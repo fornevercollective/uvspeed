@@ -3539,6 +3539,166 @@
                     </div>
                 </div>
 
+                <!-- ====== IDE PLUGIN: .mdc PREFIX GUTTER RULE ====== -->
+                <div class="inspect-section">
+                    <h3>uvspeed &mdash; IDE Plugin: Quantum Prefix Gutter Rule (<code>.mdc</code>)</h3>
+                    <p style="margin-bottom:var(--cursor-space-sm);">
+                        A <strong>Cursor IDE rule</strong> that teaches any AI model the beyondBINARY 9-symbol system natively.
+                        Installed at <code>.cursor/rules/quantum-prefix-gutter.mdc</code> &mdash; always active, zero config.
+                        Any AI agent in Cursor automatically classifies, generates, and reviews code with quantum prefixes.
+                    </p>
+
+                    <!-- Status badge -->
+                    <div style="display:flex;gap:var(--cursor-space-sm);align-items:center;margin-bottom:var(--cursor-space-md);">
+                        <span class="tag tag--green" style="font-size:0.6875rem;padding:3px 10px;">✅ SHIPPED &amp; LIVE</span>
+                        <span style="font-size:0.625rem;color:var(--cursor-text-muted);">Path: <code>.cursor/rules/quantum-prefix-gutter.mdc</code> &middot; <code>alwaysApply: true</code> &middot; 74 lines</span>
+                    </div>
+
+                    <!-- Rule file content preview -->
+                    <div style="background:var(--cursor-bg);border:2px solid var(--cursor-accent);border-radius:var(--cursor-radius-md);padding:var(--cursor-space-md);margin-bottom:var(--cursor-space-md);font-family:var(--cursor-font-mono);font-size:0.625rem;line-height:1.7;overflow-x:auto;">
+                        <div style="color:var(--cursor-accent);font-weight:700;margin-bottom:8px;">// .cursor/rules/quantum-prefix-gutter.mdc</div>
+                        <span style="color:#484f58;">---</span><br>
+                        <span style="color:#d2a8ff;">alwaysApply:</span> <span style="color:#7ee787;">true</span><br>
+                        <span style="color:#484f58;">---</span><br>
+                        <span style="color:#7ee787;font-weight:700;"># Quantum beyondBINARY Prefix System</span><br><br>
+                        <span style="color:var(--cursor-text-muted);">All code in this project uses the <strong style="color:var(--cursor-text);">9-symbol quantum prefix system</strong>.</span><br>
+                        <span style="color:var(--cursor-text-muted);">Every line of code gets a prefix that classifies its structural role.</span><br><br>
+                        <span style="color:#7ee787;">## The 9 Symbols</span><br>
+                        <div style="display:grid;grid-template-columns:60px 80px 1fr;gap:2px 12px;margin:6px 0 6px 8px;">
+                            <span style="color:var(--cursor-accent);font-weight:700;">n:</span>  <span style="color:#f97583;">shebang</span>   <span style="color:var(--cursor-text-muted);">Entry points, shebangs</span>
+                            <span style="color:var(--cursor-accent);font-weight:700;">+1:</span> <span style="color:#7ee787;">comment</span>   <span style="color:var(--cursor-text-muted);">Comments, documentation, decorators</span>
+                            <span style="color:var(--cursor-accent);font-weight:700;">-n:</span> <span style="color:#d2a8ff;">import</span>    <span style="color:var(--cursor-text-muted);">Imports, includes, requires</span>
+                            <span style="color:var(--cursor-accent);font-weight:700;">+0:</span> <span style="color:#79c0ff;">class</span>     <span style="color:var(--cursor-text-muted);">Class, struct, type, enum defs</span>
+                            <span style="color:var(--cursor-accent);font-weight:700;">0:</span>  <span style="color:#79c0ff;">function</span>  <span style="color:var(--cursor-text-muted);">Function, method definitions</span>
+                            <span style="color:var(--cursor-accent);font-weight:700;">-1:</span> <span style="color:#f97583;">error</span>     <span style="color:var(--cursor-text-muted);">Error handling, try/catch/raise</span>
+                            <span style="color:var(--cursor-accent);font-weight:700;">+n:</span> <span style="color:#f0d852;">condition</span> <span style="color:var(--cursor-text-muted);">If/else/switch/match conditionals</span>
+                            <span style="color:var(--cursor-accent);font-weight:700;">+2:</span> <span style="color:#f0883e;">loop</span>      <span style="color:var(--cursor-text-muted);">For/while/repeat loops</span>
+                            <span style="color:var(--cursor-accent);font-weight:700;">-0:</span> <span style="color:#f0d852;">return</span>    <span style="color:var(--cursor-text-muted);">Return/yield statements</span>
+                            <span style="color:var(--cursor-accent);font-weight:700;">+3:</span> <span style="color:#7ee787;">output</span>    <span style="color:var(--cursor-text-muted);">Print/echo/log/render output</span>
+                            <span style="color:var(--cursor-accent);font-weight:700;">1:</span>  <span style="color:var(--cursor-text);">variable</span> <span style="color:var(--cursor-text-muted);">Variable declarations/assignments</span>
+                        </div>
+                        <br>
+                        <span style="color:#7ee787;">## Rules for AI</span><br>
+                        <span style="color:var(--cursor-text-muted);">1. When writing or editing code, mentally classify each line by its prefix</span><br>
+                        <span style="color:var(--cursor-text-muted);">2. When showing code examples, include prefix annotations as comments</span><br>
+                        <span style="color:var(--cursor-text-muted);">3. When reviewing code, note which prefix categories changed</span><br>
+                        <span style="color:var(--cursor-text-muted);">4. Prefix-aware diffs should show which quantum coordinates shifted</span><br>
+                        <span style="color:var(--cursor-text-muted);">5. All 20 supported languages use the same 9-symbol system</span><br><br>
+                        <span style="color:#7ee787;">## Supported Languages (20)</span><br>
+                        <span style="color:var(--cursor-text);">python, javascript, typescript, rust, go, c, shell, html, css, java, swift, kotlin, ruby, yaml, toml, sql, dockerfile, nushell, zig, assembly</span><br><br>
+                        <span style="color:#7ee787;">## When Generating Files</span><br>
+                        <span style="color:var(--cursor-text-muted);">Every file includes header: </span><span style="color:var(--cursor-text);font-weight:600;"># beyondBINARY quantum-prefixed | uvspeed | {+1, 1, -1, +0, 0, -0, +n, n, -n}</span>
+                    </div>
+
+                    <!-- How it works -->
+                    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:8px;margin-bottom:var(--cursor-space-md);">
+                        <div style="background:var(--cursor-bg-tertiary);border:1px solid var(--cursor-border);border-radius:var(--cursor-radius-sm);padding:10px 12px;">
+                            <div style="font-size:0.75rem;font-weight:700;color:var(--cursor-text);margin-bottom:4px;">🧠 How It Trains the AI</div>
+                            <div style="font-size:0.625rem;color:var(--cursor-text-muted);">
+                                The <code>alwaysApply: true</code> flag injects the rule into every AI interaction in Cursor.
+                                The AI learns the 9-symbol table, the classification rules, and the 20-language support.
+                                Every code generation, review, and refactor inherits quantum prefix awareness.
+                            </div>
+                        </div>
+                        <div style="background:var(--cursor-bg-tertiary);border:1px solid var(--cursor-border);border-radius:var(--cursor-radius-sm);padding:10px 12px;">
+                            <div style="font-size:0.75rem;font-weight:700;color:var(--cursor-text);margin-bottom:4px;">⚡ Live Quantum Gutter (Notepad)</div>
+                            <div style="font-size:0.625rem;color:var(--cursor-text-muted);">
+                                In <code>quantum-notepad.html</code>, every cell has a live gutter column.
+                                Each line is classified in real-time using the same 9-symbol rules.
+                                Color-coded prefixes (<code>pfx-shebang</code> through <code>pfx-default</code>), debounced 100ms, scroll-synced with textarea.
+                            </div>
+                        </div>
+                        <div style="background:var(--cursor-bg-tertiary);border:1px solid var(--cursor-border);border-radius:var(--cursor-radius-sm);padding:10px 12px;">
+                            <div style="font-size:0.75rem;font-weight:700;color:var(--cursor-text);margin-bottom:4px;">📊 Convert Timeline Bar</div>
+                            <div style="font-size:0.625rem;color:var(--cursor-text-muted);">
+                                Top bar auto-calibrates when code is pasted or edited.
+                                Shows prefix coverage %, per-category segment distribution, and detected language.
+                                Animates a 1.5s pulse during conversion. Updates on cell focus.
+                            </div>
+                        </div>
+                        <div style="background:var(--cursor-bg-tertiary);border:1px solid var(--cursor-border);border-radius:var(--cursor-radius-sm);padding:10px 12px;">
+                            <div style="font-size:0.75rem;font-weight:700;color:var(--cursor-text);margin-bottom:4px;">🔌 Bridge API Integration</div>
+                            <div style="font-size:0.625rem;color:var(--cursor-text-muted);">
+                                Server-side prefix engine mirrors the client gutter: <code>POST /api/prefix</code> for code, <code>POST /api/prefix/file</code> for files.
+                                Security scanner uses prefix context to weight findings.
+                                Git hooks validate prefix headers on commit.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Python example with live prefixes -->
+                    <div style="font-size:0.6875rem;font-weight:700;color:var(--cursor-text);margin-bottom:6px;">Example: Python with Quantum Prefix Gutter</div>
+                    <div style="background:var(--cursor-bg);border:1px solid var(--cursor-border);border-radius:var(--cursor-radius-sm);padding:12px 14px;margin-bottom:var(--cursor-space-md);font-family:var(--cursor-font-mono);font-size:0.625rem;line-height:1.8;overflow-x:auto;">
+                        <div style="display:grid;grid-template-columns:36px 28px 1fr;gap:0 6px;">
+                            <span style="color:#f97583;font-weight:700;text-align:right;">n:</span>   <span style="color:#484f58;text-align:right;">1</span> <span style="color:var(--cursor-text-muted);">#!/usr/bin/env python3</span>
+                            <span style="color:#7ee787;font-weight:700;text-align:right;">+1:</span>  <span style="color:#484f58;text-align:right;">2</span> <span style="color:#7ee787;"># Quantum computation module</span>
+                            <span style="color:#d2a8ff;font-weight:700;text-align:right;">-n:</span>  <span style="color:#484f58;text-align:right;">3</span> <span style="color:var(--cursor-text);">import numpy as np</span>
+                            <span style="color:#d2a8ff;font-weight:700;text-align:right;">-n:</span>  <span style="color:#484f58;text-align:right;">4</span> <span style="color:var(--cursor-text);">from tinygrad.tensor import Tensor</span>
+                            <span style="color:#484f58;font-weight:700;text-align:right;"></span>    <span style="color:#484f58;text-align:right;">5</span> <span></span>
+                            <span style="color:#79c0ff;font-weight:700;text-align:right;">+0:</span>  <span style="color:#484f58;text-align:right;">6</span> <span style="color:var(--cursor-text);font-weight:600;">class QuantumState:</span>
+                            <span style="color:#7ee787;font-weight:700;text-align:right;">+1:</span>  <span style="color:#484f58;text-align:right;">7</span> <span style="color:#7ee787;">    &quot;&quot;&quot;Represents a quantum state vector.&quot;&quot;&quot;</span>
+                            <span style="color:#484f58;font-weight:700;text-align:right;"></span>    <span style="color:#484f58;text-align:right;">8</span> <span></span>
+                            <span style="color:#79c0ff;font-weight:700;text-align:right;">0:</span>   <span style="color:#484f58;text-align:right;">9</span> <span style="color:var(--cursor-text);">    def __init__(self, qubits=3):</span>
+                            <span style="color:var(--cursor-text);font-weight:700;text-align:right;">1:</span>   <span style="color:#484f58;text-align:right;">10</span> <span style="color:var(--cursor-text);">        self.n = qubits</span>
+                            <span style="color:var(--cursor-text);font-weight:700;text-align:right;">1:</span>   <span style="color:#484f58;text-align:right;">11</span> <span style="color:var(--cursor-text);">        self.state = Tensor.randn(2 ** qubits)</span>
+                            <span style="color:#79c0ff;font-weight:700;text-align:right;">0:</span>   <span style="color:#484f58;text-align:right;">13</span> <span style="color:var(--cursor-text);">    def normalize(self):</span>
+                            <span style="color:#f0d852;font-weight:700;text-align:right;">-0:</span>  <span style="color:#484f58;text-align:right;">14</span> <span style="color:var(--cursor-text);">        return self.state / self.state.norm()</span>
+                            <span style="color:#79c0ff;font-weight:700;text-align:right;">0:</span>   <span style="color:#484f58;text-align:right;">16</span> <span style="color:var(--cursor-text);">    def measure(self):</span>
+                            <span style="color:#f97583;font-weight:700;text-align:right;">-1:</span>  <span style="color:#484f58;text-align:right;">17</span> <span style="color:var(--cursor-text);">        try:</span>
+                            <span style="color:var(--cursor-text);font-weight:700;text-align:right;">1:</span>   <span style="color:#484f58;text-align:right;">18</span> <span style="color:var(--cursor-text);">            probs = (self.state ** 2).numpy()</span>
+                            <span style="color:#f0d852;font-weight:700;text-align:right;">-0:</span>  <span style="color:#484f58;text-align:right;">19</span> <span style="color:var(--cursor-text);">            return probs</span>
+                            <span style="color:#f97583;font-weight:700;text-align:right;">-1:</span>  <span style="color:#484f58;text-align:right;">20</span> <span style="color:var(--cursor-text);">        except Exception as e:</span>
+                            <span style="color:#7ee787;font-weight:700;text-align:right;">+3:</span>  <span style="color:#484f58;text-align:right;">21</span> <span style="color:var(--cursor-text);">            print(f&quot;Measurement error: {e}&quot;)</span>
+                        </div>
+                    </div>
+
+                    <!-- Installation -->
+                    <div style="font-size:0.6875rem;font-weight:700;color:var(--cursor-text);margin-bottom:6px;">Install in Any Project</div>
+                    <div style="background:var(--cursor-bg-tertiary);border:1px solid var(--cursor-border);border-radius:var(--cursor-radius-sm);padding:10px 14px;margin-bottom:var(--cursor-space-md);font-family:var(--cursor-font-mono);font-size:0.625rem;line-height:1.8;">
+                        <span style="color:#7ee787;"># 1. Copy the rule file into any project</span><br>
+                        <span style="color:var(--cursor-text);">mkdir -p .cursor/rules</span><br>
+                        <span style="color:var(--cursor-text);">cp uvspeed/.cursor/rules/quantum-prefix-gutter.mdc .cursor/rules/</span><br><br>
+                        <span style="color:#7ee787;"># 2. That's it. Cursor AI now understands quantum prefixes.</span><br>
+                        <span style="color:#7ee787;"># Every code generation, review, and refactor is prefix-aware.</span><br><br>
+                        <span style="color:#7ee787;"># 3. Optional: stamp all files with beyondBINARY header</span><br>
+                        <span style="color:var(--cursor-text);">python3 tools/prefix_all_files.py</span><br><br>
+                        <span style="color:#7ee787;"># 4. Optional: install quantum pre-commit hook</span><br>
+                        <span style="color:var(--cursor-text);">curl -s http://localhost:8085/api/git/hook/install -X POST -d '{"repo":"."}'</span>
+                    </div>
+
+                    <!-- Compatibility -->
+                    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:6px;margin-bottom:var(--cursor-space-md);">
+                        <div style="background:rgba(126,231,135,0.06);border:1px solid rgba(126,231,135,0.25);border-radius:var(--cursor-radius-sm);padding:8px 10px;text-align:center;">
+                            <div style="font-size:0.75rem;font-weight:700;color:#7ee787;">Cursor IDE</div>
+                            <div style="font-size:0.5625rem;color:var(--cursor-text-muted);"><code>.mdc</code> rules &middot; always-on</div>
+                        </div>
+                        <div style="background:var(--cursor-bg-tertiary);border:1px solid var(--cursor-border);border-radius:var(--cursor-radius-sm);padding:8px 10px;text-align:center;">
+                            <div style="font-size:0.75rem;font-weight:700;color:var(--cursor-text);">GitHub Copilot</div>
+                            <div style="font-size:0.5625rem;color:var(--cursor-text-muted);"><code>.github/copilot-instructions.md</code></div>
+                        </div>
+                        <div style="background:var(--cursor-bg-tertiary);border:1px solid var(--cursor-border);border-radius:var(--cursor-radius-sm);padding:8px 10px;text-align:center;">
+                            <div style="font-size:0.75rem;font-weight:700;color:var(--cursor-text);">VS Code</div>
+                            <div style="font-size:0.5625rem;color:var(--cursor-text-muted);"><code>.vscode/settings.json</code> context</div>
+                        </div>
+                        <div style="background:var(--cursor-bg-tertiary);border:1px solid var(--cursor-border);border-radius:var(--cursor-radius-sm);padding:8px 10px;text-align:center;">
+                            <div style="font-size:0.75rem;font-weight:700;color:var(--cursor-text);">Any MCP Client</div>
+                            <div style="font-size:0.5625rem;color:var(--cursor-text-muted);"><code>quantum_bridge_server.py</code></div>
+                        </div>
+                        <div style="background:var(--cursor-bg-tertiary);border:1px solid var(--cursor-border);border-radius:var(--cursor-radius-sm);padding:8px 10px;text-align:center;">
+                            <div style="font-size:0.75rem;font-weight:700;color:var(--cursor-text);">Windsurf</div>
+                            <div style="font-size:0.5625rem;color:var(--cursor-text-muted);">Rules-compatible format</div>
+                        </div>
+                    </div>
+
+                    <div style="display:flex;gap:var(--cursor-space-sm);flex-wrap:wrap;">
+                        <span class="tag tag--green">alwaysApply: true</span>
+                        <span class="tag tag--green">9 symbols &middot; 20 languages</span>
+                        <span class="tag tag--green">Live gutter + timeline</span>
+                        <span class="tag tag--blue">Zero config &middot; copy 1 file</span>
+                        <span class="tag tag--purple">Works with any AI model in Cursor</span>
+                    </div>
+                </div>
+
                 <!-- ====== UPGRADE ENHANCEMENT PLANS ====== -->
                 <div class="inspect-section">
                     <h3>uvspeed &mdash; Upgrade Enhancement Roadmap</h3>
