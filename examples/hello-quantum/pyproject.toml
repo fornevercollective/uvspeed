@@ -1,0 +1,12 @@
+[project]
+name = "hello-quantum"
+version = "1.0.0"
+description = "UV-Speed quantum hello world example"
+dependencies = []
+
+[tool.uv]
+dev-dependencies = []
+
+[tool.uvspeed]
+quantum_mode = true
+navigation_enabled = true

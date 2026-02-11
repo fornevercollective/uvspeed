@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# GitHub Copilot wrapper with quantum context
+
+# Load quantum environment
+source "$UVSPEED_HOME/config/quantum.env" 2>/dev/null
+
+# Add quantum context to copilot commands
+if command -v copilot >/dev/null 2>&1; then
+    echo "🚁 GitHub Copilot in Quantum Mode"
+    echo "Context: UV-Speed quantum development environment"
+    echo ""
+    
+    # Add context flag if available
+    copilot "$@" --context "$UVSPEED_HOME/config/copilot_context.md" 2>/dev/null || copilot "$@"
+else
+    echo "⚠️  GitHub Copilot CLI not found"
+    echo "Install: brew install gh && gh auth login && gh extension install github/gh-copilot"
+fi

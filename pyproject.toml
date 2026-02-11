@@ -1,0 +1,54 @@
+[project]
+name = "uvspeed-quantum"
+version = "1.0.0" 
+description = "Portable AI development environment with quantum code navigation"
+readme = "README.md"
+authors = [
+    {name = "UV-Speed Team"}
+]
+dependencies = []
+
+[project.urls]
+Repository = "https://github.com/username/uvspeed"
+Documentation = "docs/README.md"
+
+[tool.uv]
+dev-dependencies = []
+
+[tool.uvspeed]
+# UV-Speed Quantum Configuration
+quantum_mode = true
+architecture = "Zig→Rust→Semantic→Visual"
+navigation_system = "3d_spatial"
+
+[tool.uvspeed.quantum]
+# Quantum numbering prefixes
+prefixes = {
+    "n:" = "Entry points (#!/usr/bin/env)",
+    "+1:" = "Comments/documentation",
+    "-n:" = "Imports/dependencies", 
+    "+0:" = "Classes",
+    "0:" = "Functions",
+    "-1:" = "Error handling",
+    "+n:" = "Conditionals",
+    "+2:" = "Loops", 
+    "-0:" = "Returns",
+    "+3:" = "Output statements"
+}
+
+[tool.uvspeed.tools]
+# Portable tool configuration
+uv_enabled = true
+nushell_portable = true
+opencode_ai = true
+grepai_semantic = true
+
+[tool.uvspeed.copilot]
+# GitHub Copilot integration
+context_file = "config/copilot_context.md"
+quantum_mode = true
+enhanced_wrapper = "tools/copilot-quantum"
+
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
