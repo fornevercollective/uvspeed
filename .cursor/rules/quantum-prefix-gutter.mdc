@@ -1,0 +1,76 @@
+<!-- beyondBINARY quantum-prefixed | uvspeed | {+1, 1, -1, +0, 0, -0, +n, n, -n} -->
+---
+description: beyondBINARY quantum prefix system — add 9-symbol prefix gutter annotations to all code
+alwaysApply: true
+---
+
+# Quantum beyondBINARY Prefix System
+
+All code in this project uses the **9-symbol quantum prefix system** for dimensional code addressing.
+Every line of code gets a prefix that classifies its structural role.
+
+## The 9 Symbols
+
+| Prefix | Category    | Meaning                              |
+|--------|-------------|--------------------------------------|
+| `n:`   | shebang     | Entry points, shebangs               |
+| `+1:`  | comment     | Comments, documentation, decorators  |
+| `-n:`  | import      | Imports, includes, requires          |
+| `+0:`  | class       | Class, struct, type, enum defs       |
+| `0:`   | function    | Function, method definitions         |
+| `-1:`  | error       | Error handling, try/catch/raise      |
+| `+n:`  | condition   | If/else/switch/match conditionals    |
+| `+2:`  | loop        | For/while/repeat loops               |
+| `-0:`  | return      | Return/yield statements              |
+| `+3:`  | output      | Print/echo/log/render output         |
+| `1:`   | variable    | Variable declarations/assignments    |
+| `   `  | default     | Unclassified lines                   |
+
+## Rules for AI
+
+1. When writing or editing code, mentally classify each line by its prefix
+2. When showing code examples, include prefix annotations as comments
+3. When reviewing code, note which prefix categories changed
+4. Prefix-aware diffs should show which quantum coordinates shifted
+5. All 20 supported languages use the same 9-symbol system
+
+## Supported Languages (20)
+
+python, javascript, typescript, rust, go, c, shell, html, css,
+java, swift, kotlin, ruby, yaml, toml, sql, dockerfile, nushell, zig, assembly
+
+## Example: Python with Prefixes
+
+```python
+# n:   1  #!/usr/bin/env python3
+# +1:  2  # Quantum computation module
+# -n:  3  import numpy as np
+# -n:  4  from tinygrad.tensor import Tensor
+#      5
+# +0:  6  class QuantumState:
+# +1:  7      """Represents a quantum state vector."""
+#      8
+# 0:   9      def __init__(self, qubits=3):
+# 1:  10          self.n = qubits
+# 1:  11          self.state = Tensor.randn(2 ** qubits)
+#     12
+# 0:  13      def normalize(self):
+# -0: 14          return self.state / self.state.norm()
+#     15
+# 0:  16      def measure(self):
+# -1: 17          try:
+# 1:  18              probs = (self.state ** 2).numpy()
+# -0: 19              return probs
+# -1: 20          except Exception as e:
+# +3: 21              print(f"Measurement error: {e}")
+```
+
+## When Generating Files
+
+For every file in the project, the prefix gutter should be conceptually active.
+When committing to GitHub, files should include a header comment noting the
+quantum prefix system is in use:
+
+```
+# beyondBINARY quantum-prefixed | uvspeed | {+1, 1, -1, +0, 0, -0, +n, n, -n}
+```

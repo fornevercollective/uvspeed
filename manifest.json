@@ -1,0 +1,50 @@
+{
+  "manifest_version": 3,
+  "name": "UV-Speed Quantum - AI Development Environment",
+  "version": "1.0.0",
+  "description": "UV-Speed Quantum development environment with AI integration, Electron desktop app, and 3D code navigation for VR/XR/AR compatibility",
+  "icons": {
+    "16": "icons/quantum-16.png",
+    "32": "icons/quantum-32.png",
+    "48": "icons/quantum-48.png",
+    "128": "icons/quantum-128.png"
+  },
+  "action": {
+    "default_popup": "popup/quantum-popup.html",
+    "default_title": "Quantum Fox Development"
+  },
+  "background": {
+    "service_worker": "background/quantum-service-worker.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content/quantum-inject.js"],
+      "css": ["content/quantum-overlay.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "web/*",
+        "quantum/*",
+        "shared/*"
+      ],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "permissions": [
+    "activeTab",
+    "storage",
+    "scripting",
+    "tabs"
+  ],
+  "host_permissions": [
+    "http://localhost/*",
+    "https://api.openai.com/*",
+    "https://api.anthropic.com/*"
+  ],
+  "options_page": "options/quantum-options.html",
+  "devtools_page": "devtools/quantum-devtools.html"
+}

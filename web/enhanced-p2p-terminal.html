@@ -1,0 +1,716 @@
+<!-- beyondBINARY quantum-prefixed | uvspeed | {+1, 1, -1, +0, 0, -0, +n, n, -n} -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Enhanced P2P Terminal - UV-Speed Quantum</title>
+    <link rel="stylesheet" href="../cursor-theme.css">
+    <style>
+        /* P2P terminal specific styles */
+        .terminal-container {
+            height: 100vh;
+            background: var(--cursor-bg);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .header-bar {
+            background: var(--cursor-bg-secondary);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--cursor-border);
+            padding: var(--cursor-space-md) var(--cursor-space-lg);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .terminal-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--cursor-text);
+            display: flex;
+            align-items: center;
+            gap: var(--cursor-space-sm);
+        }
+
+        .peer-status {
+            display: flex;
+            align-items: center;
+            gap: var(--cursor-space-md);
+            font-size: 0.875rem;
+        }
+
+        .peer-indicator {
+            display: flex;
+            align-items: center;
+            gap: var(--cursor-space-xs);
+            color: var(--cursor-text-secondary);
+        }
+
+        .peer-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--cursor-success);
+            animation: pulse 2s infinite;
+        }
+
+        .main-grid {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 300px 1fr 300px;
+            gap: 0;
+            overflow: hidden;
+        }
+
+        .left-sidebar,
+        .right-sidebar {
+            background: var(--cursor-bg-secondary);
+            border-right: 1px solid var(--cursor-border);
+            overflow-y: auto;
+        }
+
+        .right-sidebar {
+            border-right: none;
+            border-left: 1px solid var(--cursor-border);
+        }
+
+        .terminal-area {
+            background: var(--cursor-bg);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .terminal-tabs {
+            background: var(--cursor-bg-secondary);
+            border-bottom: 1px solid var(--cursor-border);
+            display: flex;
+            align-items: center;
+            padding: 0 var(--cursor-space-md);
+        }
+
+        .terminal-tab {
+            padding: var(--cursor-space-sm) var(--cursor-space-md);
+            background: transparent;
+            border: none;
+            color: var(--cursor-text-secondary);
+            font-size: 0.8125rem;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.15s ease;
+        }
+
+        .terminal-tab.active {
+            color: var(--cursor-accent);
+            border-bottom-color: var(--cursor-accent);
+        }
+
+        .terminal-output {
+            flex: 1;
+            font-family: var(--cursor-font-mono);
+            font-size: 0.875rem;
+            line-height: 1.6;
+            padding: var(--cursor-space-md);
+            overflow-y: auto;
+            background: var(--cursor-bg);
+        }
+
+        .terminal-input-row {
+            background: var(--cursor-bg-secondary);
+            border-top: 1px solid var(--cursor-border);
+            padding: var(--cursor-space-md);
+            display: flex;
+            gap: var(--cursor-space-sm);
+        }
+
+        .terminal-input {
+            flex: 1;
+            background: var(--cursor-bg-tertiary);
+            border: 1px solid var(--cursor-border);
+            border-radius: var(--cursor-radius-md);
+            padding: var(--cursor-space-sm) var(--cursor-space-md);
+            color: var(--cursor-text);
+            font-family: var(--cursor-font-mono);
+            font-size: 0.875rem;
+        }
+
+        .sidebar-section {
+            padding: var(--cursor-space-md);
+            border-bottom: 1px solid var(--cursor-border-muted);
+        }
+
+        .sidebar-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--cursor-text-muted);
+            letter-spacing: 0.5px;
+            margin-bottom: var(--cursor-space-md);
+        }
+
+        .peer-list {
+            list-style: none;
+        }
+
+        .peer-item {
+            display: flex;
+            align-items: center;
+            gap: var(--cursor-space-sm);
+            padding: var(--cursor-space-sm);
+            border-radius: var(--cursor-radius-md);
+            margin-bottom: var(--cursor-space-xs);
+            cursor: pointer;
+            transition: background 0.1s ease;
+        }
+
+        .peer-item:hover {
+            background: var(--cursor-bg-hover);
+        }
+
+        .peer-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--cursor-accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: white;
+        }
+
+        .collaboration-tools {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--cursor-space-sm);
+            margin-bottom: var(--cursor-space-md);
+        }
+
+        .collab-btn {
+            padding: var(--cursor-space-sm);
+            background: var(--cursor-bg-tertiary);
+            border: 1px solid var(--cursor-border);
+            border-radius: var(--cursor-radius-md);
+            color: var(--cursor-text-secondary);
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            text-align: center;
+        }
+
+        .collab-btn:hover {
+            background: var(--cursor-bg-hover);
+            color: var(--cursor-text);
+        }
+
+        .collab-btn.active {
+            background: var(--cursor-accent-subtle);
+            color: var(--cursor-accent);
+            border-color: var(--cursor-accent);
+        }
+
+        /* 3D visualization area */
+        .visualization-area {
+            height: 200px;
+            background: var(--cursor-bg-tertiary);
+            border: 1px solid var(--cursor-border);
+            border-radius: var(--cursor-radius-lg);
+            margin-bottom: var(--cursor-space-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--cursor-text-muted);
+            font-size: 0.8125rem;
+        }
+
+        /* Chat messages */
+        .chat-messages {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-bottom: var(--cursor-space-sm);
+        }
+
+        .chat-message {
+            padding: var(--cursor-space-sm);
+            margin-bottom: var(--cursor-space-xs);
+            background: var(--cursor-bg-tertiary);
+            border-radius: var(--cursor-radius-md);
+            font-size: 0.8125rem;
+        }
+
+        .chat-author {
+            color: var(--cursor-accent);
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .chat-input {
+            width: 100%;
+            background: var(--cursor-bg-tertiary);
+            border: 1px solid var(--cursor-border);
+            border-radius: var(--cursor-radius-md);
+            padding: var(--cursor-space-sm);
+            color: var(--cursor-text);
+            font-size: 0.8125rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto 1fr auto;
+            }
+            
+            .left-sidebar,
+            .right-sidebar {
+                max-height: 200px;
+                border: none;
+                border-top: 1px solid var(--cursor-border);
+            }
+            
+            .left-sidebar {
+                order: 3;
+            }
+            
+            .terminal-area {
+                order: 2;
+            }
+            
+            .right-sidebar {
+                order: 4;
+            }
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.3/qrcode.min.js"></script>
+</head>
+<body>
+    <div class="terminal-container">
+        <div class="terminal-header">
+            <div class="terminal-title-section">
+                <div class="terminal-title">Enhanced P2P Claude Terminal</div>
+                <div class="terminal-mode-selector">
+                    <button class="mode-btn active" data-mode="p2p">P2P</button>
+                    <button class="mode-btn" data-mode="classical">Classical</button>
+                    <button class="mode-btn" data-mode="quantum">Quantum</button>
+                </div>
+            </div>
+            <div class="terminal-status-section">
+                <div class="productivity-sync">
+                    <div class="sync-indicator" id="productivity-indicator"></div>
+                    <span id="productivity-text">Productivity Sync</span>
+                    <div class="sync-separator"></div>
+                    <span id="productivity-status">Active</span>
+                </div>
+                <div class="p2p-network-status">
+                    <div class="network-indicator" id="network-indicator"></div>
+                    <span id="network-text">P2P Network</span>
+                    <div class="network-separator"></div>
+                    <span id="network-status">Disconnected</span>
+                </div>
+            </div>
+            <div class="terminal-controls">
+                <button class="control-btn minimize">−</button>
+                <button class="control-btn maximize">□</button>
+                <button class="control-btn close">×</button>
+            </div>
+        </div>
+        
+        <div class="terminal-content">
+            <div class="column column-1">
+                <div class="column-header">
+                    <span class="column-title">P2P Controls & Models</span>
+                    <button class="column-toggle" id="controls-toggle">🔗</button>
+                </div>
+                <div class="column-content" id="controls-content">
+                    <!-- P2P Network Controls -->
+                    <div class="option-group p2p-controls">
+                        <h4>P2P Network</h4>
+                        <div class="network-status-display">
+                            <div class="status-row">
+                                <div class="status-indicator" id="network-status-indicator"></div>
+                                <span id="network-status-text">Disconnected</span>
+                            </div>
+                            <div class="peer-count">
+                                <span id="peer-count">0 peers connected</span>
+                            </div>
+                        </div>
+                        <button class="option-btn action-btn" id="start-network">Start Network</button>
+                        <button class="option-btn action-btn" id="join-network">Join Network</button>
+                        <button class="option-btn action-btn" id="share-connection">Share Connection</button>
+                        <button class="option-btn action-btn" id="discover-peers">Discover Peers</button>
+                    </div>
+                    
+                    <!-- Productivity Sync -->
+                    <div class="option-group productivity-controls">
+                        <h4>Productivity Sync</h4>
+                        <div class="sync-status-display">
+                            <div class="sync-indicator connected" id="sync-status-indicator"></div>
+                            <span id="sync-status-text">Tasks Synced</span>
+                        </div>
+                        <button class="option-btn sync-btn active" id="sync-tasks">Sync Tasks</button>
+                        <button class="option-btn sync-btn" id="sync-artifacts">Sync Artifacts</button>
+                        <button class="option-btn sync-btn" id="sync-projects">Sync Projects</button>
+                        <button class="option-btn sync-btn" id="sync-all">Sync All</button>
+                    </div>
+                    
+                    <!-- AI Models -->
+                    <div class="option-group model-controls">
+                        <h4>AI Models</h4>
+                        <button class="option-btn model-btn active" data-model="claude-3.5-sonnet">Claude 3.5 Sonnet</button>
+                        <button class="option-btn model-btn" data-model="claude-3-haiku">Claude 3 Haiku</button>
+                        <button class="option-btn model-btn" data-model="claude-3-opus">Claude 3 Opus</button>
+                        <button class="option-btn model-btn" data-model="gemini-1.5-pro">Gemini 1.5 Pro</button>
+                        <button class="option-btn model-btn" data-model="gemini-1.5-flash">Gemini 1.5 Flash</button>
+                        <button class="option-btn model-btn" data-model="gemini-2.0-flash">Gemini 2.0 Flash</button>
+                    </div>
+                    
+                    <!-- Tools -->
+                    <div class="option-group tools-controls">
+                        <h4>Tools</h4>
+                        <button class="option-btn tool-btn" data-tool="file-explorer">File Explorer</button>
+                        <button class="option-btn tool-btn" data-tool="code-editor">Code Editor</button>
+                        <button class="option-btn tool-btn" data-tool="terminal">Terminal</button>
+                        <button class="option-btn tool-btn" data-tool="browser">Browser</button>
+                        <button class="option-btn tool-btn" data-tool="gemini-search">Gemini Search</button>
+                        <button class="option-btn tool-btn" data-tool="p2p-chat">P2P Chat</button>
+                    </div>
+                    
+                    <!-- Usage & Limits -->
+                    <div class="option-group usage-controls">
+                        <h4>Usage & Limits</h4>
+                        <div class="usage-display">
+                            <div class="usage-item">
+                                <span class="usage-label">P2P Bandwidth</span>
+                                <div class="usage-bar">
+                                    <div class="usage-fill p2p-usage" data-usage="45" style="width: 45%"></div>
+                                </div>
+                                <span class="usage-text">45/100 MB</span>
+                            </div>
+                            <div class="usage-item">
+                                <span class="usage-label">AI Tokens</span>
+                                <div class="usage-bar">
+                                    <div class="usage-fill ai-usage" data-usage="65" style="width: 65%"></div>
+                                </div>
+                                <span class="usage-text">65/100</span>
+                            </div>
+                            <div class="usage-item">
+                                <span class="usage-label">Sync Storage</span>
+                                <div class="usage-bar">
+                                    <div class="usage-fill sync-usage" data-usage="30" style="width: 30%"></div>
+                                </div>
+                                <span class="usage-text">30/100 GB</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="column column-2">
+                <div class="column-header">
+                    <span class="column-title">Connected Peers</span>
+                    <button class="column-toggle" id="peers-toggle">👥</button>
+                </div>
+                <div class="column-content" id="peers-content">
+                    <div class="peer-list" id="peer-list">
+                        <!-- Default productivity sync peers -->
+                        <div class="peer-item productivity-peer">
+                            <div class="peer-info">
+                                <div class="peer-name">Desktop App</div>
+                                <div class="peer-type">MacBook Pro</div>
+                                <div class="peer-status">
+                                    <div class="status-indicator connected"></div>
+                                    <span>Synced</span>
+                                </div>
+                            </div>
+                            <div class="peer-actions">
+                                <button class="peer-btn" onclick="terminal.pingPeer('desktop')">Ping</button>
+                                <button class="peer-btn sync-btn" onclick="terminal.syncProductivity('desktop')">Sync</button>
+                            </div>
+                        </div>
+                        <div class="peer-item productivity-peer">
+                            <div class="peer-info">
+                                <div class="peer-name">Mobile App</div>
+                                <div class="peer-type">iPhone 15</div>
+                                <div class="peer-status">
+                                    <div class="status-indicator connected"></div>
+                                    <span>Synced</span>
+                                </div>
+                            </div>
+                            <div class="peer-actions">
+                                <button class="peer-btn" onclick="terminal.pingPeer('mobile')">Ping</button>
+                                <button class="peer-btn sync-btn" onclick="terminal.syncProductivity('mobile')">Sync</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="file-drop-zone" id="file-drop-zone">
+                        <div class="drop-icon">📁</div>
+                        <div class="drop-text">
+                            <div class="drop-title">Drop files to share</div>
+                            <div class="drop-subtitle">or click to select</div>
+                        </div>
+                    </div>
+                    
+                    <div class="quick-actions">
+                        <button class="quick-btn" id="quick-screenshot">📸 Screenshot</button>
+                        <button class="quick-btn" id="quick-clipboard">📋 Clipboard</button>
+                        <button class="quick-btn" id="quick-voice">🎤 Voice Note</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="column column-3">
+                <div class="column-header">
+                    <span class="column-title">Activity & Analysis</span>
+                    <button class="column-toggle" id="activity-toggle">📊</button>
+                </div>
+                <div class="column-content" id="activity-content">
+                    <!-- P2P Activity -->
+                    <div class="activity-section p2p-activity">
+                        <h4>P2P Network Activity</h4>
+                        <div class="activity-item">
+                            <div class="activity-timestamp">14:32:15</div>
+                            <div class="activity-text">File transfer completed: document.pdf</div>
+                            <div class="activity-metrics">
+                                <span class="metric">2.3MB</span>
+                                <span class="metric">3.2s</span>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-timestamp">14:31:42</div>
+                            <div class="activity-text">Peer connected: MacBook Pro</div>
+                            <div class="activity-metrics">
+                                <span class="metric">Direct</span>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-timestamp">14:30:28</div>
+                            <div class="activity-text">Network started successfully</div>
+                            <div class="activity-metrics">
+                                <span class="metric">P2P Active</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Productivity Sync Activity -->
+                    <div class="activity-section productivity-activity">
+                        <h4>Productivity Sync</h4>
+                        <div class="sync-metrics">
+                            <div class="sync-metric">
+                                <span class="metric-label">Tasks Synced:</span>
+                                <span class="metric-value">24</span>
+                            </div>
+                            <div class="sync-metric">
+                                <span class="metric-label">Projects Updated:</span>
+                                <span class="metric-value">3</span>
+                            </div>
+                            <div class="sync-metric">
+                                <span class="metric-label">Last Sync:</span>
+                                <span class="metric-value">2 min ago</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- AI Analysis -->
+                    <div class="activity-section ai-analysis">
+                        <h4>AI Analysis</h4>
+                        <div class="thinking-item">Analyzing P2P network topology...</div>
+                        <div class="thinking-item">Optimizing file transfer routes...</div>
+                        <div class="thinking-item">Predicting productivity patterns...</div>
+                    </div>
+                    
+                    <!-- Errors & Warnings -->
+                    <div class="error-section">
+                        <h4>System Status</h4>
+                        <div class="error-item success">P2P network healthy</div>
+                        <div class="error-item warning">High bandwidth usage detected</div>
+                        <div class="error-item info">Productivity sync active</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="column column-4">
+                <div class="column-header">
+                    <span class="column-title">Transfers & Visualization</span>
+                    <button class="column-toggle" id="transfers-toggle">📈</button>
+                </div>
+                <div class="column-content" id="transfers-content">
+                    <!-- Transfer Status -->
+                    <div class="transfer-section">
+                        <h4>Active Transfers</h4>
+                        <div id="transfer-list">
+                            <div class="transfer-item completed">
+                                <div class="transfer-info">
+                                    <div class="transfer-name">tasks.json</div>
+                                    <div class="transfer-peer">→ Desktop App</div>
+                                    <div class="transfer-size">2.3 KB</div>
+                                </div>
+                                <div class="transfer-progress">
+                                    <div class="transfer-progress-fill" style="width: 100%"></div>
+                                </div>
+                                <div class="transfer-status">Completed</div>
+                            </div>
+                            <div class="transfer-item sending">
+                                <div class="transfer-info">
+                                    <div class="transfer-name">presentation.pptx</div>
+                                    <div class="transfer-peer">→ Mobile App</div>
+                                    <div class="transfer-size">15.7 MB</div>
+                                </div>
+                                <div class="transfer-progress">
+                                    <div class="transfer-progress-fill" style="width: 67%"></div>
+                                </div>
+                                <div class="transfer-status">Sending... 67%</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Network Visualization -->
+                    <div class="viz-section">
+                        <div class="viz-header">
+                            <h4>Network Topology</h4>
+                            <div class="viz-controls">
+                                <button class="viz-btn active" id="network-graph">Graph</button>
+                                <button class="viz-btn" id="network-list">List</button>
+                                <button class="viz-btn" id="network-metrics">Metrics</button>
+                            </div>
+                        </div>
+                        <div class="viz-content">
+                            <div id="network-visualization" class="network-plot">
+                                <div class="network-node central" title="This Device">
+                                    <div class="node-icon">💻</div>
+                                    <div class="node-label">You</div>
+                                </div>
+                                <div class="network-node peer" title="Desktop App" style="top: 20%; left: 70%;">
+                                    <div class="node-icon">🖥️</div>
+                                    <div class="node-label">Desktop</div>
+                                </div>
+                                <div class="network-node peer" title="Mobile App" style="top: 70%; left: 20%;">
+                                    <div class="node-icon">📱</div>
+                                    <div class="node-label">Mobile</div>
+                                </div>
+                                <svg class="network-connections">
+                                    <line x1="50%" y1="50%" x2="70%" y2="20%" stroke="#00ffff" stroke-width="2"/>
+                                    <line x1="50%" y1="50%" x2="20%" y2="70%" stroke="#00ffff" stroke-width="2"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Performance Metrics -->
+                    <div class="metrics-section">
+                        <h4>Performance</h4>
+                        <div class="performance-grid">
+                            <div class="performance-item">
+                                <span class="performance-label">Latency</span>
+                                <div class="performance-bar">
+                                    <div class="performance-fill latency-fill" style="width: 15%"></div>
+                                </div>
+                                <span class="performance-value">15ms</span>
+                            </div>
+                            <div class="performance-item">
+                                <span class="performance-label">Throughput</span>
+                                <div class="performance-bar">
+                                    <div class="performance-fill throughput-fill" style="width: 85%"></div>
+                                </div>
+                                <span class="performance-value">85 MB/s</span>
+                            </div>
+                            <div class="performance-item">
+                                <span class="performance-label">Reliability</span>
+                                <div class="performance-bar">
+                                    <div class="performance-fill reliability-fill" style="width: 98%"></div>
+                                </div>
+                                <span class="performance-value">98%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="input-row">
+            <div class="input-container">
+                <div class="input-mode-indicator">
+                    <span class="mode-icon" id="mode-icon">🔗</span>
+                    <span class="mode-text" id="mode-text">P2P Mode</span>
+                </div>
+                <input type="text" id="command-input" placeholder="Enter P2P command, sync message, or AI query..." />
+                <div class="input-actions">
+                    <button class="action-btn-small" id="voice-input" title="Voice Input">🎤</button>
+                    <button class="action-btn-small" id="file-share" title="Share File">📎</button>
+                    <button class="action-btn-small" id="quick-sync" title="Quick Sync">🔄</button>
+                    <button class="send-btn" id="send-btn">Send</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Connection Modal -->
+    <div id="connection-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Connect to P2P Network</h3>
+                <button class="modal-close" id="close-connection-modal">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="connection-options">
+                    <div class="connection-option">
+                        <h4>Join by ID</h4>
+                        <input type="text" id="peer-id-input" class="modal-input" placeholder="Enter peer ID">
+                        <button class="modal-btn primary" id="connect-by-id">Connect</button>
+                    </div>
+                    <div class="connection-divider">OR</div>
+                    <div class="connection-option">
+                        <h4>Scan QR Code</h4>
+                        <div class="qr-scanner" id="qr-scanner">
+                            <div class="qr-placeholder">QR Scanner</div>
+                        </div>
+                        <button class="modal-btn secondary" id="start-camera">Start Camera</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Share Modal -->
+    <div id="share-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Share Connection</h3>
+                <button class="modal-close" id="close-share-modal">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="share-options">
+                    <div class="share-option">
+                        <h4>Connection ID</h4>
+                        <div class="id-container">
+                            <input type="text" id="my-peer-id" class="modal-input" readonly>
+                            <button class="copy-btn" id="copy-id">Copy</button>
+                        </div>
+                    </div>
+                    <div class="share-option">
+                        <h4>QR Code</h4>
+                        <div class="qr-code" id="qr-code">
+                            <canvas id="qr-canvas"></canvas>
+                        </div>
+                    </div>
+                    <div class="share-option">
+                        <h4>Quick Actions</h4>
+                        <div class="quick-share-buttons">
+                            <button class="modal-btn secondary" id="share-link">Share Link</button>
+                            <button class="modal-btn secondary" id="share-email">Email</button>
+                            <button class="modal-btn secondary" id="share-sms">SMS</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="enhanced-p2p-terminal.js"></script>
+</body>
+</html>

@@ -1,3 +1,4 @@
+# beyondBINARY quantum-prefixed | uvspeed | {+1, 1, -1, +0, 0, -0, +n, n, -n}
 [project]
 name = "uvspeed-quantum"
 version = "1.0.0" 

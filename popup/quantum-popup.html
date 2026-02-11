@@ -1,0 +1,207 @@
+<!-- beyondBINARY quantum-prefixed | uvspeed | {+1, 1, -1, +0, 0, -0, +n, n, -n} -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantum Fox Development</title>
+    <style>
+        body {
+            width: 350px;
+            height: 500px;
+            margin: 0;
+            font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: #ffffff;
+            overflow: hidden;
+        }
+        
+        .header {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .title {
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0;
+            background: linear-gradient(45deg, #64b5f6, #81c784, #ffb74d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .subtitle {
+            font-size: 12px;
+            margin: 5px 0 0 0;
+            opacity: 0.8;
+        }
+        
+        .content {
+            padding: 20px;
+        }
+        
+        .launch-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .launch-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 12px 8px;
+            color: white;
+            text-decoration: none;
+            text-align: center;
+            font-size: 11px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .launch-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+        
+        .launch-icon {
+            font-size: 20px;
+        }
+        
+        .version-selector {
+            margin-bottom: 15px;
+        }
+        
+        .version-label {
+            font-size: 12px;
+            margin-bottom: 8px;
+            opacity: 0.9;
+        }
+        
+        .version-buttons {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .version-btn {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            padding: 8px 4px;
+            color: white;
+            font-size: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .version-btn.active {
+            background: rgba(100, 181, 246, 0.3);
+            border-color: #64b5f6;
+        }
+        
+        .version-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .status {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            padding: 10px;
+            font-size: 11px;
+            margin-top: 15px;
+        }
+        
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+        
+        .status-indicator {
+            font-size: 10px;
+        }
+        
+        .indicator-online { color: #4caf50; }
+        .indicator-offline { color: #f44336; }
+        .indicator-pending { color: #ff9800; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1 class="title">Quantum Fox</h1>
+        <p class="subtitle">AI Development Environment</p>
+    </div>
+    
+    <div class="content">
+        <div class="version-selector">
+            <div class="version-label">Complexity Level:</div>
+            <div class="version-buttons">
+                <button class="version-btn active" data-version="v1">Core</button>
+                <button class="version-btn" data-version="v2">AI</button>
+                <button class="version-btn" data-version="v3">Full</button>
+            </div>
+        </div>
+        
+        <div class="launch-grid">
+            <button class="launch-btn" id="launch-terminal">
+                <span class="launch-icon">🌌</span>
+                <span>Quantum Terminal</span>
+            </button>
+            
+            <button class="launch-btn" id="launch-web">
+                <span class="launch-icon">🌐</span>
+                <span>Web Interface</span>
+            </button>
+            
+            <button class="launch-btn" id="launch-viewer">
+                <span class="launch-icon">🔍</span>
+                <span>3D Code Viewer</span>
+            </button>
+            
+            <button class="launch-btn" id="launch-chat">
+                <span class="launch-icon">💬</span>
+                <span>AI Chat</span>
+            </button>
+            
+            <button class="launch-btn" id="launch-converter">
+                <span class="launch-icon">🔄</span>
+                <span>Code Converter</span>
+            </button>
+            
+            <button class="launch-btn" id="launch-status">
+                <span class="launch-icon">⚙️</span>
+                <span>System Status</span>
+            </button>
+        </div>
+        
+        <div class="status">
+            <div class="status-item">
+                <span>Python Environment:</span>
+                <span class="status-indicator indicator-online" id="python-status">●</span>
+            </div>
+            <div class="status-item">
+                <span>UV Package Manager:</span>
+                <span class="status-indicator indicator-pending" id="uv-status">●</span>
+            </div>
+            <div class="status-item">
+                <span>OpenCode AI:</span>
+                <span class="status-indicator indicator-offline" id="ai-status">●</span>
+            </div>
+            <div class="status-item">
+                <span>Quantum Position:</span>
+                <span style="font-family: monospace;">[0,0,0]</span>
+            </div>
+        </div>
+    </div>
+    
+    <script src="quantum-popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,1072 @@
+<!-- beyondBINARY quantum-prefixed | uvspeed | {+1, 1, -1, +0, 0, -0, +n, n, -n} -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UV-Speed Quantum Terminal - Desktop + VR/XR Ready</title>
+    <link rel="stylesheet" href="../../cursor-theme.css">
+    <style>
+        /* Terminal-specific overrides */
+        .terminal-grid {
+            display: grid;
+            grid-template-columns: 280px 1fr 320px;
+            gap: 0;
+            height: calc(100vh - 64px);
+        }
+
+        .left-panel {
+            background: var(--cursor-bg-secondary);
+            border-right: 1px solid var(--cursor-border);
+            overflow-y: auto;
+        }
+
+        .center-terminal {
+            background: var(--cursor-bg);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .right-panel {
+            background: var(--cursor-bg-secondary);
+            border-left: 1px solid var(--cursor-border);
+            overflow-y: auto;
+        }
+
+        .terminal-output {
+            flex: 1;
+            padding: var(--cursor-space-md);
+            font-family: var(--cursor-font-mono);
+            font-size: 0.875rem;
+            line-height: 1.6;
+            overflow-y: auto;
+            background: var(--cursor-bg);
+            color: var(--cursor-text) !important;
+        }
+
+        .terminal-input-area {
+            padding: var(--cursor-space-md);
+            background: var(--cursor-bg-secondary);
+            border-top: 1px solid var(--cursor-border);
+            overflow: hidden;
+        }
+
+        .terminal-prompt {
+            display: flex;
+            align-items: center;
+            gap: var(--cursor-space-sm);
+            margin-bottom: var(--cursor-space-sm);
+            overflow: hidden;
+        }
+
+        .prompt-symbol {
+            color: var(--cursor-accent) !important;
+            font-weight: bold;
+            font-family: var(--cursor-font-mono);
+            flex-shrink: 0;
+            min-width: 20px;
+        }
+        }
+
+        .terminal-input {
+            flex: 1;
+            background: var(--cursor-bg-tertiary) !important;
+            border: 1px solid var(--cursor-border) !important;
+            border-radius: var(--cursor-radius-md);
+            padding: var(--cursor-space-sm) var(--cursor-space-md);
+            color: var(--cursor-text) !important;
+            font-family: var(--cursor-font-mono);
+            font-size: 0.875rem;
+        }
+
+        .terminal-input:focus {
+            border-color: var(--cursor-accent) !important;
+            outline: none;
+        }
+
+        .terminal-input::placeholder {
+            color: var(--cursor-text-muted) !important;
+        }
+
+        /* Additional fixes for electron-specific issues */
+        * {
+            color: inherit !important;
+            box-sizing: border-box;
+        }
+        
+        /* Fix all potential overflow and black text issues */
+        .terminal-output,
+        .terminal-output *,
+        .terminal-input-area,
+        .terminal-input-area *,
+        input,
+        input *,
+        pre,
+        code,
+        .code,
+        span,
+        div {
+            color: var(--cursor-text) !important;
+            overflow: visible;
+            text-overflow: ellipsis;
+        }
+        
+        /* Ensure no black text anywhere */
+        input[type="text"] {
+            background: var(--cursor-bg-tertiary) !important;
+            color: var(--cursor-text) !important;
+            border: 1px solid var(--cursor-border) !important;
+            font-family: var(--cursor-font-mono) !important;
+        }
+        
+        input[type="text"]:focus {
+            color: var(--cursor-text) !important;
+            background: var(--cursor-bg-tertiary) !important;
+        }
+        
+        input[type="text"]::placeholder {
+            color: var(--cursor-text-muted) !important;
+            opacity: 0.7;
+        }
+        
+        /* Fix terminal content overflow */
+        .terminal-output {
+            overflow-x: hidden;
+            overflow-y: auto;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+        }
+        
+        .terminal-output div {
+            color: var(--cursor-text) !important;
+            margin-bottom: 0.25rem;
+        }
+        
+        /* Fix any code blocks */
+        pre, code, .code {
+            background: var(--cursor-bg-tertiary) !important;
+            color: var(--cursor-text) !important;
+            padding: 0.25rem 0.5rem;
+            border-radius: var(--cursor-radius-sm);
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        
+        .app-container,
+        .terminal-grid,
+        .left-panel,
+        .center-terminal,
+        .right-panel {
+            color: var(--cursor-text) !important;
+        }
+        
+        .file-item,
+        .file-item span {
+            color: var(--cursor-text-secondary) !important;
+        }
+        
+        .file-item:hover {
+            color: var(--cursor-text) !important;
+        }
+        
+        .section-title {
+            color: var(--cursor-text-muted) !important;
+        }
+        
+        .quantum-btn {
+            color: var(--cursor-text-secondary) !important;
+        }
+        
+        .quantum-btn:hover {
+            color: var(--cursor-text) !important;
+        }
+        
+        .quantum-btn.active {
+            background: var(--cursor-accent) !important;
+            color: #ffffff !important;
+            border-color: var(--cursor-accent) !important;
+        }
+        .quantum-coordinates {
+            font-family: var(--cursor-font-mono);
+            font-size: 0.75rem;
+            color: var(--cursor-accent) !important;
+            background: var(--cursor-bg-tertiary);
+            padding: var(--cursor-space-xs) var(--cursor-space-sm);
+            border-radius: var(--cursor-radius-sm);
+            border: 1px solid var(--cursor-border);
+        }
+
+        /* Panel sections */
+        .panel-section {
+            padding: var(--cursor-space-md);
+            border-bottom: 1px solid var(--cursor-border-muted);
+        }
+
+        .section-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--cursor-text-muted);
+            letter-spacing: 0.5px;
+            margin-bottom: var(--cursor-space-md);
+        }
+
+        .file-tree {
+            font-family: var(--cursor-font-mono);
+            font-size: 0.8125rem;
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            gap: var(--cursor-space-sm);
+            padding: 2px var(--cursor-space-xs);
+            border-radius: var(--cursor-radius-sm);
+            cursor: pointer;
+            transition: background 0.1s ease;
+        }
+
+        .file-item:hover {
+            background: var(--cursor-bg-hover);
+        }
+
+        .file-icon {
+            width: 16px;
+            text-align: center;
+        }
+
+        /* WebSocket status */
+        .websocket-status {
+            display: flex;
+            align-items: center;
+            gap: var(--cursor-space-xs);
+            font-size: 0.75rem;
+            color: var(--cursor-text-muted);
+        }
+
+        .connection-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--cursor-success);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 1200px) {
+            .terminal-grid {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto 1fr auto;
+            }
+            
+            .left-panel, .right-panel {
+                order: 3;
+                max-height: 200px;
+                border: none;
+                border-top: 1px solid var(--cursor-border);
+            }
+            
+            .center-terminal {
+                order: 2;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="title">
+                UV-Speed Quantum Terminal
+                <span class="quantum-coordinates" id="quantum-position">[0, 0, 0]</span>
+            </div>
+            
+            <div style="display: flex; align-items: center; gap: var(--cursor-space-md);">
+                <div class="websocket-status">
+                    <div class="connection-dot"></div>
+                    <span>Connected</span>
+                </div>
+                
+                <div style="display: flex; gap: var(--cursor-space-sm);">
+                    <button class="btn btn--sm" id="settings-btn">⚙️ Settings</button>
+                    <button class="btn btn--primary btn--sm" id="ai-assist-btn">🤖 AI Assist</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main content grid -->
+        <div class="terminal-grid">
+            <!-- Left Panel: Navigation & File Explorer -->
+            <div class="left-panel">
+                <div class="panel-section">
+                    <h3 class="section-title">Quantum Navigation</h3>
+                    <div class="quantum-nav">
+                        <button class="quantum-btn" data-direction="+1">+1</button>
+                        <button class="quantum-btn" data-direction="0">0</button>
+                        <button class="quantum-btn" data-direction="-1">-1</button>
+                        <button class="quantum-btn" data-direction="+n">+n</button>
+                        <button class="quantum-btn active" data-direction="⚛️">⚛️</button>
+                        <button class="quantum-btn" data-direction="-n">-n</button>
+                        <button class="quantum-btn" data-direction="+0">+0</button>
+                        <button class="quantum-btn" data-direction="-0">-0</button>
+                        <button class="quantum-btn" data-direction="+2">+2</button>
+                    </div>
+                </div>
+
+                <div class="panel-section">
+                    <h3 class="section-title">File Explorer</h3>
+                    <div class="file-tree" id="file-explorer">
+                        <div class="file-item">
+                            <span class="file-icon">📁</span>
+                            <span>electron-app</span>
+                        </div>
+                        <div class="file-item" style="margin-left: var(--cursor-space-md);">
+                            <span class="file-icon">📄</span>
+                            <span>main.js</span>
+                        </div>
+                        <div class="file-item" style="margin-left: var(--cursor-space-md);">
+                            <span class="file-icon">📁</span>
+                            <span>src</span>
+                        </div>
+                        <div class="file-item" style="margin-left: var(--cursor-space-xl);">
+                            <span class="file-icon">🌐</span>
+                            <span>index.html</span>
+                        </div>
+                        <div class="file-item" style="margin-left: var(--cursor-space-xl);">
+                            <span class="file-icon">⚡</span>
+                            <span>renderer.js</span>
+                        </div>
+                        <div class="file-item">
+                            <span class="file-icon">🌌</span>
+                            <span>quantum_prototype.py</span>
+                        </div>
+                        <div class="file-item">
+                            <span class="file-icon">📦</span>
+                            <span>package.json</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel-section">
+                    <h3 class="section-title">Quick Actions</h3>
+                    <div style="display: flex; flex-direction: column; gap: var(--cursor-space-sm);">
+                        <button class="btn btn--sm">🔍 Semantic Search</button>
+                        <button class="btn btn--sm">🔄 Sync Changes</button>
+                        <button class="btn btn--sm">🚀 Deploy</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Center: Terminal -->
+            <div class="center-terminal">
+                <div class="terminal-header">
+                    <span class="terminal-title">uvspeed@quantum:~</span>
+                    <div style="display: flex; gap: var(--cursor-space-sm);">
+                        <span class="status-indicator status-indicator--success">Running</span>
+                        <button class="btn btn--sm">Split Terminal</button>
+                    </div>
+                </div>
+                
+                <div class="terminal-output" id="terminal-output">
+                    <div style="color: var(--cursor-text-secondary) !important;">
+                        <div style="color: var(--cursor-text) !important;">🚀 UV-Speed Quantum Terminal v1.0.0</div>
+                        <div style="color: var(--cursor-text) !important;">🌌 Quantum environment initialized</div>
+                        <div style="color: var(--cursor-text) !important;">📡 WebSocket server: http://localhost:3847</div>
+                        <div style="color: var(--cursor-text) !important;">🎯 Position: [0, 0, 0] | Ready for quantum navigation</div>
+                        <div></div>
+                        <div style="color: var(--cursor-accent) !important;">uvspeed@quantum:~$</div>
+                    </div>
+                </div>
+
+                <div class="terminal-input-area">
+                    <div class="terminal-prompt">
+                        <span class="prompt-symbol">$</span>
+                        <input type="text" class="terminal-input" placeholder="Enter command..." id="command-input">
+                        <button class="btn btn--primary btn--sm" id="execute-btn">Execute</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel: AI & Status -->
+            <div class="right-panel">
+                <div class="panel-section">
+                    <h3 class="section-title">AI Assistant</h3>
+                    <div class="card">
+                        <div style="margin-bottom: var(--cursor-space-md);">
+                            <div style="font-size: 0.875rem; margin-bottom: var(--cursor-space-sm);">
+                                Ready to help with quantum development
+                            </div>
+                            <div style="font-size: 0.75rem; color: var(--cursor-text-muted);">
+                                Ask me about code, quantum navigation, or deployment
+                            </div>
+                        </div>
+                        <input type="text" class="input" placeholder="Ask AI..." style="margin-bottom: var(--cursor-space-sm);">
+                        <button class="btn btn--primary btn--sm" style="width: 100%;">Send</button>
+                    </div>
+                </div>
+
+                <div class="panel-section">
+                    <h3 class="section-title">System Status</h3>
+                    <div style="display: flex; flex-direction: column; gap: var(--cursor-space-sm);">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-size: 0.875rem;">Desktop App</span>
+                            <span class="status-indicator status-indicator--success">Active</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-size: 0.875rem;">Firefox Extension</span>
+                            <span class="status-indicator status-indicator--warning">Ready</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-size: 0.875rem;">VR/XR PWA</span>
+                            <span class="status-indicator status-indicator--success">Port 8080</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-size: 0.875rem;">Quantum Tools</span>
+                            <span class="status-indicator status-indicator--success">Ready</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel-section">
+                    <h3 class="section-title">Recent Activity</h3>
+                    <div style="font-size: 0.8125rem; color: var(--cursor-text-secondary);">
+                        <div style="margin-bottom: var(--cursor-space-xs);">
+                            <span style="color: var(--cursor-accent);">12:34</span> Quantum navigation: +1
+                        </div>
+                        <div style="margin-bottom: var(--cursor-space-xs);">
+                            <span style="color: var(--cursor-accent);">12:33</span> WebSocket connected
+                        </div>
+                        <div style="margin-bottom: var(--cursor-space-xs);">
+                            <span style="color: var(--cursor-accent);">12:32</span> Desktop app started
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Quantum navigation
+        document.querySelectorAll('.quantum-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.quantum-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                
+                const direction = btn.dataset.direction;
+                updateQuantumPosition(direction);
+            });
+        });
+
+        function updateQuantumPosition(direction) {
+            const positionEl = document.getElementById('quantum-position');
+            // Simple position simulation
+            const currentPos = positionEl.textContent.match(/\[(.*)\]/)[1].split(', ').map(Number);
+            
+            switch(direction) {
+                case '+1':
+                    currentPos[1] += 1;
+                    break;
+                case '-1':
+                    currentPos[1] -= 1;
+                    break;
+                case '+n':
+                    currentPos[0] += 1;
+                    break;
+                case '-n':
+                    currentPos[0] -= 1;
+                    break;
+                case '+2':
+                    currentPos[2] += 1;
+                    break;
+            }
+            
+            positionEl.textContent = `[${currentPos.join(', ')}]`;
+            
+            // Add to activity log
+            const activity = document.querySelector('.panel-section:last-child > div');
+            const time = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
+            const newActivity = document.createElement('div');
+            newActivity.style.marginBottom = 'var(--cursor-space-xs)';
+            newActivity.innerHTML = `<span style="color: var(--cursor-accent);">${time}</span> Quantum navigation: ${direction}`;
+            activity.insertBefore(newActivity, activity.firstChild);
+            
+            // Keep only last 5 activities
+            const activities = activity.querySelectorAll('div');
+            if (activities.length > 5) {
+                activity.removeChild(activities[activities.length - 1]);
+            }
+        }
+
+        // Terminal input
+        document.getElementById('command-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                executeCommand();
+            }
+        });
+
+        document.getElementById('execute-btn').addEventListener('click', executeCommand);
+
+        function executeCommand() {
+            const input = document.getElementById('command-input');
+            const output = document.getElementById('terminal-output');
+            const command = input.value.trim();
+            
+            if (command) {
+                // Add command to output
+                const commandDiv = document.createElement('div');
+                commandDiv.innerHTML = `<span style="color: var(--cursor-accent);">uvspeed@quantum:~$</span> ${command}`;
+                output.appendChild(commandDiv);
+                
+                // Simulate command response
+                const responseDiv = document.createElement('div');
+                responseDiv.style.color = 'var(--cursor-text-secondary)';
+                responseDiv.style.marginBottom = 'var(--cursor-space-sm)';
+                
+                if (command.startsWith('q ')) {
+                    responseDiv.textContent = `🔍 Semantic search: ${command.substring(2)}`;
+                } else if (command === 'qstatus') {
+                    responseDiv.innerHTML = '🌌 Quantum environment healthy<br>📡 WebSocket: Connected<br>🎯 Position tracking: Active';
+                } else if (command.startsWith('uv ')) {
+                    responseDiv.textContent = `🚀 UV executing: ${command.substring(3)}`;
+                } else {
+                    responseDiv.textContent = `Command executed: ${command}`;
+                }
+                
+                output.appendChild(responseDiv);
+                output.scrollTop = output.scrollHeight;
+                
+                input.value = '';
+            }
+        }
+
+        // File explorer
+        document.querySelectorAll('.file-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const fileName = item.querySelector('span:last-child').textContent;
+                const output = document.getElementById('terminal-output');
+                const openDiv = document.createElement('div');
+                openDiv.style.color = 'var(--cursor-text-secondary)';
+                openDiv.style.marginBottom = 'var(--cursor-space-sm)';
+                openDiv.textContent = `📂 Opening: ${fileName}`;
+                output.appendChild(openDiv);
+                output.scrollTop = output.scrollHeight;
+            });
+        });
+
+        // Simulate periodic status updates
+        setInterval(() => {
+            const time = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
+            console.log(`${time} - System heartbeat`);
+        }, 30000);
+    </script>
+</body>
+</html>
+
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .header {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 12px 20px;
+            border-bottom: 1px solid rgba(100, 181, 246, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            backdrop-filter: blur(10px);
+            -webkit-app-region: drag;
+        }
+
+        .header * {
+            -webkit-app-region: no-drag;
+        }
+
+        .title {
+            font-size: 18px;
+            font-weight: 600;
+            background: linear-gradient(45deg, #64b5f6, #81c784, #ffb74d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-right: 20px;
+        }
+
+        .quantum-position {
+            font-family: monospace;
+            font-size: 14px;
+            background: rgba(100, 181, 246, 0.2);
+            padding: 4px 12px;
+            border-radius: 12px;
+            border: 1px solid rgba(100, 181, 246, 0.4);
+        }
+
+        .controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .version-selector {
+            display: flex;
+            gap: 5px;
+        }
+
+        .version-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 12px;
+        }
+
+        .version-btn.active {
+            background: rgba(100, 181, 246, 0.3);
+            border-color: #64b5f6;
+        }
+
+        .version-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .main-content {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 250px 1fr 300px;
+            gap: 1px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #64b5f6;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .nav-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .nav-btn {
+            background: rgba(100, 181, 246, 0.7);
+            border: none;
+            color: white;
+            padding: 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-size: 12px;
+        }
+
+        .nav-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(100, 181, 246, 0.4);
+        }
+
+        .nav-btn:active {
+            transform: scale(0.95);
+        }
+
+        .nav-btn.lines { background: rgba(100, 181, 246, 0.7); }
+        .nav-btn.deps { background: rgba(129, 199, 132, 0.7); }
+        .nav-btn.complexity { background: rgba(255, 183, 77, 0.7); }
+        .nav-btn.negative { background: rgba(244, 67, 54, 0.7); }
+
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .action-btn {
+            background: linear-gradient(135deg, rgba(100, 181, 246, 0.3), rgba(129, 199, 132, 0.3));
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 12px;
+            text-align: left;
+        }
+
+        .action-btn:hover {
+            background: linear-gradient(135deg, rgba(100, 181, 246, 0.5), rgba(129, 199, 132, 0.5));
+            transform: translateY(-2px);
+        }
+
+        .terminal-area {
+            background: rgba(0, 0, 0, 0.8);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .terminal-tabs {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 8px 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .tab {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px 6px 0 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 12px;
+        }
+
+        .tab.active {
+            background: rgba(100, 181, 246, 0.3);
+        }
+
+        .tab:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .new-tab-btn {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 6px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: auto;
+            transition: all 0.3s ease;
+        }
+
+        .new-tab-btn:hover {
+            background: rgba(100, 181, 246, 0.3);
+        }
+
+        .terminal-content {
+            flex: 1;
+            padding: 20px;
+            font-family: 'SF Mono', 'Monaco', monospace;
+            background: radial-gradient(ellipse at center, rgba(100, 181, 246, 0.05) 0%, transparent 70%);
+            position: relative;
+            overflow: auto;
+        }
+
+        .welcome-screen {
+            text-align: center;
+            padding: 60px 40px;
+        }
+
+        .logo {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        .welcome-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #64b5f6, #81c784, #ffb74d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .welcome-subtitle {
+            font-size: 14px;
+            opacity: 0.8;
+            margin-bottom: 30px;
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .quick-action {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .quick-action:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .info-panel {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            overflow-y: auto;
+        }
+
+        .status-grid {
+            display: grid;
+            gap: 10px;
+        }
+
+        .status-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 12px;
+            border-radius: 6px;
+            border-left: 3px solid #64b5f6;
+        }
+
+        .status-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.7;
+            margin-bottom: 5px;
+        }
+
+        .status-value {
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .ai-services {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .ai-service {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #4caf50;
+        }
+
+        .status-indicator.offline {
+            background: #f44336;
+        }
+
+        .status-indicator.pending {
+            background: #ff9800;
+        }
+
+        .quantum-axes {
+            font-size: 10px;
+            opacity: 0.6;
+            margin-top: 10px;
+            line-height: 1.4;
+        }
+
+        /* Animations */
+        @keyframes quantumPulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.02); }
+        }
+
+        .quantum-position.active {
+            animation: quantumPulse 2s infinite;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .main-content {
+                grid-template-columns: 200px 1fr 250px;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto 1fr auto;
+            }
+            
+            .sidebar, .info-panel {
+                max-height: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="header">
+            <div style="display: flex; align-items: center;">
+                <div class="title">🌌 UV-Speed Quantum Terminal</div>
+                <div class="quantum-position" id="quantum-position">[0, 0, 0]</div>
+            </div>
+            
+            <div class="controls">
+                <div class="version-selector">
+                    <button class="version-btn" data-version="v1">v1-core</button>
+                    <button class="version-btn active" data-version="v2">v2-terminal</button>
+                    <button class="version-btn" data-version="v3">v3-complete</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <!-- Left Sidebar - Navigation & Actions -->
+            <div class="sidebar">
+                <div>
+                    <div class="section-title">🌌 Quantum Navigation</div>
+                    <div class="nav-grid">
+                        <button class="nav-btn lines" data-direction="+1">+1</button>
+                        <button class="nav-btn deps" data-direction="+0">+0</button>
+                        <button class="nav-btn complexity" data-direction="+n">+n</button>
+                        <button class="nav-btn lines negative" data-direction="-1">-1</button>
+                        <button class="nav-btn deps negative" data-direction="-0">-0</button>
+                        <button class="nav-btn complexity negative" data-direction="-n">-n</button>
+                    </div>
+                    <div class="quantum-axes">
+                        X = Dependencies<br>
+                        Y = Lines<br>
+                        Z = Complexity
+                    </div>
+                </div>
+
+                <div>
+                    <div class="section-title">🚀 Quick Actions</div>
+                    <div class="action-buttons">
+                        <button class="action-btn" data-action="new-terminal">
+                            🌌 New Quantum Terminal
+                        </button>
+                        <button class="action-btn" data-action="ai-terminal">
+                            🤖 New AI Terminal
+                        </button>
+                        <button class="action-btn" data-action="web-interface">
+                            🌐 Open Web Interface
+                        </button>
+                        <button class="action-btn" data-action="code-viewer">
+                            🔍 3D Code Viewer
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Terminal Area -->
+            <div class="terminal-area">
+                <div class="terminal-tabs">
+                    <button class="tab active" data-tab="welcome">Welcome</button>
+                    <button class="new-tab-btn" id="new-tab">+ New</button>
+                </div>
+                
+                <div class="terminal-content" id="terminal-content">
+                    <div class="welcome-screen" id="welcome-screen">
+                        <div class="logo">🌌</div>
+                        <div class="welcome-title">UV-Speed Quantum Terminal</div>
+                        <div class="welcome-subtitle">
+                            Progressive quantum development environment with AI integration
+                        </div>
+                        
+                        <div class="quick-actions">
+                            <div class="quick-action" data-action="launch-v1">
+                                <div style="font-size: 20px; margin-bottom: 5px;">🟢</div>
+                                <div style="font-weight: 600;">v1-core</div>
+                                <div style="font-size: 11px; opacity: 0.8;">Basic UV + Quantum</div>
+                            </div>
+                            <div class="quick-action" data-action="launch-v2">
+                                <div style="font-size: 20px; margin-bottom: 5px;">🔵</div>
+                                <div style="font-weight: 600;">v2-terminal</div>
+                                <div style="font-size: 11px; opacity: 0.8;">+ AI Integration</div>
+                            </div>
+                            <div class="quick-action" data-action="launch-v3">
+                                <div style="font-size: 20px; margin-bottom: 5px;">🟣</div>
+                                <div style="font-weight: 600;">v3-complete</div>
+                                <div style="font-size: 11px; opacity: 0.8;">+ Full Copilot</div>
+                            </div>
+                            <div class="quick-action" data-action="prototype">
+                                <div style="font-size: 20px; margin-bottom: 5px;">🛠️</div>
+                                <div style="font-weight: 600;">Prototype</div>
+                                <div style="font-size: 11px; opacity: 0.8;">Standalone Terminal</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel - Info & Status -->
+            <div class="info-panel">
+                <div>
+                    <div class="section-title">⚙️ System Status</div>
+                    <div class="status-grid">
+                        <div class="status-item">
+                            <div class="status-label">Quantum Position</div>
+                            <div class="status-value" id="status-position">[0, 0, 0]</div>
+                        </div>
+                        <div class="status-item">
+                            <div class="status-label">Active Terminals</div>
+                            <div class="status-value" id="status-terminals">0</div>
+                        </div>
+                        <div class="status-item">
+                            <div class="status-label">Server</div>
+                            <div class="status-value" id="status-server">Starting...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="section-title">🤖 AI Services</div>
+                    <div class="ai-services">
+                        <div class="ai-service">
+                            <span>OpenCode</span>
+                            <div class="status-indicator offline" id="ai-opencode"></div>
+                        </div>
+                        <div class="ai-service">
+                            <span>GitHub Copilot</span>
+                            <div class="status-indicator offline" id="ai-copilot"></div>
+                        </div>
+                        <div class="ai-service">
+                            <span>Quantum Fallback</span>
+                            <div class="status-indicator" id="ai-quantum"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="renderer.js"></script>
+</body>
+</html>

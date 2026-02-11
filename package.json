@@ -1,0 +1,94 @@
+{
+  "name": "uvspeed-quantum-terminal",
+  "version": "1.0.0",
+  "description": "UV-Speed Quantum Terminal - Electron Desktop App with AI Integration",
+  "main": "electron-app/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev",
+    "build": "electron-builder",
+    "build-mac": "electron-builder --mac",
+    "build-linux": "electron-builder --linux",
+    "build-win": "electron-builder --win",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder --publish=never"
+  },
+  "keywords": [
+    "quantum",
+    "uvspeed",
+    "ai",
+    "terminal",
+    "development",
+    "electron"
+  ],
+  "author": "UV-Speed Quantum Development Team",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^40.3.0",
+    "electron-builder": "^24.0.0"
+  },
+  "dependencies": {
+    "express": "^4.18.0",
+    "node-pty": "^1.0.0",
+    "ws": "^8.14.0",
+    "xterm": "^5.3.0",
+    "xterm-addon-fit": "^0.8.0"
+  },
+  "build": {
+    "appId": "com.uvspeed.quantum-terminal",
+    "productName": "UV-Speed Quantum Terminal",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "electron-app/**/*",
+      "quantum/**/*",
+      "web/**/*",
+      "shared/**/*",
+      "*.py",
+      "*.sh"
+    ],
+    "mac": {
+      "icon": "electron-app/assets/icon.icns",
+      "category": "public.app-category.developer-tools",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ]
+    },
+    "linux": {
+      "icon": "electron-app/assets/icon.png",
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "deb",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ]
+    },
+    "win": {
+      "icon": "electron-app/assets/icon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    }
+  }
+}

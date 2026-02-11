@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# beyondBINARY quantum-prefixed | uvspeed | {+1, 1, -1, +0, 0, -0, +n, n, -n}
 # UV-Speed BSD Installation Script
 # Compatible with FreeBSD, OpenBSD, NetBSD
 

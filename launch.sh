@@ -1,23 +1,73 @@
 #!/usr/bin/env bash
-# UV-Speed Quantum Terminal - Portable AI Development Environment
-# BSD/Git compatible launcher with integrated Copilot development
+# beyondBINARY quantum-prefixed | uvspeed | {+1, 1, -1, +0, 0, -0, +n, n, -n}
+# UV-Speed Quantum - Primary Launcher (Enhanced with Browser + VR/XR support)
+# Auto-detects and launches best available platform
 
-set -e
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
 
-UVSPEED_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-export UVSPEED_HOME="$UVSPEED_ROOT"
+# Quick detection and launch for enhanced uvspeed
+if [ -f "launch-enhanced.sh" ]; then
+    ./launch-enhanced.sh
+else
+    # Fallback to original launcher
+    echo "🚀 UV-Speed Quantum - Quick Launch"
+    echo "=================================="
+    
+    # Try platforms in priority order
+    if [ -f "electron-app/main.js" ] && command -v npm >/dev/null 2>&1; then
+        echo "🖥️  Starting Desktop App..."
+        npm start
+    elif [ -f "quantum_prototype.py" ]; then
+        echo "🌌 Starting Quantum Prototype..."
+        python3 quantum_prototype.py
+    elif [ -f "launch-progressive.sh" ]; then
+        echo "📊 Starting Progressive Terminal..."
+        ./launch-progressive.sh v2 quantum
+    else
+        echo "❌ No compatible launcher found"
+        exit 1
+    fi
+fi
 
-# Colors
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-PURPLE='\033[0;35m'
-CYAN='\033[0;36m'
-NC='\033[0m'
+echo -e "${PURPLE}🌌 UV-Speed Quantum Development Environment${NC}"
+echo -e "${CYAN}Progressive quantum development with AI integration${NC}"
+echo "=================================================="
+echo ""
 
-echo -e "${CYAN}🌌 UV-Speed Quantum Terminal${NC}"
-echo -e "${BLUE}Portable AI Development Environment${NC}"
+# Check Node.js for Electron
+if command -v node >/dev/null 2>&1 && command -v npm >/dev/null 2>&1; then
+    echo -e "${GREEN}✅ Node.js detected${NC}"
+    
+    # Check if dependencies are installed
+    if [ ! -d "node_modules" ]; then
+        echo -e "${YELLOW}📦 Installing Electron dependencies...${NC}"
+        npm install
+    fi
+    
+    echo -e "${BLUE}🖥️  Launching Electron Desktop App...${NC}"
+    echo ""
+    echo -e "${CYAN}Desktop Features:${NC}"
+    echo "  • 🌌 Native quantum terminal interface"
+    echo "  • ⌨️  Keyboard shortcuts (Cmd+Arrow keys)"
+    echo "  • 📊 Real-time system status"
+    echo "  • 🤖 Integrated AI services"
+    echo ""
+    
+    npm start
+    
+else
+    echo -e "${YELLOW}⚠️  Node.js not found - launching progressive terminal${NC}"
+    echo ""
+    echo -e "${CYAN}Alternative launch options:${NC}"
+    echo "  ./launch-progressive.sh     # Progressive terminal"
+    echo "  python3 quantum_prototype.py # Standalone prototype"
+    echo "  ./launch-web-gui.sh         # Web interfaces"
+    echo ""
+    
+    # Fallback to progressive terminal
+    ./launch-progressive.sh
+fi
 echo "======================================"
 echo ""
 

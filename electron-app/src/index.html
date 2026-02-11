@@ -1,0 +1,1541 @@
+<!-- beyondBINARY quantum-prefixed | uvspeed | {+1, 1, -1, +0, 0, -0, +n, n, -n} -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UV-Speed Quantum Terminal - Desktop + VR/XR Ready</title>
+    <link rel="stylesheet" href="../../cursor-theme.css">
+    <style>
+        /* Terminal-specific overrides */
+        .terminal-grid {
+            display: grid;
+            grid-template-columns: 260px 1fr 280px;
+            gap: 0;
+            height: calc(100vh - 64px);
+            overflow: hidden;
+        }
+
+        .left-panel {
+            background: var(--cursor-bg-secondary);
+            border-right: 1px solid var(--cursor-border);
+            overflow-y: auto;
+            overflow-x: hidden;
+            min-width: 240px;
+            max-width: 280px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .center-terminal {
+            background: var(--cursor-bg);
+            display: flex;
+            flex-direction: column;
+            min-width: 0; /* Allow shrinking */
+            overflow: hidden;
+        }
+
+        .right-panel {
+            background: var(--cursor-bg-secondary);
+            border-left: 1px solid var(--cursor-border);
+            overflow-y: auto;
+            overflow-x: hidden;
+            min-width: 260px;
+            max-width: 300px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .terminal-output {
+            flex: 1;
+            padding: var(--cursor-space-md);
+            font-family: var(--cursor-font-mono);
+            font-size: 0.875rem;
+            line-height: 1.6;
+            overflow-y: auto;
+            background: var(--cursor-bg);
+            color: var(--cursor-text) !important;
+        }
+
+        .terminal-input-area {
+            padding: var(--cursor-space-md);
+            background: var(--cursor-bg-secondary);
+            border-top: 1px solid var(--cursor-border);
+            overflow: hidden;
+        }
+
+        .terminal-prompt {
+            display: flex;
+            align-items: center;
+            gap: var(--cursor-space-sm);
+            margin-bottom: var(--cursor-space-sm);
+            overflow: hidden;
+        }
+
+        .prompt-symbol {
+            color: var(--cursor-accent) !important;
+            font-weight: bold;
+            font-family: var(--cursor-font-mono);
+            flex-shrink: 0;
+            min-width: 20px;
+        }
+        }
+
+        .terminal-input {
+            flex: 1;
+            background: var(--cursor-bg-tertiary) !important;
+            border: 1px solid var(--cursor-border) !important;
+            border-radius: var(--cursor-radius-md);
+            padding: var(--cursor-space-sm) var(--cursor-space-md);
+            color: var(--cursor-text) !important;
+            font-family: var(--cursor-font-mono);
+            font-size: 0.875rem;
+        }
+
+        .terminal-input:focus {
+            border-color: var(--cursor-accent) !important;
+            outline: none;
+        }
+
+        .terminal-input::placeholder {
+            color: var(--cursor-text-muted) !important;
+        }
+
+        /* Additional fixes for electron-specific issues */
+        * {
+            color: inherit !important;
+            box-sizing: border-box;
+        }
+        
+        /* Fix all potential overflow and black text issues */
+        .terminal-output,
+        .terminal-output *,
+        .terminal-input-area,
+        .terminal-input-area *,
+        input,
+        input *,
+        pre,
+        code,
+        .code,
+        span,
+        div {
+            color: var(--cursor-text) !important;
+            overflow: visible;
+            text-overflow: ellipsis;
+        }
+        
+        /* Ensure no black text anywhere */
+        input[type="text"] {
+            background: var(--cursor-bg-tertiary) !important;
+            color: var(--cursor-text) !important;
+            border: 1px solid var(--cursor-border) !important;
+            font-family: var(--cursor-font-mono) !important;
+        }
+        
+        input[type="text"]:focus {
+            color: var(--cursor-text) !important;
+            background: var(--cursor-bg-tertiary) !important;
+        }
+        
+        input[type="text"]::placeholder {
+            color: var(--cursor-text-muted) !important;
+            opacity: 0.7;
+        }
+        
+        /* Fix terminal content overflow */
+        .terminal-output {
+            overflow-x: hidden;
+            overflow-y: auto;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+        }
+        
+        .terminal-output div {
+            color: var(--cursor-text) !important;
+            margin-bottom: 0.25rem;
+        }
+        
+        /* Fix any code blocks */
+        pre, code, .code {
+            background: var(--cursor-bg-tertiary) !important;
+            color: var(--cursor-text) !important;
+            padding: 0.25rem 0.5rem;
+            border-radius: var(--cursor-radius-sm);
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        
+        .app-container,
+        .terminal-grid,
+        .left-panel,
+        .center-terminal,
+        .right-panel {
+            color: var(--cursor-text) !important;
+        }
+        
+        .file-item,
+        .file-item span {
+            color: var(--cursor-text-secondary) !important;
+        }
+        
+        .file-item:hover {
+            color: var(--cursor-text) !important;
+        }
+        
+        .section-title {
+            color: var(--cursor-text-muted) !important;
+        }
+        
+        .quantum-btn {
+            color: var(--cursor-text-secondary) !important;
+        }
+        
+        .quantum-btn:hover {
+            color: var(--cursor-text) !important;
+        }
+        
+        .quantum-btn.active {
+            background: var(--cursor-accent) !important;
+            color: #ffffff !important;
+            border-color: var(--cursor-accent) !important;
+        }
+        .quantum-coordinates {
+            font-family: var(--cursor-font-mono);
+            font-size: 0.75rem;
+            color: var(--cursor-accent) !important;
+            background: var(--cursor-bg-tertiary);
+            padding: var(--cursor-space-xs) var(--cursor-space-sm);
+            border-radius: var(--cursor-radius-sm);
+            border: 1px solid var(--cursor-border);
+        }
+
+        /* Panel sections */
+        .panel-section {
+            padding: var(--cursor-space-sm) var(--cursor-space-md);
+            border-bottom: 1px solid var(--cursor-border-muted);
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            flex-shrink: 0;
+        }
+
+        .panel-section:last-child {
+            border-bottom: none;
+            flex: 1;
+        }
+
+        .section-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--cursor-text-muted);
+            letter-spacing: 0.5px;
+            margin-bottom: var(--cursor-space-sm);
+            word-break: break-word;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .file-tree {
+            font-family: var(--cursor-font-mono);
+            font-size: 0.8125rem;
+            overflow: hidden;
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            gap: var(--cursor-space-xs);
+            padding: 2px var(--cursor-space-xs);
+            border-radius: var(--cursor-radius-sm);
+            cursor: pointer;
+            transition: background 0.1s ease;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+
+        .file-item:hover {
+            background: var(--cursor-bg-hover);
+        }
+
+        .file-item span {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .file-icon {
+            width: 16px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        /* WebSocket status */
+        .websocket-status {
+            display: flex;
+            align-items: center;
+            gap: var(--cursor-space-xs);
+            font-size: 0.75rem;
+            color: var(--cursor-text-muted);
+        }
+
+        .connection-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--cursor-success);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 1200px) {
+            .terminal-grid {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto 1fr auto;
+            }
+            
+            .left-panel, .right-panel {
+                order: 3;
+                max-height: 200px;
+                border: none;
+                border-top: 1px solid var(--cursor-border);
+            }
+            
+            .center-terminal {
+                order: 2;
+            }
+        }
+
+        /* AI Cell Styling */
+        .ai-cell {
+            animation: aiCellAppear 0.5s ease-out;
+        }
+
+        @keyframes aiCellAppear {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .ai-cell .cell-header {
+            background: linear-gradient(90deg, var(--cursor-bg-secondary), rgba(88, 166, 255, 0.1)) !important;
+            border-color: var(--cursor-accent) !important;
+        }
+
+        .ai-question {
+            background: var(--cursor-bg-tertiary) !important;
+            border-left: 3px solid var(--cursor-accent);
+        }
+
+        .ai-response-content {
+            background: var(--cursor-bg) !important;
+            border-left: 3px solid var(--cursor-accent);
+        }
+
+        .ai-response-content code {
+            background: var(--cursor-bg-tertiary);
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-family: var(--cursor-font-mono);
+        }
+
+        .ai-response-content pre {
+            background: var(--cursor-bg-secondary) !important;
+            border: 1px solid var(--cursor-border);
+            padding: var(--cursor-space-sm);
+            border-radius: var(--cursor-radius-sm);
+            overflow-x: auto;
+        }
+
+        /* Terminal Cell Styling */
+        .terminal-cell {
+            animation: terminalCellAppear 0.5s ease-out;
+        }
+
+        @keyframes terminalCellAppear {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .terminal-cell .cell-header {
+            background: linear-gradient(90deg, var(--cursor-bg-secondary), rgba(88, 255, 88, 0.1)) !important;
+            border-color: var(--cursor-success) !important;
+        }
+
+        .terminal-command {
+            background: var(--cursor-bg-tertiary) !important;
+            border-left: 3px solid var(--cursor-success);
+        }
+
+        .terminal-response-content {
+            background: var(--cursor-bg) !important;
+            border-left: 3px solid var(--cursor-success);
+        }
+
+        .terminal-response-content code {
+            background: var(--cursor-bg-tertiary);
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-family: var(--cursor-font-mono);
+            color: var(--cursor-accent);
+        }
+
+        /* Quantum Navigation Styling */
+        .quantum-nav-container {
+            overflow: hidden;
+            padding: var(--cursor-space-xs);
+        }
+
+        .quantum-nav {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--cursor-space-xs);
+            width: 100%;
+            max-width: 200px;
+            margin: 0 auto;
+        }
+
+        .quantum-btn {
+            background: var(--cursor-bg-tertiary) !important;
+            border: 1px solid var(--cursor-border) !important;
+            border-radius: var(--cursor-radius-sm) !important;
+            padding: var(--cursor-space-xs) !important;
+            color: var(--cursor-text-secondary) !important;
+            font-family: var(--cursor-font-mono) !important;
+            font-size: 0.75rem !important;
+            cursor: pointer !important;
+            transition: all 0.1s ease !important;
+            min-width: 32px !important;
+            height: 32px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+
+        .quantum-btn:hover {
+            background: var(--cursor-bg-hover) !important;
+            border-color: var(--cursor-accent) !important;
+            color: var(--cursor-text) !important;
+        }
+
+        .quantum-btn.active {
+            background: var(--cursor-accent) !important;
+            color: #ffffff !important;
+            border-color: var(--cursor-accent) !important;
+        }
+
+        .layer-btn {
+            flex: 1;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="title" style="flex: 1; display: flex; align-items: center; padding-left: 80px;">
+                UVspeed Notes
+                <span class="quantum-coordinates" id="quantum-position" style="margin-left: var(--cursor-space-md);">[0, 0, 0]</span>
+            </div>
+            
+            <div style="display: flex; align-items: center; gap: var(--cursor-space-md);">
+                <div class="websocket-status">
+                    <div class="connection-dot"></div>
+                    <span>Connected</span>
+                </div>
+                
+                <div style="display: flex; gap: var(--cursor-space-sm);">
+                    <button class="btn btn--sm" id="settings-btn">⚙️ Settings</button>
+                    <button class="btn btn--primary btn--sm" id="ai-assist-btn">🤖 AI Assist</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main content grid -->
+        <div class="terminal-grid">
+            <!-- Left Panel: Navigation & File Explorer -->
+            <div class="left-panel">
+                <div class="panel-section">
+                    <h3 class="section-title">Quantum Navigation</h3>
+                    <div style="font-size: 0.75rem; color: var(--cursor-text-muted); text-align: center; margin-bottom: var(--cursor-space-sm);" id="current-layer">Layer 0 - Base Layer</div>
+                    
+                    <div class="quantum-nav-container">
+                        <div class="quantum-nav">
+                            <!-- Dynamic content generated by JavaScript -->
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; justify-content: center; gap: var(--cursor-space-xs); margin-top: var(--cursor-space-sm);">
+                        <button class="btn btn--xs layer-btn" id="layer-up">⬆️ Up</button>
+                        <button class="btn btn--xs layer-btn" id="layer-down">⬇️ Down</button>
+                    </div>
+                </div>
+
+                <div class="panel-section">
+                    <h3 class="section-title" style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;" id="file-explorer-header">
+                        <span>File Explorer</span>
+                        <button class="btn btn--xs" id="file-explorer-toggle">➖</button>
+                    </h3>
+                    <div class="file-tree" id="file-explorer-content" style="font-family: var(--cursor-font-mono); font-size: 0.8125rem;">
+                        <div class="file-item">
+                            <span class="file-icon">📁</span>
+                            <span>electron-app</span>
+                        </div>
+                        <div class="file-item" style="margin-left: 12px;">
+                            <span class="file-icon">📄</span>
+                            <span>main.js</span>
+                        </div>
+                        <div class="file-item" style="margin-left: 12px;">
+                            <span class="file-icon">📁</span>
+                            <span>src</span>
+                        </div>
+                        <div class="file-item" style="margin-left: 24px;">
+                            <span class="file-icon">🌐</span>
+                            <span>index.html</span>
+                        </div>
+                        <div class="file-item" style="margin-left: 24px;">
+                            <span class="file-icon">⚡</span>
+                            <span>renderer.js</span>
+                        </div>
+                        <div class="file-item">
+                            <span class="file-icon">🌌</span>
+                            <span>quantum_notepad.py</span>
+                        </div>
+                        <div class="file-item">
+                            <span class="file-icon">📦</span>
+                            <span>package.json</span>
+                        </div>
+                        <div class="file-item">
+                            <span class="file-icon">🎨</span>
+                            <span>cursor-theme.css</span>
+                        </div>
+                        <div class="file-item">
+                            <span class="file-icon">📁</span>
+                            <span>web</span>
+                        </div>
+                        <div class="file-item" style="margin-left: 12px;">
+                            <span class="file-icon">🌐</span>
+                            <span>quantum-claude.html</span>
+                        </div>
+                        <div class="file-item" style="margin-left: 12px;">
+                            <span class="file-icon">🔗</span>
+                            <span>enhanced-p2p.html</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel-section">
+                    <h3 class="section-title">Quick Actions</h3>
+                    <div style="display: flex; flex-direction: column; gap: var(--cursor-space-sm);">
+                        <button class="btn btn--sm">🔍 Semantic Search</button>
+                        <button class="btn btn--sm">🔄 Sync Changes</button>
+                        <button class="btn btn--sm">🚀 Deploy</button>
+                    </div>
+                </div>
+
+                <div class="panel-section">
+                    <h3 class="section-title">System Status</h3>
+                    <div style="display: flex; flex-direction: column; gap: var(--cursor-space-sm);">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-size: 0.875rem;">Desktop App</span>
+                            <span class="status-indicator status-indicator--success">Active</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-size: 0.875rem;">Firefox Extension</span>
+                            <span class="status-indicator status-indicator--warning">Ready</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-size: 0.875rem;">VR/XR PWA</span>
+                            <span class="status-indicator status-indicator--success">Port 8080</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-size: 0.875rem;">Quantum Tools</span>
+                            <span class="status-indicator status-indicator--success">Ready</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Center: Quantum Notepad -->
+            <div class="center-terminal">
+                <div class="quantum-notepad-header" style="padding: var(--cursor-space-md); border-bottom: 1px solid var(--cursor-border); background: var(--cursor-bg-secondary);">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <h2 style="margin: 0; font-size: 1.125rem; font-weight: 600;">UVspeed Notes</h2>
+                        <div style="display: flex; gap: var(--cursor-space-sm);">
+                            <button class="btn btn--primary" id="new-note-btn">📝 New Cell</button>
+                            <button class="btn btn--secondary" id="save-notebook-btn">💾 Save</button>
+                            <button class="btn btn--secondary" id="export-notebook-btn">📤 Export</button>
+                            <button class="btn btn--success" id="run-all-btn">▶️ Run All</button>
+                            <button class="btn btn--warning" id="clear-outputs-btn">🧹 Clear</button>
+                        </div>
+                    </div>
+                    <div style="margin-top: var(--cursor-space-sm); font-size: 0.875rem; color: var(--cursor-text-muted); display: flex; justify-content: space-between; align-items: center;">
+                        <span>infinite quantum notebook</span>
+                        <div style="display: flex; gap: var(--cursor-space-md); font-size: 0.8125rem;">
+                            <span>Active Cells: <strong id="cell-count">1</strong></span>
+                            <span>Runtime: <span class="status-indicator status-indicator--success">Ready</span></span>
+                            <span>Tinygrad: <span class="status-indicator status-indicator--warning" id="tinygrad-status">Available</span></span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="quantum-notebook-container" id="quantum-notebook-container" style="flex: 1; overflow-y: auto; padding: var(--cursor-space-md);">
+                    <div class="note-cell" data-cell-id="1">
+                        <div class="cell-header" style="background: var(--cursor-bg-secondary); padding: var(--cursor-space-sm); border-radius: var(--cursor-radius-md) var(--cursor-radius-md) 0 0; border: 1px solid var(--cursor-border); border-bottom: none; display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-size: 0.875rem; color: var(--cursor-text-muted); font-weight: 500;">Cell 1 • Python • Quantum Ready</span>
+                            <div style="display: flex; gap: var(--cursor-space-xs);">
+                                <button class="btn btn--sm btn--success cell-run-btn">▶️ Run</button>
+                                <button class="btn btn--sm cell-type-btn" data-type="python">🐍 Python</button>
+                            </div>
+                        </div>
+                        <textarea class="cell-input" placeholder="# Welcome to UV-Speed Quantum Notepad!
+# This surpasses Jupyter with infinite scroll and tinygrad integration
+
+import numpy as np
+try:
+    from tinygrad import Tensor
+    print('🧮 Tinygrad available - Quantum computing ready!')
+    
+    # Create quantum state
+    psi = Tensor([1/np.sqrt(2), 1/np.sqrt(2)])  # |+⟩ state
+    print(f'Quantum state |ψ⟩ = {psi}')
+    
+    # Quantum operation simulation
+    hadamard = Tensor([[1, 1], [1, -1]]) / np.sqrt(2)
+    result = hadamard @ Tensor([1, 0])  # H|0⟩
+    print(f'H|0⟩ = {result}')
+    
+except ImportError:
+    print('📦 Using NumPy fallback - Install tinygrad for quantum acceleration')
+    psi = np.array([1/np.sqrt(2), 1/np.sqrt(2)])
+    print(f'Quantum state |ψ⟩ = {psi}')
+
+print('🚀 Ready for quantum algorithms!')" style="width: 100%; min-height: 200px; border: 1px solid var(--cursor-border); border-top: none; border-radius: 0 0 var(--cursor-radius-md) var(--cursor-radius-md); padding: var(--cursor-space-md); background: var(--cursor-bg); color: var(--cursor-text); font-family: var(--cursor-font-mono); font-size: 0.875rem; resize: vertical; line-height: 1.5;"></textarea>
+                        <div class="cell-output" style="background: var(--cursor-bg-tertiary); padding: var(--cursor-space-md); border: 1px solid var(--cursor-border); border-top: 1px solid var(--cursor-border-muted); border-radius: 0 0 var(--cursor-radius-md) var(--cursor-radius-md); font-family: var(--cursor-font-mono); font-size: 0.8125rem; color: var(--cursor-text-secondary); display: none; margin-bottom: var(--cursor-space-lg);"></div>
+                    </div>
+                </div>
+                
+                <!-- Terminal Input Area - Always Visible Footer -->
+                <div class="terminal-input-area" style="padding: var(--cursor-space-md); background: var(--cursor-bg-secondary); border-top: 1px solid var(--cursor-border);">
+                    <!-- AI Assistant Integration -->
+                    <div class="ai-assistant-bar" style="margin-bottom: var(--cursor-space-sm); display: flex; gap: var(--cursor-space-sm); align-items: center;">
+                        <div style="flex: 1; display: flex; gap: var(--cursor-space-xs);">
+                            <input type="text" 
+                                   id="ai-input" 
+                                   placeholder="🤖 Ask AI - responses appear as new cells in notebook..."
+                                   style="flex: 1; background: var(--cursor-bg); border: 1px solid var(--cursor-accent); border-radius: var(--cursor-radius-sm); padding: var(--cursor-space-sm); color: var(--cursor-text); font-size: 0.875rem;">
+                            <button class="btn btn--primary btn--sm" id="ai-send-btn">🤖 Create AI Cell</button>
+                        </div>
+                    </div>
+                    
+                    <div class="terminal-prompt" style="display: flex; align-items: center; gap: var(--cursor-space-sm);">
+                        <span class="prompt-symbol" style="color: var(--cursor-accent); font-weight: bold; font-family: var(--cursor-font-mono);"> +\- </span>
+                        <input type="text" 
+                               class="terminal-input" 
+                               id="command-input" 
+                               placeholder="uv run, q search, qstatus, help..."
+                               style="flex: 1; background: var(--cursor-bg); border: 1px solid var(--cursor-border); border-radius: var(--cursor-radius-sm); padding: var(--cursor-space-sm); color: var(--cursor-text); font-family: var(--cursor-font-mono); font-size: 0.875rem;">
+                        <button class="btn btn--primary btn--sm" id="execute-btn">Execute</button>
+                    </div>
+                    <div class="terminal-quick-commands" style="margin-top: var(--cursor-space-sm); display: flex; gap: var(--cursor-space-xs); flex-wrap: wrap;">
+                        <button class="btn btn--xs quick-cmd" data-cmd="qstatus">📊 Status</button>
+                        <button class="btn btn--xs quick-cmd" data-cmd="uv sync">🔄 Sync</button>
+                        <button class="btn btn--xs quick-cmd" data-cmd="q tinygrad">🔍 Search</button>
+                        <button class="btn btn--xs quick-cmd" data-cmd="help">❓ Help</button>
+                    </div>
+                </div>
+                </div>
+            </div>
+
+            <!-- Right Panel: Activity -->
+            <div class="right-panel">
+                <div class="panel-section">
+                    <h3 class="section-title">Recent Activity</h3>
+                    <div style="font-size: 0.8125rem; color: var(--cursor-text-secondary);">
+                        <div style="margin-bottom: var(--cursor-space-xs);">
+                            <span style="color: var(--cursor-accent);">12:34</span> Quantum navigation: +1
+                        </div>
+                        <div style="margin-bottom: var(--cursor-space-xs);">
+                            <span style="color: var(--cursor-accent);">12:33</span> WebSocket connected
+                        </div>
+                        <div style="margin-bottom: var(--cursor-space-xs);">
+                            <span style="color: var(--cursor-accent);">12:32</span> Desktop app started
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Layered Quantum Navigation with infinite layers
+        let currentLayer = 0;
+        
+        // Developer-customizable layer names
+        const layerNames = {
+            0: 'Base Layer',
+            1: 'Upper Layer',
+            2: 'Quantum Flux',
+            3: 'Dimensional Portal',
+            4: 'Hyperspace',
+            5: 'Infinity Gate',
+            '-1': 'Lower Layer',
+            '-2': 'Subspace',
+            '-3': 'Quantum Void',
+            '-4': 'Dark Matter',
+            '-5': 'Singularity'
+        };
+        
+        // Function to get or create layer name
+        function getLayerName(layer) {
+            if (layerNames[layer]) {
+                return layerNames[layer];
+            }
+            // Auto-generate names for undefined layers
+            if (layer > 5) {
+                return `Dimension ${layer}`;
+            } else if (layer < -5) {
+                return `Abyss ${Math.abs(layer)}`;
+            }
+            return `Layer ${layer}`;
+        }
+        
+        // Function to set custom layer name (for developers)
+        window.setQuantumLayerName = function(layer, name) {
+            layerNames[layer] = name;
+            if (currentLayer === layer) {
+                updateQuantumLayer();
+            }
+            addActivity(`Layer ${layer} renamed to: ${name}`);
+        };
+        
+        document.getElementById('layer-up').addEventListener('click', () => {
+            currentLayer++;
+            updateQuantumLayer();
+            addActivity(`Layer changed to ${currentLayer}`);
+        });
+
+        document.getElementById('layer-down').addEventListener('click', () => {
+            currentLayer--;
+            updateQuantumLayer();
+            addActivity(`Layer changed to ${currentLayer}`);
+        });
+
+        function updateQuantumLayer() {
+            // Update layer indicator with descriptive names
+            const layerTitle = document.getElementById('current-layer');
+            const layerName = getLayerName(currentLayer);
+            layerTitle.textContent = `Layer ${currentLayer} - ${layerName}`;
+            
+            // Generate quantum navigation for current layer
+            generateQuantumNavForLayer(currentLayer);
+            
+            // Re-attach event listeners for the new layer
+            setupQuantumNavigation();
+        }
+
+        function generateQuantumNavForLayer(layer) {
+            const container = document.querySelector('.quantum-nav');
+            
+            if (layer === 0) {
+                // Base layer with quantum symbol in center
+                container.innerHTML = `
+                    <button class="quantum-btn" data-direction="+1">+1</button>
+                    <button class="quantum-btn" data-direction="0">0</button>
+                    <button class="quantum-btn" data-direction="-1">-1</button>
+                    <button class="quantum-btn" data-direction="+n">+n</button>
+                    <button class="quantum-btn active" data-direction="⚛️">⚛️</button>
+                    <button class="quantum-btn" data-direction="-n">-n</button>
+                    <button class="quantum-btn" data-direction="+0">+0</button>
+                    <button class="quantum-btn" data-direction="-0">-0</button>
+                    <button class="quantum-btn" data-direction="+2">+2</button>
+                `;
+            } else if (layer > 0) {
+                // Upper layers - progressively more complex
+                const intensity = Math.min(layer, 5);
+                container.innerHTML = `
+                    <button class="quantum-btn" data-direction="+${intensity}">+${intensity}</button>
+                    <button class="quantum-btn" data-direction="${intensity}">${intensity}</button>
+                    <button class="quantum-btn" data-direction="-${intensity}">-${intensity}</button>
+                    <button class="quantum-btn" data-direction="+n">+n</button>
+                    <button class="quantum-btn" data-direction="${layer > 3 ? '∞' : '*'}">{{${layer > 3 ? '∞' : '*'}}}</button>
+                    <button class="quantum-btn" data-direction="-n">-n</button>
+                    <button class="quantum-btn" data-direction="+${intensity + 1}">+${intensity + 1}</button>
+                    <button class="quantum-btn" data-direction="-${intensity + 1}">-${intensity + 1}</button>
+                    <button class="quantum-btn" data-direction="+${intensity + 2}">+${intensity + 2}</button>
+                `;
+            } else {
+                // Lower layers - deeper quantum states
+                const depth = Math.abs(layer);
+                const minDepth = Math.min(depth, 5);
+                container.innerHTML = `
+                    <button class="quantum-btn" data-direction="-${minDepth}">-${minDepth}</button>
+                    <button class="quantum-btn" data-direction="-${minDepth - 1}">-${minDepth - 1}</button>
+                    <button class="quantum-btn" data-direction="-${minDepth + 1}">-${minDepth + 1}</button>
+                    <button class="quantum-btn" data-direction="-n">-n</button>
+                    <button class="quantum-btn" data-direction="${depth > 3 ? '○' : '∞'}">{{${depth > 3 ? '○' : '∞'}}}</button>
+                    <button class="quantum-btn" data-direction="+n">+n</button>
+                    <button class="quantum-btn" data-direction="-0">-0</button>
+                    <button class="quantum-btn" data-direction="+0">+0</button>
+                    <button class="quantum-btn" data-direction="0">0</button>
+                `;
+            }
+        }
+
+        function setupQuantumNavigation() {
+            // Remove existing listeners to avoid duplicates
+            document.querySelectorAll('.quantum-btn').forEach(btn => {
+                btn.removeEventListener('click', handleQuantumClick);
+                btn.addEventListener('click', handleQuantumClick);
+            });
+        }
+
+        function handleQuantumClick(e) {
+            const btn = e.target;
+            
+            // Remove active class from all buttons in current layer
+            document.querySelectorAll('.quantum-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            
+            const direction = btn.dataset.direction;
+            updateQuantumPosition(direction, currentLayer);
+        }
+
+        // File Explorer Toggle
+        document.getElementById('file-explorer-toggle').addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleFileExplorer();
+        });
+
+        document.getElementById('file-explorer-header').addEventListener('click', () => {
+            toggleFileExplorer();
+        });
+
+        function toggleFileExplorer() {
+            const content = document.getElementById('file-explorer-content');
+            const toggle = document.getElementById('file-explorer-toggle');
+            
+            if (content.style.display === 'none') {
+                content.style.display = 'block';
+                toggle.textContent = '➖';
+                addActivity('File explorer expanded');
+            } else {
+                content.style.display = 'none';
+                toggle.textContent = '➕';
+                addActivity('File explorer collapsed');
+            }
+        }
+
+        // AI Assistant
+        document.getElementById('ai-send-btn').addEventListener('click', handleAIQuestion);
+        document.getElementById('ai-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                handleAIQuestion();
+            }
+        });
+
+        function handleAIQuestion() {
+            const input = document.getElementById('ai-input');
+            const question = input.value.trim();
+            
+            if (!question) return;
+            
+            // Create a new cell for the AI interaction
+            createAICell(question);
+            
+            // Clear input
+            input.value = '';
+            addActivity('AI query processed in new cell');
+        }
+
+        function createAICell(question) {
+            cellCounter++;
+            const container = document.getElementById('quantum-notebook-container');
+            const cellDiv = document.createElement('div');
+            cellDiv.className = 'note-cell ai-cell';
+            cellDiv.dataset.cellId = cellCounter;
+            
+            cellDiv.innerHTML = `
+                <div class="cell-header" style="background: linear-gradient(90deg, var(--cursor-bg-secondary), var(--cursor-accent-bg)); padding: var(--cursor-space-sm); border-radius: var(--cursor-radius-md) var(--cursor-radius-md) 0 0; border: 1px solid var(--cursor-accent); border-bottom: none; display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 0.875rem; color: var(--cursor-accent); font-weight: 600;">🤖 AI Response Cell ${cellCounter} • Quantum Assistant</span>
+                    <div style="display: flex; gap: var(--cursor-space-xs);">
+                        <button class="btn btn--sm btn--success cell-copy-btn">📋 Copy</button>
+                        <button class="btn btn--sm cell-delete-btn">🗑️ Delete</button>
+                    </div>
+                </div>
+                <div class="ai-question" style="background: var(--cursor-bg-tertiary); padding: var(--cursor-space-md); border: 1px solid var(--cursor-accent); border-top: none; border-bottom: none; font-family: var(--cursor-font-mono); font-size: 0.875rem; color: var(--cursor-text); font-weight: 500;">
+                    <div style="color: var(--cursor-accent); margin-bottom: var(--cursor-space-xs);">🙋 Question:</div>
+                    ${question}
+                </div>
+                <div class="ai-response-content" style="background: var(--cursor-bg); padding: var(--cursor-space-md); border: 1px solid var(--cursor-accent); border-top: none; border-radius: 0 0 var(--cursor-radius-md) var(--cursor-radius-md); font-family: var(--cursor-font-mono); font-size: 0.8125rem; color: var(--cursor-text); margin-bottom: var(--cursor-space-lg);">
+                    <div style="color: var(--cursor-accent); margin-bottom: var(--cursor-space-xs);">🤖 AI Response:</div>
+                    <div style="color: var(--cursor-warning);">🔄 Generating response...</div>
+                </div>
+            `;
+            
+            container.appendChild(cellDiv);
+            
+            // Add event listeners for the new cell
+            setupAICellEvents(cellDiv);
+            
+            // Scroll to new cell
+            cellDiv.scrollIntoView({ behavior: 'smooth' });
+            
+            // Update cell count
+            updateCellCount();
+            
+            // Simulate AI response generation
+            generateAIResponse(cellDiv, question);
+        }
+
+        function setupAICellEvents(cellDiv) {
+            const copyBtn = cellDiv.querySelector('.cell-copy-btn');
+            const deleteBtn = cellDiv.querySelector('.cell-delete-btn');
+            
+            copyBtn.addEventListener('click', () => {
+                const responseContent = cellDiv.querySelector('.ai-response-content').textContent;
+                navigator.clipboard.writeText(responseContent).then(() => {
+                    copyBtn.textContent = '✅ Copied';
+                    setTimeout(() => copyBtn.textContent = '📋 Copy', 2000);
+                });
+            });
+            
+            deleteBtn.addEventListener('click', () => deleteCell(cellDiv));
+        }
+
+        function generateAIResponse(cellDiv, question) {
+            const responseArea = cellDiv.querySelector('.ai-response-content');
+            
+            setTimeout(() => {
+                let answer = '';
+                
+                if (question.toLowerCase().includes('quantum') || question.toLowerCase().includes('tinygrad')) {
+                    answer = `<div style="color: var(--cursor-accent); margin-bottom: var(--cursor-space-xs);">🤖 AI Response:</div>
+<div style="color: var(--cursor-text);">
+<strong>🧮 Quantum Development Tips:</strong><br><br>
+• <strong>Tinygrad Tensors:</strong> Use <code>Tensor([data])</code> for quantum states<br>
+• <strong>Matrix Operations:</strong> Try <code>tensor.reshape()</code> and <code>tensor @ other</code><br>
+• <strong>Performance:</strong> Tinygrad is 10x faster than PyTorch for quantum workloads<br>
+• <strong>Navigation:</strong> Use quantum navigation panel for position tracking<br>
+• <strong>Example:</strong><br>
+<pre style="background: var(--cursor-bg-tertiary); padding: var(--cursor-space-sm); border-radius: var(--cursor-radius-sm); margin: var(--cursor-space-sm) 0;">
+from tinygrad import Tensor
+import numpy as np
+
+# Create quantum superposition state
+psi = Tensor([1/np.sqrt(2), 1/np.sqrt(2)])  # |+⟩ state
+print(f'Quantum state: {psi}')
+
+# Hadamard gate operation  
+H = Tensor([[1, 1], [1, -1]]) / np.sqrt(2)
+result = H @ Tensor([1, 0])  # H|0⟩ = |+⟩
+print(f'H|0⟩ = {result}')
+</pre>
+</div>`;
+                } else if (question.toLowerCase().includes('cell') || question.toLowerCase().includes('notebook')) {
+                    answer = `<div style="color: var(--cursor-accent); margin-bottom: var(--cursor-space-xs);">🤖 AI Response:</div>
+<div style="color: var(--cursor-text);">
+<strong>📝 Quantum Notebook Tips:</strong><br><br>
+• <strong>Quick Execution:</strong> Press Shift+Enter to run cells instantly<br>
+• <strong>Infinite Scroll:</strong> Use "📝 New Cell" for unlimited content<br>
+• <strong>Auto-save:</strong> Your work is continuously preserved<br>
+• <strong>Export Options:</strong> Save as markdown or JSON format<br>
+• <strong>AI Integration:</strong> Ask questions anytime - responses appear in new cells<br>
+• <strong>Performance:</strong> No kernel restarts needed unlike Jupyter<br><br>
+<strong>🎯 Keyboard Shortcuts:</strong><br>
+• <code>Shift+Enter</code> - Run current cell<br>
+• <code>Ctrl+S</code> - Save notebook<br>
+• <code>Ctrl+Enter</code> - Run without advancing<br>
+</div>`;
+                } else if (question.toLowerCase().includes('navigation') || question.toLowerCase().includes('layer')) {
+                    answer = `<div style="color: var(--cursor-accent); margin-bottom: var(--cursor-space-xs);">🤖 AI Response:</div>
+<div style="color: var(--cursor-text);">
+<strong>🧊 Infinite Quantum Navigation System:</strong><br><br>
+• <strong>Infinite Layers:</strong> Navigate through unlimited dimensions (-∞ ↔ +∞)<br>
+• <strong>Layer 0 Special:</strong> Only base layer shows ⚛️ quantum symbol<br>
+• <strong>Auto-Generation:</strong> Layers auto-name beyond predefined ranges<br>
+• <strong>Position Tracking:</strong> [X, Y, Z] coordinates with layer modifiers<br><br>
+<strong>🎮 How to Use:</strong><br>
+1. Click ⬆️ Up/⬇️ Down - No limits! Go to any layer<br>
+2. Each layer has unique quantum operations<br>
+3. Base layer (0) has special ⚛️ center button<br>
+4. Activity log tracks all movements with layer notation<br><br>
+<strong>👨‍💻 Developer API:</strong><br>
+• <strong>Custom Layer Names:</strong> <code>setQuantumLayerName(5, 'My Custom Layer')</code><br>
+• <strong>Example:</strong> <code>setQuantumLayerName(-3, 'Data Mining')</code><br>
+• <strong>Auto-Names:</strong> Dimension N (positive), Abyss N (negative)<br>
+• <strong>Predefined:</strong> Hyperspace, Quantum Flux, Subspace, Dark Matter<br>
+</div>`;
+                } else if (question.toLowerCase().includes('terminal') || question.toLowerCase().includes('uv')) {
+                    answer = `<div style="color: var(--cursor-accent); margin-bottom: var(--cursor-space-xs);">🤖 AI Response:</div>
+<div style="color: var(--cursor-text);">
+<strong>⌨️ Terminal & UV Commands:</strong><br><br>
+• <strong>UV Commands:</strong><br>
+  - <code>uv run script.py</code> - Execute Python with UV<br>
+  - <code>uv add package</code> - Add dependencies<br>
+  - <code>uv sync</code> - Synchronize environment<br><br>
+• <strong>Quantum Commands:</strong><br>
+  - <code>q search_term</code> - Semantic code search<br>
+  - <code>qstatus</code> - System status check<br><br>
+• <strong>Quick Buttons:</strong> Click for instant execution<br>
+• <strong>Output Toggle:</strong> Use 📺 Output to show/hide results<br>
+• <strong>Prompt:</strong> <code> +\- </code> indicates quantum-ready state<br>
+</div>`;
+                } else {
+                    answer = `<div style="color: var(--cursor-accent); margin-bottom: var(--cursor-space-xs);">🤖 AI Response:</div>
+<div style="color: var(--cursor-text);">
+<strong>🌌 UV-Speed Quantum Assistant:</strong><br><br>
+I'm here to help with your quantum development workflow! I can assist with:<br><br>
+• <strong>Quantum Computing:</strong> Tinygrad, tensor operations, quantum algorithms<br>
+• <strong>Notebook Usage:</strong> Cell management, shortcuts, export options<br>
+• <strong>Navigation:</strong> Layer system, quantum coordinates, position tracking<br>
+• <strong>Terminal:</strong> UV commands, semantic search, system operations<br>
+• <strong>Performance:</strong> Optimization tips, best practices<br><br>
+<strong>💡 Try asking about:</strong><br>
+"How do I create quantum states in tinygrad?"<br>
+"What are the navigation layers?"<br>
+"Show me notebook shortcuts"<br>
+</div>`;
+                }
+                
+                responseArea.innerHTML = answer;
+            }, 1500);
+        }
+
+        // Quick Command Buttons
+        document.querySelectorAll('.quick-cmd').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const cmd = btn.dataset.cmd;
+                const input = document.getElementById('command-input');
+                input.value = cmd;
+                executeCommand();
+            });
+        });
+
+        // Toggle Terminal
+        document.getElementById('toggle-terminal-btn')?.addEventListener('click', () => {
+            const terminalSection = document.getElementById('terminal-section');
+            const btn = document.getElementById('toggle-terminal-btn');
+            
+            if (terminalSection.style.display === 'none') {
+                terminalSection.style.display = 'block';
+                btn.textContent = '❌ Hide Terminal';
+                addActivity('Terminal opened');
+            } else {
+                terminalSection.style.display = 'none';
+                btn.textContent = '⌨️ Terminal';
+                addActivity('Terminal closed');
+            }
+        });
+
+        // Additional notebook controls
+        document.getElementById('run-all-btn')?.addEventListener('click', () => {
+            const cells = document.querySelectorAll('.note-cell');
+            let delay = 0;
+            cells.forEach((cell, index) => {
+                setTimeout(() => runCell(cell), delay);
+                delay += 500; // Stagger execution
+            });
+            addActivity(`Running all ${cells.length} cells`);
+        });
+
+        document.getElementById('clear-outputs-btn')?.addEventListener('click', () => {
+            const outputs = document.querySelectorAll('.cell-output');
+            outputs.forEach(output => {
+                output.style.display = 'none';
+                output.innerHTML = '';
+            });
+            addActivity('All outputs cleared');
+        });
+
+        // Update cell count
+        function updateCellCount() {
+            const cellCount = document.querySelectorAll('.note-cell').length;
+            const countEl = document.getElementById('cell-count');
+            if (countEl) countEl.textContent = cellCount;
+        }
+
+        // Initialize quantum navigation
+        setupQuantumNavigation();
+        updateQuantumLayer(); // Set initial layer
+
+        function updateQuantumPosition(direction, layer = 0) {
+            const positionEl = document.getElementById('quantum-position');
+            // Simple position simulation with layer consideration
+            const currentPos = positionEl.textContent.match(/\[(.*)\]/)[1].split(', ').map(Number);
+            
+            // Base movements with layer modifiers
+            const layerMultiplier = layer === 0 ? 1 : (layer > 0 ? 2 : 0.5);
+            
+            switch(direction) {
+                case '+1':
+                    currentPos[1] += (1 * layerMultiplier);
+                    break;
+                case '-1':
+                    currentPos[1] -= (1 * layerMultiplier);
+                    break;
+                case '+n':
+                    currentPos[0] += (1 * layerMultiplier);
+                    break;
+                case '-n':
+                    currentPos[0] -= (1 * layerMultiplier);
+                    break;
+                case '+2':
+                    currentPos[2] += (2 * layerMultiplier);
+                    break;
+                case '-2':
+                    currentPos[2] -= (2 * layerMultiplier);
+                    break;
+                case '+3':
+                    currentPos[1] += (3 * layerMultiplier);
+                    break;
+                case '-3':
+                    currentPos[1] -= (3 * layerMultiplier);
+                    break;
+                case '+0':
+                    currentPos[0] = Math.abs(currentPos[0]);
+                    break;
+                case '-0':
+                    currentPos[0] = -Math.abs(currentPos[0]);
+                    break;
+                case '0':
+                    currentPos[0] = 0;
+                    break;
+                case '1':
+                    currentPos[1] = 1;
+                    break;
+                case '*':
+                    currentPos[2] *= 2;
+                    break;
+                case '∞':
+                    currentPos[2] = 999;
+                    break;
+                case '⚛️':
+                    // Quantum superposition - randomize
+                    currentPos[0] += Math.random() > 0.5 ? 1 : -1;
+                    currentPos[1] += Math.random() > 0.5 ? 1 : -1;
+                    currentPos[2] += Math.random() > 0.5 ? 1 : -1;
+                    break;
+            }
+            
+            positionEl.textContent = `[${currentPos.join(', ')}]`;
+            
+            // Add to activity log with layer info
+            addActivity(`L${layer}: ${direction} → [${currentPos.join(', ')}]`);
+        }
+
+        // Quantum Notepad functionality
+        let cellCounter = 1;
+        
+        document.getElementById('new-note-btn').addEventListener('click', createNewCell);
+        document.getElementById('save-notebook-btn').addEventListener('click', saveNotebook);
+        document.getElementById('export-notebook-btn').addEventListener('click', exportNotebook);
+
+        function createNewCell() {
+            cellCounter++;
+            const container = document.getElementById('quantum-notebook-container');
+            const cellDiv = document.createElement('div');
+            cellDiv.className = 'note-cell';
+            cellDiv.dataset.cellId = cellCounter;
+            
+            cellDiv.innerHTML = `
+                <div class="cell-header" style="background: var(--cursor-bg-secondary); padding: var(--cursor-space-sm); border-radius: var(--cursor-radius-md) var(--cursor-radius-md) 0 0; border: 1px solid var(--cursor-border); border-bottom: none; display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 0.875rem; color: var(--cursor-text-muted); font-weight: 500;">Cell ${cellCounter} • Python • Quantum Ready</span>
+                    <div style="display: flex; gap: var(--cursor-space-xs);">
+                        <button class="btn btn--sm btn--success cell-run-btn">▶️ Run</button>
+                        <button class="btn btn--sm cell-delete-btn">🗑️ Delete</button>
+                        <button class="btn btn--sm cell-type-btn" data-type="python">🐍 Python</button>
+                    </div>
+                </div>
+                <textarea class="cell-input" placeholder="# Enter quantum code here
+import numpy as np
+try:
+    from tinygrad import Tensor
+    # Your quantum computing code here...
+except ImportError:
+    print('Install tinygrad for quantum acceleration')
+" style="width: 100%; min-height: 200px; border: 1px solid var(--cursor-border); border-top: none; border-radius: 0 0 var(--cursor-radius-md) var(--cursor-radius-md); padding: var(--cursor-space-md); background: var(--cursor-bg); color: var(--cursor-text); font-family: var(--cursor-font-mono); font-size: 0.875rem; resize: vertical; line-height: 1.5;"></textarea>
+                <div class="cell-output" style="background: var(--cursor-bg-tertiary); padding: var(--cursor-space-md); border: 1px solid var(--cursor-border); border-top: 1px solid var(--cursor-border-muted); border-radius: 0 0 var(--cursor-radius-md) var(--cursor-radius-md); font-family: var(--cursor-font-mono); font-size: 0.8125rem; color: var(--cursor-text-secondary); display: none; margin-bottom: var(--cursor-space-lg);"></div>
+            `;
+            
+            container.appendChild(cellDiv);
+            
+            // Add event listeners for the new cell
+            setupCellEvents(cellDiv);
+            
+            // Scroll to new cell
+            cellDiv.scrollIntoView({ behavior: 'smooth' });
+            
+            // Focus the textarea
+            cellDiv.querySelector('.cell-input').focus();
+            
+            // Update cell count
+            updateCellCount();
+            
+            // Update activity log
+            addActivity(`Created cell ${cellCounter}`);
+        }
+
+        function setupCellEvents(cellDiv) {
+            const runBtn = cellDiv.querySelector('.cell-run-btn');
+            const deleteBtn = cellDiv.querySelector('.cell-delete-btn');
+            const textarea = cellDiv.querySelector('.cell-input');
+            
+            runBtn.addEventListener('click', () => runCell(cellDiv));
+            deleteBtn?.addEventListener('click', () => deleteCell(cellDiv));
+            
+            // Auto-resize textarea
+            textarea.addEventListener('input', () => {
+                textarea.style.height = 'auto';
+                textarea.style.height = (textarea.scrollHeight) + 'px';
+            });
+            
+            // Run on Shift+Enter
+            textarea.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && e.shiftKey) {
+                    e.preventDefault();
+                    runCell(cellDiv);
+                }
+            });
+        }
+
+        function runCell(cellDiv) {
+            const input = cellDiv.querySelector('.cell-input');
+            const output = cellDiv.querySelector('.cell-output');
+            const code = input.value.trim();
+            
+            if (!code) return;
+            
+            // Show output area
+            output.style.display = 'block';
+            output.innerHTML = '<div style="color: var(--cursor-warning);">🔄 Executing...</div>';
+            
+            // Simulate code execution
+            setTimeout(() => {
+                let result = '';
+                
+                if (code.includes('import') && (code.includes('tinygrad') || code.includes('Tensor'))) {
+                    result = `🧮 Quantum computation executed:
+Tensor shape: [2]
+Result: tensor([0.7071, 0.7071])
+Performance: 2.3ms (faster than Jupyter!)`;
+                } else if (code.includes('matplotlib') || code.includes('plot')) {
+                    result = `📊 Visualization rendered:
+Plot generated successfully
+[Image would be displayed here]
+Resolution: 800x600px`;
+                } else if (code.includes('print')) {
+                    const printMatch = code.match(/print\(['"](.+?)['"]/);
+                    result = printMatch ? printMatch[1] : 'Output generated';
+                } else if (code.includes('numpy') || code.includes('np.')) {
+                    result = `🔢 NumPy computation:
+Array processed successfully
+Shape: ${Math.floor(Math.random() * 10) + 1}D array
+Performance optimized`;
+                } else {
+                    result = `✅ Code executed successfully
+No output to display`;
+                }
+                
+                output.innerHTML = `<pre style="margin: 0; white-space: pre-wrap;">${result}</pre>`;
+                
+                const cellId = cellDiv.dataset.cellId;
+                addActivity(`Executed cell ${cellId}`);
+            }, 800);
+        }
+
+        function deleteCell(cellDiv) {
+            const cellId = cellDiv.dataset.cellId;
+            cellDiv.remove();
+            updateCellCount();
+            addActivity(`Deleted cell ${cellId}`);
+        }
+
+        function saveNotebook() {
+            const cells = document.querySelectorAll('.note-cell');
+            const notebook = {
+                version: '1.0',
+                timestamp: new Date().toISOString(),
+                cells: Array.from(cells).map(cell => ({
+                    id: cell.dataset.cellId,
+                    type: 'code',
+                    content: cell.querySelector('.cell-input').value,
+                    output: cell.querySelector('.cell-output').style.display !== 'none' ? 
+                           cell.querySelector('.cell-output').textContent : null
+                }))
+            };
+            
+            // In a real implementation, this would save to file
+            console.log('Notebook saved:', notebook);
+            addActivity('Notebook saved to disk');
+            
+            // Show temporary feedback
+            const btn = document.getElementById('save-notebook-btn');
+            const originalText = btn.textContent;
+            btn.textContent = '✅ Saved';
+            btn.style.background = 'var(--cursor-success)';
+            setTimeout(() => {
+                btn.textContent = originalText;
+                btn.style.background = '';
+            }, 2000);
+        }
+
+        function exportNotebook() {
+            const cells = document.querySelectorAll('.note-cell');
+            let markdown = '# UV-Speed Quantum Notebook\n\n';
+            markdown += `Exported: ${new Date().toLocaleString()}\n\n`;
+            
+            Array.from(cells).forEach(cell => {
+                const id = cell.dataset.cellId;
+                const content = cell.querySelector('.cell-input').value;
+                const output = cell.querySelector('.cell-output').style.display !== 'none' ? 
+                             cell.querySelector('.cell-output').textContent : '';
+                
+                markdown += `## Cell ${id}\n\n`;
+                markdown += '```python\n' + content + '\n```\n\n';
+                if (output) {
+                    markdown += '**Output:**\n```\n' + output + '\n```\n\n';
+                }
+            });
+            
+            // In a real implementation, this would trigger a download
+            console.log('Exported markdown:', markdown);
+            addActivity('Notebook exported as markdown');
+            
+            // Show temporary feedback
+            const btn = document.getElementById('export-notebook-btn');
+            const originalText = btn.textContent;
+            btn.textContent = '✅ Exported';
+            btn.style.background = 'var(--cursor-success)';
+            setTimeout(() => {
+                btn.textContent = originalText;
+                btn.style.background = '';
+            }, 2000);
+        }
+
+        function addActivity(message) {
+            // Target the Recent Activity section specifically in the right panel
+            const activity = document.querySelector('.right-panel .panel-section:last-child > div');
+            if (!activity) return; // Safety check
+            
+            const time = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
+            const newActivity = document.createElement('div');
+            newActivity.style.marginBottom = 'var(--cursor-space-xs)';
+            newActivity.innerHTML = `<span style="color: var(--cursor-accent);">${time}</span> ${message}`;
+            activity.insertBefore(newActivity, activity.firstChild);
+            
+            // Keep only last 5 activities
+            const activities = activity.querySelectorAll('div');
+            if (activities.length > 5) {
+                activity.removeChild(activities[activities.length - 1]);
+            }
+        }
+
+        // Initialize first cell events
+        document.addEventListener('DOMContentLoaded', () => {
+            const firstCell = document.querySelector('.note-cell');
+            if (firstCell) {
+                setupCellEvents(firstCell);
+            }
+        });
+
+        // Terminal input
+        document.getElementById('command-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                executeCommand();
+            }
+        });
+
+        document.getElementById('execute-btn').addEventListener('click', executeCommand);
+
+        function executeCommand() {
+            const input = document.getElementById('command-input');
+            const command = input.value.trim();
+            
+            if (command) {
+                // Create a new cell for the terminal interaction
+                createTerminalCell(command);
+                
+                // Clear input
+                input.value = '';
+                addActivity(`Terminal: ${command}`);
+            }
+        }
+
+        function createTerminalCell(command) {
+            cellCounter++;
+            const container = document.getElementById('quantum-notebook-container');
+            const cellDiv = document.createElement('div');
+            cellDiv.className = 'note-cell terminal-cell';
+            cellDiv.dataset.cellId = cellCounter;
+            
+            cellDiv.innerHTML = `
+                <div class="cell-header" style="background: linear-gradient(90deg, var(--cursor-bg-secondary), rgba(88, 255, 88, 0.1)); padding: var(--cursor-space-sm); border-radius: var(--cursor-radius-md) var(--cursor-radius-md) 0 0; border: 1px solid var(--cursor-success); border-bottom: none; display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 0.875rem; color: var(--cursor-success); font-weight: 600;">⌨️ Terminal Cell ${cellCounter} • Command Output</span>
+                    <div style="display: flex; gap: var(--cursor-space-xs);">
+                        <button class="btn btn--sm btn--success cell-copy-btn">📋 Copy</button>
+                        <button class="btn btn--sm cell-delete-btn">🗑️ Delete</button>
+                    </div>
+                </div>
+                <div class="terminal-command" style="background: var(--cursor-bg-tertiary); padding: var(--cursor-space-md); border: 1px solid var(--cursor-success); border-top: none; border-bottom: none; font-family: var(--cursor-font-mono); font-size: 0.875rem; color: var(--cursor-text); font-weight: 500;">
+                    <div style="color: var(--cursor-success); margin-bottom: var(--cursor-space-xs);"> +\- </div>
+                    ${command}
+                </div>
+                <div class="terminal-response-content" style="background: var(--cursor-bg); padding: var(--cursor-space-md); border: 1px solid var(--cursor-success); border-top: none; border-radius: 0 0 var(--cursor-radius-md) var(--cursor-radius-md); font-family: var(--cursor-font-mono); font-size: 0.8125rem; color: var(--cursor-text); margin-bottom: var(--cursor-space-lg);">
+                    <div style="color: var(--cursor-success); margin-bottom: var(--cursor-space-xs);">📤 Output:</div>
+                    <div style="color: var(--cursor-warning);">🔄 Executing command...</div>
+                </div>
+            `;
+            
+            container.appendChild(cellDiv);
+            
+            // Add event listeners for the new cell
+            setupTerminalCellEvents(cellDiv);
+            
+            // Scroll to new cell
+            cellDiv.scrollIntoView({ behavior: 'smooth' });
+            
+            // Update cell count
+            updateCellCount();
+            
+            // Simulate command execution
+            generateTerminalResponse(cellDiv, command);
+        }
+
+        function setupTerminalCellEvents(cellDiv) {
+            const copyBtn = cellDiv.querySelector('.cell-copy-btn');
+            const deleteBtn = cellDiv.querySelector('.cell-delete-btn');
+            
+            copyBtn.addEventListener('click', () => {
+                const responseContent = cellDiv.querySelector('.terminal-response-content').textContent;
+                navigator.clipboard.writeText(responseContent).then(() => {
+                    copyBtn.textContent = '✅ Copied';
+                    setTimeout(() => copyBtn.textContent = '📋 Copy', 2000);
+                });
+            });
+            
+            deleteBtn.addEventListener('click', () => deleteCell(cellDiv));
+        }
+
+        function generateTerminalResponse(cellDiv, command) {
+            const responseArea = cellDiv.querySelector('.terminal-response-content');
+            
+            setTimeout(() => {
+                let result = '';
+                
+                if (command.startsWith('q ')) {
+                    const searchTerm = command.substring(2);
+                    result = `<div style="color: var(--cursor-success); margin-bottom: var(--cursor-space-xs);">📤 Output:</div>
+<div style="color: var(--cursor-text);">
+🔍 <strong>Semantic Search Results: "${searchTerm}"</strong><br><br>
+<div style="background: var(--cursor-bg-tertiary); padding: var(--cursor-space-sm); border-radius: var(--cursor-radius-sm); margin: var(--cursor-space-sm) 0;">
+<strong>Found in quantum_notepad.py:</strong><br>
+Line 45: <code>def ${searchTerm}_handler()</code><br>
+Line 123: <code># ${searchTerm} implementation</code><br>
+Line 287: <code>class ${searchTerm}Processor</code>
+</div>
+<strong>📊 Performance:</strong> 0.12ms • 3 matches found<br>
+<strong>💡 Suggestion:</strong> Use navigation layers to explore results
+</div>`;
+                } else if (command === 'qstatus') {
+                    result = `<div style="color: var(--cursor-success); margin-bottom: var(--cursor-space-xs);">📤 Output:</div>
+<div style="color: var(--cursor-text);">
+🌌 <strong>Quantum Environment Status</strong><br><br>
+<div style="background: var(--cursor-bg-tertiary); padding: var(--cursor-space-sm); border-radius: var(--cursor-radius-sm); margin: var(--cursor-space-sm) 0;">
+📡 WebSocket: <span style="color: var(--cursor-success);">Connected</span><br>
+🧮 Tinygrad: <span style="color: var(--cursor-warning);">Available</span><br>
+🎯 Position: <span style="color: var(--cursor-accent);">[0, 0, 0]</span><br>
+⚛️ Layer: <span style="color: var(--cursor-accent);">Base (0)</span><br>
+💻 Runtime: <span style="color: var(--cursor-success);">Ready</span><br>
+📝 Cells: <span style="color: var(--cursor-text);">${document.querySelectorAll('.note-cell').length}</span>
+</div>
+<strong>🚀 System Health:</strong> Optimal • All quantum tools operational
+</div>`;
+                } else if (command.startsWith('uv ')) {
+                    const uvCommand = command.substring(3);
+                    result = `<div style="color: var(--cursor-success); margin-bottom: var(--cursor-space-xs);">📤 Output:</div>
+<div style="color: var(--cursor-text);">
+🚀 <strong>UV Command: ${uvCommand}</strong><br><br>
+<div style="background: var(--cursor-bg-tertiary); padding: var(--cursor-space-sm); border-radius: var(--cursor-radius-sm); margin: var(--cursor-space-sm) 0;">
+Executing with UV package manager...<br>
+Environment: quantum-dev<br>
+Python: 3.11.5 (optimized build)<br>
+Tinygrad: 0.7.0 (quantum-ready)<br>
+</div>
+<span style="color: var(--cursor-success);">✅ Command completed successfully</span><br>
+<strong>⚡ Performance:</strong> 1.8s (UV acceleration enabled)
+</div>`;
+                } else if (command === 'help') {
+                    result = `<div style="color: var(--cursor-success); margin-bottom: var(--cursor-space-xs);">📤 Output:</div>
+<div style="color: var(--cursor-text);">
+<strong>🌌 UV-Speed Quantum Terminal Help</strong><br><br>
+<strong>📋 Available Commands:</strong><br>
+• <code>q [term]</code> - Semantic code search<br>
+• <code>qstatus</code> - Show quantum environment status<br>
+• <code>uv [cmd]</code> - Execute UV package manager commands<br>
+• <code>help</code> - Show this help message<br><br>
+<strong>🎯 Quick Actions:</strong><br>
+Use the quick command buttons below for instant access<br><br>
+<strong>💡 Tip:</strong> All terminal output appears in notebook cells for permanent reference
+</div>`;
+                } else {
+                    result = `<div style="color: var(--cursor-success); margin-bottom: var(--cursor-space-xs);">📤 Output:</div>
+<div style="color: var(--cursor-text);">
+<strong>⚡ Command Executed: ${command}</strong><br><br>
+<div style="background: var(--cursor-bg-tertiary); padding: var(--cursor-space-sm); border-radius: var(--cursor-radius-sm); margin: var(--cursor-space-sm) 0;">
+Command processed by quantum terminal<br>
+Result: Success<br>
+Time: ${new Date().toLocaleTimeString()}
+</div>
+<strong>💡 Note:</strong> Use <code>help</code> to see available quantum commands
+</div>`;
+                }
+                
+                responseArea.innerHTML = result;
+            }, 800);
+        }
+
+        // File explorer
+        document.querySelectorAll('.file-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const fileName = item.querySelector('span:last-child').textContent;
+                const output = document.getElementById('terminal-output');
+                const openDiv = document.createElement('div');
+                openDiv.style.color = 'var(--cursor-text-secondary)';
+                openDiv.style.marginBottom = 'var(--cursor-space-sm)';
+                openDiv.textContent = `📂 Opening: ${fileName}`;
+                output.appendChild(openDiv);
+                output.scrollTop = output.scrollHeight;
+            });
+        });
+
+        // Simulate periodic status updates
+        setInterval(() => {
+            const time = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
+            console.log(`${time} - System heartbeat`);
+        }, 30000);
+    </script>
+</body>
+</html>
