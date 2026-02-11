@@ -22,19 +22,17 @@ architecture = "Zig→Rust→Semantic→Visual"
 navigation_system = "3d_spatial"
 
 [tool.uvspeed.quantum]
-# Quantum numbering prefixes
-prefixes = {
-    "n:" = "Entry points (#!/usr/bin/env)",
-    "+1:" = "Comments/documentation",
-    "-n:" = "Imports/dependencies", 
-    "+0:" = "Classes",
-    "0:" = "Functions",
-    "-1:" = "Error handling",
-    "+n:" = "Conditionals",
-    "+2:" = "Loops", 
-    "-0:" = "Returns",
-    "+3:" = "Output statements"
-}
+# Quantum numbering prefixes  
+entry_points = "n:"
+comments = "+1:"
+imports = "-n:"
+classes = "+0:" 
+functions = "0:"
+error_handling = "-1:"
+conditionals = "+n:"
+loops = "+2:"
+returns = "-0:"
+output = "+3:"
 
 [tool.uvspeed.tools]
 # Portable tool configuration
