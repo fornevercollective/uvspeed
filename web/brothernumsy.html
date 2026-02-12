@@ -1,0 +1,1407 @@
+<!-- beyondBINARY quantum-prefixed | uvspeed | {+1, 1, -1, +0, 0, -0, +n, n, -n} -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>brotherNumsy &amp; Freya — beyondBINARY runner</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="../icons/favicon.png">
+    <link rel="icon" type="image/x-icon" href="../icons/favicon.ico">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0d1117;
+            color: #c9d1d9;
+            font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, monospace;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        #header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 16px;
+            background: #161b22;
+            border-bottom: 1px solid #30363d;
+            font-size: 0.8125rem;
+            z-index: 10;
+        }
+        #header a { color: #58a6ff; text-decoration: none; }
+        #header a:hover { text-decoration: underline; }
+        .hdr-title { font-weight: 700; color: #e6b422; }
+        .hdr-freya { font-weight: 700; color: #a78bfa; }
+        .hdr-sub { color: #8b949e; font-size: 0.6875rem; }
+        #game-wrap {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        canvas { display: block; image-rendering: pixelated; image-rendering: crisp-edges; }
+        #hud {
+            position: absolute;
+            top: 12px;
+            left: 16px;
+            right: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            font-size: 0.875rem;
+            pointer-events: none;
+            z-index: 5;
+        }
+        .hud-left, .hud-right { display: flex; flex-direction: column; gap: 4px; }
+        .hud-center { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+        .hud-item { background: rgba(13,17,23,0.7); padding: 4px 10px; border-radius: 6px; border: 1px solid #30363d; white-space: nowrap; }
+        .hud-score { color: #e6b422; font-weight: 700; font-size: 1rem; }
+        .hud-hi { color: #8b949e; }
+        .hud-speed { color: #58a6ff; }
+        .hud-freya { color: #a78bfa; font-size: 0.75rem; border-color: #7c3aed44; }
+        .hud-freya-unit { color: #06b6d4; font-size: 0.6875rem; border-color: #06b6d444; }
+        .hud-freya-power { color: #c084fc; font-size: 0.6875rem; border-color: #c084fc44; }
+
+        /* Overlays */
+        .overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(13,17,23,0.88);
+            z-index: 20;
+            transition: opacity 0.3s;
+        }
+        .overlay.hidden { opacity: 0; pointer-events: none; }
+        .overlay h1 { font-size: 2.5rem; margin-bottom: 4px; }
+        .overlay h2 { font-size: 1.5rem; margin-bottom: 6px; color: #e6b422; }
+        .overlay h3 { font-size: 1rem; margin-bottom: 10px; color: #a78bfa; font-weight: 400; }
+        .overlay p { color: #8b949e; margin-bottom: 16px; max-width: 520px; text-align: center; line-height: 1.5; font-size: 0.875rem; }
+        .overlay .start-btn {
+            padding: 12px 32px;
+            font-size: 1.125rem;
+            font-family: inherit;
+            background: #e6b422;
+            color: #0d1117;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            transition: transform 0.15s, background 0.15s;
+        }
+        .overlay .start-btn:hover { transform: scale(1.05); background: #f0c040; }
+        .controls-hint {
+            margin-top: 20px;
+            font-size: 0.75rem;
+            color: #484f58;
+        }
+        .controls-hint kbd {
+            background: #21262d;
+            border: 1px solid #30363d;
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-family: inherit;
+            color: #c9d1d9;
+        }
+        .score-final { font-size: 3rem; font-weight: 700; color: #e6b422; margin: 8px 0; }
+        .dist-final { font-size: 0.875rem; color: #a78bfa; margin-bottom: 8px; }
+        .quote { font-style: italic; color: #7ee787; font-size: 0.875rem; margin-bottom: 16px; max-width: 440px; text-align: center; }
+        #footer {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            padding: 6px 16px;
+            background: #161b22;
+            border-top: 1px solid #30363d;
+            font-size: 0.6875rem;
+            color: #484f58;
+            z-index: 10;
+            flex-wrap: wrap;
+        }
+        #footer a { color: #58a6ff; text-decoration: none; }
+        .freya-tag { color: #a78bfa; }
+    </style>
+</head>
+<body>
+    <div id="header">
+        <div>
+            <span class="hdr-title">brotherNumsy</span>
+            <span class="hdr-sub"> &amp; </span>
+            <span class="hdr-freya">Freya</span>
+            <span class="hdr-sub"> — beyondBINARY endless runner</span>
+        </div>
+        <div>
+            <a href="quantum-notepad.html">Back to Notepad</a>
+        </div>
+    </div>
+
+    <div id="game-wrap">
+        <canvas id="game"></canvas>
+
+        <div id="hud">
+            <div class="hud-left">
+                <div class="hud-item hud-score" id="hud-score">+n: 0</div>
+                <div class="hud-item hud-freya-power" id="hud-freya-power" style="display:none;"></div>
+            </div>
+            <div class="hud-center">
+                <div class="hud-item hud-freya" id="hud-freya">FREYA: Planck 0.0 &#x2113;p</div>
+                <div class="hud-item hud-freya-unit" id="hud-freya-unit"></div>
+            </div>
+            <div class="hud-right">
+                <div class="hud-item hud-speed" id="hud-speed">SPEED 1x</div>
+                <div class="hud-item hud-hi" id="hud-hi">HI: 0</div>
+            </div>
+        </div>
+
+        <!-- Start overlay -->
+        <div class="overlay" id="start-overlay">
+            <h1 style="color:#e6b422;">brotherNumsy</h1>
+            <h3>with <span style="color:#c084fc;">Freya</span> — precision companion</h3>
+            <h2>beyondBINARY runner</h2>
+            <p>The binary agents are coming. Only the quantum-prefixed can survive.<br>
+            Collect <b style="color:#58a6ff;">{+1, -1, +0, 0, -0, +n, n, -n}</b> to prove you're beyond binary.<br>
+            <b style="color:#e6b422;">Golden Child</b> tokens grant invincibility.<br>
+            <span style="color:#a78bfa;"><b>Freya</b></span> flies with you, measuring your journey from <b style="color:#06b6d4;">Planck length to Parsec</b>.<br>
+            Collect <b style="color:#c084fc;">FreyaUnit</b> tokens to unleash her <em>conversion beam</em> and clear obstacles.</p>
+            <button class="start-btn" id="btn-start">PLAY</button>
+            <div class="controls-hint">
+                <kbd>Space</kbd> / <kbd>&uarr;</kbd> Jump &nbsp;&middot;&nbsp;
+                <kbd>&darr;</kbd> Duck &nbsp;&middot;&nbsp;
+                Tap on mobile
+            </div>
+        </div>
+
+        <!-- Game Over overlay -->
+        <div class="overlay hidden" id="gameover-overlay">
+            <h2>GAME OVER</h2>
+            <div class="score-final" id="final-score">0</div>
+            <div class="dist-final" id="final-dist"></div>
+            <div class="quote" id="go-quote">"The binary caught you. beyondBINARY next time."</div>
+            <button class="start-btn" id="btn-restart">PLAY AGAIN</button>
+            <div class="controls-hint" id="go-hi">HIGH SCORE: 0</div>
+        </div>
+    </div>
+
+    <div id="footer">
+        <span>{+1, 1, -1, +0, 0, -0, +n, n, -n}</span>
+        <span>&middot;</span>
+        <span class="freya-tag">FreyaUnits: Planck &rarr; Parsec</span>
+        <span>&middot;</span>
+        <a href="quantum-notepad.html">uvspeed notepad</a>
+        <span>&middot;</span>
+        <span>AI API: <code>window.numsyAI</code></span>
+    </div>
+
+    <script>
+    // ================================================================
+    //  brotherNumsy & Freya — beyondBINARY Endless Runner
+    //  Sprites, physics, FreyaUnits conversion engine — all in one file.
+    // ================================================================
+
+    // ──────────────────── SPRITES ────────────────────
+    // Numsy Palette: 0=transparent, 1=black outline, 2=dark robe, 3=robe mid,
+    // 4=gold/skin, 5=bright gold, 6=white, 7=red (eyes/detail), 8=dark gold, 9=gray
+
+    const NUMSY_PAL = [
+        null,
+        '#1a1a2e',  // 1 outline
+        '#2d2040',  // 2 dark robe
+        '#4a3560',  // 3 robe mid
+        '#e6b422',  // 4 gold / skin
+        '#ffd700',  // 5 bright gold
+        '#ffffff',  // 6 white
+        '#ff4444',  // 7 red
+        '#b8860b',  // 8 dark gold
+        '#888899',  // 9 gray
+    ];
+
+    // brotherNumsy 16x16 — run frame 1 (left leg forward)
+    const NUMSY_RUN1 = [
+        [0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0],
+        [0,0,0,0,0,1,4,4,4,4,1,0,0,0,0,0],
+        [0,0,0,0,1,4,6,1,1,6,4,1,0,0,0,0],
+        [0,0,0,0,1,4,4,4,4,4,4,1,0,0,0,0],
+        [0,0,0,0,0,1,4,7,4,1,0,0,0,0,0,0],
+        [0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0],
+        [0,0,0,1,3,3,5,5,5,3,3,1,0,0,0,0],
+        [0,0,1,3,3,3,5,5,5,3,3,3,1,0,0,0],
+        [0,0,1,2,3,3,3,3,3,3,3,2,1,0,0,0],
+        [0,0,1,2,2,3,3,3,3,3,2,2,1,0,0,0],
+        [0,0,0,1,2,2,3,3,3,2,2,1,0,0,0,0],
+        [0,0,0,1,2,2,2,2,2,2,2,1,0,0,0,0],
+        [0,0,0,0,1,2,2,2,2,2,1,0,0,0,0,0],
+        [0,0,0,0,1,1,0,0,1,1,0,0,0,0,0,0],
+        [0,0,0,1,9,1,0,0,0,1,9,1,0,0,0,0],
+        [0,0,0,1,1,0,0,0,0,0,1,1,0,0,0,0],
+    ];
+
+    // brotherNumsy run frame 2 (right leg forward)
+    const NUMSY_RUN2 = [
+        [0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0],
+        [0,0,0,0,0,1,4,4,4,4,1,0,0,0,0,0],
+        [0,0,0,0,1,4,6,1,1,6,4,1,0,0,0,0],
+        [0,0,0,0,1,4,4,4,4,4,4,1,0,0,0,0],
+        [0,0,0,0,0,1,4,7,4,1,0,0,0,0,0,0],
+        [0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0],
+        [0,0,0,1,3,3,5,5,5,3,3,1,0,0,0,0],
+        [0,0,1,3,3,3,5,5,5,3,3,3,1,0,0,0],
+        [0,0,1,2,3,3,3,3,3,3,3,2,1,0,0,0],
+        [0,0,1,2,2,3,3,3,3,3,2,2,1,0,0,0],
+        [0,0,0,1,2,2,3,3,3,2,2,1,0,0,0,0],
+        [0,0,0,1,2,2,2,2,2,2,2,1,0,0,0,0],
+        [0,0,0,0,1,2,2,2,2,2,1,0,0,0,0,0],
+        [0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0],
+        [0,0,0,0,1,9,1,0,1,9,1,0,0,0,0,0],
+        [0,0,0,0,0,1,1,0,0,1,1,0,0,0,0,0],
+    ];
+
+    // brotherNumsy jump frame (arms up, robe flared)
+    const NUMSY_JUMP = [
+        [0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0],
+        [0,0,0,0,0,1,4,4,4,4,1,0,0,0,0,0],
+        [0,0,0,0,1,4,6,1,1,6,4,1,0,0,0,0],
+        [0,0,0,0,1,4,4,4,4,4,4,1,0,0,0,0],
+        [0,0,0,0,0,1,4,7,4,1,0,0,0,0,0,0],
+        [0,0,1,0,1,1,1,1,1,1,1,0,1,0,0,0],
+        [0,1,5,1,3,3,5,5,5,3,3,1,5,1,0,0],
+        [0,1,5,1,3,3,5,5,5,3,3,1,5,1,0,0],
+        [0,0,1,2,3,3,3,3,3,3,3,2,1,0,0,0],
+        [0,1,2,2,2,3,3,3,3,3,2,2,2,1,0,0],
+        [1,2,2,1,2,2,3,3,3,2,2,1,2,2,1,0],
+        [0,1,1,0,1,2,2,2,2,2,1,0,1,1,0,0],
+        [0,0,0,0,0,1,2,2,2,1,0,0,0,0,0,0],
+        [0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0],
+        [0,0,0,0,0,1,9,0,9,1,0,0,0,0,0,0],
+        [0,0,0,0,0,1,1,0,1,1,0,0,0,0,0,0],
+    ];
+
+    // brotherNumsy duck frame (crouched)
+    const NUMSY_DUCK = [
+        [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0],
+        [0,0,0,0,0,1,4,4,4,4,1,0,0,0,0,0],
+        [0,0,0,0,1,4,6,1,1,6,4,1,0,0,0,0],
+        [0,0,0,1,3,1,4,7,4,1,3,3,1,0,0,0],
+        [0,0,1,3,3,3,5,5,5,3,3,3,3,1,0,0],
+        [0,1,2,2,3,3,3,3,3,3,3,2,2,2,1,0],
+        [0,1,2,2,2,2,2,2,2,2,2,2,2,2,1,0],
+        [0,0,1,1,1,1,1,1,1,1,1,1,1,1,0,0],
+        [0,0,1,9,1,0,0,0,0,0,0,1,9,1,0,0],
+        [0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0],
+    ];
+
+    const NUMSY_FRAMES = [NUMSY_RUN1, NUMSY_RUN2, NUMSY_JUMP, NUMSY_DUCK];
+
+    // ──────────────────── FREYA SPRITES ────────────────────
+    // Freya Palette: 0=transparent, 1=dark outline, 2=deep purple, 3=mid purple,
+    // 4=light purple/lavender, 5=cyan glow, 6=white, 7=blue, 8=pink, 9=violet bright
+
+    const FREYA_PAL = [
+        null,
+        '#1a1a2e',  // 1 outline
+        '#4c1d95',  // 2 deep purple
+        '#7c3aed',  // 3 mid purple
+        '#a78bfa',  // 4 lavender
+        '#06b6d4',  // 5 cyan
+        '#ffffff',  // 6 white
+        '#3b82f6',  // 7 blue
+        '#f472b6',  // 8 pink
+        '#c084fc',  // 9 bright violet
+    ];
+
+    // Freya companion 12x12 — floating scientist figure, frame 1 (arms out, measuring)
+    const FREYA_FLY1 = [
+        [0,0,0,0,1,1,1,1,0,0,0,0],
+        [0,0,0,1,4,4,4,4,1,0,0,0],
+        [0,0,1,4,6,1,1,6,4,1,0,0],
+        [0,0,1,4,4,8,4,4,4,1,0,0],
+        [0,0,0,1,1,1,1,1,1,0,0,0],
+        [0,1,5,1,3,3,3,3,1,5,1,0],
+        [1,5,1,3,3,9,9,3,3,1,5,1],
+        [0,1,1,2,3,3,3,3,2,1,1,0],
+        [0,0,1,2,2,3,3,2,2,1,0,0],
+        [0,0,0,1,2,2,2,2,1,0,0,0],
+        [0,0,0,1,1,0,0,1,1,0,0,0],
+        [0,0,0,1,7,0,0,7,1,0,0,0],
+    ];
+
+    // Freya frame 2 (arms shifted, measurement pulse)
+    const FREYA_FLY2 = [
+        [0,0,0,0,1,1,1,1,0,0,0,0],
+        [0,0,0,1,4,4,4,4,1,0,0,0],
+        [0,0,1,4,6,1,1,6,4,1,0,0],
+        [0,0,1,4,4,8,4,4,4,1,0,0],
+        [0,0,0,1,1,1,1,1,1,0,0,0],
+        [0,0,1,3,3,3,3,3,3,1,0,0],
+        [0,1,5,3,3,9,9,3,3,5,1,0],
+        [1,5,1,2,3,3,3,3,2,1,5,1],
+        [0,1,1,2,2,3,3,2,2,1,1,0],
+        [0,0,0,1,2,2,2,2,1,0,0,0],
+        [0,0,0,0,1,1,1,1,0,0,0,0],
+        [0,0,0,0,1,7,7,1,0,0,0,0],
+    ];
+
+    // Freya conversion beam frame (arms wide, energy blast)
+    const FREYA_BEAM = [
+        [0,0,0,0,1,1,1,1,0,0,0,0],
+        [0,0,0,1,9,9,9,9,1,0,0,0],
+        [0,0,1,9,6,1,1,6,9,1,0,0],
+        [0,0,1,4,4,8,4,4,4,1,0,0],
+        [0,0,0,1,1,1,1,1,1,0,0,0],
+        [5,5,5,1,3,9,9,3,1,5,5,5],
+        [0,5,1,3,3,9,9,3,3,1,5,0],
+        [0,0,1,2,3,3,3,3,2,1,0,0],
+        [0,0,1,2,2,3,3,2,2,1,0,0],
+        [0,0,0,1,2,2,2,2,1,0,0,0],
+        [0,0,0,1,1,0,0,1,1,0,0,0],
+        [0,0,0,1,5,0,0,5,1,0,0,0],
+    ];
+
+    const FREYA_FRAMES = [FREYA_FLY1, FREYA_FLY2, FREYA_BEAM];
+
+    // ──────────────────── ENEMY / COLLECTIBLE SPRITES ────────────────────
+
+    // Binary "0" enemy (8x12)
+    const BINARY_0 = [
+        [0,0,1,1,1,1,0,0],
+        [0,1,7,7,7,7,1,0],
+        [1,7,0,0,0,0,7,1],
+        [1,7,0,0,0,0,7,1],
+        [1,7,0,0,0,0,7,1],
+        [1,7,0,0,0,0,7,1],
+        [1,7,0,0,0,0,7,1],
+        [1,7,0,0,0,0,7,1],
+        [1,7,0,0,0,0,7,1],
+        [0,1,7,7,7,7,1,0],
+        [0,0,1,1,1,1,0,0],
+        [0,0,0,0,0,0,0,0],
+    ];
+
+    // Binary "1" enemy (8x12)
+    const BINARY_1 = [
+        [0,0,0,1,1,0,0,0],
+        [0,0,1,7,7,0,0,0],
+        [0,1,1,7,7,0,0,0],
+        [0,0,0,7,7,0,0,0],
+        [0,0,0,7,7,0,0,0],
+        [0,0,0,7,7,0,0,0],
+        [0,0,0,7,7,0,0,0],
+        [0,0,0,7,7,0,0,0],
+        [0,0,0,7,7,0,0,0],
+        [0,1,7,7,7,7,1,0],
+        [0,0,1,1,1,1,0,0],
+        [0,0,0,0,0,0,0,0],
+    ];
+
+    // Flying binary pair {0,1} (12x8)
+    const BINARY_FLYING = [
+        [1,1,0,0,1,0,0,1,0,1,1,0],
+        [1,0,1,0,1,0,1,0,1,0,0,1],
+        [1,0,1,0,1,0,1,0,0,0,0,1],
+        [1,0,1,0,1,0,1,0,0,0,1,0],
+        [1,0,1,0,1,0,1,0,0,1,0,0],
+        [1,0,1,0,1,0,1,0,1,0,0,0],
+        [1,1,0,0,1,0,0,1,1,1,1,0],
+        [0,0,0,0,0,0,0,0,0,0,0,0],
+    ];
+
+    // Quantum collectible (8x8)
+    const QUANTUM_SYMBOL = [
+        [0,0,1,1,1,1,0,0],
+        [0,1,5,5,5,5,1,0],
+        [1,5,4,4,4,4,5,1],
+        [1,5,4,6,6,4,5,1],
+        [1,5,4,6,6,4,5,1],
+        [1,5,4,4,4,4,5,1],
+        [0,1,5,5,5,5,1,0],
+        [0,0,1,1,1,1,0,0],
+    ];
+
+    // Golden Child token (10x10)
+    const GOLDEN_CHILD = [
+        [0,0,0,5,5,5,5,0,0,0],
+        [0,0,5,4,5,5,4,5,0,0],
+        [0,5,4,6,4,4,6,4,5,0],
+        [0,5,4,4,4,4,4,4,5,0],
+        [5,8,5,4,7,4,5,5,8,5],
+        [5,5,5,5,5,5,5,5,5,5],
+        [0,5,8,5,5,5,5,8,5,0],
+        [0,0,5,5,5,5,5,5,0,0],
+        [0,0,0,5,8,8,5,0,0,0],
+        [0,0,0,0,5,5,0,0,0,0],
+    ];
+
+    // FreyaUnit token (10x10) — purple/cyan measurement crystal
+    const FREYA_TOKEN = [
+        [0,0,0,0,1,1,0,0,0,0],
+        [0,0,0,1,9,9,1,0,0,0],
+        [0,0,1,5,9,9,5,1,0,0],
+        [0,1,3,5,6,6,5,3,1,0],
+        [1,3,3,5,6,6,5,3,3,1],
+        [1,3,3,5,6,6,5,3,3,1],
+        [0,1,3,5,9,9,5,3,1,0],
+        [0,0,1,5,9,9,5,1,0,0],
+        [0,0,0,1,9,9,1,0,0,0],
+        [0,0,0,0,1,1,0,0,0,0],
+    ];
+
+    const ENEMY_PAL = [
+        null, '#1a1a2e', '#2d2040', '#4a3560', '#e6b422',
+        '#ffd700', '#ffffff', '#ff3333', '#b8860b', '#888899',
+    ];
+
+    const FLYING_PAL = [null, '#ff5555'];
+
+    // ──────────────────── FREYA UNITS CONVERSION ENGINE ────────────────────
+    // Real FreyaUnits system — 29 units from Planck length to Parsec
+    const FREYA_UNITS = [
+        { sym: 'ℓp',  name: 'Planck',       m: 1.616255e-35 },
+        { sym: 'am',  name: 'Attometer',     m: 1e-18 },
+        { sym: 'fm',  name: 'Femtometer',    m: 1e-15 },
+        { sym: 'pm',  name: 'Picometer',     m: 1e-12 },
+        { sym: 'Å',   name: 'Angstrom',      m: 1e-10 },
+        { sym: 'nm',  name: 'Nanometer',     m: 1e-9 },
+        { sym: 'µin', name: 'Microinch',     m: 2.54e-8 },
+        { sym: 'µm',  name: 'Micrometer',    m: 1e-6 },
+        { sym: 'λIR', name: 'IR Wave',       m: 10e-6 },
+        { sym: 'mil', name: 'Mil',           m: 2.54e-5 },
+        { sym: 'mm',  name: 'Millimeter',    m: 1e-3 },
+        { sym: 'cm',  name: 'Centimeter',    m: 1e-2 },
+        { sym: 'in',  name: 'Inch',          m: 0.0254 },
+        { sym: 'ft',  name: 'Foot',          m: 0.3048 },
+        { sym: 'yd',  name: 'Yard',          m: 0.9144 },
+        { sym: 'm',   name: 'Meter',         m: 1 },
+        { sym: 'λRF', name: 'RF Wave',       m: 1 },
+        { sym: 'λVHF',name: 'VHF Wave',      m: 3 },
+        { sym: 'km',  name: 'Kilometer',     m: 1e3 },
+        { sym: 'mi',  name: 'Mile',          m: 1609.34 },
+        { sym: 'NM',  name: 'Nautical Mile', m: 1852 },
+        { sym: 'λAM', name: 'AM Wave',       m: 300 },
+        { sym: 'λLF', name: 'Long Wave',     m: 3000 },
+        { sym: 'λELF',name: 'ELF Wave',      m: 5e6 },
+        { sym: 'AU',  name: 'Astro Unit',    m: 1.496e11 },
+        { sym: 'ly',  name: 'Light Year',    m: 9.461e15 },
+        { sym: 'pc',  name: 'Parsec',        m: 3.086e16 },
+    ];
+
+    // Unit display categories for the conversion HUD
+    const FREYA_DISPLAY_UNITS = [
+        { sym: 'ℓp',  name: 'Planck',     m: 1.616255e-35 },
+        { sym: 'fm',  name: 'Femtometer', m: 1e-15 },
+        { sym: 'nm',  name: 'Nanometer',  m: 1e-9 },
+        { sym: 'µm',  name: 'Micrometer', m: 1e-6 },
+        { sym: 'mm',  name: 'Millimeter', m: 1e-3 },
+        { sym: 'm',   name: 'Meter',      m: 1 },
+        { sym: 'km',  name: 'Kilometer',  m: 1e3 },
+        { sym: 'AU',  name: 'Astro Unit', m: 1.496e11 },
+        { sym: 'ly',  name: 'Light Year', m: 9.461e15 },
+        { sym: 'pc',  name: 'Parsec',     m: 3.086e16 },
+    ];
+
+    // FreyaUnit symbols that appear as collectible labels
+    const FREYA_SYMBOLS = ['Å', 'nm', 'µm', 'mm', 'm', 'km', 'AU', 'ly', 'pc', 'ℓp'];
+
+    // Distance scale: 1 game pixel-distance = 0.01 meters (10 mm per px)
+    const PX_TO_METERS = 0.01;
+
+    function freyaConvert(meters, unit) {
+        return meters / unit.m;
+    }
+
+    function freyaFormat(val) {
+        if (val === 0) return '0.0';
+        const abs = Math.abs(val);
+        if (abs >= 1e15) return val.toExponential(2);
+        if (abs >= 1e6) return (val / 1e6).toFixed(2) + 'M';
+        if (abs >= 1e3) return (val / 1e3).toFixed(2) + 'K';
+        if (abs >= 1) return val.toFixed(2);
+        if (abs >= 0.001) return val.toFixed(4);
+        return val.toExponential(2);
+    }
+
+    // Pick the best "human-readable" unit for a given distance in meters
+    function freyaBestUnit(meters) {
+        if (meters <= 0) return FREYA_DISPLAY_UNITS[0];
+        // Walk up the scale, pick the unit where the value is >= 0.5
+        let best = FREYA_DISPLAY_UNITS[0];
+        for (const u of FREYA_DISPLAY_UNITS) {
+            if (meters / u.m >= 0.5) best = u;
+        }
+        return best;
+    }
+
+    // Conversion facts shown at scale milestones
+    const FREYA_FACTS = [
+        { at: 0.001,  text: 'You\'ve traveled 1 mm — the width of a pencil lead' },
+        { at: 0.01,   text: 'You\'ve traveled 1 cm — the width of your fingernail' },
+        { at: 0.0254, text: 'You\'ve traveled 1 inch — exactly 25.4 mm (Freya knows)' },
+        { at: 0.1,    text: '100 mm — a LEGO minifig is about 40 mm tall' },
+        { at: 0.3048, text: '1 foot — 12 inches, 304.8 mm' },
+        { at: 1,      text: '1 meter — the SI base unit of length' },
+        { at: 10,     text: '10 meters — the length of a school bus' },
+        { at: 100,    text: '100 m — a football field (Freya: = 3.281×10² ft)' },
+        { at: 1000,   text: '1 kilometer — Freya: = 0.621 miles' },
+        { at: 1609.34,text: '1 mile — 5,280 feet, 1.609 km' },
+        { at: 1852,   text: '1 nautical mile — used in navigation (Freya confirms)' },
+        { at: 10000,  text: '10 km — average altitude of a cruising airplane' },
+        { at: 42195,  text: 'Marathon distance — 42.195 km (Freya: 26.219 mi)' },
+        { at: 100000, text: '100 km — the Kármán line (edge of space!)' },
+    ];
+
+    // ──────────────────── CONSTANTS ────────────────────
+    const GRAVITY    = 0.65;
+    const JUMP_FORCE = -12;
+    const GROUND_Y   = 0.78;
+    const BASE_SPEED = 4.5;
+    const SPEED_INC  = 0.08;
+    const SPAWN_MIN  = 60;
+    const SPAWN_MAX  = 140;
+    const GOLDEN_CHANCE  = 0.03;
+    const FREYA_CHANCE   = 0.08;  // FreyaUnit token spawn chance
+
+    const PREFIXES = ['+1', '1', '-1', '+0', '0', '-0', '+n', 'n', '-n'];
+
+    const GOLDEN_QUOTES = [
+        '"I want the knife." — Chandler Jarrell',
+        '"Only the chosen one can hold the blade."',
+        '"My dear, sweet brother Numsy!"',
+        '"There is a place so dark, the binary dare not go."',
+        '"The quantum child has returned."',
+        '"beyondBINARY... always beyondBINARY."',
+        '"I-I-I want the knife... please."',
+        '"You are not prepared for what lies beyond {0,1}."',
+        '"Freya measured the distance — it was exactly 1 Parsec of courage."',
+        '"Between Planck and Parsec, the truth lives." — Freya',
+        '"..luvuFREYAbot" — echoed through every calculation',
+        '"Her name, in every robot, across all of time."',
+    ];
+
+    // ──────────────────── GAME CLASS ────────────────────
+    class BrotherNumsyGame {
+        constructor(canvas) {
+            this.canvas = canvas;
+            this.ctx = canvas.getContext('2d');
+            this.resize();
+
+            // State
+            this.running = false;
+            this.alive = false;
+            this.score = 0;
+            this.distance = 0;       // px units
+            this.distMeters = 0;     // real meters via FreyaUnits
+            this.highScore = parseInt(localStorage.getItem('numsy_hi') || '0');
+            this.speed = BASE_SPEED;
+            this.speedMult = 1;
+            this.frame = 0;
+
+            // Player
+            this.player = {
+                x: 0, y: 0, vy: 0,
+                w: 16, h: 16,
+                grounded: true,
+                ducking: false,
+                invincible: 0,
+                animFrame: 0,
+            };
+
+            // Freya companion
+            this.freya = {
+                x: 0, y: 0,
+                targetX: 0, targetY: 0,
+                animFrame: 0,
+                power: 0,       // conversion beam energy (0-100)
+                beamActive: 0,  // frames remaining for beam
+                tokensCollected: 0,
+                lastUnit: FREYA_DISPLAY_UNITS[0],
+            };
+
+            // World
+            this.obstacles = [];
+            this.collectibles = [];
+            this.particles = [];
+            this.stars = [];
+            this.gridOffset = 0;
+            this.spawnTimer = 80;
+            this.collectTimer = 50;
+
+            // Freya conversion HUD state
+            this.freyaHudRotate = 0;     // which unit index to show
+            this.freyaHudTimer = 0;
+            this.freyaFactIdx = 0;       // next fact to show
+            this.freyaFactMsg = '';       // current fact message
+            this.freyaFactTimer = 0;     // display timer
+
+            // Generate starfield
+            for (let i = 0; i < 100; i++) {
+                this.stars.push({
+                    x: Math.random() * 2000,
+                    y: Math.random() * this.H,
+                    s: Math.random() * 2 + 0.5,
+                    b: Math.random() * 150 + 80,
+                    speed: Math.random() * 0.5 + 0.2,
+                });
+            }
+
+            // AI callbacks
+            this._aiCallbacks = [];
+
+            // Input
+            this._keys = {};
+            this._touchY = null;
+            window.addEventListener('keydown', e => {
+                this._keys[e.code] = true;
+                if (['Space','ArrowUp','ArrowDown'].includes(e.code)) e.preventDefault();
+            });
+            window.addEventListener('keyup', e => this._keys[e.code] = false);
+            canvas.addEventListener('touchstart', e => {
+                e.preventDefault();
+                this._touchY = e.touches[0].clientY;
+                const rect = canvas.getBoundingClientRect();
+                const relY = (e.touches[0].clientY - rect.top) / rect.height;
+                if (relY < 0.5) this._keys['Space'] = true;
+                else this._keys['ArrowDown'] = true;
+            });
+            canvas.addEventListener('touchend', e => {
+                this._keys['Space'] = false;
+                this._keys['ArrowDown'] = false;
+            });
+
+            this._updateHiDisplay();
+        }
+
+        resize() {
+            const wrap = this.canvas.parentElement;
+            const maxW = wrap.clientWidth;
+            const maxH = wrap.clientHeight - 10;
+            const aspect = 16 / 9;
+            let w = maxW;
+            let h = w / aspect;
+            if (h > maxH) { h = maxH; w = h * aspect; }
+            this.W = Math.floor(w);
+            this.H = Math.floor(h);
+            this.canvas.width = this.W;
+            this.canvas.height = this.H;
+            this.scale = Math.max(2, Math.floor(this.H / 160));
+            this.groundY = Math.floor(this.H * GROUND_Y);
+        }
+
+        start() {
+            this.alive = true;
+            this.running = true;
+            this.score = 0;
+            this.distance = 0;
+            this.distMeters = 0;
+            this.speed = BASE_SPEED;
+            this.speedMult = 1;
+            this.frame = 0;
+            this.obstacles = [];
+            this.collectibles = [];
+            this.particles = [];
+            this.spawnTimer = 80;
+            this.collectTimer = 50;
+            this.freyaHudRotate = 0;
+            this.freyaHudTimer = 0;
+            this.freyaFactIdx = 0;
+            this.freyaFactMsg = '';
+            this.freyaFactTimer = 0;
+
+            const s = this.scale;
+            this.player.x = this.W * 0.12;
+            this.player.y = this.groundY - 16 * s;
+            this.player.vy = 0;
+            this.player.grounded = true;
+            this.player.ducking = false;
+            this.player.invincible = 0;
+            this.player.animFrame = 0;
+
+            // Reset Freya companion
+            this.freya.x = this.player.x - 8 * s;
+            this.freya.y = this.player.y - 20 * s;
+            this.freya.targetX = this.freya.x;
+            this.freya.targetY = this.freya.y;
+            this.freya.animFrame = 0;
+            this.freya.power = 0;
+            this.freya.beamActive = 0;
+            this.freya.tokensCollected = 0;
+            this.freya.lastUnit = FREYA_DISPLAY_UNITS[0];
+
+            document.getElementById('start-overlay').classList.add('hidden');
+            document.getElementById('gameover-overlay').classList.add('hidden');
+            document.getElementById('hud-freya-power').style.display = 'none';
+
+            if (!this._looping) {
+                this._looping = true;
+                this._loop();
+            }
+        }
+
+        _loop() {
+            if (!this.running) { this._looping = false; return; }
+            this.update();
+            this.render();
+            for (const cb of this._aiCallbacks) {
+                try { cb(this.getState()); } catch(e) {}
+            }
+            requestAnimationFrame(() => this._loop());
+        }
+
+        // ──────── UPDATE ────────
+        update() {
+            if (!this.alive) return;
+            this.frame++;
+            const s = this.scale;
+            const p = this.player;
+            const f = this.freya;
+
+            // Speed ramp
+            this.speedMult = 1 + Math.floor(this.score / 500) * SPEED_INC;
+            const spd = this.speed * this.speedMult * (p.invincible > 0 ? 1.3 : 1);
+
+            // Input
+            const wantJump = this._keys['Space'] || this._keys['ArrowUp'] || this._keys['KeyW'];
+            const wantDuck = this._keys['ArrowDown'] || this._keys['KeyS'];
+
+            if (wantJump && p.grounded) {
+                p.vy = JUMP_FORCE * (s / 4);
+                p.grounded = false;
+            }
+            p.ducking = wantDuck && p.grounded;
+
+            // Gravity
+            if (!p.grounded) {
+                p.vy += GRAVITY * (s / 4);
+                p.y += p.vy;
+                if (p.y >= this.groundY - 16 * s) {
+                    p.y = this.groundY - 16 * s;
+                    p.vy = 0;
+                    p.grounded = true;
+                }
+            }
+
+            // Player animation
+            if (p.grounded && !p.ducking) {
+                p.animFrame = (Math.floor(this.frame / 8) % 2);
+            } else if (!p.grounded) {
+                p.animFrame = 2;
+            } else {
+                p.animFrame = 3;
+            }
+
+            // Invincibility countdown
+            if (p.invincible > 0) p.invincible--;
+
+            // ── Freya companion movement ──
+            f.targetX = p.x - 14 * s;
+            f.targetY = p.y - 18 * s + Math.sin(this.frame * 0.05) * 6 * (s / 3);
+            // Smooth follow
+            f.x += (f.targetX - f.x) * 0.12;
+            f.y += (f.targetY - f.y) * 0.1;
+            // Animation: normal fly or beam
+            if (f.beamActive > 0) {
+                f.animFrame = 2; // beam frame
+                f.beamActive--;
+            } else {
+                f.animFrame = Math.floor(this.frame / 10) % 2;
+            }
+
+            // ── Freya trail particles ──
+            if (this.frame % 4 === 0) {
+                const trailColor = f.beamActive > 0 ? '#c084fc' : '#7c3aed';
+                this.particles.push({
+                    x: f.x + 6 * s, y: f.y + 10 * s,
+                    vx: (Math.random() - 0.5) * 1.5,
+                    vy: Math.random() * 2 + 0.5,
+                    color: trailColor,
+                    size: Math.random() * 2 + 0.5,
+                    life: 15 + Math.floor(Math.random() * 10),
+                });
+            }
+
+            // Scroll distance
+            this.distance += spd;
+            this.distMeters = this.distance * PX_TO_METERS;
+            this.score = Math.floor(this.distance / 10);
+            this.gridOffset = (this.gridOffset + spd) % (32 * s);
+
+            // ── Freya conversion HUD update ──
+            this.freyaHudTimer++;
+            if (this.freyaHudTimer >= 90) { // rotate display unit every 1.5s
+                this.freyaHudTimer = 0;
+                this.freyaHudRotate = (this.freyaHudRotate + 1) % FREYA_DISPLAY_UNITS.length;
+            }
+            f.lastUnit = freyaBestUnit(this.distMeters);
+
+            // ── Freya scale milestone facts ──
+            if (this.freyaFactIdx < FREYA_FACTS.length) {
+                const fact = FREYA_FACTS[this.freyaFactIdx];
+                if (this.distMeters >= fact.at) {
+                    this.freyaFactMsg = fact.text;
+                    this.freyaFactTimer = 180; // 3 seconds
+                    this.freyaFactIdx++;
+                    // Bonus particles at milestone
+                    this._spawnParticles(f.x + 6 * s, f.y + 6 * s, '#06b6d4', 10);
+                }
+            }
+            if (this.freyaFactTimer > 0) this.freyaFactTimer--;
+
+            // ── Spawn obstacles ──
+            this.spawnTimer -= 1;
+            if (this.spawnTimer <= 0) {
+                this.spawnTimer = SPAWN_MIN + Math.floor(Math.random() * (SPAWN_MAX - SPAWN_MIN));
+                this.spawnTimer = Math.max(30, this.spawnTimer - Math.floor(this.speedMult * 10));
+
+                const isFlying = Math.random() < 0.3;
+                if (isFlying) {
+                    this.obstacles.push({
+                        type: 'flying',
+                        x: this.W + 20,
+                        y: this.groundY - (30 + Math.random() * 20) * s,
+                        w: 12 * s, h: 8 * s,
+                        sprite: BINARY_FLYING,
+                    });
+                } else {
+                    const isTall = Math.random() < 0.4;
+                    const sprite = Math.random() < 0.5 ? BINARY_0 : BINARY_1;
+                    this.obstacles.push({
+                        type: 'ground',
+                        x: this.W + 20,
+                        y: this.groundY - (isTall ? 14 : 12) * s,
+                        w: 8 * s, h: (isTall ? 14 : 12) * s,
+                        sprite: sprite,
+                    });
+                }
+            }
+
+            // ── Spawn collectibles ──
+            this.collectTimer -= 1;
+            if (this.collectTimer <= 0) {
+                this.collectTimer = 40 + Math.floor(Math.random() * 60);
+                const roll = Math.random();
+                const isGolden = roll < GOLDEN_CHANCE;
+                const isFreya = !isGolden && roll < GOLDEN_CHANCE + FREYA_CHANCE;
+                const yOff = Math.random() < 0.5 ? 0 : -20 * s;
+
+                let type, spriteC, symbolC, wC, hC;
+                if (isGolden) {
+                    type = 'golden'; spriteC = GOLDEN_CHILD;
+                    symbolC = ''; wC = 10; hC = 10;
+                } else if (isFreya) {
+                    type = 'freya'; spriteC = FREYA_TOKEN;
+                    symbolC = FREYA_SYMBOLS[Math.floor(Math.random() * FREYA_SYMBOLS.length)];
+                    wC = 10; hC = 10;
+                } else {
+                    type = 'quantum'; spriteC = QUANTUM_SYMBOL;
+                    symbolC = PREFIXES[Math.floor(Math.random() * PREFIXES.length)];
+                    wC = 8; hC = 8;
+                }
+                this.collectibles.push({
+                    type, sprite: spriteC, symbol: symbolC,
+                    x: this.W + 20,
+                    y: this.groundY - 20 * s + yOff,
+                    w: wC * s, h: hC * s,
+                    bob: Math.random() * Math.PI * 2,
+                });
+            }
+
+            // ── Move obstacles ──
+            for (const ob of this.obstacles) ob.x -= spd;
+            this.obstacles = this.obstacles.filter(o => o.x + o.w > -50);
+
+            // ── Move collectibles ──
+            for (const c of this.collectibles) {
+                c.x -= spd;
+                c.bob += 0.08;
+            }
+            this.collectibles = this.collectibles.filter(c => c.x + c.w > -50);
+
+            // ── Freya conversion beam effect ──
+            if (f.beamActive > 0) {
+                // Beam destroys nearby obstacles
+                for (const ob of this.obstacles) {
+                    const dist = ob.x - p.x;
+                    if (dist > 0 && dist < 200 * (s / 3)) {
+                        this._spawnParticles(ob.x + ob.w/2, ob.y + ob.h/2, '#c084fc', 10);
+                        ob.x = -999;
+                        this.score += 7;
+                    }
+                }
+            }
+
+            // ── Collision: obstacles ──
+            const px = p.x;
+            const pw = 12 * s;
+            const py = p.ducking ? p.y + 8 * s : p.y;
+            const ph = p.ducking ? 8 * s : 16 * s;
+
+            for (const ob of this.obstacles) {
+                if (this._aabb(px, py, pw, ph, ob.x, ob.y, ob.w, ob.h)) {
+                    if (p.invincible > 0) {
+                        ob.x = -999;
+                        this._spawnParticles(ob.x + ob.w/2, ob.y + ob.h/2, '#ff3333', 8);
+                        this.score += 5;
+                    } else {
+                        this._die();
+                        return;
+                    }
+                }
+            }
+
+            // ── Collision: collectibles ──
+            for (let i = this.collectibles.length - 1; i >= 0; i--) {
+                const c = this.collectibles[i];
+                const cy = c.y + Math.sin(c.bob) * 4 * (s / 3);
+                if (this._aabb(px, py, pw, ph, c.x, cy, c.w, c.h)) {
+                    if (c.type === 'golden') {
+                        p.invincible = 180;
+                        this.score += 99;
+                        this._spawnParticles(c.x, cy, '#ffd700', 20);
+                    } else if (c.type === 'freya') {
+                        // FreyaUnit token collected!
+                        f.tokensCollected++;
+                        f.power = Math.min(100, f.power + 35);
+                        this.score += 15;
+                        this._spawnParticles(c.x, cy, '#c084fc', 15);
+                        this._spawnParticles(c.x, cy, '#06b6d4', 10);
+                        // Auto-trigger beam when power hits 100
+                        if (f.power >= 100) {
+                            f.beamActive = 120; // 2 seconds of beam
+                            f.power = 0;
+                            this._spawnParticles(f.x + 6 * s, f.y + 6 * s, '#c084fc', 25);
+                        }
+                    } else {
+                        this.score += 9;
+                        this._spawnParticles(c.x, cy, '#58a6ff', 6);
+                    }
+                    this.collectibles.splice(i, 1);
+                }
+            }
+
+            // ── Particles ──
+            for (const pt of this.particles) {
+                pt.x += pt.vx;
+                pt.y += pt.vy;
+                pt.vy += 0.2;
+                pt.life--;
+            }
+            this.particles = this.particles.filter(pt => pt.life > 0);
+
+            // ── Golden trail ──
+            if (p.invincible > 0 && this.frame % 3 === 0) {
+                this._spawnParticles(p.x, p.y + 8 * s, '#e6b422', 2);
+            }
+
+            // Update HUD
+            this._updateHUD();
+        }
+
+        _aabb(ax, ay, aw, ah, bx, by, bw, bh) {
+            return ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by;
+        }
+
+        _spawnParticles(x, y, color, count) {
+            for (let i = 0; i < count; i++) {
+                this.particles.push({
+                    x, y,
+                    vx: (Math.random() - 0.5) * 6,
+                    vy: (Math.random() - 1) * 5,
+                    color,
+                    size: Math.random() * 3 + 1,
+                    life: 20 + Math.floor(Math.random() * 15),
+                });
+            }
+        }
+
+        _die() {
+            this.alive = false;
+            if (this.score > this.highScore) {
+                this.highScore = this.score;
+                localStorage.setItem('numsy_hi', String(this.highScore));
+            }
+            setTimeout(() => this._showGameOver(), 400);
+        }
+
+        _showGameOver() {
+            const overlay = document.getElementById('gameover-overlay');
+            document.getElementById('final-score').textContent = `+n: ${this.score.toLocaleString()}`;
+
+            // Show final distance in best FreyaUnit
+            const bestUnit = freyaBestUnit(this.distMeters);
+            const val = freyaConvert(this.distMeters, bestUnit);
+            document.getElementById('final-dist').textContent =
+                `Freya measured: ${freyaFormat(val)} ${bestUnit.sym} (${freyaFormat(this.distMeters)} m) — ${this.freya.tokensCollected} FreyaUnit tokens`;
+
+            document.getElementById('go-quote').textContent = GOLDEN_QUOTES[Math.floor(Math.random() * GOLDEN_QUOTES.length)];
+            document.getElementById('go-hi').textContent = `HIGH SCORE: +n: ${this.highScore.toLocaleString()}`;
+            overlay.classList.remove('hidden');
+        }
+
+        _updateHUD() {
+            document.getElementById('hud-score').textContent = `+n: ${this.score.toLocaleString()}`;
+            document.getElementById('hud-speed').textContent = `SPEED ${this.speedMult.toFixed(1)}x`;
+
+            // Freya primary distance (best unit)
+            const bestUnit = this.freya.lastUnit;
+            const bestVal = freyaConvert(this.distMeters, bestUnit);
+            document.getElementById('hud-freya').textContent =
+                `FREYA: ${freyaFormat(bestVal)} ${bestUnit.sym}`;
+
+            // Freya secondary (rotating unit)
+            const rotUnit = FREYA_DISPLAY_UNITS[this.freyaHudRotate];
+            const rotVal = freyaConvert(this.distMeters, rotUnit);
+            document.getElementById('hud-freya-unit').textContent =
+                `= ${freyaFormat(rotVal)} ${rotUnit.sym} (${rotUnit.name})`;
+
+            // Freya power meter
+            const f = this.freya;
+            const powerEl = document.getElementById('hud-freya-power');
+            if (f.power > 0 || f.beamActive > 0) {
+                powerEl.style.display = 'block';
+                if (f.beamActive > 0) {
+                    powerEl.textContent = `BEAM ACTIVE [${'█'.repeat(Math.ceil(f.beamActive / 12))}]`;
+                    powerEl.style.color = '#c084fc';
+                } else {
+                    const bars = Math.ceil(f.power / 10);
+                    powerEl.textContent = `FREYA [${'█'.repeat(bars)}${'░'.repeat(10 - bars)}] ${f.power}%`;
+                    powerEl.style.color = '#a78bfa';
+                }
+            } else {
+                powerEl.style.display = 'none';
+            }
+        }
+
+        _updateHiDisplay() {
+            document.getElementById('hud-hi').textContent = `HI: ${this.highScore.toLocaleString()}`;
+        }
+
+        // ──────── RENDER ────────
+        render() {
+            const ctx = this.ctx;
+            const W = this.W, H = this.H;
+            const s = this.scale;
+
+            // === Background: space ===
+            ctx.fillStyle = '#0d1117';
+            ctx.fillRect(0, 0, W, H);
+
+            // Parallax stars
+            for (const star of this.stars) {
+                star.x -= star.speed * this.speedMult;
+                if (star.x < 0) { star.x = W + Math.random() * 200; star.y = Math.random() * H; }
+                ctx.fillStyle = `rgba(255,255,255,${star.b / 255})`;
+                ctx.fillRect(star.x, star.y, star.s, star.s);
+            }
+
+            // === Mid-ground: quantum lattice grid ===
+            ctx.strokeStyle = 'rgba(88,166,255,0.08)';
+            ctx.lineWidth = 1;
+            const gridSpacing = 32 * s;
+            const gOff = this.gridOffset;
+            for (let x = -gOff; x < W + gridSpacing; x += gridSpacing) {
+                ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, this.groundY); ctx.stroke();
+            }
+            for (let y = 0; y < this.groundY; y += gridSpacing) {
+                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+            }
+
+            // === Ground ===
+            ctx.fillStyle = '#161b22';
+            ctx.fillRect(0, this.groundY, W, H - this.groundY);
+            ctx.fillStyle = '#30363d';
+            ctx.fillRect(0, this.groundY, W, 2);
+
+            // Ground texture
+            ctx.strokeStyle = 'rgba(48,54,61,0.5)';
+            for (let x = -gOff; x < W + 20; x += 20 * s) {
+                ctx.beginPath();
+                ctx.moveTo(x, this.groundY + 6);
+                ctx.lineTo(x + 10 * s, this.groundY + 6);
+                ctx.stroke();
+            }
+
+            // === Freya conversion beam visual ===
+            const f = this.freya;
+            if (f.beamActive > 0) {
+                const beamAlpha = 0.15 + Math.sin(this.frame * 0.3) * 0.08;
+                const grad = ctx.createLinearGradient(f.x + 12 * s, 0, this.W, 0);
+                grad.addColorStop(0, `rgba(167,139,250,${beamAlpha})`);
+                grad.addColorStop(0.5, `rgba(6,182,212,${beamAlpha * 0.7})`);
+                grad.addColorStop(1, 'rgba(192,132,252,0)');
+                ctx.fillStyle = grad;
+                ctx.fillRect(f.x + 12 * s, f.y - 4 * s, this.W - f.x, 24 * s);
+
+                // Beam sparkles
+                if (this.frame % 2 === 0) {
+                    for (let bx = f.x + 20 * s; bx < Math.min(f.x + 200 * s, this.W); bx += 15 * s) {
+                        const by = f.y + Math.sin(bx * 0.05 + this.frame * 0.2) * 10 * s;
+                        ctx.fillStyle = '#c084fc';
+                        ctx.globalAlpha = 0.6;
+                        ctx.fillRect(bx, by, s * 1.5, s * 1.5);
+                    }
+                    ctx.globalAlpha = 1;
+                }
+            }
+
+            // === Obstacles ===
+            for (const ob of this.obstacles) {
+                if (ob.type === 'flying') {
+                    this._drawSprite(ctx, ob.sprite, ob.x, ob.y, s, FLYING_PAL);
+                } else {
+                    this._drawSprite(ctx, ob.sprite, ob.x, ob.y, s, ENEMY_PAL);
+                }
+            }
+
+            // === Collectibles ===
+            for (const c of this.collectibles) {
+                const bobY = c.y + Math.sin(c.bob) * 4 * (s / 3);
+                // Glow
+                let glowColor;
+                if (c.type === 'golden') glowColor = 'rgba(255,215,0,0.25)';
+                else if (c.type === 'freya') glowColor = 'rgba(167,139,250,0.3)';
+                else glowColor = 'rgba(88,166,255,0.2)';
+                ctx.fillStyle = glowColor;
+                ctx.beginPath();
+                ctx.arc(c.x + c.w / 2, bobY + c.h / 2, c.w * 0.8, 0, Math.PI * 2);
+                ctx.fill();
+
+                // FreyaUnit token has a secondary cyan ring
+                if (c.type === 'freya') {
+                    ctx.strokeStyle = `rgba(6,182,212,${0.3 + Math.sin(c.bob) * 0.15})`;
+                    ctx.lineWidth = s * 0.5;
+                    ctx.beginPath();
+                    ctx.arc(c.x + c.w / 2, bobY + c.h / 2, c.w * 1.0, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+
+                // Sprite
+                const pal = c.type === 'freya' ? FREYA_PAL : NUMSY_PAL;
+                this._drawSprite(ctx, c.sprite, c.x, bobY, s, pal);
+
+                // Symbol label
+                if (c.type === 'golden') {
+                    ctx.fillStyle = '#ffd700';
+                } else if (c.type === 'freya') {
+                    ctx.fillStyle = '#c084fc';
+                } else {
+                    ctx.fillStyle = '#58a6ff';
+                }
+                ctx.font = `bold ${Math.max(8, s * 3)}px monospace`;
+                ctx.textAlign = 'center';
+                ctx.fillText(c.symbol, c.x + c.w / 2, bobY - 2);
+                ctx.textAlign = 'start';
+            }
+
+            // === Freya companion ===
+            const freyaSprite = FREYA_FRAMES[f.animFrame];
+
+            // Freya aura
+            const auraAlpha = f.beamActive > 0
+                ? 0.3 + Math.sin(this.frame * 0.25) * 0.15
+                : 0.12 + Math.sin(this.frame * 0.08) * 0.06;
+            const auraColor = f.beamActive > 0 ? '192,132,252' : '124,58,237';
+            ctx.fillStyle = `rgba(${auraColor},${auraAlpha})`;
+            ctx.beginPath();
+            ctx.arc(f.x + 6 * s, f.y + 6 * s, (f.beamActive > 0 ? 10 : 8) * s, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Draw Freya sprite
+            this._drawSprite(ctx, freyaSprite, f.x, f.y, s, FREYA_PAL);
+
+            // Small "F" label above Freya
+            ctx.fillStyle = '#a78bfa';
+            ctx.font = `bold ${Math.max(7, s * 2.5)}px monospace`;
+            ctx.textAlign = 'center';
+            ctx.fillText('F', f.x + 6 * s, f.y - 3);
+            ctx.textAlign = 'start';
+
+            // === Player ===
+            const p = this.player;
+            const spriteFrame = NUMSY_FRAMES[p.animFrame];
+
+            // Invincibility golden aura
+            if (p.invincible > 0) {
+                const pulse = 0.3 + Math.sin(this.frame * 0.2) * 0.15;
+                ctx.fillStyle = `rgba(230,180,34,${pulse})`;
+                ctx.beginPath();
+                ctx.arc(p.x + 8 * s, p.y + 8 * s, 12 * s, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // Flash blink at end of invincibility
+            if (p.invincible > 0 && p.invincible < 30 && this.frame % 4 < 2) {
+                // skip (blink)
+            } else {
+                this._drawSprite(ctx, spriteFrame, p.x, p.y, s, NUMSY_PAL);
+            }
+
+            // === Particles ===
+            for (const pt of this.particles) {
+                const alpha = pt.life / 30;
+                ctx.fillStyle = pt.color;
+                ctx.globalAlpha = alpha;
+                ctx.fillRect(pt.x, pt.y, pt.size * s / 3, pt.size * s / 3);
+            }
+            ctx.globalAlpha = 1;
+
+            // === Freya fact banner ===
+            if (this.freyaFactTimer > 0) {
+                const factAlpha = Math.min(1, this.freyaFactTimer / 30);
+                ctx.fillStyle = `rgba(76,29,149,${0.7 * factAlpha})`;
+                const bannerH = 28;
+                const bannerY = this.groundY - bannerH - 8;
+                ctx.fillRect(0, bannerY, W, bannerH);
+                ctx.strokeStyle = `rgba(167,139,250,${0.5 * factAlpha})`;
+                ctx.lineWidth = 1;
+                ctx.strokeRect(0, bannerY, W, bannerH);
+                ctx.fillStyle = `rgba(6,182,212,${factAlpha})`;
+                ctx.font = `${Math.max(10, s * 3)}px monospace`;
+                ctx.textAlign = 'center';
+                ctx.fillText(this.freyaFactMsg, W / 2, bannerY + bannerH / 2 + 4);
+                ctx.textAlign = 'start';
+            }
+
+            // === Death flash ===
+            if (!this.alive) {
+                ctx.fillStyle = 'rgba(255,68,68,0.15)';
+                ctx.fillRect(0, 0, W, H);
+            }
+        }
+
+        _drawSprite(ctx, sprite, x, y, scale, palette) {
+            for (let r = 0; r < sprite.length; r++) {
+                const row = sprite[r];
+                for (let c = 0; c < row.length; c++) {
+                    const idx = row[c];
+                    if (idx === 0) continue;
+                    const color = (palette && palette[idx]) || NUMSY_PAL[idx];
+                    if (!color) continue;
+                    ctx.fillStyle = color;
+                    ctx.fillRect(x + c * scale, y + r * scale, scale, scale);
+                }
+            }
+        }
+
+        // ──────── AI API ────────
+        getState() {
+            const s = this.scale;
+            const p = this.player;
+            const f = this.freya;
+            return {
+                alive: this.alive,
+                score: this.score,
+                speed: this.speed * this.speedMult,
+                distanceMeters: this.distMeters,
+                playerY: p.y,
+                playerGrounded: p.grounded,
+                playerDucking: p.ducking,
+                invincible: p.invincible > 0,
+                freyaPower: f.power,
+                freyaBeamActive: f.beamActive > 0,
+                freyaTokens: f.tokensCollected,
+                freyaUnit: f.lastUnit.sym,
+                obstacles: this.obstacles.slice(0, 5).map(o => ({
+                    type: o.type, x: o.x, y: o.y, w: o.w, h: o.h,
+                    dist: o.x - p.x,
+                })),
+                collectibles: this.collectibles.slice(0, 5).map(c => ({
+                    type: c.type, x: c.x, y: c.y, symbol: c.symbol,
+                    dist: c.x - p.x,
+                })),
+                groundY: this.groundY,
+                canvasH: this.H,
+                frame: this.frame,
+            };
+        }
+
+        act(action) {
+            if (action === 'jump') {
+                this._keys['Space'] = true;
+                setTimeout(() => this._keys['Space'] = false, 100);
+            } else if (action === 'duck') {
+                this._keys['ArrowDown'] = true;
+                setTimeout(() => this._keys['ArrowDown'] = false, 200);
+            }
+        }
+
+        reset() {
+            this.start();
+        }
+
+        onFrame(cb) {
+            this._aiCallbacks.push(cb);
+        }
+    }
+
+    // ──────────────────── FREYA UNITS API ────────────────────
+    // Expose FreyaUnits conversion functions globally
+    window.FreyaUnits = {
+        units: FREYA_UNITS,
+        convert: function(value, fromSym, toSym) {
+            const from = FREYA_UNITS.find(u => u.sym === fromSym);
+            const to = FREYA_UNITS.find(u => u.sym === toSym);
+            if (!from || !to) return null;
+            const meters = value * from.m;
+            return meters / to.m;
+        },
+        toMeters: function(value, sym) {
+            const u = FREYA_UNITS.find(u => u.sym === sym);
+            return u ? value * u.m : null;
+        },
+        fromMeters: function(meters, sym) {
+            const u = FREYA_UNITS.find(u => u.sym === sym);
+            return u ? meters / u.m : null;
+        },
+        bestUnit: freyaBestUnit,
+        format: freyaFormat,
+        listUnits: function() { return FREYA_UNITS.map(u => `${u.sym} (${u.name}): ${u.m} m`); },
+    };
+
+    // ──────────────────── INIT ────────────────────
+    const canvas = document.getElementById('game');
+    const game = new BrotherNumsyGame(canvas);
+
+    // Expose AI API
+    window.numsyAI = {
+        getState: () => game.getState(),
+        act: (a) => game.act(a),
+        reset: () => game.reset(),
+        onFrame: (cb) => game.onFrame(cb),
+        get highScore() { return game.highScore; },
+    };
+
+    // Buttons
+    document.getElementById('btn-start').addEventListener('click', () => game.start());
+    document.getElementById('btn-restart').addEventListener('click', () => game.start());
+
+    // Keyboard shortcut to restart
+    window.addEventListener('keydown', e => {
+        if (!game.alive && !document.getElementById('start-overlay').classList.contains('hidden')) {
+            if (e.code === 'Space' || e.code === 'Enter') game.start();
+        }
+        if (!game.alive && !document.getElementById('gameover-overlay').classList.contains('hidden')) {
+            if (e.code === 'Space' || e.code === 'Enter') game.start();
+        }
+    });
+
+    // Resize handler
+    window.addEventListener('resize', () => {
+        game.resize();
+        if (!game.running) game.render();
+    });
+
+    // Initial render
+    game.render();
+    </script>
+</body>
+</html>

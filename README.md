@@ -14,7 +14,7 @@
 [![License](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
 [![Live Demo](https://img.shields.io/badge/Live-GitHub_Pages-00c853)](https://fornevercollective.github.io/uvspeed/web/quantum-notepad.html)
 
-**[Launch Live Demo](https://fornevercollective.github.io/uvspeed/web/quantum-notepad.html)** | [GitHub Repo](https://github.com/fornevercollective/uvspeed)
+**[Launch Live Demo](https://fornevercollective.github.io/uvspeed/web/quantum-notepad.html)** | **[Play brotherNumsy & Freya](https://fornevercollective.github.io/uvspeed/web/brothernumsy.html)** | [GitHub Repo](https://github.com/fornevercollective/uvspeed)
 
 ---
 
@@ -227,6 +227,53 @@ Interactive mermaid diagrams with pan/zoom/drag, SVG export, and expand overlay:
 <p align="center">
 <img src="icons/12-quantum-navigation.png" alt="Quantum navigation sidebar — 9-button grid with layer up/down, position display" width="200">
 </p>
+
+---
+
+## brotherNumsy & Freya — beyondBINARY Runner
+
+An endless side-scrolling runner built entirely in one self-contained HTML file. Play as **brotherNumsy** — a robed, golden-aura figure inspired by Sardo Numspa from *The Golden Child* — dodging binary agents (`0` and `1`) while collecting quantum prefix symbols. Your companion **Freya** flies alongside you, measuring every meter of your journey using the **FreyaUnits** precision conversion engine (Planck length to Parsec).
+
+**[Play Now](https://fornevercollective.github.io/uvspeed/web/brothernumsy.html)** | Also launchable from the notepad footer (`🎮 brotherNumsy & Freya` button)
+
+| Feature | Details |
+|---------|---------|
+| **brotherNumsy** | 16x16 pixel-art sprite with 4 animation frames (run1, run2, jump, duck) |
+| **Freya** | 12x12 companion sprite (fly1, fly2, beam) — purple/cyan quantum palette, floats alongside the player |
+| **FreyaUnits Engine** | Real 27-unit conversion system (ℓp → pc), live HUD showing distance in rotating units |
+| **FreyaUnit Tokens** | Purple crystal collectibles (+15 pts) — collect 3 to trigger Freya's *conversion beam* |
+| **Conversion Beam** | 2-second purple/cyan energy wave that clears all obstacles ahead |
+| **Obstacles** | Ground binary `0`/`1` blocks (jump), flying `{0,1}` pairs (duck) |
+| **Collectibles** | Quantum prefix symbols `{+1, -1, +0, 0, -0, +n, n, -n}` (+9 pts each) |
+| **Golden Child** | Rare token — 3s invincibility + golden trail |
+| **Scale Milestones** | Freya announces real-world facts as you pass 1mm, 1cm, 1in, 1ft, 1m, 1km, 1mi... |
+| **Scoring** | Distance + collectibles, displayed as `+n: 1,337` |
+| **Controls** | `Space`/`↑` jump, `↓` duck, touch on mobile |
+| **AI Training** | `window.numsyAI` API — full game state including Freya power/beam/tokens |
+| **FreyaUnits API** | `window.FreyaUnits` — convert between any 27 units from browser console |
+| **Persistence** | High scores saved in localStorage |
+
+### AI Training API
+
+```javascript
+// Game control
+window.numsyAI.getState()  // {alive, score, speed, freyaPower, freyaBeamActive, distanceMeters, ...}
+window.numsyAI.act('jump') // 'jump', 'duck', or 'none'
+window.numsyAI.reset()     // restart the game
+window.numsyAI.onFrame(cb) // register per-frame callback for RL training loops
+```
+
+### FreyaUnits Conversion API
+
+```javascript
+// Unit conversion from browser console
+window.FreyaUnits.convert(1, 'mi', 'km')      // 1.60934
+window.FreyaUnits.convert(1, 'AU', 'ly')       // 1.581e-5
+window.FreyaUnits.toMeters(100, 'nm')           // 1e-7
+window.FreyaUnits.fromMeters(0.0254, 'mil')     // 1000
+window.FreyaUnits.bestUnit(42195)               // {sym:'km', name:'Kilometer', m:1000}
+window.FreyaUnits.listUnits()                   // all 27 units with meter values
+```
 
 ---
 

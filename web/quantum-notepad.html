@@ -2240,6 +2240,8 @@
                 <button class="btn btn--xs" id="f-git-hook" title="Install quantum pre-commit hook" style="background:#8b5cf622;border-color:#8b5cf655;color:#8b5cf6;">🪝 Hook</button>
                 <button class="btn btn--xs quick-cmd" data-cmd="uv sync">🔄 Sync</button>
                 <button class="btn btn--xs quick-cmd" data-cmd="q tinygrad">🔍 Search</button>
+                <span style="opacity:0.3;margin:0 2px;">│</span>
+                <button class="btn btn--xs" id="f-play-numsy" title="Play brotherNumsy &amp; Freya — beyondBINARY runner with FreyaUnits conversion engine" style="background:#e6b42222;border-color:#e6b42255;color:#e6b422;">🎮 brotherNumsy &amp; Freya</button>
                 <button class="btn btn--xs quick-cmd" data-cmd="help">❓ Help</button>
                 <button class="btn btn--xs quick-cmd" data-cmd="pos">📍 Position</button>
                 <button class="btn btn--xs quick-cmd" data-cmd="cells">📋 Cells</button>
@@ -4600,6 +4602,11 @@
                 // Git hook install button
                 document.getElementById('f-git-hook').addEventListener('click', () => {
                     this._installGitHook();
+                });
+
+                // brotherNumsy game button — opens in new tab
+                document.getElementById('f-play-numsy').addEventListener('click', () => {
+                    window.open('brothernumsy.html', '_blank');
                 });
 
                 // Stream pipe in/out buttons
