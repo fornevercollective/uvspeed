@@ -1,0 +1,553 @@
+<!-- beyondBINARY quantum-prefixed | uvspeed | {+1, 1, -1, +0, 0, -0, +n, n, -n} -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>uvspeed — jawta audio | Spatial Audio + Live Code</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="../icons/favicon.png">
+    <link rel="icon" type="image/x-icon" href="../icons/favicon.ico">
+    <style>
+        :root {
+            --cursor-bg: #0d1117; --cursor-bg-secondary: #161b22; --cursor-bg-tertiary: #21262d;
+            --cursor-border: #30363d; --cursor-text: #e6edf3; --cursor-text-muted: #8b949e;
+            --cursor-accent: #58a6ff; --cursor-success: #3fb950; --cursor-warning: #f0883e;
+            --cursor-error: #f85149; --cursor-purple: #a78bfa; --cursor-cyan: #56d4dd;
+            --audio-pink: #ff6b9d; --audio-violet: #c084fc;
+            --cursor-space-xs: 4px; --cursor-space-sm: 8px; --cursor-space-md: 16px;
+            --cursor-space-lg: 24px; --cursor-radius: 6px;
+            --cursor-font-mono: 'SF Mono','Fira Code','JetBrains Mono','Cascadia Code',monospace;
+        }
+        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+        html,body{height:100%;overflow:hidden}
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;background:var(--cursor-bg);color:var(--cursor-text);font-size:14px;line-height:1.5}
+        a{color:var(--cursor-accent);text-decoration:none}a:hover{text-decoration:underline}
+
+        .app{display:flex;flex-direction:column;height:100vh}
+
+        /* Header */
+        .hdr{background:var(--cursor-bg-secondary);border-bottom:1px solid var(--cursor-border);padding:var(--cursor-space-sm) var(--cursor-space-lg);display:flex;align-items:center;justify-content:space-between;gap:var(--cursor-space-md);flex-shrink:0;min-height:48px}
+        .hdr-title{display:flex;align-items:center;gap:var(--cursor-space-sm);font-size:1rem;font-weight:600;white-space:nowrap}
+        .hdr-logo{height:24px;width:auto;border-radius:4px;filter:drop-shadow(0 0 4px rgba(139,92,246,.3))}
+        .hdr-badge{display:inline-flex;align-items:center;gap:4px;background:#c084fc22;border:1px solid var(--audio-violet);color:var(--audio-violet);border-radius:10px;padding:2px 8px;font-size:.625rem;font-weight:600}
+        .hdr-nav{display:flex;align-items:center;gap:6px;font-size:.75rem;flex-wrap:wrap}
+        .hdr-nav a{padding:3px 8px;border-radius:var(--cursor-radius);background:var(--cursor-bg-tertiary);border:1px solid var(--cursor-border);color:var(--cursor-text-muted);transition:all .15s}
+        .hdr-nav a:hover{color:var(--cursor-accent);border-color:var(--cursor-accent);text-decoration:none}
+        .pulse{display:inline-block;width:7px;height:7px;border-radius:50%;animation:pulse 2s infinite}
+        .pulse-violet{background:var(--audio-violet);box-shadow:0 0 6px var(--audio-violet)}
+        @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.85)}}
+
+        /* Controls */
+        .controls{background:var(--cursor-bg-secondary);border-bottom:1px solid var(--cursor-border);padding:6px var(--cursor-space-lg);display:flex;align-items:center;gap:6px;flex-wrap:wrap;flex-shrink:0}
+        .ctrl-btn{background:var(--cursor-bg-tertiary);border:1px solid var(--cursor-border);color:var(--cursor-text);padding:4px 10px;border-radius:var(--cursor-radius);font-size:.6875rem;cursor:pointer;transition:all .15s;font-family:inherit}
+        .ctrl-btn:hover{border-color:var(--cursor-accent);color:var(--cursor-accent)}
+        .ctrl-btn.active{background:var(--audio-violet);border-color:var(--audio-violet);color:#fff}
+        .ctrl-sep{width:1px;height:20px;background:var(--cursor-border);margin:0 4px}
+
+        /* Main */
+        .main{flex:1;display:flex;overflow:hidden}
+        .content{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:0}
+
+        /* Panels */
+        .panel{border-bottom:1px solid var(--cursor-border);display:flex;flex-direction:column}
+        .panel-hdr{background:var(--cursor-bg-secondary);padding:4px 12px;font-size:.6875rem;font-weight:600;border-bottom:1px solid var(--cursor-border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+        .panel-tag{font-size:.5625rem;padding:1px 6px;border-radius:8px;font-weight:500}
+        .tag-atmos{background:#c084fc22;color:var(--audio-violet);border:1px solid #c084fc44}
+        .tag-live{background:#3fb95022;color:var(--cursor-success);border:1px solid #3fb95044}
+        .tag-eq{background:#f0883e22;color:var(--cursor-warning);border:1px solid #f0883e44}
+        .panel-body{position:relative;background:#000;overflow:hidden}
+        .panel-body canvas{display:block;width:100%;height:100%}
+
+        /* Waveform / Spectrum */
+        .viz-row{display:grid;grid-template-columns:1fr 1fr;min-height:200px}
+        @media(max-width:768px){.viz-row{grid-template-columns:1fr;min-height:auto}}
+
+        /* EQ Bands */
+        .eq-container{background:var(--cursor-bg-secondary);padding:12px 16px}
+        .eq-bands{display:flex;align-items:flex-end;gap:6px;height:140px;padding:0 8px}
+        .eq-band{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+        .eq-slider-wrap{flex:1;display:flex;align-items:center;justify-content:center;width:100%;position:relative}
+        .eq-slider{writing-mode:vertical-lr;direction:rtl;width:28px;height:100px;accent-color:var(--audio-violet);cursor:pointer}
+        .eq-label{font-family:var(--cursor-font-mono);font-size:.5625rem;color:var(--cursor-text-muted);text-align:center}
+        .eq-val{font-family:var(--cursor-font-mono);font-size:.5625rem;color:var(--audio-violet);font-weight:600;min-width:28px;text-align:center}
+
+        /* Spatial / Atmos */
+        .atmos-container{display:grid;grid-template-columns:1fr 1fr;gap:0;min-height:280px}
+        @media(max-width:768px){.atmos-container{grid-template-columns:1fr}}
+        .atmos-canvas-wrap{position:relative;background:#050510;aspect-ratio:1;max-height:280px;display:flex;align-items:center;justify-content:center}
+        .atmos-canvas-wrap canvas{width:100%;height:100%}
+        .atmos-info{padding:12px 16px;background:var(--cursor-bg-secondary);font-size:.6875rem;overflow-y:auto}
+        .atmos-stat{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--cursor-border)}
+        .atmos-stat span:last-child{font-family:var(--cursor-font-mono);font-weight:600}
+
+        /* Live Code Editor (Strudel-style) */
+        .code-container{background:var(--cursor-bg-secondary);display:flex;flex-direction:column}
+        .code-editor{background:var(--cursor-bg);border:1px solid var(--cursor-border);border-radius:var(--cursor-radius);margin:8px 12px;padding:10px;font-family:var(--cursor-font-mono);font-size:.8125rem;color:var(--cursor-text);resize:vertical;min-height:120px;outline:none;line-height:1.6}
+        .code-toolbar{display:flex;gap:4px;padding:0 12px 8px 12px;flex-wrap:wrap}
+
+        /* Sidebar */
+        .sidebar{width:240px;flex-shrink:0;background:var(--cursor-bg-secondary);border-left:1px solid var(--cursor-border);overflow-y:auto;font-size:.75rem}
+        .sidebar-section{padding:var(--cursor-space-sm) var(--cursor-space-md);border-bottom:1px solid var(--cursor-border)}
+        .sidebar-title{font-size:.625rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--cursor-text-muted);margin-bottom:6px}
+        @media(max-width:768px){.sidebar{display:none}}
+
+        /* Spatial channel */
+        .ch-row{display:flex;align-items:center;gap:6px;padding:3px 0;font-size:.6875rem}
+        .ch-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+        .ch-bar{flex:1;height:4px;border-radius:2px;background:var(--cursor-bg);overflow:hidden}
+        .ch-bar-fill{height:100%;border-radius:2px;transition:width .3s}
+        .ch-val{font-family:var(--cursor-font-mono);font-size:.5625rem;min-width:32px;text-align:right}
+
+        /* Footer */
+        .ftr{background:var(--cursor-bg-secondary);border-top:1px solid var(--cursor-border);padding:4px var(--cursor-space-lg);display:flex;align-items:center;gap:8px;font-size:.625rem;color:var(--cursor-text-muted);flex-shrink:0;flex-wrap:wrap}
+        .ftr-mono{font-family:var(--cursor-font-mono)}
+
+        ::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--cursor-border);border-radius:3px}
+    </style>
+</head>
+<body>
+<div class="app">
+    <!-- Header -->
+    <div class="hdr">
+        <div class="hdr-title">
+            <img src="../icons/nyan-banner.png" alt="uvspeed" class="hdr-logo">
+            jawta audio
+            <span style="color:var(--cursor-text-muted);font-weight:400;font-size:.8rem">— spatial audio + live code</span>
+            <span class="hdr-badge"><span class="pulse pulse-violet"></span> Dolby Atmos</span>
+        </div>
+        <div class="hdr-nav">
+            <a href="quantum-notepad.html">Notepad</a>
+            <a href="questcast.html">questcast</a>
+            <a href="archflow.html">archflow</a>
+            <a href="blackwell.html" style="color:#76b900">Blackwell</a>
+            <a href="hexcast.html">hexcast</a>
+            <a href="brothernumsy.html">Game</a>
+        </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls">
+        <button class="ctrl-btn" id="btn-mic" title="Microphone input">🎤 Mic</button>
+        <button class="ctrl-btn" id="btn-file" title="Load audio file">📂 File</button>
+        <button class="ctrl-btn active" id="btn-osc" title="Oscillator test tone">🔊 Oscillator</button>
+        <button class="ctrl-btn" id="btn-strudel" title="Strudel live code">🎵 Strudel</button>
+        <div class="ctrl-sep"></div>
+        <button class="ctrl-btn active" id="btn-atmos" title="Dolby Atmos spatial">🎧 Atmos</button>
+        <button class="ctrl-btn" id="btn-binaural" title="Binaural HRTF">🧠 Binaural</button>
+        <button class="ctrl-btn" id="btn-surround" title="7.1.4 Surround">🔈 7.1.4</button>
+        <div class="ctrl-sep"></div>
+        <button class="ctrl-btn" id="btn-play" title="Play/Resume">▶ Play</button>
+        <button class="ctrl-btn" id="btn-stop" title="Stop">⏹ Stop</button>
+        <button class="ctrl-btn" id="btn-record" title="Record output">⏺ Record</button>
+        <div class="ctrl-sep"></div>
+        <button class="ctrl-btn" id="btn-export" title="Export audio">📤 Export</button>
+    </div>
+
+    <div class="main">
+        <div class="content">
+            <!-- Waveform + Spectrum -->
+            <div class="panel">
+                <div class="panel-hdr"><span>📊 Waveform + Frequency Spectrum</span><span class="panel-tag tag-live"><span class="pulse pulse-violet" style="width:5px;height:5px"></span> live</span></div>
+                <div class="viz-row">
+                    <div class="panel-body" style="min-height:180px"><canvas id="cv-wave"></canvas></div>
+                    <div class="panel-body" style="min-height:180px"><canvas id="cv-spectrum"></canvas></div>
+                </div>
+            </div>
+
+            <!-- EQ -->
+            <div class="panel">
+                <div class="panel-hdr"><span>🎛 8-Band Parametric EQ</span><span class="panel-tag tag-eq">Parametric</span></div>
+                <div class="eq-container">
+                    <div class="eq-bands" id="eq-bands">
+                        <!-- 8 EQ bands injected by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Spatial Atmos -->
+            <div class="panel">
+                <div class="panel-hdr"><span>🎧 Dolby Atmos Spatial Field</span><span class="panel-tag tag-atmos">7.1.4</span></div>
+                <div class="atmos-container">
+                    <div class="atmos-canvas-wrap"><canvas id="cv-atmos"></canvas></div>
+                    <div class="atmos-info">
+                        <div class="sidebar-title">Spatial Configuration</div>
+                        <div class="atmos-stat"><span>Mode</span><span style="color:var(--audio-violet)" id="atmos-mode">Dolby Atmos 7.1.4</span></div>
+                        <div class="atmos-stat"><span>Channels</span><span id="atmos-ch">12</span></div>
+                        <div class="atmos-stat"><span>Objects</span><span id="atmos-obj">128 max</span></div>
+                        <div class="atmos-stat"><span>Binaural</span><span style="color:var(--cursor-success)" id="atmos-bin">HRTF active</span></div>
+                        <div class="atmos-stat"><span>Head Tracking</span><span style="color:var(--cursor-warning)" id="atmos-ht">Quest gyro</span></div>
+                        <div class="atmos-stat"><span>Sample Rate</span><span>48 kHz</span></div>
+                        <div class="atmos-stat"><span>Bit Depth</span><span>24-bit</span></div>
+                        <div class="atmos-stat"><span>Latency</span><span id="atmos-lat">5.3 ms</span></div>
+
+                        <div class="sidebar-title" style="margin-top:12px">Speaker Layout (7.1.4)</div>
+                        <div class="ch-row"><span class="ch-dot" style="background:var(--cursor-accent)"></span>L <div class="ch-bar"><div class="ch-bar-fill" id="ch-l" style="width:70%;background:var(--cursor-accent)"></div></div><span class="ch-val" id="chv-l">-3.2 dB</span></div>
+                        <div class="ch-row"><span class="ch-dot" style="background:var(--cursor-accent)"></span>R <div class="ch-bar"><div class="ch-bar-fill" id="ch-r" style="width:68%;background:var(--cursor-accent)"></div></div><span class="ch-val" id="chv-r">-3.5 dB</span></div>
+                        <div class="ch-row"><span class="ch-dot" style="background:var(--cursor-success)"></span>C <div class="ch-bar"><div class="ch-bar-fill" id="ch-c" style="width:82%;background:var(--cursor-success)"></div></div><span class="ch-val" id="chv-c">-1.2 dB</span></div>
+                        <div class="ch-row"><span class="ch-dot" style="background:var(--cursor-error)"></span>LFE <div class="ch-bar"><div class="ch-bar-fill" id="ch-lfe" style="width:55%;background:var(--cursor-error)"></div></div><span class="ch-val" id="chv-lfe">-6.0 dB</span></div>
+                        <div class="ch-row"><span class="ch-dot" style="background:var(--cursor-warning)"></span>Ls <div class="ch-bar"><div class="ch-bar-fill" id="ch-ls" style="width:50%;background:var(--cursor-warning)"></div></div><span class="ch-val" id="chv-ls">-7.1 dB</span></div>
+                        <div class="ch-row"><span class="ch-dot" style="background:var(--cursor-warning)"></span>Rs <div class="ch-bar"><div class="ch-bar-fill" id="ch-rs" style="width:48%;background:var(--cursor-warning)"></div></div><span class="ch-val" id="chv-rs">-7.4 dB</span></div>
+                        <div class="ch-row"><span class="ch-dot" style="background:var(--cursor-purple)"></span>Lrs <div class="ch-bar"><div class="ch-bar-fill" id="ch-lrs" style="width:40%;background:var(--cursor-purple)"></div></div><span class="ch-val" id="chv-lrs">-9.0 dB</span></div>
+                        <div class="ch-row"><span class="ch-dot" style="background:var(--cursor-purple)"></span>Rrs <div class="ch-bar"><div class="ch-bar-fill" id="ch-rrs" style="width:38%;background:var(--cursor-purple)"></div></div><span class="ch-val" id="chv-rrs">-9.3 dB</span></div>
+                        <div class="ch-row"><span class="ch-dot" style="background:var(--audio-violet)"></span>TFL <div class="ch-bar"><div class="ch-bar-fill" id="ch-tfl" style="width:45%;background:var(--audio-violet)"></div></div><span class="ch-val" id="chv-tfl">-8.0 dB</span></div>
+                        <div class="ch-row"><span class="ch-dot" style="background:var(--audio-violet)"></span>TFR <div class="ch-bar"><div class="ch-bar-fill" id="ch-tfr" style="width:43%;background:var(--audio-violet)"></div></div><span class="ch-val" id="chv-tfr">-8.2 dB</span></div>
+                        <div class="ch-row"><span class="ch-dot" style="background:var(--audio-pink)"></span>TRL <div class="ch-bar"><div class="ch-bar-fill" id="ch-trl" style="width:35%;background:var(--audio-pink)"></div></div><span class="ch-val" id="chv-trl">-10.0 dB</span></div>
+                        <div class="ch-row"><span class="ch-dot" style="background:var(--audio-pink)"></span>TRR <div class="ch-bar"><div class="ch-bar-fill" id="ch-trr" style="width:33%;background:var(--audio-pink)"></div></div><span class="ch-val" id="chv-trr">-10.3 dB</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Live Code Editor (Strudel-style) -->
+            <div class="panel">
+                <div class="panel-hdr"><span>🎵 Live Code — Strudel Style</span><span class="panel-tag tag-live"><span class="pulse pulse-violet" style="width:5px;height:5px"></span> interactive</span></div>
+                <div class="code-container">
+                    <textarea class="code-editor" id="code-editor" spellcheck="false">// jawta audio — Strudel-style live coding
+// Press Ctrl+Enter to evaluate, Ctrl+. to stop
+
+// Basic pattern — kick, snare, hihat
+note("c2 ~ e2 ~").s("bd")
+  .stack(
+    note("~ c3 ~ c3").s("sd"),
+    note("c4 c4 c4 c4").s("hh")
+  )
+  .gain(0.8)
+  .room(0.3)
+
+// Spatial panning — Dolby Atmos object
+.pan(sine.range(0, 1).slow(4))
+.spatialize({
+  azimuth: sine.range(-180, 180).slow(8),
+  elevation: cosine.range(-30, 90).slow(6),
+  distance: sine.range(0.5, 3).slow(12)
+})
+
+// EQ + effects
+.eq({ low: 2, mid: 0, high: -3 })
+.delay(0.25).delaytime(0.125)
+.reverb(0.4)</textarea>
+                    <div class="code-toolbar">
+                        <button class="ctrl-btn" id="btn-eval" title="Evaluate code (Ctrl+Enter)" style="background:var(--cursor-success);border-color:var(--cursor-success);color:#000">▶ Eval</button>
+                        <button class="ctrl-btn" id="btn-hush" title="Stop all (Ctrl+.)">⏹ Hush</button>
+                        <button class="ctrl-btn" id="btn-pattern-1">Pattern: Ambient</button>
+                        <button class="ctrl-btn" id="btn-pattern-2">Pattern: Techno</button>
+                        <button class="ctrl-btn" id="btn-pattern-3">Pattern: Spatial</button>
+                        <button class="ctrl-btn" id="btn-pattern-4">Pattern: Binaural</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-section">
+                <div class="sidebar-title">Audio Engine</div>
+                <div style="font-size:.6875rem;">
+                    <div class="atmos-stat"><span>State</span><span style="color:var(--cursor-success)" id="eng-state">running</span></div>
+                    <div class="atmos-stat"><span>Context</span><span id="eng-ctx">AudioContext</span></div>
+                    <div class="atmos-stat"><span>Sample Rate</span><span id="eng-sr">48000</span></div>
+                    <div class="atmos-stat"><span>Buffer</span><span id="eng-buf">256</span></div>
+                    <div class="atmos-stat"><span>Latency</span><span id="eng-lat">5.3 ms</span></div>
+                </div>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-title">Analyzers</div>
+                <div style="display:flex;flex-direction:column;gap:4px;">
+                    <button class="ctrl-btn" style="width:100%;text-align:left;font-size:.625rem" id="btn-fft">📊 FFT Spectrum</button>
+                    <button class="ctrl-btn" style="width:100%;text-align:left;font-size:.625rem" id="btn-rms">📈 RMS / Peak</button>
+                    <button class="ctrl-btn" style="width:100%;text-align:left;font-size:.625rem" id="btn-phase">🔄 Phase Correlation</button>
+                    <button class="ctrl-btn" style="width:100%;text-align:left;font-size:.625rem" id="btn-lufs">🔉 LUFS Metering</button>
+                </div>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-title">Spatial Modes</div>
+                <div style="display:flex;flex-direction:column;gap:4px;">
+                    <button class="ctrl-btn" style="width:100%;text-align:left;font-size:.625rem" id="mode-atmos">🎧 Dolby Atmos 7.1.4</button>
+                    <button class="ctrl-btn" style="width:100%;text-align:left;font-size:.625rem" id="mode-binaural">🧠 Binaural HRTF</button>
+                    <button class="ctrl-btn" style="width:100%;text-align:left;font-size:.625rem" id="mode-ambi">🌐 Ambisonics (HOA)</button>
+                    <button class="ctrl-btn" style="width:100%;text-align:left;font-size:.625rem" id="mode-stereo">🔊 Stereo</button>
+                    <button class="ctrl-btn" style="width:100%;text-align:left;font-size:.625rem" id="mode-mono">📻 Mono</button>
+                </div>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-title">Effects Chain</div>
+                <div style="font-size:.625rem;color:var(--cursor-text-muted);font-family:var(--cursor-font-mono);">
+                    Input → EQ → Compressor → Reverb → Spatial → Binaural → Output
+                </div>
+            </div>
+            <div class="sidebar-section" style="margin-top:auto">
+                <div class="sidebar-title">beyondBINARY</div>
+                <div style="font-size:.5625rem;color:var(--cursor-text-muted);font-family:var(--cursor-font-mono);">
+                    {+1, 1, -1, +0, 0, -0, +n, n, -n}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="ftr">
+        <span>⚛ jawta audio</span><span style="opacity:.3">|</span>
+        <span class="ftr-mono" id="ftr-sr">48kHz</span><span style="opacity:.3">|</span>
+        <span class="ftr-mono" id="ftr-ch">7.1.4</span><span style="opacity:.3">|</span>
+        <span class="ftr-mono" id="ftr-lat">5.3ms</span><span style="opacity:.3">|</span>
+        <span class="ftr-mono">{+1, 1, -1, +0, 0, -0, +n, n, -n}</span>
+        <span style="flex:1"></span>
+        <a href="quantum-notepad.html" style="font-size:.625rem">Notepad</a>
+        <a href="hexcast.html" style="font-size:.625rem">hexcast</a>
+        <span style="color:var(--audio-violet);font-family:var(--cursor-font-mono)">Dolby Atmos + Strudel</span>
+    </div>
+</div>
+
+<script>
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+
+// EQ Bands
+const eqFreqs=[32,64,125,250,500,1000,4000,8000];
+const eqLabels=['32','64','125','250','500','1k','4k','8k'];
+const eqBands=$('eq-bands');
+const eqValues=new Array(8).fill(0);
+eqFreqs.forEach((f,i)=>{
+    const band=document.createElement('div');band.className='eq-band';
+    band.innerHTML=`<div class="eq-val" id="eq-val-${i}">0 dB</div>
+        <div class="eq-slider-wrap"><input type="range" class="eq-slider" id="eq-${i}" min="-12" max="12" value="0" step="0.5"></div>
+        <div class="eq-label">${eqLabels[i]}</div>`;
+    eqBands.appendChild(band);
+    band.querySelector('input').addEventListener('input',e=>{
+        eqValues[i]=parseFloat(e.target.value);
+        $('eq-val-'+i).textContent=eqValues[i].toFixed(1)+' dB';
+    });
+});
+
+// Canvas setup
+function setupCanvas(id){
+    const c=document.getElementById(id);
+    const p=c.parentElement;
+    const r=p.getBoundingClientRect();
+    c.width=r.width*devicePixelRatio;c.height=r.height*devicePixelRatio;
+    const ctx=c.getContext('2d');ctx.scale(devicePixelRatio,devicePixelRatio);
+    ctx._w=r.width;ctx._h=r.height;return ctx;
+}
+let ctxWave,ctxSpectrum,ctxAtmos;
+function initCanvases(){
+    ctxWave=setupCanvas('cv-wave');
+    ctxSpectrum=setupCanvas('cv-spectrum');
+    ctxAtmos=setupCanvas('cv-atmos');
+}
+setTimeout(initCanvases,100);
+window.addEventListener('resize',()=>setTimeout(initCanvases,50));
+
+// Simulated audio data
+let t=0;
+const fftSize=64;
+const fftData=new Float32Array(fftSize);
+const waveData=new Float32Array(256);
+
+function simAudio(){
+    t+=0.03;
+    for(let i=0;i<waveData.length;i++){
+        waveData[i]=Math.sin(i*0.05+t*3)*0.3+Math.sin(i*0.12+t*5)*0.15+Math.sin(i*0.02+t)*0.2+(Math.random()-0.5)*0.05;
+    }
+    for(let i=0;i<fftSize;i++){
+        const base=Math.max(0,1-i/fftSize)*0.8;
+        const peak=i<8?0.3:i<16?0.15:0.05;
+        fftData[i]=base+Math.sin(t*2+i*0.3)*peak+Math.random()*0.05;
+    }
+}
+
+// Draw waveform
+function drawWave(){
+    if(!ctxWave)return;
+    const ctx=ctxWave,w=ctx._w,h=ctx._h;
+    ctx.clearRect(0,0,w,h);
+    ctx.fillStyle='#050510';ctx.fillRect(0,0,w,h);
+    // Grid
+    ctx.strokeStyle='#ffffff08';ctx.lineWidth=.5;
+    for(let y=0;y<h;y+=h/4){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke()}
+    // Center line
+    ctx.strokeStyle='#ffffff15';ctx.beginPath();ctx.moveTo(0,h/2);ctx.lineTo(w,h/2);ctx.stroke();
+    // Waveform
+    ctx.beginPath();ctx.strokeStyle='var(--audio-violet)';ctx.lineWidth=1.5;
+    const step=w/waveData.length;
+    waveData.forEach((v,i)=>{
+        const x=i*step;const y=h/2-v*h/2;
+        if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+    });
+    ctx.stroke();
+    // Glow
+    ctx.globalAlpha=0.1;ctx.strokeStyle='#c084fc';ctx.lineWidth=4;
+    ctx.beginPath();
+    waveData.forEach((v,i)=>{const x=i*step;const y=h/2-v*h/2;if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y)});
+    ctx.stroke();ctx.globalAlpha=1;
+    // Label
+    ctx.fillStyle='#c084fc88';ctx.font='bold 9px '+getComputedStyle(document.body).getPropertyValue('--cursor-font-mono');
+    ctx.fillText('WAVEFORM',6,12);
+}
+
+// Draw spectrum
+function drawSpectrum(){
+    if(!ctxSpectrum)return;
+    const ctx=ctxSpectrum,w=ctx._w,h=ctx._h;
+    ctx.clearRect(0,0,w,h);
+    ctx.fillStyle='#050510';ctx.fillRect(0,0,w,h);
+    // Grid
+    ctx.strokeStyle='#ffffff08';ctx.lineWidth=.5;
+    for(let y=0;y<h;y+=h/4){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke()}
+    // Bars
+    const bw=w/fftSize-1;
+    fftData.forEach((v,i)=>{
+        const x=i*(bw+1);const bh=v*h*0.9;
+        const ratio=i/fftSize;
+        const r=Math.round(192+ratio*63);
+        const g=Math.round(132-ratio*80);
+        const b=Math.round(252-ratio*100);
+        ctx.fillStyle=`rgba(${r},${g},${b},0.8)`;
+        ctx.fillRect(x,h-bh,bw,bh);
+        // Top glow
+        ctx.fillStyle=`rgba(${r},${g},${b},0.3)`;
+        ctx.fillRect(x,h-bh-2,bw,2);
+    });
+    ctx.fillStyle='#ff6b9d88';ctx.font='bold 9px '+getComputedStyle(document.body).getPropertyValue('--cursor-font-mono');
+    ctx.fillText('SPECTRUM',6,12);
+}
+
+// Draw Atmos spatial field
+const speakers=[
+    {name:'L',a:-30,d:.7,color:'#58a6ff'},{name:'R',a:30,d:.7,color:'#58a6ff'},
+    {name:'C',a:0,d:.8,color:'#3fb950'},{name:'LFE',a:0,d:.3,color:'#f85149'},
+    {name:'Ls',a:-110,d:.7,color:'#f0883e'},{name:'Rs',a:110,d:.7,color:'#f0883e'},
+    {name:'Lrs',a:-150,d:.6,color:'#a78bfa'},{name:'Rrs',a:150,d:.6,color:'#a78bfa'},
+    {name:'TFL',a:-45,d:.5,color:'#c084fc'},{name:'TFR',a:45,d:.5,color:'#c084fc'},
+    {name:'TRL',a:-135,d:.5,color:'#ff6b9d'},{name:'TRR',a:135,d:.5,color:'#ff6b9d'}
+];
+let listenerAngle=0;
+
+function drawAtmos(){
+    if(!ctxAtmos)return;
+    const ctx=ctxAtmos,w=ctx._w,h=ctx._h;
+    const cx=w/2,cy=h/2,r=Math.min(w,h)*0.4;
+    ctx.clearRect(0,0,w,h);
+    ctx.fillStyle='#050510';ctx.fillRect(0,0,w,h);
+    // Rings
+    [1,.7,.4].forEach(s=>{
+        ctx.beginPath();ctx.arc(cx,cy,r*s,0,Math.PI*2);
+        ctx.strokeStyle='#ffffff0a';ctx.lineWidth=1;ctx.stroke();
+    });
+    // Cross
+    ctx.strokeStyle='#ffffff08';ctx.beginPath();ctx.moveTo(cx,cy-r);ctx.lineTo(cx,cy+r);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(cx-r,cy);ctx.lineTo(cx+r,cy);ctx.stroke();
+    // Listener head
+    listenerAngle+=0.01;
+    ctx.save();ctx.translate(cx,cy);ctx.rotate(listenerAngle);
+    ctx.beginPath();ctx.arc(0,0,8,0,Math.PI*2);
+    ctx.fillStyle='#e6edf3';ctx.fill();
+    ctx.beginPath();ctx.moveTo(0,-12);ctx.lineTo(-5,-4);ctx.lineTo(5,-4);ctx.closePath();
+    ctx.fillStyle='#e6edf3';ctx.fill();
+    ctx.restore();
+    // Speakers
+    speakers.forEach(s=>{
+        const rad=(s.a-90)*Math.PI/180;
+        const sx=cx+Math.cos(rad)*r*s.d;
+        const sy=cy+Math.sin(rad)*r*s.d;
+        const activity=0.3+Math.random()*0.7;
+        // Glow
+        ctx.beginPath();ctx.arc(sx,sy,6+activity*6,0,Math.PI*2);
+        ctx.fillStyle=s.color+'33';ctx.fill();
+        // Dot
+        ctx.beginPath();ctx.arc(sx,sy,4,0,Math.PI*2);
+        ctx.fillStyle=s.color;ctx.fill();
+        // Label
+        ctx.fillStyle=s.color;
+        ctx.font='bold 8px '+getComputedStyle(document.body).getPropertyValue('--cursor-font-mono');
+        ctx.fillText(s.name,sx+8,sy+3);
+    });
+    // Title
+    ctx.fillStyle='#c084fc66';ctx.font='bold 9px '+getComputedStyle(document.body).getPropertyValue('--cursor-font-mono');
+    ctx.fillText('ATMOS 7.1.4',6,12);
+}
+
+// Update channel meters
+function updateChannels(){
+    const ids=['l','r','c','lfe','ls','rs','lrs','rrs','tfl','tfr','trl','trr'];
+    ids.forEach(id=>{
+        const v=30+Math.random()*70;
+        const el=$('ch-'+id);
+        if(el)el.style.width=v+'%';
+        const vel=$('chv-'+id);
+        if(vel)vel.textContent=(-20+v/5).toFixed(1)+' dB';
+    });
+}
+
+// Animation
+let frame=0;
+function tick(){
+    frame++;
+    simAudio();
+    drawWave();drawSpectrum();drawAtmos();
+    if(frame%15===0)updateChannels();
+    requestAnimationFrame(tick);
+}
+setTimeout(tick,200);
+
+// Strudel patterns
+const patterns={
+    ambient:`// Ambient pad with spatial movement
+note("c3 e3 g3 b3").s("pad")
+  .gain(0.4).room(0.8)
+  .pan(sine.range(0,1).slow(8))
+  .spatialize({azimuth: sine.range(-90,90).slow(12)})`,
+    techno:`// Techno kick pattern
+note("c1 ~ c1 ~").s("bd").gain(0.9)
+  .stack(
+    note("~ c3 ~ c3").s("sd").gain(0.7),
+    note("c5*8").s("hh").gain(0.3)
+  ).bpm(130)`,
+    spatial:`// Full spatial orbit
+note("c4 e4 g4 c5").s("pluck")
+  .spatialize({
+    azimuth: sine.range(-180,180).slow(4),
+    elevation: cosine.range(0,90).slow(6),
+    distance: sine.range(0.5,2).slow(8)
+  }).room(0.6).gain(0.5)`,
+    binaural:`// Binaural beat generator
+note("c3").s("sine").gain(0.3)
+  .stack(note("c3*1.003").s("sine").gain(0.3))
+  .pan(stack(0, 1))
+  // 3 Hz theta binaural beat
+  .lpf(800).room(0.2)`
+};
+
+$('btn-pattern-1').addEventListener('click',()=>$('code-editor').value=patterns.ambient);
+$('btn-pattern-2').addEventListener('click',()=>$('code-editor').value=patterns.techno);
+$('btn-pattern-3').addEventListener('click',()=>$('code-editor').value=patterns.spatial);
+$('btn-pattern-4').addEventListener('click',()=>$('code-editor').value=patterns.binaural);
+
+// Control button toggles
+document.querySelectorAll('.ctrl-btn').forEach(btn=>{
+    if(!btn.id||btn.id.startsWith('btn-pattern')||btn.id==='btn-eval'||btn.id==='btn-hush'||btn.id==='btn-export')return;
+    btn.addEventListener('click',()=>{
+        const srcGroup=['btn-mic','btn-file','btn-osc','btn-strudel'];
+        const modeGroup=['btn-atmos','btn-binaural','btn-surround'];
+        const group=srcGroup.includes(btn.id)?srcGroup:modeGroup.includes(btn.id)?modeGroup:null;
+        if(group){group.forEach(id=>$(id).classList.remove('active'));btn.classList.add('active')}
+        else btn.classList.toggle('active');
+    });
+});
+
+// API
+window.jawta={
+    get state(){return{sampleRate:48000,channels:12,mode:'atmos-7.1.4',latency:5.3,eq:eqValues.slice()}},
+    get waveform(){return Array.from(waveData)},
+    get spectrum(){return Array.from(fftData)},
+    setEQ(band,val){if(band>=0&&band<8){eqValues[band]=val;$('eq-'+band).value=val;$('eq-val-'+band).textContent=val.toFixed(1)+' dB'}},
+    loadPattern(name){if(patterns[name])$('code-editor').value=patterns[name]},
+    exportJSON(){return JSON.stringify(this.state)}
+};
+
+console.log('⚛ jawta audio — spatial audio + live code');
+console.log('{+1, 1, -1, +0, 0, -0, +n, n, -n}');
+console.log('API: window.jawta');
+})();
+</script>
+</body>
+</html>

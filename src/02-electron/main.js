@@ -1,7 +1,7 @@
 // beyondBINARY quantum-prefixed | uvspeed | {+1, 1, -1, +0, 0, -0, +n, n, -n}
 // UVspeed - Advanced Notes & Terminal Environment
-// Desktop app with quantum navigation and infinite notebooks
-// v3.0.0 — restructured from src/02-electron/
+// Desktop app with quantum navigation, multi-instance windows, and AI integration
+// v3.2.0 — QubesOS-style isolated instances, MCP-ready
 
 const { app, BrowserWindow, Menu, ipcMain, dialog, shell } = require('electron');
 const path = require('path');
@@ -9,7 +9,6 @@ const { spawn } = require('child_process');
 const express = require('express');
 const WebSocket = require('ws');
 
-let mainWindow;
 let terminalServer;
 let wsServer;
 
@@ -21,10 +20,144 @@ const PORT = 3847; // UFFO in phone keypad
 // Project root is two levels up from src/02-electron/
 const PROJECT_ROOT = path.join(__dirname, '..', '..');
 
+// ═══════════════════════════════════════════════════════════════════════════
+// Window Registry — QubesOS-style isolated instances
+// Each window is an independent instance with its own state.
+// The bridge server is the shared brain; windows communicate via IPC/WS.
+// ═══════════════════════════════════════════════════════════════════════════
+
+class WindowRegistry {
+    constructor() {
+        /** @type {Map<string, {window: BrowserWindow, page: string, createdAt: number}>} */
+        this.windows = new Map();
+        this._counter = 0;
+    }
+
+    /** Create a new isolated instance window */
+    createInstance(page, options = {}) {
+        const id = `inst-${++this._counter}-${Date.now().toString(36)}`;
+        const defaults = {
+            width: options.width || 1400,
+            height: options.height || 900,
+            minWidth: 900,
+            minHeight: 600,
+            title: `${APP_NAME} — ${page}`,
+            icon: path.join(PROJECT_ROOT, 'icons', 'icon-192.png'),
+            webPreferences: {
+                nodeIntegration: false,
+                contextIsolation: true,
+                preload: path.join(__dirname, 'preload.js'),
+                webSecurity: !isDev
+            },
+            titleBarStyle: 'hiddenInset',
+            backgroundColor: '#0d1117',
+            show: false,
+        };
+
+        const win = new BrowserWindow(defaults);
+        const url = `http://localhost:${PORT}/web/${page}`;
+        win.loadURL(url);
+
+        win.once('ready-to-show', () => win.show());
+
+        win.on('closed', () => {
+            this.windows.delete(id);
+            console.log(`🔒 Instance closed: ${id} (${page}) — ${this.windows.size} remaining`);
+        });
+
+        // Handle external links — open in system browser, not new Electron window
+        win.webContents.setWindowOpenHandler(({ url }) => {
+            if (url.startsWith('http://localhost:' + PORT)) {
+                // Internal page — open as new instance
+                const pageName = url.split('/web/')[1];
+                if (pageName) this.createInstance(pageName);
+                return { action: 'deny' };
+            }
+            shell.openExternal(url);
+            return { action: 'deny' };
+        });
+
+        this.windows.set(id, { window: win, page, createdAt: Date.now() });
+        console.log(`🟢 Instance created: ${id} (${page}) — ${this.windows.size} total`);
+        return { id, window: win };
+    }
+
+    /** Get the focused window or the first one */
+    getFocused() {
+        return BrowserWindow.getFocusedWindow() || this.getFirst();
+    }
+
+    /** Get the first window (main) */
+    getFirst() {
+        const first = this.windows.values().next().value;
+        return first ? first.window : null;
+    }
+
+    /** Send IPC message to all instances */
+    broadcastToAll(channel, ...args) {
+        this.windows.forEach(({ window }) => {
+            if (!window.isDestroyed()) {
+                window.webContents.send(channel, ...args);
+            }
+        });
+    }
+
+    /** Send IPC to specific instance */
+    sendTo(instanceId, channel, ...args) {
+        const entry = this.windows.get(instanceId);
+        if (entry && !entry.window.isDestroyed()) {
+            entry.window.webContents.send(channel, ...args);
+        }
+    }
+
+    /** List all instances (for session manager API) */
+    list() {
+        const result = [];
+        this.windows.forEach((entry, id) => {
+            result.push({
+                id,
+                page: entry.page,
+                createdAt: entry.createdAt,
+                focused: entry.window === BrowserWindow.getFocusedWindow(),
+                title: entry.window.isDestroyed() ? '(closed)' : entry.window.getTitle(),
+            });
+        });
+        return result;
+    }
+
+    /** Save layout for restore on next launch */
+    saveLayout() {
+        const layout = [];
+        this.windows.forEach((entry) => {
+            if (!entry.window.isDestroyed()) {
+                const bounds = entry.window.getBounds();
+                layout.push({ page: entry.page, bounds });
+            }
+        });
+        return layout;
+    }
+
+    /** Restore layout from saved state */
+    restoreLayout(layout) {
+        layout.forEach(({ page, bounds }) => {
+            this.createInstance(page, bounds);
+        });
+    }
+
+    /** Close all windows */
+    closeAll() {
+        this.windows.forEach(({ window }) => {
+            if (!window.isDestroyed()) window.close();
+        });
+    }
+}
+
+
 class UVspeedApp {
     constructor() {
         this.quantumPosition = [0, 0, 0];
         this.activeTerminals = new Map();
+        this.registry = new WindowRegistry();
         this.aiServices = {
             opencode: false,
             copilot: false,
@@ -53,6 +186,7 @@ class UVspeedApp {
             res.json({
                 position: this.quantumPosition,
                 terminals: this.activeTerminals.size,
+                instances: this.registry.list(),
                 ai: this.aiServices,
                 version: app.getVersion()
             });
@@ -66,6 +200,42 @@ class UVspeedApp {
             const { direction, amount = 1 } = req.body;
             this.navigateQuantum(direction, amount);
             res.json({ position: this.quantumPosition });
+        });
+
+        // ── Instance Management API ──
+        server.get('/api/instances', (req, res) => {
+            res.json({ instances: this.registry.list() });
+        });
+
+        server.post('/api/instances', express.json(), (req, res) => {
+            const { page } = req.body;
+            if (!page) return res.status(400).json({ error: 'page is required' });
+            const { id } = this.registry.createInstance(page);
+            res.json({ created: true, id, page });
+        });
+
+        server.post('/api/instances/message', express.json(), (req, res) => {
+            const { instanceId, channel, data } = req.body;
+            if (instanceId) {
+                this.registry.sendTo(instanceId, channel || 'instance-message', data);
+            } else {
+                this.registry.broadcastToAll(channel || 'instance-message', data);
+            }
+            res.json({ sent: true });
+        });
+
+        server.get('/api/instances/layout', (req, res) => {
+            res.json({ layout: this.registry.saveLayout() });
+        });
+
+        server.post('/api/instances/layout', express.json(), (req, res) => {
+            const { layout } = req.body;
+            if (layout && Array.isArray(layout)) {
+                this.registry.restoreLayout(layout);
+                res.json({ restored: true, count: layout.length });
+            } else {
+                res.status(400).json({ error: 'layout array required' });
+            }
         });
         
         // Start server
@@ -82,6 +252,7 @@ class UVspeedApp {
             ws.send(JSON.stringify({
                 type: 'init',
                 position: this.quantumPosition,
+                instances: this.registry.list(),
                 ai: this.aiServices
             }));
             
@@ -97,7 +268,8 @@ class UVspeedApp {
     }
 
     createMainWindow() {
-        mainWindow = new BrowserWindow({
+        // Main window is the Electron terminal UI
+        const mainWin = new BrowserWindow({
             width: 1400,
             height: 900,
             minWidth: 1000,
@@ -111,38 +283,51 @@ class UVspeedApp {
                 webSecurity: !isDev
             },
             titleBarStyle: 'hiddenInset',
-            backgroundColor: '#1a1a2e',
+            backgroundColor: '#0d1117',
             show: false
         });
 
         // Load the quantum terminal interface
         if (isDev) {
-            mainWindow.loadFile(path.join(__dirname, 'src', 'index.html'));
-            mainWindow.webContents.openDevTools();
+            mainWin.loadFile(path.join(__dirname, 'src', 'index.html'));
+            mainWin.webContents.openDevTools();
         } else {
-            mainWindow.loadFile(path.join(__dirname, 'src', 'index.html'));
+            mainWin.loadFile(path.join(__dirname, 'src', 'index.html'));
         }
 
-        mainWindow.once('ready-to-show', () => {
-            mainWindow.show();
-            
-            // Show welcome notification
-            this.showWelcomeMessage();
+        mainWin.once('ready-to-show', () => {
+            mainWin.show();
+            this.showWelcomeMessage(mainWin);
         });
 
-        mainWindow.on('closed', () => {
-            mainWindow = null;
-            this.cleanup();
+        mainWin.on('closed', () => {
+            // Only cleanup server when all windows are gone
+            if (BrowserWindow.getAllWindows().length === 0) {
+                this.cleanup();
+            }
         });
 
         // Handle external links
-        mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+        mainWin.webContents.setWindowOpenHandler(({ url }) => {
+            if (url.startsWith('http://localhost:' + PORT + '/web/')) {
+                const pageName = url.split('/web/')[1];
+                if (pageName) this.registry.createInstance(pageName);
+                return { action: 'deny' };
+            }
             shell.openExternal(url);
             return { action: 'deny' };
+        });
+
+        // Register main window in registry
+        this.registry.windows.set('main', {
+            window: mainWin,
+            page: 'index.html',
+            createdAt: Date.now()
         });
     }
 
     setupMenus() {
+        const self = this;
         const template = [
             {
                 label: 'UVspeed',
@@ -168,45 +353,20 @@ class UVspeedApp {
             {
                 label: 'Edit',
                 submenu: [
-                    {
-                        label: 'Undo',
-                        accelerator: 'CmdOrCtrl+Z',
-                        selector: 'undo:'
-                    },
-                    {
-                        label: 'Redo',
-                        accelerator: 'Shift+CmdOrCtrl+Z',
-                        selector: 'redo:'
-                    },
+                    { label: 'Undo', accelerator: 'CmdOrCtrl+Z', selector: 'undo:' },
+                    { label: 'Redo', accelerator: 'Shift+CmdOrCtrl+Z', selector: 'redo:' },
                     { type: 'separator' },
-                    {
-                        label: 'Cut',
-                        accelerator: 'CmdOrCtrl+X',
-                        selector: 'cut:'
-                    },
-                    {
-                        label: 'Copy',
-                        accelerator: 'CmdOrCtrl+C',
-                        selector: 'copy:'
-                    },
-                    {
-                        label: 'Paste',
-                        accelerator: 'CmdOrCtrl+V',
-                        selector: 'paste:'
-                    },
-                    {
-                        label: 'Select All',
-                        accelerator: 'CmdOrCtrl+A',
-                        selector: 'selectAll:'
-                    },
+                    { label: 'Cut', accelerator: 'CmdOrCtrl+X', selector: 'cut:' },
+                    { label: 'Copy', accelerator: 'CmdOrCtrl+C', selector: 'copy:' },
+                    { label: 'Paste', accelerator: 'CmdOrCtrl+V', selector: 'paste:' },
+                    { label: 'Select All', accelerator: 'CmdOrCtrl+A', selector: 'selectAll:' },
                     { type: 'separator' },
                     {
                         label: 'Find',
                         accelerator: 'CmdOrCtrl+F',
                         click: () => {
-                            if (mainWindow) {
-                                mainWindow.webContents.send('show-find');
-                            }
+                            const win = this.registry.getFocused();
+                            if (win) win.webContents.send('show-find');
                         }
                     }
                 ]
@@ -254,66 +414,98 @@ class UVspeedApp {
                         label: 'New Note Cell',
                         accelerator: 'CmdOrCtrl+N',
                         click: () => {
-                            if (mainWindow) {
-                                mainWindow.webContents.send('create-note-cell');
-                            }
+                            const win = this.registry.getFocused();
+                            if (win) win.webContents.send('create-note-cell');
                         }
                     },
                     {
                         label: 'New AI Cell',
                         accelerator: 'CmdOrCtrl+Shift+N',
                         click: () => {
-                            if (mainWindow) {
-                                mainWindow.webContents.send('create-ai-cell');
-                            }
+                            const win = this.registry.getFocused();
+                            if (win) win.webContents.send('create-ai-cell');
                         }
                     },
                     {
                         label: 'New Terminal Cell',
                         accelerator: 'CmdOrCtrl+T',
                         click: () => {
-                            if (mainWindow) {
-                                mainWindow.webContents.send('create-terminal-cell');
-                            }
+                            const win = this.registry.getFocused();
+                            if (win) win.webContents.send('create-terminal-cell');
                         }
                     },
                     { type: 'separator' },
                     {
                         label: 'Run All Cells',
-                        accelerator: 'CmdOrCtrl+Shift+R',
                         click: () => {
-                            if (mainWindow) {
-                                mainWindow.webContents.send('run-all-cells');
-                            }
+                            const win = this.registry.getFocused();
+                            if (win) win.webContents.send('run-all-cells');
                         }
                     },
-                    {
-                        label: 'Clear All Outputs',
-                        accelerator: 'CmdOrCtrl+Shift+C',
-                        click: () => {
-                            if (mainWindow) {
-                                mainWindow.webContents.send('clear-all-outputs');
-                            }
-                        }
-                    },
-                    { type: 'separator' },
                     {
                         label: 'Save Notebook',
                         accelerator: 'CmdOrCtrl+S',
                         click: () => {
-                            if (mainWindow) {
-                                mainWindow.webContents.send('save-notebook');
-                            }
+                            const win = this.registry.getFocused();
+                            if (win) win.webContents.send('save-notebook');
+                        }
+                    }
+                ]
+            },
+            {
+                label: 'Instances',
+                submenu: [
+                    {
+                        label: 'New Notepad',
+                        click: () => self.registry.createInstance('quantum-notepad.html')
+                    },
+                    {
+                        label: 'New questcast',
+                        click: () => self.registry.createInstance('questcast.html')
+                    },
+                    {
+                        label: 'New archflow',
+                        click: () => self.registry.createInstance('archflow.html')
+                    },
+                    {
+                        label: 'New jawta audio',
+                        click: () => self.registry.createInstance('jawta-audio.html')
+                    },
+                    {
+                        label: 'New Blackwell Live',
+                        click: () => self.registry.createInstance('blackwell.html')
+                    },
+                    {
+                        label: 'New hexcast',
+                        click: () => self.registry.createInstance('hexcast.html')
+                    },
+                    {
+                        label: 'New kbatch',
+                        click: () => self.registry.createInstance('kbatch.html')
+                    },
+                    {
+                        label: 'New brotherNumsy',
+                        click: () => self.registry.createInstance('brothernumsy.html')
+                    },
+                    { type: 'separator' },
+                    {
+                        label: 'List All Instances',
+                        click: () => {
+                            const instances = self.registry.list();
+                            const detail = instances.map(i =>
+                                `${i.focused ? '→ ' : '  '}${i.id}: ${i.page}`
+                            ).join('\n');
+                            dialog.showMessageBox({
+                                type: 'info',
+                                title: 'Active Instances',
+                                message: `${instances.length} instance(s) running`,
+                                detail: detail || '(none)'
+                            });
                         }
                     },
                     {
-                        label: 'Export Notebook',
-                        accelerator: 'CmdOrCtrl+E',
-                        click: () => {
-                            if (mainWindow) {
-                                mainWindow.webContents.send('export-notebook');
-                            }
-                        }
+                        label: 'Close All Instances',
+                        click: () => self.registry.closeAll()
                     }
                 ]
             },
@@ -321,41 +513,28 @@ class UVspeedApp {
                 label: 'View',
                 submenu: [
                     {
-                        label: 'Quantum Notepad',
-                        click: () => this.openQuantumNotepad()
-                    },
-                    {
-                        label: 'brotherNumsy Game',
-                        click: () => this.openBrotherNumsy()
-                    },
-                    {
-                        label: 'kbatch Keyboard Analyzer',
-                        click: () => this.openKbatch()
-                    },
-                    {
-                        label: 'hexcast Video Broadcast',
-                        click: () => this.openHexcast()
-                    },
-                    { type: 'separator' },
-                    {
-                        label: 'Legacy Terminal',
-                        click: () => this.openLegacyTerminal()
-                    },
-                    { type: 'separator' },
-                    {
                         label: 'Reload',
                         accelerator: 'CmdOrCtrl+R',
-                        click: () => mainWindow.reload()
+                        click: () => {
+                            const win = this.registry.getFocused();
+                            if (win) win.reload();
+                        }
                     },
                     {
                         label: 'Force Reload',
                         accelerator: 'CmdOrCtrl+Shift+R', 
-                        click: () => mainWindow.webContents.reloadIgnoringCache()
+                        click: () => {
+                            const win = this.registry.getFocused();
+                            if (win) win.webContents.reloadIgnoringCache();
+                        }
                     },
                     {
                         label: 'Developer Tools',
                         accelerator: 'F12',
-                        click: () => mainWindow.webContents.openDevTools()
+                        click: () => {
+                            const win = this.registry.getFocused();
+                            if (win) win.webContents.openDevTools();
+                        }
                     }
                 ]
             },
@@ -365,12 +544,18 @@ class UVspeedApp {
                     {
                         label: 'Minimize',
                         accelerator: 'CmdOrCtrl+M',
-                        click: () => mainWindow.minimize()
+                        click: () => {
+                            const win = this.registry.getFocused();
+                            if (win) win.minimize();
+                        }
                     },
                     {
                         label: 'Close',
                         accelerator: 'CmdOrCtrl+W',
-                        click: () => mainWindow.close()
+                        click: () => {
+                            const win = this.registry.getFocused();
+                            if (win) win.close();
+                        }
                     }
                 ]
             }
@@ -405,11 +590,37 @@ class UVspeedApp {
         ipcMain.handle('get-status', () => {
             return this.getSystemStatus();
         });
+
+        // ── Instance IPC ──
+        ipcMain.handle('instance-create', (event, page) => {
+            const { id } = this.registry.createInstance(page);
+            return { id, page };
+        });
+
+        ipcMain.handle('instance-list', () => {
+            return this.registry.list();
+        });
+
+        ipcMain.handle('instance-message', (event, targetId, channel, data) => {
+            if (targetId === '*') {
+                this.registry.broadcastToAll(channel, data);
+            } else {
+                this.registry.sendTo(targetId, channel, data);
+            }
+            return { sent: true };
+        });
+
+        ipcMain.handle('instance-layout-save', () => {
+            return this.registry.saveLayout();
+        });
+
+        ipcMain.handle('instance-layout-restore', (event, layout) => {
+            this.registry.restoreLayout(layout);
+            return { restored: true };
+        });
     }
 
     navigateQuantum(direction, amount = 1) {
-        const oldPosition = [...this.quantumPosition];
-        
         switch(direction) {
             case '+1': this.quantumPosition[1] += amount; break;
             case '-1': this.quantumPosition[1] -= amount; break;
@@ -419,13 +630,9 @@ class UVspeedApp {
             case '-n': this.quantumPosition[2] -= amount; break;
         }
 
-        // Broadcast position change to all clients
+        // Broadcast position change to all WS clients and all instances
         this.broadcastPositionChange();
-        
-        // Send to main window
-        if (mainWindow) {
-            mainWindow.webContents.send('quantum-position-changed', this.quantumPosition);
-        }
+        this.registry.broadcastToAll('quantum-position-changed', this.quantumPosition);
 
         console.log(`🌌 Quantum navigation: ${direction} → [${this.quantumPosition.join(', ')}]`);
         return this.quantumPosition;
@@ -434,9 +641,7 @@ class UVspeedApp {
     resetQuantumPosition() {
         this.quantumPosition = [0, 0, 0];
         this.broadcastPositionChange();
-        if (mainWindow) {
-            mainWindow.webContents.send('quantum-position-changed', this.quantumPosition);
-        }
+        this.registry.broadcastToAll('quantum-position-changed', this.quantumPosition);
     }
 
     broadcastPositionChange() {
@@ -452,84 +657,35 @@ class UVspeedApp {
         }
     }
 
-    createNewTerminal() {
-        if (mainWindow) {
-            mainWindow.webContents.send('create-terminal', 'quantum');
-        }
-    }
-
-    createAITerminal() {
-        if (mainWindow) {
-            mainWindow.webContents.send('create-terminal', 'ai');
-        }
-    }
-
-    launchProgressive(version) {
-        const script = path.join(PROJECT_ROOT, 'src', '03-tools', 'launch-progressive.sh');
-        const terminal = spawn('bash', [script, version], {
-            cwd: path.dirname(script),
-            stdio: 'inherit'
-        });
-        
-        terminal.on('error', (error) => {
-            console.error(`Failed to launch progressive ${version}:`, error);
-            dialog.showErrorBox('Launch Error', `Failed to launch progressive ${version}: ${error.message}`);
-        });
-    }
-
-    openQuantumNotepad() {
-        const url = `http://localhost:${PORT}/web/quantum-notepad.html`;
-        shell.openExternal(url);
-    }
-
-    openBrotherNumsy() {
-        const url = `http://localhost:${PORT}/web/brothernumsy.html`;
-        shell.openExternal(url);
-    }
-
-    openKbatch() {
-        const url = `http://localhost:${PORT}/web/kbatch.html`;
-        shell.openExternal(url);
-    }
-
-    openHexcast() {
-        const url = `http://localhost:${PORT}/web/hexcast.html`;
-        shell.openExternal(url);
-    }
-
-    openLegacyTerminal() {
-        const url = `http://localhost:${PORT}/web/legacy/quantum-claude-terminal.html`;
-        shell.openExternal(url);
-    }
-
-    showWelcomeMessage() {
-        if (mainWindow) {
-            mainWindow.webContents.send('show-welcome', {
+    showWelcomeMessage(win) {
+        if (win && !win.isDestroyed()) {
+            win.webContents.send('show-welcome', {
                 title: 'Welcome to UVspeed Notes',
                 message: 'Your quantum development environment is ready!',
-                position: this.quantumPosition
+                position: this.quantumPosition,
+                instances: this.registry.list().length
             });
         }
     }
 
     showAbout() {
-        dialog.showMessageBox(mainWindow, {
+        const win = this.registry.getFocused();
+        dialog.showMessageBox(win || undefined, {
             type: 'info',
             title: 'About UVspeed',
             message: 'UVspeed Notes',
-            detail: `Version: ${app.getVersion()}\n\nAdvanced notes and terminal environment with infinite quantum notebooks, AI integration, and 3D code navigation.\n\nArchitecture: Zig → Rust → Semantic → Visual\nQuantum Position: [${this.quantumPosition.join(', ')}]`
+            detail: `Version: ${app.getVersion()}\n\nQubesOS-style multi-instance architecture with quantum notebooks, AI integration, and 3D code navigation.\n\nInstances: ${this.registry.list().length}\nArchitecture: Zig → Rust → Semantic → Visual\nQuantum Position: [${this.quantumPosition.join(', ')}]`
         });
     }
 
     showPreferences() {
-        // TODO: Implement preferences window
-        if (mainWindow) {
-            mainWindow.webContents.send('show-preferences');
-        }
+        const win = this.registry.getFocused();
+        if (win) win.webContents.send('show-preferences');
     }
 
     showQuantumPosition() {
-        dialog.showMessageBox(mainWindow, {
+        const win = this.registry.getFocused();
+        dialog.showMessageBox(win || undefined, {
             type: 'info',
             title: 'Quantum Position',
             message: `Current Position: [${this.quantumPosition.join(', ')}]`,
@@ -548,6 +704,22 @@ class UVspeedApp {
                     data: this.getSystemStatus()
                 }));
                 break;
+            case 'instance-create':
+                if (message.page) {
+                    const { id } = this.registry.createInstance(message.page);
+                    ws.send(JSON.stringify({ type: 'instance-created', id, page: message.page }));
+                }
+                break;
+            case 'instance-list':
+                ws.send(JSON.stringify({ type: 'instance-list', instances: this.registry.list() }));
+                break;
+            case 'instance-message':
+                if (message.targetId === '*') {
+                    this.registry.broadcastToAll(message.channel || 'instance-message', message.data);
+                } else if (message.targetId) {
+                    this.registry.sendTo(message.targetId, message.channel || 'instance-message', message.data);
+                }
+                break;
         }
     }
 
@@ -555,6 +727,7 @@ class UVspeedApp {
         return {
             position: this.quantumPosition,
             terminals: this.activeTerminals.size,
+            instances: this.registry.list(),
             ai: this.aiServices,
             server: `http://localhost:${PORT}`,
             version: app.getVersion(),
@@ -570,7 +743,6 @@ class UVspeedApp {
         if (wsServer) {
             wsServer.close();
         }
-        // Kill any active terminals
         this.activeTerminals.forEach(terminal => {
             if (terminal.kill) terminal.kill();
         });

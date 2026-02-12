@@ -1,0 +1,986 @@
+<!-- beyondBINARY quantum-prefixed | uvspeed | {+1, 1, -1, +0, 0, -0, +n, n, -n} -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>uvspeed — NVIDIA Blackwell Live Visualization</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="../icons/favicon.png">
+    <link rel="icon" type="image/x-icon" href="../icons/favicon.ico">
+    <link rel="apple-touch-icon" sizes="192x192" href="../icons/icon-192.png">
+    <style>
+        /* ===== Inlined Design System ===== */
+        :root {
+            --cursor-bg: #0d1117;
+            --cursor-bg-secondary: #161b22;
+            --cursor-bg-tertiary: #21262d;
+            --cursor-border: #30363d;
+            --cursor-text: #e6edf3;
+            --cursor-text-muted: #8b949e;
+            --cursor-accent: #58a6ff;
+            --cursor-success: #3fb950;
+            --cursor-warning: #f0883e;
+            --cursor-error: #f85149;
+            --cursor-purple: #a78bfa;
+            --cursor-cyan: #56d4dd;
+            --nv-green: #76b900;
+            --nv-green-dim: #76b90033;
+            --nv-dark: #1a1a2e;
+            --nv-glow: rgba(118, 185, 0, 0.25);
+            --cursor-space-xs: 4px;
+            --cursor-space-sm: 8px;
+            --cursor-space-md: 16px;
+            --cursor-space-lg: 24px;
+            --cursor-space-xl: 32px;
+            --cursor-radius: 6px;
+            --cursor-font-mono: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Cascadia Code', monospace;
+        }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body { height: 100%; overflow: hidden; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+            background: var(--cursor-bg);
+            color: var(--cursor-text);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        a { color: var(--cursor-accent); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+
+        /* ===== Layout ===== */
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* ===== Header ===== */
+        .app-header {
+            background: var(--cursor-bg-secondary);
+            border-bottom: 1px solid var(--cursor-border);
+            padding: var(--cursor-space-sm) var(--cursor-space-lg);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: var(--cursor-space-md);
+            flex-shrink: 0;
+            min-height: 52px;
+        }
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: var(--cursor-space-sm);
+            font-size: 1.125rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .header-logo {
+            height: 28px; width: auto; border-radius: 4px; flex-shrink: 0;
+            filter: drop-shadow(0 0 6px rgba(139, 92, 246, 0.4));
+        }
+        .header-nv-badge {
+            display: inline-flex; align-items: center; gap: 4px;
+            background: var(--nv-green-dim); border: 1px solid var(--nv-green);
+            color: var(--nv-green); border-radius: 12px;
+            padding: 2px 10px; font-size: 0.6875rem; font-weight: 600;
+        }
+        .header-nav {
+            display: flex; align-items: center; gap: var(--cursor-space-sm);
+            font-size: 0.8125rem; flex-wrap: wrap;
+        }
+        .header-nav a {
+            padding: 4px 10px; border-radius: var(--cursor-radius);
+            background: var(--cursor-bg-tertiary); border: 1px solid var(--cursor-border);
+            color: var(--cursor-text-muted); transition: all 0.15s;
+        }
+        .header-nav a:hover { color: var(--cursor-accent); border-color: var(--cursor-accent); text-decoration: none; }
+
+        /* ===== Main Layout (sidebar + content) ===== */
+        .main-area {
+            display: flex; flex: 1; overflow: hidden;
+        }
+
+        /* ===== Content ===== */
+        .content {
+            flex: 1; overflow-y: auto; padding: var(--cursor-space-lg);
+            display: flex; flex-direction: column; gap: var(--cursor-space-lg);
+        }
+
+        /* ===== Cards ===== */
+        .card {
+            background: var(--cursor-bg-secondary);
+            border: 1px solid var(--cursor-border);
+            border-radius: var(--cursor-radius);
+            overflow: hidden;
+        }
+        .card-header {
+            padding: var(--cursor-space-sm) var(--cursor-space-md);
+            border-bottom: 1px solid var(--cursor-border);
+            display: flex; align-items: center; justify-content: space-between;
+            font-size: 0.8125rem; font-weight: 600;
+        }
+        .card-header .tag { font-size: 0.625rem; padding: 2px 8px; border-radius: 10px; font-weight: 500; }
+        .tag-live { background: #3fb95022; color: var(--cursor-success); border: 1px solid #3fb95055; }
+        .tag-nv { background: var(--nv-green-dim); color: var(--nv-green); border: 1px solid #76b90055; }
+        .tag-stream { background: #58a6ff22; color: var(--cursor-accent); border: 1px solid #58a6ff55; }
+        .card-body { padding: var(--cursor-space-md); }
+
+        /* ===== Hero Section ===== */
+        .hero-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--cursor-space-lg);
+        }
+        @media (max-width: 900px) { .hero-grid { grid-template-columns: 1fr; } }
+        .hero-img {
+            width: 100%; border-radius: var(--cursor-radius);
+            border: 1px solid var(--cursor-border);
+        }
+
+        /* ===== Arch Diagram ===== */
+        .arch-flow {
+            display: flex; align-items: center; gap: 6px;
+            flex-wrap: wrap; font-size: 0.75rem; font-family: var(--cursor-font-mono);
+        }
+        .arch-node {
+            background: var(--cursor-bg-tertiary); border: 1px solid var(--cursor-border);
+            padding: 6px 12px; border-radius: var(--cursor-radius);
+            white-space: nowrap;
+        }
+        .arch-node.nv { border-color: var(--nv-green); color: var(--nv-green); background: var(--nv-green-dim); }
+        .arch-node.uv { border-color: var(--cursor-purple); color: var(--cursor-purple); background: #a78bfa18; }
+        .arch-arrow { color: var(--cursor-text-muted); font-size: 1rem; }
+
+        /* ===== Canvas Viz ===== */
+        .viz-canvas-wrap {
+            position: relative;
+            background: #000;
+            border-radius: var(--cursor-radius);
+            overflow: hidden;
+            aspect-ratio: 16/9;
+            max-height: 420px;
+        }
+        .viz-canvas-wrap canvas {
+            width: 100%; height: 100%; display: block;
+        }
+        .viz-overlay {
+            position: absolute; top: 8px; left: 8px;
+            font-family: var(--cursor-font-mono); font-size: 0.625rem;
+            color: var(--nv-green); background: rgba(0,0,0,0.7);
+            padding: 4px 8px; border-radius: 4px;
+            pointer-events: none;
+        }
+
+        /* ===== SM Grid ===== */
+        .sm-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(28px, 1fr));
+            gap: 3px;
+        }
+        .sm-cell {
+            aspect-ratio: 1; border-radius: 3px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.5rem; font-family: var(--cursor-font-mono);
+            color: rgba(255,255,255,0.7);
+            transition: background 0.3s, box-shadow 0.3s;
+            cursor: default;
+        }
+
+        /* ===== Data Stream ===== */
+        .stream-bar {
+            height: 4px; border-radius: 2px;
+            background: var(--cursor-bg-tertiary);
+            overflow: hidden; margin-bottom: 4px;
+        }
+        .stream-bar-fill {
+            height: 100%; border-radius: 2px;
+            transition: width 0.5s ease;
+        }
+        .stream-row {
+            display: flex; align-items: center; gap: var(--cursor-space-sm);
+            font-size: 0.75rem; margin-bottom: 8px;
+        }
+        .stream-label { min-width: 100px; color: var(--cursor-text-muted); }
+        .stream-value { font-family: var(--cursor-font-mono); font-weight: 600; min-width: 60px; text-align: right; }
+
+        /* ===== Server Stack ===== */
+        .server-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: var(--cursor-space-sm);
+        }
+        .server-node {
+            background: var(--cursor-bg-tertiary);
+            border: 1px solid var(--cursor-border);
+            border-radius: var(--cursor-radius);
+            padding: var(--cursor-space-sm) var(--cursor-space-md);
+            font-size: 0.75rem;
+        }
+        .server-name { font-weight: 600; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
+        .server-stat { display: flex; justify-content: space-between; color: var(--cursor-text-muted); margin-top: 2px; }
+        .server-stat span:last-child { font-family: var(--cursor-font-mono); color: var(--cursor-text); }
+        .pulse { display: inline-block; width: 8px; height: 8px; border-radius: 50%; animation: pulse 2s infinite; }
+        .pulse-green { background: var(--cursor-success); box-shadow: 0 0 6px var(--cursor-success); }
+        .pulse-nv { background: var(--nv-green); box-shadow: 0 0 6px var(--nv-green); }
+        .pulse-yellow { background: var(--cursor-warning); box-shadow: 0 0 6px var(--cursor-warning); }
+        .pulse-blue { background: var(--cursor-accent); box-shadow: 0 0 6px var(--cursor-accent); }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.85); }
+        }
+
+        /* ===== Quantum Sidebar ===== */
+        .quantum-sidebar {
+            width: 240px; flex-shrink: 0;
+            background: var(--cursor-bg-secondary);
+            border-left: 1px solid var(--cursor-border);
+            overflow-y: auto; font-size: 0.75rem;
+            display: flex; flex-direction: column;
+        }
+        .sidebar-tabs {
+            display: flex; border-bottom: 1px solid var(--cursor-border);
+        }
+        .sidebar-tab {
+            flex: 1; padding: 8px 0; text-align: center;
+            background: transparent; border: none; color: var(--cursor-text-muted);
+            cursor: pointer; font-size: 0.6875rem; font-weight: 600;
+            border-bottom: 2px solid transparent; transition: all 0.15s;
+        }
+        .sidebar-tab:hover { color: var(--cursor-text); }
+        .sidebar-tab.active { color: var(--cursor-accent); border-bottom-color: var(--cursor-accent); }
+        .sidebar-tab-panel { display: none; padding: var(--cursor-space-sm); }
+        .sidebar-tab-panel.active { display: block; }
+        .sidebar-title {
+            font-size: 0.6875rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.5px; color: var(--cursor-text-muted);
+            margin-bottom: var(--cursor-space-sm);
+        }
+        .sidebar-section {
+            padding: var(--cursor-space-sm);
+            border-bottom: 1px solid var(--cursor-border);
+        }
+
+        /* ===== Quantum Nav Grid ===== */
+        .quantum-nav-mini {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 3px; margin-bottom: 8px;
+        }
+        .nav-btn {
+            background: var(--cursor-bg-tertiary);
+            border: 1px solid var(--cursor-border);
+            color: var(--cursor-text);
+            padding: 6px 0; border-radius: 4px;
+            font-family: var(--cursor-font-mono);
+            font-size: 0.625rem; font-weight: 700;
+            cursor: pointer; text-align: center;
+            transition: all 0.15s;
+        }
+        .nav-btn:hover { border-color: var(--cursor-accent); color: var(--cursor-accent); }
+        .nav-btn.active { background: var(--cursor-accent); color: #fff; border-color: var(--cursor-accent); }
+
+        .layer-nav {
+            display: flex; align-items: center; gap: 4px; margin-bottom: 6px;
+        }
+        .layer-btn {
+            background: var(--cursor-bg-tertiary); border: 1px solid var(--cursor-border);
+            color: var(--cursor-text-muted); padding: 3px 8px; border-radius: 4px;
+            cursor: pointer; font-size: 0.625rem;
+        }
+        .layer-btn:hover { border-color: var(--cursor-accent); color: var(--cursor-accent); }
+        .layer-label {
+            flex: 1; text-align: center; font-family: var(--cursor-font-mono);
+            font-size: 0.625rem;
+        }
+        .position-display {
+            text-align: center; font-family: var(--cursor-font-mono);
+            font-size: 0.625rem; color: var(--cursor-accent);
+            padding: 4px; background: var(--cursor-bg);
+            border-radius: 4px; margin-bottom: 8px;
+        }
+        .stream-log {
+            max-height: 120px; overflow-y: auto; font-family: var(--cursor-font-mono);
+            font-size: 0.5625rem; background: var(--cursor-bg);
+            border-radius: 4px; padding: 4px 6px;
+        }
+        .stream-entry { padding: 1px 0; color: var(--cursor-text-muted); }
+        .stream-entry.stream-origin { color: var(--cursor-accent); }
+
+        /* ===== Deploy Stat Grid ===== */
+        .deploy-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 4px;
+        }
+        .deploy-stat {
+            background: var(--cursor-bg); border-radius: 4px; padding: 6px;
+            text-align: center;
+        }
+        .deploy-stat-val { font-family: var(--cursor-font-mono); font-size: 0.875rem; font-weight: 700; }
+        .deploy-stat-label { font-size: 0.5625rem; color: var(--cursor-text-muted); }
+
+        /* ===== Specs Table ===== */
+        .specs-table {
+            width: 100%; border-collapse: collapse; font-size: 0.75rem;
+        }
+        .specs-table th {
+            text-align: left; padding: 6px 8px;
+            background: var(--cursor-bg-tertiary); border: 1px solid var(--cursor-border);
+            color: var(--cursor-text-muted); font-weight: 600;
+        }
+        .specs-table td {
+            padding: 6px 8px; border: 1px solid var(--cursor-border);
+        }
+        .specs-table tr:hover td { background: var(--cursor-bg-tertiary); }
+
+        /* ===== Footer ===== */
+        .app-footer {
+            background: var(--cursor-bg-secondary);
+            border-top: 1px solid var(--cursor-border);
+            padding: 6px var(--cursor-space-lg);
+            display: flex; align-items: center; gap: var(--cursor-space-sm);
+            font-size: 0.6875rem; color: var(--cursor-text-muted);
+            flex-wrap: wrap; flex-shrink: 0;
+        }
+        .footer-stat { font-family: var(--cursor-font-mono); }
+        .footer-sep { opacity: 0.3; }
+
+        /* ===== Scrollbar ===== */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--cursor-border); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #484f58; }
+
+        /* ===== Responsive ===== */
+        @media (max-width: 768px) {
+            .quantum-sidebar { display: none; }
+            .hero-grid { grid-template-columns: 1fr; }
+            .server-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- ===== Header ===== -->
+        <div class="app-header">
+            <div class="header-title">
+                <img src="../icons/nyan-banner.png" alt="uvspeed" class="header-logo" title="uvspeed — beyondBINARY">
+                uvspeed — <span style="color:var(--nv-green);">Blackwell</span> Live
+                <span class="header-nv-badge"><span class="pulse pulse-nv"></span> NVIDIA</span>
+            </div>
+            <div class="header-nav">
+                <a href="quantum-notepad.html">Notepad</a>
+                <a href="questcast.html">questcast</a>
+                <a href="archflow.html">archflow</a>
+                <a href="jawta-audio.html">jawta</a>
+                <a href="hexcast.html">hexcast</a>
+                <a href="brothernumsy.html">Game</a>
+            </div>
+        </div>
+
+        <!-- ===== Main ===== -->
+        <div class="main-area">
+            <div class="content" id="content">
+
+                <!-- ===== Hero: Blackwell Architecture ===== -->
+                <div class="card">
+                    <div class="card-header">
+                        <span>NVIDIA Blackwell Ultra — AI Factory Architecture</span>
+                        <span class="tag tag-nv">GB200 / B200</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="hero-grid">
+                            <div>
+                                <img src="https://cdn.mos.cms.futurecdn.net/Q2osnG97ujS33szL8W6TvT-650-80.png.webp"
+                                     alt="NVIDIA Blackwell Ultra chip" class="hero-img" loading="lazy">
+                                <p style="font-size:0.75rem;color:var(--cursor-text-muted);margin-top:8px;">
+                                    Blackwell Ultra — 208B transistors, 4nm process, 192 SMs, 2nd gen Transformer Engine
+                                </p>
+                            </div>
+                            <div>
+                                <img src="https://developer-blogs.nvidia.com/wp-content/uploads/2025/08/Blackwell-Ultra-SM-architecture-png.webp"
+                                     alt="Blackwell Ultra SM architecture" class="hero-img" loading="lazy">
+                                <p style="font-size:0.75rem;color:var(--cursor-text-muted);margin-top:8px;">
+                                    Streaming Multiprocessor — FP4/FP6/FP8 Tensor Cores, 5th gen NVLink, 1.8 TB/s bandwidth
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Architecture Flow -->
+                        <div style="margin-top:16px;">
+                            <div class="arch-flow">
+                                <span class="arch-node nv">GB200 NVL72</span>
+                                <span class="arch-arrow">→</span>
+                                <span class="arch-node nv">NVLink 5.0</span>
+                                <span class="arch-arrow">→</span>
+                                <span class="arch-node nv">HBM3e (192GB)</span>
+                                <span class="arch-arrow">→</span>
+                                <span class="arch-node nv">Transformer Engine</span>
+                                <span class="arch-arrow">→</span>
+                                <span class="arch-node uv">uvspeed Bridge</span>
+                                <span class="arch-arrow">→</span>
+                                <span class="arch-node uv">Quantum Prefix</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===== Live Data Streams ===== -->
+                <div class="card">
+                    <div class="card-header">
+                        <span>Live Data Streams — SM Utilization &amp; Memory Bandwidth</span>
+                        <span class="tag tag-live"><span class="pulse pulse-green"></span>&nbsp; Streaming</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="viz-canvas-wrap">
+                            <canvas id="stream-canvas"></canvas>
+                            <div class="viz-overlay" id="stream-overlay">
+                                FPS: 60 | SMs: 192 | Bandwidth: 1.8 TB/s | Utilization: —%
+                            </div>
+                        </div>
+
+                        <div style="margin-top:16px;">
+                            <div class="stream-row">
+                                <span class="stream-label">SM Throughput</span>
+                                <div class="stream-bar" style="flex:1;"><div class="stream-bar-fill" id="bar-sm" style="width:72%;background:var(--nv-green);"></div></div>
+                                <span class="stream-value" id="val-sm" style="color:var(--nv-green);">72%</span>
+                            </div>
+                            <div class="stream-row">
+                                <span class="stream-label">HBM3e BW</span>
+                                <div class="stream-bar" style="flex:1;"><div class="stream-bar-fill" id="bar-hbm" style="width:65%;background:var(--cursor-accent);"></div></div>
+                                <span class="stream-value" id="val-hbm" style="color:var(--cursor-accent);">1.17 TB/s</span>
+                            </div>
+                            <div class="stream-row">
+                                <span class="stream-label">NVLink Traffic</span>
+                                <div class="stream-bar" style="flex:1;"><div class="stream-bar-fill" id="bar-nvlink" style="width:58%;background:var(--cursor-purple);"></div></div>
+                                <span class="stream-value" id="val-nvlink" style="color:var(--cursor-purple);">1.04 TB/s</span>
+                            </div>
+                            <div class="stream-row">
+                                <span class="stream-label">Tensor Core FP4</span>
+                                <div class="stream-bar" style="flex:1;"><div class="stream-bar-fill" id="bar-fp4" style="width:81%;background:var(--cursor-warning);"></div></div>
+                                <span class="stream-value" id="val-fp4" style="color:var(--cursor-warning);">81%</span>
+                            </div>
+                            <div class="stream-row">
+                                <span class="stream-label">Power Draw</span>
+                                <div class="stream-bar" style="flex:1;"><div class="stream-bar-fill" id="bar-power" style="width:70%;background:var(--cursor-error);"></div></div>
+                                <span class="stream-value" id="val-power" style="color:var(--cursor-error);">840W</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===== SM Heatmap ===== -->
+                <div class="card">
+                    <div class="card-header">
+                        <span>SM Activity Heatmap — 192 Streaming Multiprocessors</span>
+                        <span class="tag tag-stream">Real-time</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="sm-grid" id="sm-grid">
+                            <!-- 192 SM cells injected by JS -->
+                        </div>
+                        <div style="display:flex;align-items:center;gap:16px;margin-top:12px;font-size:0.6875rem;color:var(--cursor-text-muted);">
+                            <span>Idle</span>
+                            <div style="flex:1;height:8px;border-radius:4px;background:linear-gradient(90deg,#21262d,#76b900,#f0883e,#f85149);"></div>
+                            <span>Saturated</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===== Attention Layer Acceleration ===== -->
+                <div class="card">
+                    <div class="card-header">
+                        <span>Attention Layer Acceleration — Transformer Engine 2.0</span>
+                        <span class="tag tag-nv">FP4 / FP6 / FP8</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="hero-grid">
+                            <div>
+                                <img src="https://developer-blogs.nvidia.com/wp-content/uploads/2025/08/Blackwell-Ultra-attention-layer-acceleration-png.webp"
+                                     alt="Blackwell Ultra attention layer acceleration" class="hero-img" loading="lazy">
+                            </div>
+                            <div>
+                                <img src="https://developer-blogs.nvidia.com/wp-content/uploads/2025/08/AI-factory-output.gif"
+                                     alt="AI Factory output animation" class="hero-img" loading="lazy">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===== Blackwell Specs ===== -->
+                <div class="card">
+                    <div class="card-header">
+                        <span>Blackwell Ultra Specifications</span>
+                        <span class="tag tag-nv">B200 / GB200</span>
+                    </div>
+                    <div class="card-body">
+                        <table class="specs-table">
+                            <thead>
+                                <tr><th>Specification</th><th>Blackwell Ultra (B200)</th><th>Blackwell (B100)</th><th>Hopper (H100)</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>Transistors</td><td style="color:var(--nv-green);">208B</td><td>208B</td><td>80B</td></tr>
+                                <tr><td>Process</td><td style="color:var(--nv-green);">TSMC 4NP</td><td>TSMC 4NP</td><td>TSMC 4N</td></tr>
+                                <tr><td>SMs</td><td style="color:var(--nv-green);">192</td><td>180</td><td>132</td></tr>
+                                <tr><td>FP4 Tensor</td><td style="color:var(--nv-green);">20 PFLOPS</td><td>18 PFLOPS</td><td>—</td></tr>
+                                <tr><td>FP8 Tensor</td><td style="color:var(--nv-green);">10 PFLOPS</td><td>9 PFLOPS</td><td>3.96 PFLOPS</td></tr>
+                                <tr><td>HBM</td><td style="color:var(--nv-green);">HBM3e 192GB</td><td>HBM3e 192GB</td><td>HBM3 80GB</td></tr>
+                                <tr><td>Memory BW</td><td style="color:var(--nv-green);">8 TB/s</td><td>8 TB/s</td><td>3.35 TB/s</td></tr>
+                                <tr><td>NVLink BW</td><td style="color:var(--nv-green);">1.8 TB/s (NVL5)</td><td>1.8 TB/s</td><td>900 GB/s</td></tr>
+                                <tr><td>TDP</td><td>1200W</td><td>1000W</td><td>700W</td></tr>
+                                <tr><td>Interconnect</td><td style="color:var(--nv-green);">NVLink 5.0</td><td>NVLink 5.0</td><td>NVLink 4.0</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- ===== Server Stack / Deploy Targets ===== -->
+                <div class="card">
+                    <div class="card-header">
+                        <span>Localized Deploy Targets — Server Stacks</span>
+                        <span class="tag tag-live"><span class="pulse pulse-green"></span>&nbsp; Colab Ready</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="server-grid" id="server-grid">
+                            <div class="server-node" id="srv-dgx">
+                                <div class="server-name"><span class="pulse pulse-nv"></span> DGX Spark</div>
+                                <div class="server-stat"><span>GPUs</span><span>1× GB200 Grace</span></div>
+                                <div class="server-stat"><span>Memory</span><span>128 GB unified</span></div>
+                                <div class="server-stat"><span>Perf</span><span id="dgx-perf">1000 TOPS AI</span></div>
+                                <div class="server-stat"><span>Status</span><span style="color:var(--cursor-success);" id="dgx-status">ready</span></div>
+                            </div>
+                            <div class="server-node" id="srv-supermicro">
+                                <div class="server-name"><span class="pulse pulse-green"></span> Supermicro GPU</div>
+                                <div class="server-stat"><span>GPUs</span><span>8× B200</span></div>
+                                <div class="server-stat"><span>Memory</span><span>8× 192GB HBM3e</span></div>
+                                <div class="server-stat"><span>Perf</span><span id="smc-perf">160 PFLOPS FP4</span></div>
+                                <div class="server-stat"><span>Status</span><span style="color:var(--cursor-success);" id="smc-status">ready</span></div>
+                            </div>
+                            <div class="server-node" id="srv-lambda">
+                                <div class="server-name"><span class="pulse pulse-blue"></span> Lambda Supercluster</div>
+                                <div class="server-stat"><span>GPUs</span><span>3,584× B200</span></div>
+                                <div class="server-stat"><span>Fabric</span><span>NVLink + InfiniBand</span></div>
+                                <div class="server-stat"><span>Perf</span><span id="lambda-perf">~71 EFLOPS FP4</span></div>
+                                <div class="server-stat"><span>Status</span><span style="color:var(--cursor-accent);" id="lambda-status">cloud</span></div>
+                            </div>
+                            <div class="server-node" id="srv-local">
+                                <div class="server-name"><span class="pulse pulse-yellow"></span> Local Dev (uvspeed)</div>
+                                <div class="server-stat"><span>Bridge</span><span>:8085 HTTP + :8086 WS</span></div>
+                                <div class="server-stat"><span>Engine</span><span>Quantum Prefix 3.0</span></div>
+                                <div class="server-stat"><span>Deploy</span><span id="local-deploy">Electron / Web</span></div>
+                                <div class="server-stat"><span>Status</span><span style="color:var(--cursor-warning);" id="local-status">local</span></div>
+                            </div>
+                            <div class="server-node" id="srv-colab">
+                                <div class="server-name"><span class="pulse pulse-blue"></span> Google Colab</div>
+                                <div class="server-stat"><span>GPUs</span><span>T4 / A100 / L4</span></div>
+                                <div class="server-stat"><span>Runtime</span><span>Python + Jupyter</span></div>
+                                <div class="server-stat"><span>Bridge</span><span id="colab-bridge">ngrok tunnel</span></div>
+                                <div class="server-stat"><span>Status</span><span style="color:var(--cursor-accent);" id="colab-status">cloud</span></div>
+                            </div>
+                            <div class="server-node" id="srv-dgx-cloud">
+                                <div class="server-name"><span class="pulse pulse-nv"></span> DGX Cloud</div>
+                                <div class="server-stat"><span>GPUs</span><span>8× B200 per node</span></div>
+                                <div class="server-stat"><span>Network</span><span>NVLink + IB NDR</span></div>
+                                <div class="server-stat"><span>Perf</span><span id="dgxc-perf">160 PFLOPS/node</span></div>
+                                <div class="server-stat"><span>Status</span><span style="color:var(--cursor-accent);" id="dgxc-status">cloud</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===== References ===== -->
+                <div class="card">
+                    <div class="card-header">
+                        <span>References &amp; Resources</span>
+                    </div>
+                    <div class="card-body" style="font-size:0.8125rem;">
+                        <ul style="list-style:none;display:flex;flex-direction:column;gap:6px;">
+                            <li>🔗 <a href="https://developer.nvidia.com/blog/inside-nvidia-blackwell-ultra-the-chip-powering-the-ai-factory-era/" target="_blank">Inside NVIDIA Blackwell Ultra — Developer Blog</a></li>
+                            <li>🔗 <a href="https://en.wikipedia.org/wiki/Blackwell_(microarchitecture)" target="_blank">Blackwell Microarchitecture — Wikipedia</a></li>
+                            <li>🔗 <a href="https://lambda.ai/superclusters" target="_blank">Lambda AI Superclusters — Blackwell B200 Clusters</a></li>
+                            <li>🔗 <a href="https://www.supermicro.com/en/accelerators/nvidia" target="_blank">Supermicro NVIDIA GPU Servers</a></li>
+                            <li>🔗 <a href="https://www.nvidia.com/en-us/data-center/dgx-spark/" target="_blank">NVIDIA DGX Spark — Desktop AI Supercomputer</a></li>
+                        </ul>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- ===== Quantum Sidebar ===== -->
+            <div class="quantum-sidebar">
+                <div class="sidebar-tabs">
+                    <button class="sidebar-tab active" data-tab="nav-tab" id="tab-nav">⚛ Nav</button>
+                    <button class="sidebar-tab" data-tab="deploy-tab" id="tab-deploy">🚀 Deploy</button>
+                    <button class="sidebar-tab" data-tab="stream-tab" id="tab-stream">📡 Stream</button>
+                </div>
+
+                <!-- TAB 1: Quantum Navigation -->
+                <div class="sidebar-tab-panel active" id="nav-tab">
+                    <div class="sidebar-section">
+                        <div class="sidebar-title">Quantum Navigation</div>
+                        <div class="quantum-nav-mini">
+                            <button class="nav-btn" data-direction="+1" title="Lines up (+Y)">+1</button>
+                            <button class="nav-btn" data-direction="0" title="Neutral">0</button>
+                            <button class="nav-btn" data-direction="-1" title="Lines down (-Y)">-1</button>
+                            <button class="nav-btn" data-direction="+n" title="Complexity up (+Z)">+n</button>
+                            <button class="nav-btn active" data-direction="⚛" id="nav-center-btn" title="Reset to origin">∞</button>
+                            <button class="nav-btn" data-direction="-n" title="Complexity down (-Z)">-n</button>
+                            <button class="nav-btn" data-direction="+0" title="Dependencies right (+X)">+0</button>
+                            <button class="nav-btn" data-direction="-0" title="Dependencies left (-X)">-0</button>
+                            <button class="nav-btn" data-direction="+2" title="Jump +2 lines">+2</button>
+                        </div>
+                        <div class="layer-nav">
+                            <button class="layer-btn" id="layer-down" title="Layer down">▼</button>
+                            <div class="layer-label">Layer <strong id="layer-value">0</strong> <span style="opacity:0.5">Z</span></div>
+                            <button class="layer-btn" id="layer-up" title="Layer up">▲</button>
+                        </div>
+                        <div class="position-display" id="position-display">[0, 0, 0]</div>
+                        <div class="stream-log" id="stream-log">
+                            <div class="stream-entry stream-origin">∞ origin [0, 0, 0]</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 2: Deploy -->
+                <div class="sidebar-tab-panel" id="deploy-tab">
+                    <div class="sidebar-section">
+                        <div class="sidebar-title">Deploy Status</div>
+                        <div class="deploy-grid">
+                            <div class="deploy-stat">
+                                <div class="deploy-stat-val" style="color:var(--nv-green);" id="deploy-nodes">6</div>
+                                <div class="deploy-stat-label">Targets</div>
+                            </div>
+                            <div class="deploy-stat">
+                                <div class="deploy-stat-val" style="color:var(--cursor-success);" id="deploy-ready">4</div>
+                                <div class="deploy-stat-label">Ready</div>
+                            </div>
+                            <div class="deploy-stat">
+                                <div class="deploy-stat-val" style="color:var(--cursor-accent);" id="deploy-cloud">2</div>
+                                <div class="deploy-stat-label">Cloud</div>
+                            </div>
+                            <div class="deploy-stat">
+                                <div class="deploy-stat-val" style="color:var(--cursor-warning);" id="deploy-local">1</div>
+                                <div class="deploy-stat-label">Local</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="sidebar-section">
+                        <div class="sidebar-title">Quick Deploy</div>
+                        <div style="display:flex;flex-direction:column;gap:4px;">
+                            <button class="nav-btn" id="deploy-dgx" style="text-align:left;padding:6px 8px;">🟢 DGX Spark → uvspeed bridge</button>
+                            <button class="nav-btn" id="deploy-smc" style="text-align:left;padding:6px 8px;">🟢 Supermicro → multi-GPU</button>
+                            <button class="nav-btn" id="deploy-lambda" style="text-align:left;padding:6px 8px;">🔵 Lambda → supercluster</button>
+                            <button class="nav-btn" id="deploy-colab" style="text-align:left;padding:6px 8px;">🔵 Colab → ngrok tunnel</button>
+                            <button class="nav-btn" id="deploy-local" style="text-align:left;padding:6px 8px;">🟡 Local → Electron app</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 3: Stream -->
+                <div class="sidebar-tab-panel" id="stream-tab">
+                    <div class="sidebar-section">
+                        <div class="sidebar-title">Data Stream Monitor</div>
+                        <div style="display:flex;flex-direction:column;gap:6px;">
+                            <div style="display:flex;justify-content:space-between;"><span style="color:var(--cursor-text-muted);">Frames/s</span><span style="font-family:var(--cursor-font-mono);color:var(--nv-green);" id="side-fps">60</span></div>
+                            <div style="display:flex;justify-content:space-between;"><span style="color:var(--cursor-text-muted);">SM Load</span><span style="font-family:var(--cursor-font-mono);color:var(--nv-green);" id="side-sm">72%</span></div>
+                            <div style="display:flex;justify-content:space-between;"><span style="color:var(--cursor-text-muted);">HBM3e</span><span style="font-family:var(--cursor-font-mono);color:var(--cursor-accent);" id="side-hbm">1.17 TB/s</span></div>
+                            <div style="display:flex;justify-content:space-between;"><span style="color:var(--cursor-text-muted);">NVLink</span><span style="font-family:var(--cursor-font-mono);color:var(--cursor-purple);" id="side-nvlink">1.04 TB/s</span></div>
+                            <div style="display:flex;justify-content:space-between;"><span style="color:var(--cursor-text-muted);">Power</span><span style="font-family:var(--cursor-font-mono);color:var(--cursor-error);" id="side-power">840W</span></div>
+                            <div style="display:flex;justify-content:space-between;"><span style="color:var(--cursor-text-muted);">Temp</span><span style="font-family:var(--cursor-font-mono);color:var(--cursor-warning);" id="side-temp">72°C</span></div>
+                        </div>
+                    </div>
+                    <div class="sidebar-section">
+                        <div class="sidebar-title">Stream Log</div>
+                        <div class="stream-log" id="data-stream-log" style="max-height:200px;">
+                            <div class="stream-entry stream-origin">⚛ stream initialized</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Always visible -->
+                <div class="sidebar-section" style="margin-top:auto;">
+                    <div class="sidebar-title">beyondBINARY</div>
+                    <div style="font-size:0.625rem;color:var(--cursor-text-muted);font-family:var(--cursor-font-mono);">
+                        {+1, 1, -1, +0, 0, -0, +n, n, -n}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== Footer ===== -->
+        <div class="app-footer">
+            <span>⚛ uvspeed Blackwell Live</span>
+            <span class="footer-sep">|</span>
+            <span class="footer-stat" id="footer-fps">60 FPS</span>
+            <span class="footer-sep">|</span>
+            <span class="footer-stat" id="footer-sm">192 SMs</span>
+            <span class="footer-sep">|</span>
+            <span class="footer-stat" id="footer-bw">8 TB/s HBM3e</span>
+            <span class="footer-sep">|</span>
+            <span class="footer-stat" id="footer-pos">[0, 0, 0]</span>
+            <span style="flex:1;"></span>
+            <span style="color:var(--nv-green);font-family:var(--cursor-font-mono);">NVIDIA Blackwell Ultra</span>
+        </div>
+    </div>
+
+    <!-- ===== JavaScript ===== -->
+    <script>
+    (function() {
+        'use strict';
+
+        // ===== Sidebar Tabs =====
+        const tabs = document.querySelectorAll('.sidebar-tab');
+        const panels = document.querySelectorAll('.sidebar-tab-panel');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                panels.forEach(p => p.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.tab).classList.add('active');
+            });
+        });
+
+        // ===== Quantum Navigation =====
+        const pos = [0, 0, 0]; // [x, y, z]
+        const posDisplay = document.getElementById('position-display');
+        const layerVal = document.getElementById('layer-value');
+        const streamLog = document.getElementById('stream-log');
+        const footerPos = document.getElementById('footer-pos');
+
+        function updatePosition(dir) {
+            switch (dir) {
+                case '+1': pos[1]++; break;
+                case '-1': pos[1]--; break;
+                case '+0': pos[0]++; break;
+                case '-0': pos[0]--; break;
+                case '+n': pos[2]++; break;
+                case '-n': pos[2]--; break;
+                case '+2': pos[1] += 2; break;
+                case '0': break;
+                case '⚛': pos[0] = pos[1] = pos[2] = 0; break;
+            }
+            layerVal.textContent = pos[2];
+            const str = `[${pos.join(', ')}]`;
+            posDisplay.textContent = str;
+            footerPos.textContent = str;
+            const entry = document.createElement('div');
+            entry.className = 'stream-entry';
+            entry.textContent = `${dir} → ${str}`;
+            streamLog.appendChild(entry);
+            streamLog.scrollTop = streamLog.scrollHeight;
+        }
+
+        document.querySelectorAll('.nav-btn[data-direction]').forEach(btn => {
+            btn.addEventListener('click', () => updatePosition(btn.dataset.direction));
+        });
+        document.getElementById('layer-up').addEventListener('click', () => updatePosition('+n'));
+        document.getElementById('layer-down').addEventListener('click', () => updatePosition('-n'));
+
+        // ===== SM Heatmap =====
+        const smGrid = document.getElementById('sm-grid');
+        const smCells = [];
+        for (let i = 0; i < 192; i++) {
+            const cell = document.createElement('div');
+            cell.className = 'sm-cell';
+            cell.title = `SM ${i}`;
+            smGrid.appendChild(cell);
+            smCells.push(cell);
+        }
+
+        function updateSMGrid() {
+            smCells.forEach(cell => {
+                const load = Math.random();
+                const r = Math.round(33 + load * 200);
+                const g = Math.round(185 * (1 - load * 0.6));
+                const b = Math.round(load < 0.5 ? 0 : (load - 0.5) * 100);
+                cell.style.background = `rgb(${r},${g},${b})`;
+                cell.style.boxShadow = load > 0.8 ? `0 0 6px rgba(${r},${g},${b},0.5)` : 'none';
+            });
+        }
+
+        // ===== Stream Canvas =====
+        const canvas = document.getElementById('stream-canvas');
+        const ctx = canvas.getContext('2d');
+        const overlay = document.getElementById('stream-overlay');
+        let frameCount = 0;
+        const history = { sm: [], hbm: [], nvlink: [], power: [], temp: [] };
+        const MAX_HISTORY = 300;
+
+        function resizeCanvas() {
+            const rect = canvas.parentElement.getBoundingClientRect();
+            canvas.width = rect.width * window.devicePixelRatio;
+            canvas.height = rect.height * window.devicePixelRatio;
+            ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        function drawStreams() {
+            const w = canvas.width / window.devicePixelRatio;
+            const h = canvas.height / window.devicePixelRatio;
+            ctx.clearRect(0, 0, w, h);
+
+            // Background grid
+            ctx.strokeStyle = '#ffffff08';
+            ctx.lineWidth = 0.5;
+            for (let x = 0; x < w; x += 40) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke(); }
+            for (let y = 0; y < h; y += 30) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke(); }
+
+            const colors = {
+                sm: '#76b900',
+                hbm: '#58a6ff',
+                nvlink: '#a78bfa',
+                power: '#f85149',
+                temp: '#f0883e'
+            };
+
+            Object.keys(history).forEach(key => {
+                const data = history[key];
+                if (data.length < 2) return;
+                ctx.beginPath();
+                ctx.strokeStyle = colors[key];
+                ctx.lineWidth = 1.5;
+                ctx.globalAlpha = 0.8;
+                const step = w / MAX_HISTORY;
+                const start = MAX_HISTORY - data.length;
+                data.forEach((val, i) => {
+                    const x = (start + i) * step;
+                    const y = h - (val * h);
+                    if (i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                });
+                ctx.stroke();
+                ctx.globalAlpha = 1;
+
+                // Glow
+                ctx.globalAlpha = 0.1;
+                ctx.lineTo((start + data.length - 1) * step, h);
+                ctx.lineTo(start * step, h);
+                ctx.closePath();
+                ctx.fillStyle = colors[key];
+                ctx.fill();
+                ctx.globalAlpha = 1;
+            });
+
+            // Current value dots
+            Object.keys(history).forEach(key => {
+                const data = history[key];
+                if (data.length < 1) return;
+                const val = data[data.length - 1];
+                const x = w - 2;
+                const y = h - (val * h);
+                ctx.beginPath();
+                ctx.arc(x, y, 3, 0, Math.PI * 2);
+                ctx.fillStyle = colors[key];
+                ctx.fill();
+            });
+        }
+
+        // ===== Simulate Live Data =====
+        function simVal(base, range) {
+            return base + (Math.random() - 0.5) * range;
+        }
+
+        function updateData() {
+            const sm = Math.max(0, Math.min(1, simVal(0.72, 0.15)));
+            const hbm = Math.max(0, Math.min(1, simVal(0.65, 0.12)));
+            const nvl = Math.max(0, Math.min(1, simVal(0.58, 0.1)));
+            const pwr = Math.max(0, Math.min(1, simVal(0.70, 0.08)));
+            const tmp = Math.max(0, Math.min(1, simVal(0.60, 0.1)));
+
+            history.sm.push(sm); if (history.sm.length > MAX_HISTORY) history.sm.shift();
+            history.hbm.push(hbm); if (history.hbm.length > MAX_HISTORY) history.hbm.shift();
+            history.nvlink.push(nvl); if (history.nvlink.length > MAX_HISTORY) history.nvlink.shift();
+            history.power.push(pwr); if (history.power.length > MAX_HISTORY) history.power.shift();
+            history.temp.push(tmp); if (history.temp.length > MAX_HISTORY) history.temp.shift();
+
+            const smPct = Math.round(sm * 100);
+            const hbmTB = (hbm * 1.8).toFixed(2);
+            const nvlTB = (nvl * 1.8).toFixed(2);
+            const pwrW = Math.round(pwr * 1200);
+            const tmpC = Math.round(tmp * 120);
+
+            // Update bars
+            document.getElementById('bar-sm').style.width = smPct + '%';
+            document.getElementById('val-sm').textContent = smPct + '%';
+            document.getElementById('bar-hbm').style.width = Math.round(hbm * 100) + '%';
+            document.getElementById('val-hbm').textContent = hbmTB + ' TB/s';
+            document.getElementById('bar-nvlink').style.width = Math.round(nvl * 100) + '%';
+            document.getElementById('val-nvlink').textContent = nvlTB + ' TB/s';
+            document.getElementById('bar-fp4').style.width = Math.round(sm * 100 * 1.12) + '%';
+            document.getElementById('val-fp4').textContent = Math.round(sm * 100 * 1.12) + '%';
+            document.getElementById('bar-power').style.width = Math.round(pwr * 100) + '%';
+            document.getElementById('val-power').textContent = pwrW + 'W';
+
+            // Update sidebar stream
+            document.getElementById('side-sm').textContent = smPct + '%';
+            document.getElementById('side-hbm').textContent = hbmTB + ' TB/s';
+            document.getElementById('side-nvlink').textContent = nvlTB + ' TB/s';
+            document.getElementById('side-power').textContent = pwrW + 'W';
+            document.getElementById('side-temp').textContent = tmpC + '°C';
+
+            // Overlay
+            overlay.textContent = `FPS: 60 | SMs: 192 | BW: ${hbmTB} TB/s | Util: ${smPct}% | Power: ${pwrW}W | Temp: ${tmpC}°C`;
+        }
+
+        // ===== Stream Log =====
+        const dataStreamLog = document.getElementById('data-stream-log');
+        let streamTick = 0;
+        function addStreamEntry() {
+            streamTick++;
+            const msgs = [
+                `[${streamTick}] SM dispatch batch → 192 warps`,
+                `[${streamTick}] HBM3e read: ${(Math.random() * 1.8).toFixed(2)} TB/s`,
+                `[${streamTick}] NVLink sync: ${Math.round(Math.random() * 72)} nodes`,
+                `[${streamTick}] Tensor FP4 → attention layer ${Math.round(Math.random() * 128)}`,
+                `[${streamTick}] Transformer Engine 2.0: prefill complete`,
+                `[${streamTick}] KV-cache compressed → ${Math.round(Math.random() * 256)}MB`,
+            ];
+            const entry = document.createElement('div');
+            entry.className = 'stream-entry';
+            entry.textContent = msgs[Math.floor(Math.random() * msgs.length)];
+            dataStreamLog.appendChild(entry);
+            if (dataStreamLog.children.length > 50) dataStreamLog.removeChild(dataStreamLog.firstChild);
+            dataStreamLog.scrollTop = dataStreamLog.scrollHeight;
+        }
+
+        // ===== Animation Loop =====
+        function tick() {
+            frameCount++;
+            if (frameCount % 30 === 0) updateSMGrid();
+            if (frameCount % 20 === 0) updateData();
+            if (frameCount % 60 === 0) addStreamEntry();
+            drawStreams();
+            requestAnimationFrame(tick);
+        }
+
+        // Init
+        updateSMGrid();
+        updateData();
+        tick();
+
+        // ===== Deploy Buttons =====
+        document.querySelectorAll('[id^="deploy-"]').forEach(btn => {
+            if (btn.tagName === 'BUTTON') {
+                btn.addEventListener('click', () => {
+                    const target = btn.textContent.trim();
+                    const entry = document.createElement('div');
+                    entry.className = 'stream-entry';
+                    entry.textContent = `🚀 Deploy initiated → ${target}`;
+                    dataStreamLog.appendChild(entry);
+                    dataStreamLog.scrollTop = dataStreamLog.scrollHeight;
+                    btn.style.borderColor = 'var(--cursor-success)';
+                    btn.style.color = 'var(--cursor-success)';
+                    setTimeout(() => {
+                        btn.style.borderColor = '';
+                        btn.style.color = '';
+                    }, 2000);
+                });
+            }
+        });
+
+        console.log('⚛ uvspeed Blackwell Live — initialized');
+        console.log('{+1, 1, -1, +0, 0, -0, +n, n, -n}');
+    })();
+    </script>
+</body>
+</html>

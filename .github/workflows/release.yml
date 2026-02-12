@@ -81,6 +81,10 @@ jobs:
           - `web/brothernumsy.html` — endless runner with AI training API
           - `web/kbatch.html` — keyboard pattern analyzer
           - `web/hexcast.html` — live video hex broadcast
+          - `web/blackwell.html` — NVIDIA Blackwell data visualization + deploy targets
+          - `web/questcast.html` — Meta Quest broadcast + research tools
+          - `web/archflow.html` — n8n-style architecture visualizer
+          - `web/jawta-audio.html` — Spatial audio + Strudel live code
           - 6 IDE configurations (Cursor, Copilot, VS Code, Windsurf)
           - 20-language quantum prefix support
           
