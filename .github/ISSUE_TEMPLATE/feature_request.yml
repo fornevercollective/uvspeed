@@ -1,0 +1,72 @@
+name: Feature Request
+description: Suggest a new feature or enhancement for uvspeed
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for your feature suggestion! Please describe what you'd like to see.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: Which area does this feature belong to?
+      options:
+        - Prefix System / Core Architecture
+        - Web App (new page or existing page enhancement)
+        - Bridge Server API
+        - MCP Server / IDE Integration
+        - Electron Desktop App
+        - AI / LLM / tinygrad
+        - Multi-Instance / Session Management
+        - Game (brotherNumsy)
+        - Audio (jawta)
+        - Visualization (Blackwell / archflow)
+        - DevOps / CI / GitHub Actions
+        - Documentation
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Feature Description
+      description: A clear description of what you want to happen.
+      placeholder: What should this feature do?
+    validations:
+      required: true
+
+  - type: textarea
+    id: use_case
+    attributes:
+      label: Use Case
+      description: Why is this feature needed? What problem does it solve?
+      placeholder: I want this because...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: phase
+    attributes:
+      label: Suggested Phase
+      description: Which development phase does this fit into?
+      options:
+        - Phase 3.4 (Agent Orchestration)
+        - Phase 4 (Terminal/OS App)
+        - Future / Unphased
+        - Not sure
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Any alternative solutions or workarounds you've considered.
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Screenshots, mockups, reference links, etc.

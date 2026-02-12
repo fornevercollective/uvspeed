@@ -1,0 +1,95 @@
+name: Bug Report
+description: Report a bug in uvspeed
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug. Please fill out the sections below.
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      description: Which part of uvspeed is affected?
+      options:
+        - Quantum Notepad (web)
+        - Bridge Server (Python)
+        - Electron Desktop App
+        - MCP Server
+        - brotherNumsy Game
+        - kbatch Analyzer
+        - hexcast Broadcast
+        - Blackwell Live
+        - questcast
+        - archflow
+        - jawta audio
+        - GitHub Actions / CI
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear description of what the bug is.
+      placeholder: What happened?
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: How can we reproduce this issue?
+      placeholder: |
+        1. Open quantum-notepad.html
+        2. Click '...'
+        3. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What should have happened?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: browser
+    attributes:
+      label: Browser / Runtime
+      options:
+        - Chrome
+        - Firefox
+        - Safari
+        - Edge
+        - Electron App
+        - Node.js
+        - Python
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: Operating System
+      placeholder: "e.g., macOS 15.3, Ubuntu 24.04, Windows 11"
+
+  - type: input
+    id: version
+    attributes:
+      label: uvspeed Version
+      placeholder: "e.g., 3.3.0 (check /api/status or package.json)"
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / Screenshots
+      description: Paste any relevant logs, error messages, or screenshots.
+      render: shell

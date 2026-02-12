@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Live Demo
+    url: https://fornevercollective.github.io/uvspeed/web/quantum-notepad.html
+    about: Try the live demo before reporting issues
+  - name: Documentation
+    url: https://github.com/fornevercollective/uvspeed#readme
+    about: Check the README for setup and API documentation

@@ -57,7 +57,7 @@ jobs:
             web/ src/ icons/ \
             pyproject.toml package.json uvspeed_cli.py \
             .cursor/ .github/ .windsurf/ .vscode/ \
-            README.md CHANGELOG.md LICENSE .gitignore .gitattributes
+            README.md CHANGELOG.md LICENSE CODE_OF_CONDUCT.md CONTRIBUTING.md SECURITY.md .gitignore .gitattributes
 
       - name: Generate release notes
         id: notes
@@ -77,7 +77,8 @@ jobs:
           
           ### What's Included
           - `web/quantum-notepad.html` — zero-install web notepad
-          - `src/01-core/quantum_bridge_server.py` — 40+ API endpoint bridge server
+          - `src/01-core/quantum_bridge_server.py` — 55+ API endpoint bridge server
+          - `src/01-core/mcp_server.py` — MCP server (10 tools, Cursor/Claude Desktop)
           - `web/brothernumsy.html` — endless runner with AI training API
           - `web/kbatch.html` — keyboard pattern analyzer
           - `web/hexcast.html` — live video hex broadcast
@@ -85,7 +86,8 @@ jobs:
           - `web/questcast.html` — Meta Quest broadcast + research tools
           - `web/archflow.html` — n8n-style architecture visualizer
           - `web/jawta-audio.html` — Spatial audio + Strudel live code
-          - 6 IDE configurations (Cursor, Copilot, VS Code, Windsurf)
+          - `web/github-dashboard.html` — GitHub project health dashboard
+          - 6 IDE configurations (Cursor, Copilot, VS Code, Windsurf) + MCP
           - 20-language quantum prefix support
           
           ### Install

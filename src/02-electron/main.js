@@ -487,6 +487,10 @@ class UVspeedApp {
                         label: 'New brotherNumsy',
                         click: () => self.registry.createInstance('brothernumsy.html')
                     },
+                    {
+                        label: 'New GitHub Dashboard',
+                        click: () => self.registry.createInstance('github-dashboard.html')
+                    },
                     { type: 'separator' },
                     {
                         label: 'List All Instances',

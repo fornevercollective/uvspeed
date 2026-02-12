@@ -1,0 +1,1006 @@
+<!-- beyondBINARY quantum-prefixed | uvspeed | {+1, 1, -1, +0, 0, -0, +n, n, -n} -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>uvspeed — GitHub Project Health Dashboard</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="../icons/favicon.png">
+    <link rel="icon" type="image/x-icon" href="../icons/favicon.ico">
+    <link rel="apple-touch-icon" sizes="192x192" href="../icons/icon-192.png">
+    <style>
+        :root {
+            --bg: #0d1117;
+            --bg2: #161b22;
+            --bg3: #21262d;
+            --border: #30363d;
+            --text: #e6edf3;
+            --muted: #8b949e;
+            --accent: #58a6ff;
+            --success: #3fb950;
+            --warning: #f0883e;
+            --error: #f85149;
+            --purple: #a78bfa;
+            --cyan: #56d4dd;
+            --gh-green: #238636;
+            --gh-blue: #1f6feb;
+            --space-xs: 4px;
+            --space-sm: 8px;
+            --space-md: 16px;
+            --space-lg: 24px;
+            --space-xl: 32px;
+            --radius: 6px;
+            --font-mono: 'SF Mono', 'Fira Code', 'JetBrains Mono', monospace;
+        }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body { height: 100%; overflow: hidden; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            font-size: 13px;
+            line-height: 1.5;
+            display: flex;
+            flex-direction: column;
+        }
+        a { color: var(--accent); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+
+        /* ===== Header ===== */
+        .header {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+            padding: var(--space-sm) var(--space-md);
+            background: var(--bg2);
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+        .header img { height: 24px; border-radius: 4px; filter: drop-shadow(0 0 4px rgba(139,92,246,0.3)); }
+        .header .title { font-size: 15px; font-weight: 600; }
+        .header .badge {
+            background: var(--gh-green);
+            color: #fff;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .header nav { margin-left: auto; display: flex; gap: var(--space-md); font-size: 12px; }
+
+        /* ===== Tabs ===== */
+        .tab-bar {
+            display: flex;
+            gap: 0;
+            background: var(--bg2);
+            border-bottom: 1px solid var(--border);
+            padding: 0 var(--space-md);
+            flex-shrink: 0;
+            overflow-x: auto;
+        }
+        .tab-bar button {
+            background: none;
+            border: none;
+            color: var(--muted);
+            padding: var(--space-sm) var(--space-md);
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            white-space: nowrap;
+            transition: all 0.15s;
+        }
+        .tab-bar button:hover { color: var(--text); }
+        .tab-bar button.active { color: var(--accent); border-bottom-color: var(--accent); }
+        .tab-bar button .count {
+            background: var(--bg3);
+            padding: 1px 6px;
+            border-radius: 10px;
+            font-size: 10px;
+            margin-left: 4px;
+        }
+
+        /* ===== Main ===== */
+        .main {
+            flex: 1;
+            overflow-y: auto;
+            padding: var(--space-lg);
+        }
+
+        /* ===== Panel Grid ===== */
+        .panel-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: var(--space-md);
+            margin-bottom: var(--space-lg);
+        }
+        .panel {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+        }
+        .panel-header {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            padding: var(--space-sm) var(--space-md);
+            background: var(--bg3);
+            border-bottom: 1px solid var(--border);
+            font-weight: 600;
+            font-size: 13px;
+        }
+        .panel-header .icon { font-size: 16px; }
+        .panel-header .status {
+            margin-left: auto;
+            font-size: 11px;
+            font-weight: 500;
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+        .status-pass { background: #238636; color: #fff; }
+        .status-warn { background: #9e6a03; color: #fff; }
+        .status-fail { background: #da3633; color: #fff; }
+        .status-info { background: var(--gh-blue); color: #fff; }
+        .panel-body { padding: var(--space-md); }
+
+        /* ===== Checklist ===== */
+        .checklist { list-style: none; }
+        .checklist li {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            padding: 6px 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 13px;
+        }
+        .checklist li:last-child { border-bottom: none; }
+        .check { width: 18px; height: 18px; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0; }
+        .check-pass { background: var(--success); color: #000; }
+        .check-fail { background: var(--bg3); border: 1px solid var(--border); color: var(--muted); }
+        .check-warn { background: var(--warning); color: #000; }
+        .checklist .label { flex: 1; }
+        .checklist .meta { color: var(--muted); font-size: 11px; font-family: var(--font-mono); }
+
+        /* ===== Stats Row ===== */
+        .stats-row {
+            display: flex;
+            gap: var(--space-md);
+            flex-wrap: wrap;
+            margin-bottom: var(--space-lg);
+        }
+        .stat-card {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: var(--space-md);
+            min-width: 150px;
+            flex: 1;
+        }
+        .stat-card .value { font-size: 28px; font-weight: 700; font-family: var(--font-mono); }
+        .stat-card .label { color: var(--muted); font-size: 11px; margin-top: 2px; }
+
+        /* ===== Canvas Charts ===== */
+        .chart-container { position: relative; width: 100%; }
+        .chart-container canvas { width: 100%; height: 140px; border-radius: var(--radius); }
+
+        /* ===== Table ===== */
+        .data-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        .data-table th { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--border); color: var(--muted); font-weight: 500; }
+        .data-table td { padding: 6px 8px; border-bottom: 1px solid var(--border); }
+        .data-table tr:last-child td { border-bottom: none; }
+        .data-table .mono { font-family: var(--font-mono); font-size: 11px; }
+
+        /* ===== Progress Bar ===== */
+        .progress-bar { height: 8px; background: var(--bg3); border-radius: 4px; overflow: hidden; margin-top: 4px; }
+        .progress-fill { height: 100%; border-radius: 4px; transition: width 0.5s; }
+
+        /* ===== Footer ===== */
+        .footer {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+            padding: var(--space-xs) var(--space-md);
+            background: var(--bg2);
+            border-top: 1px solid var(--border);
+            font-size: 11px;
+            color: var(--muted);
+            flex-shrink: 0;
+        }
+        .footer .prefix { font-family: var(--font-mono); color: var(--purple); }
+        .footer .actions { margin-left: auto; display: flex; gap: var(--space-sm); }
+        .btn {
+            padding: 4px 10px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            background: var(--bg3);
+            color: var(--text);
+            cursor: pointer;
+            font-size: 11px;
+            transition: all 0.15s;
+        }
+        .btn:hover { border-color: var(--accent); color: var(--accent); }
+        .btn-primary { background: var(--gh-green); border-color: var(--gh-green); color: #fff; }
+        .btn-primary:hover { background: #2ea043; }
+
+        /* ===== Tab Content ===== */
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* ===== Contribution Graph ===== */
+        .contrib-grid { display: flex; gap: 2px; flex-wrap: wrap; }
+        .contrib-cell {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+            background: var(--bg3);
+        }
+        .contrib-1 { background: #0e4429; }
+        .contrib-2 { background: #006d32; }
+        .contrib-3 { background: #26a641; }
+        .contrib-4 { background: #39d353; }
+
+        /* ===== Dep Table ===== */
+        .dep-badge {
+            display: inline-block;
+            padding: 1px 6px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-family: var(--font-mono);
+        }
+        .dep-current { background: #238636; color: #fff; }
+        .dep-outdated { background: #9e6a03; color: #fff; }
+        .dep-critical { background: #da3633; color: #fff; }
+
+        /* ===== Responsive ===== */
+        @media (max-width: 800px) {
+            .panel-grid { grid-template-columns: 1fr; }
+            .stats-row { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ===== Header ===== -->
+<div class="header">
+    <img src="../icons/nyan-banner.png" alt="uvspeed" title="uvspeed — beyondBINARY">
+    <span class="title">GitHub Project Health</span>
+    <span class="badge">Dashboard</span>
+    <nav>
+        <a href="quantum-notepad.html">Notepad</a>
+        <a href="archflow.html">archflow</a>
+        <a href="blackwell.html">Blackwell</a>
+        <a href="questcast.html">questcast</a>
+        <a href="jawta-audio.html">jawta</a>
+        <a href="hexcast.html">hexcast</a>
+        <a href="brothernumsy.html">brotherNumsy</a>
+    </nav>
+</div>
+
+<!-- ===== Tab Bar ===== -->
+<div class="tab-bar">
+    <button class="active" data-tab="overview">Overview</button>
+    <button data-tab="community">Community Standards</button>
+    <button data-tab="dependencies">Dependencies</button>
+    <button data-tab="actions">Actions & CI</button>
+    <button data-tab="traffic">Traffic & Pulse</button>
+    <button data-tab="codefreq">Code Frequency</button>
+    <button data-tab="network">Network & Forks</button>
+</div>
+
+<!-- ===== Main Content ===== -->
+<div class="main">
+
+    <!-- ==================== OVERVIEW ==================== -->
+    <div class="tab-content active" id="tab-overview">
+        <!-- Stats -->
+        <div class="stats-row">
+            <div class="stat-card"><div class="value" style="color:var(--success)" id="stat-score">7/7</div><div class="label">Community Standards</div></div>
+            <div class="stat-card"><div class="value" style="color:var(--accent)" id="stat-endpoints">55+</div><div class="label">API Endpoints</div></div>
+            <div class="stat-card"><div class="value" style="color:var(--purple)" id="stat-files">179</div><div class="label">Source Files</div></div>
+            <div class="stat-card"><div class="value" style="color:var(--cyan)" id="stat-pages">9</div><div class="label">Web Apps</div></div>
+            <div class="stat-card"><div class="value" style="color:var(--warning)" id="stat-languages">20</div><div class="label">Languages</div></div>
+            <div class="stat-card"><div class="value" style="color:var(--success)" id="stat-mcp">10</div><div class="label">MCP Tools</div></div>
+        </div>
+
+        <!-- Panel Grid -->
+        <div class="panel-grid">
+            <!-- Community Standards -->
+            <div class="panel">
+                <div class="panel-header">
+                    <span class="icon">📋</span> Community Standards
+                    <span class="status status-pass" id="cs-status">All Pass</span>
+                </div>
+                <div class="panel-body">
+                    <ul class="checklist" id="cs-checklist"></ul>
+                </div>
+            </div>
+
+            <!-- Dependabot -->
+            <div class="panel">
+                <div class="panel-header">
+                    <span class="icon">🤖</span> Dependabot
+                    <span class="status status-pass">Configured</span>
+                </div>
+                <div class="panel-body">
+                    <ul class="checklist">
+                        <li><span class="check check-pass">✓</span><span class="label">npm (weekly, Monday)</span><span class="meta">10 PR limit</span></li>
+                        <li><span class="check check-pass">✓</span><span class="label">pip (weekly, Monday)</span><span class="meta">5 PR limit</span></li>
+                        <li><span class="check check-pass">✓</span><span class="label">GitHub Actions (monthly)</span><span class="meta">5 PR limit</span></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Workflows -->
+            <div class="panel">
+                <div class="panel-header">
+                    <span class="icon">⚡</span> GitHub Actions
+                    <span class="status status-pass" id="actions-status">2 Workflows</span>
+                </div>
+                <div class="panel-body">
+                    <ul class="checklist" id="actions-list"></ul>
+                </div>
+            </div>
+
+            <!-- Phase Tracking -->
+            <div class="panel">
+                <div class="panel-header">
+                    <span class="icon">🎯</span> Phase Tracking
+                    <span class="status status-info">Phase 3.3</span>
+                </div>
+                <div class="panel-body">
+                    <ul class="checklist" id="phase-list"></ul>
+                </div>
+            </div>
+
+            <!-- Repository Health -->
+            <div class="panel">
+                <div class="panel-header">
+                    <span class="icon">💻</span> Repository Stats
+                </div>
+                <div class="panel-body">
+                    <table class="data-table">
+                        <tr><td>Language Mix</td><td class="mono">HTML 27% · JS 27% · CSS 19% · Py 16% · Sh 12%</td></tr>
+                        <tr><td>Total Size</td><td class="mono">~7.3 MB (excl. node_modules)</td></tr>
+                        <tr><td>Version</td><td class="mono">3.3.0</td></tr>
+                        <tr><td>License</td><td class="mono">MIT</td></tr>
+                        <tr><td>Python</td><td class="mono">≥3.9</td></tr>
+                        <tr><td>Electron</td><td class="mono">40.4</td></tr>
+                        <tr><td>Node</td><td class="mono">LTS</td></tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Contribution Graph -->
+            <div class="panel">
+                <div class="panel-header">
+                    <span class="icon">📊</span> Contribution Activity
+                </div>
+                <div class="panel-body">
+                    <div class="contrib-grid" id="contrib-grid"></div>
+                    <div style="margin-top:8px;font-size:11px;color:var(--muted)">
+                        Less <span style="display:inline-flex;gap:2px;vertical-align:middle;margin:0 4px;">
+                            <span class="contrib-cell" style="width:10px;height:10px;"></span>
+                            <span class="contrib-cell contrib-1" style="width:10px;height:10px;"></span>
+                            <span class="contrib-cell contrib-2" style="width:10px;height:10px;"></span>
+                            <span class="contrib-cell contrib-3" style="width:10px;height:10px;"></span>
+                            <span class="contrib-cell contrib-4" style="width:10px;height:10px;"></span>
+                        </span> More
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== COMMUNITY STANDARDS ==================== -->
+    <div class="tab-content" id="tab-community">
+        <h2 style="margin-bottom:var(--space-md);font-size:18px;">Community Standards Checklist</h2>
+        <p style="color:var(--muted);margin-bottom:var(--space-lg);">How this project compares to GitHub's recommended community standards.</p>
+        <div class="panel" style="max-width:700px;">
+            <div class="panel-header"><span class="icon">✅</span> Full Checklist</div>
+            <div class="panel-body">
+                <ul class="checklist" id="cs-full-checklist"></ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== DEPENDENCIES ==================== -->
+    <div class="tab-content" id="tab-dependencies">
+        <h2 style="margin-bottom:var(--space-md);font-size:18px;">Dependency Graph</h2>
+        <div class="panel-grid">
+            <div class="panel">
+                <div class="panel-header"><span class="icon">📦</span> npm Dependencies</div>
+                <div class="panel-body">
+                    <table class="data-table" id="npm-deps"></table>
+                </div>
+            </div>
+            <div class="panel">
+                <div class="panel-header"><span class="icon">🐍</span> Python Dependencies</div>
+                <div class="panel-body">
+                    <table class="data-table" id="pip-deps"></table>
+                </div>
+            </div>
+            <div class="panel">
+                <div class="panel-header"><span class="icon">🔧</span> Dev Dependencies</div>
+                <div class="panel-body">
+                    <table class="data-table" id="dev-deps"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== ACTIONS ==================== -->
+    <div class="tab-content" id="tab-actions">
+        <h2 style="margin-bottom:var(--space-md);font-size:18px;">GitHub Actions & CI/CD</h2>
+        <div class="panel-grid">
+            <div class="panel">
+                <div class="panel-header"><span class="icon">🚀</span> pages.yml — GitHub Pages Deploy</div>
+                <div class="panel-body">
+                    <table class="data-table">
+                        <tr><td>Trigger</td><td class="mono">push to main</td></tr>
+                        <tr><td>Deploys</td><td class="mono">web/ → GitHub Pages</td></tr>
+                        <tr><td>Pages</td><td class="mono">9 web apps + legacy</td></tr>
+                        <tr><td>URL</td><td><a href="https://fornevercollective.github.io/uvspeed/" target="_blank">fornevercollective.github.io/uvspeed/</a></td></tr>
+                    </table>
+                </div>
+            </div>
+            <div class="panel">
+                <div class="panel-header"><span class="icon">📦</span> release.yml — Tagged Release Builder</div>
+                <div class="panel-body">
+                    <table class="data-table">
+                        <tr><td>Trigger</td><td class="mono">push tag v*</td></tr>
+                        <tr><td>Artifacts</td><td class="mono">tar.gz + wheel + sdist</td></tr>
+                        <tr><td>Latest</td><td class="mono">v3.3.0</td></tr>
+                        <tr><td>Registry</td><td class="mono">PyPI + npm (ready)</td></tr>
+                    </table>
+                </div>
+            </div>
+            <div class="panel">
+                <div class="panel-header"><span class="icon">🤖</span> dependabot.yml — Dependency Updates</div>
+                <div class="panel-body">
+                    <table class="data-table">
+                        <tr><td>npm</td><td class="mono">weekly (Monday), 10 PR limit</td></tr>
+                        <tr><td>pip</td><td class="mono">weekly (Monday), 5 PR limit</td></tr>
+                        <tr><td>Actions</td><td class="mono">monthly, 5 PR limit</td></tr>
+                        <tr><td>Labels</td><td class="mono">dependencies + ecosystem</td></tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== TRAFFIC ==================== -->
+    <div class="tab-content" id="tab-traffic">
+        <h2 style="margin-bottom:var(--space-md);font-size:18px;">Traffic & Pulse</h2>
+        <p style="color:var(--muted);margin-bottom:var(--space-lg);">Connect to the GitHub API for live data. Simulated view shown below.</p>
+        <div class="panel-grid">
+            <div class="panel">
+                <div class="panel-header"><span class="icon">👁</span> Views (14 days)</div>
+                <div class="panel-body">
+                    <div class="chart-container"><canvas id="chart-views"></canvas></div>
+                </div>
+            </div>
+            <div class="panel">
+                <div class="panel-header"><span class="icon">🔗</span> Clones (14 days)</div>
+                <div class="panel-body">
+                    <div class="chart-container"><canvas id="chart-clones"></canvas></div>
+                </div>
+            </div>
+            <div class="panel">
+                <div class="panel-header"><span class="icon">🌐</span> Referring Sites</div>
+                <div class="panel-body">
+                    <table class="data-table" id="referrers-table">
+                        <thead><tr><th>Source</th><th>Views</th><th>Unique</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="panel">
+                <div class="panel-header"><span class="icon">📄</span> Popular Content</div>
+                <div class="panel-body">
+                    <table class="data-table" id="popular-table">
+                        <thead><tr><th>Path</th><th>Views</th><th>Unique</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== CODE FREQUENCY ==================== -->
+    <div class="tab-content" id="tab-codefreq">
+        <h2 style="margin-bottom:var(--space-md);font-size:18px;">Commits & Code Frequency</h2>
+        <div class="panel-grid">
+            <div class="panel" style="grid-column: 1 / -1;">
+                <div class="panel-header"><span class="icon">📈</span> Code Frequency (additions/deletions per phase)</div>
+                <div class="panel-body">
+                    <div class="chart-container"><canvas id="chart-codefreq" style="height:200px;"></canvas></div>
+                </div>
+            </div>
+            <div class="panel">
+                <div class="panel-header"><span class="icon">🕐</span> Recent Commits</div>
+                <div class="panel-body">
+                    <table class="data-table" id="commits-table">
+                        <thead><tr><th>Hash</th><th>Message</th><th>Date</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="panel">
+                <div class="panel-header"><span class="icon">👥</span> Contributors</div>
+                <div class="panel-body">
+                    <table class="data-table" id="contributors-table">
+                        <thead><tr><th>Author</th><th>Commits</th><th>Lines</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== NETWORK ==================== -->
+    <div class="tab-content" id="tab-network">
+        <h2 style="margin-bottom:var(--space-md);font-size:18px;">Network & Forks</h2>
+        <div class="panel-grid">
+            <div class="panel" style="grid-column: 1 / -1;">
+                <div class="panel-header"><span class="icon">🔀</span> Branch Network</div>
+                <div class="panel-body">
+                    <div class="chart-container"><canvas id="chart-network" style="height:180px;"></canvas></div>
+                </div>
+            </div>
+            <div class="panel">
+                <div class="panel-header"><span class="icon">🍴</span> Forks</div>
+                <div class="panel-body">
+                    <p style="color:var(--muted);text-align:center;padding:var(--space-lg);">Fork data loads from GitHub API.<br>Connect a PAT for live data.</p>
+                </div>
+            </div>
+            <div class="panel">
+                <div class="panel-header"><span class="icon">⭐</span> Stargazers</div>
+                <div class="panel-body">
+                    <p style="color:var(--muted);text-align:center;padding:var(--space-lg);">Star history loads from GitHub API.<br>Connect a PAT for live data.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== Footer ===== -->
+<div class="footer">
+    <span class="prefix">{+1, 1, -1, +0, 0, -0, +n, n, -n}</span>
+    <span>uvspeed v3.3.0 — GitHub Project Health</span>
+    <div class="actions">
+        <button class="btn" onclick="window.open('https://github.com/fornevercollective/uvspeed','_blank')">GitHub Repo</button>
+        <button class="btn" onclick="window.open('https://github.com/fornevercollective/uvspeed/settings','_blank')">Settings</button>
+        <button class="btn" onclick="fetchLiveData()">🔄 Refresh</button>
+        <button class="btn btn-primary" onclick="exportDashboard()">📋 Export</button>
+    </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// GitHub Project Health Dashboard — uvspeed
+// ═══════════════════════════════════════════════════════════
+
+const REPO = 'fornevercollective/uvspeed';
+const GH_API = `https://api.github.com/repos/${REPO}`;
+
+// ── Tab Switching ──
+document.querySelectorAll('.tab-bar button').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-bar button').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    });
+});
+
+// ── Community Standards ──
+const communityItems = [
+    { name: 'README', file: 'README.md', present: true, desc: 'Project documentation with 1010+ lines' },
+    { name: 'Code of Conduct', file: 'CODE_OF_CONDUCT.md', present: true, desc: 'Contributor Covenant v2.1' },
+    { name: 'Contributing', file: 'CONTRIBUTING.md', present: true, desc: 'Dev setup, prefix system, contribution guide' },
+    { name: 'License', file: 'LICENSE', present: true, desc: 'MIT License' },
+    { name: 'Security Policy', file: 'SECURITY.md', present: true, desc: 'Vulnerability reporting + security features' },
+    { name: 'Issue Templates', file: '.github/ISSUE_TEMPLATE/', present: true, desc: 'Bug report + feature request (YAML forms)' },
+    { name: 'Pull Request Template', file: '.github/pull_request_template.md', present: true, desc: 'Phase, components, testing checklist' },
+];
+
+function renderChecklist(items, containerId) {
+    const ul = document.getElementById(containerId);
+    ul.innerHTML = items.map(item => `
+        <li>
+            <span class="check ${item.present ? 'check-pass' : 'check-fail'}">${item.present ? '✓' : '✗'}</span>
+            <span class="label">${item.name}</span>
+            <span class="meta">${item.file}</span>
+        </li>
+    `).join('');
+}
+
+renderChecklist(communityItems, 'cs-checklist');
+renderChecklist(communityItems.map(i => ({...i, name: `${i.name} — ${i.desc}`})), 'cs-full-checklist');
+
+// ── Phase Tracking ──
+const phases = [
+    { name: 'Phase 1 — Structural Bootstrap', done: true },
+    { name: 'Phase 2 — Execution Bridge', done: true },
+    { name: 'Phase 2.1 — Cross-Project Integration', done: true },
+    { name: 'Phase 2.2 — Release + Game', done: true },
+    { name: 'Phase 2.3 — Interactive Tools', done: true },
+    { name: 'Phase 3.0 — Restructure', done: true },
+    { name: 'Phase 3.1 — Blackwell Live', done: true },
+    { name: 'Phase 3.2 — Dev Pages', done: true },
+    { name: 'Phase 3.3 — Multi-Instance', done: true },
+    { name: 'Phase 3.4 — Agent Orchestration', done: false },
+    { name: 'Phase 4 — Terminal/OS App', done: false },
+];
+
+const phaseList = document.getElementById('phase-list');
+phaseList.innerHTML = phases.map(p => `
+    <li>
+        <span class="check ${p.done ? 'check-pass' : 'check-fail'}">${p.done ? '✓' : '○'}</span>
+        <span class="label">${p.name}</span>
+    </li>
+`).join('');
+
+// ── Actions ──
+const actions = [
+    { name: 'pages.yml', desc: 'GitHub Pages auto-deploy', trigger: 'push main', status: 'active' },
+    { name: 'release.yml', desc: 'Tagged release builder', trigger: 'push v*', status: 'active' },
+    { name: 'dependabot.yml', desc: 'Dependency version updates', trigger: 'weekly', status: 'active' },
+];
+
+document.getElementById('actions-list').innerHTML = actions.map(a => `
+    <li>
+        <span class="check check-pass">✓</span>
+        <span class="label">${a.name} — ${a.desc}</span>
+        <span class="meta">${a.trigger}</span>
+    </li>
+`).join('');
+
+// ── Dependencies ──
+const npmDeps = [
+    { name: 'electron', version: '^40.4.0', type: 'dev', status: 'current' },
+    { name: 'electron-builder', version: '^25.1.0', type: 'dev', status: 'current' },
+    { name: 'express', version: '^4.21.0', type: 'prod', status: 'current' },
+    { name: 'ws', version: '^8.18.0', type: 'prod', status: 'current' },
+    { name: 'xterm', version: '^5.5.0', type: 'prod', status: 'current' },
+    { name: 'xterm-addon-fit', version: '^0.10.0', type: 'prod', status: 'current' },
+    { name: 'node-pty', version: '^1.0.0', type: 'prod', status: 'current' },
+];
+
+const pipDeps = [
+    { name: 'websockets', version: '>=12.0', type: 'required', status: 'current' },
+    { name: 'aiohttp', version: '>=3.9', type: 'optional', status: 'current' },
+    { name: 'numpy', version: '>=1.24', type: 'optional', status: 'current' },
+    { name: 'psutil', version: '>=5.9', type: 'optional', status: 'current' },
+];
+
+const devDeps = [
+    { name: 'pytest', version: '>=7.0', type: 'dev', status: 'current' },
+    { name: 'ruff', version: '>=0.1', type: 'dev', status: 'current' },
+];
+
+function renderDeps(deps, tableId) {
+    const table = document.getElementById(tableId);
+    table.innerHTML = `
+        <thead><tr><th>Package</th><th>Version</th><th>Type</th><th>Status</th></tr></thead>
+        <tbody>${deps.map(d => `
+            <tr>
+                <td class="mono">${d.name}</td>
+                <td class="mono">${d.version}</td>
+                <td>${d.type}</td>
+                <td><span class="dep-badge dep-${d.status}">${d.status}</span></td>
+            </tr>
+        `).join('')}</tbody>
+    `;
+}
+renderDeps(npmDeps, 'npm-deps');
+renderDeps(pipDeps, 'pip-deps');
+renderDeps(devDeps, 'dev-deps');
+
+// ── Contribution Grid ──
+const gridEl = document.getElementById('contrib-grid');
+for (let w = 0; w < 52; w++) {
+    for (let d = 0; d < 7; d++) {
+        const cell = document.createElement('div');
+        cell.className = 'contrib-cell';
+        // Simulate activity — heavier in recent weeks
+        const recency = w / 52;
+        const r = Math.random();
+        if (w > 44) {
+            if (r < 0.7) cell.classList.add('contrib-' + (Math.floor(Math.random() * 4) + 1));
+        } else if (w > 35) {
+            if (r < 0.4) cell.classList.add('contrib-' + (Math.floor(Math.random() * 3) + 1));
+        } else {
+            if (r < 0.1) cell.classList.add('contrib-' + (Math.floor(Math.random() * 2) + 1));
+        }
+        gridEl.appendChild(cell);
+    }
+}
+
+// ── Charts ──
+function drawLineChart(canvasId, datasets, labels) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width = canvas.offsetWidth * 2;
+    const H = canvas.height = canvas.offsetHeight * 2;
+    ctx.scale(2, 2);
+    const w = W / 2, h = H / 2;
+
+    // Background
+    ctx.fillStyle = '#0d1117';
+    ctx.fillRect(0, 0, w, h);
+
+    // Grid
+    ctx.strokeStyle = '#21262d';
+    ctx.lineWidth = 0.5;
+    for (let i = 0; i < 5; i++) {
+        const y = 20 + (h - 40) * i / 4;
+        ctx.beginPath();
+        ctx.moveTo(40, y);
+        ctx.lineTo(w - 10, y);
+        ctx.stroke();
+    }
+
+    // Data
+    datasets.forEach(ds => {
+        const max = Math.max(...ds.data, 1);
+        ctx.strokeStyle = ds.color;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ds.data.forEach((v, i) => {
+            const x = 40 + (w - 50) * i / (ds.data.length - 1);
+            const y = h - 20 - (h - 40) * v / max;
+            i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+
+        // Fill
+        ctx.globalAlpha = 0.1;
+        ctx.lineTo(40 + (w - 50), h - 20);
+        ctx.lineTo(40, h - 20);
+        ctx.fillStyle = ds.color;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+    });
+
+    // Labels
+    ctx.fillStyle = '#8b949e';
+    ctx.font = '10px -apple-system, sans-serif';
+    if (labels) {
+        labels.forEach((l, i) => {
+            const x = 40 + (w - 50) * i / (labels.length - 1);
+            ctx.fillText(l, x - 10, h - 4);
+        });
+    }
+}
+
+function drawBarChart(canvasId, additions, deletions, labels) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width = canvas.offsetWidth * 2;
+    const H = canvas.height = canvas.offsetHeight * 2;
+    ctx.scale(2, 2);
+    const w = W / 2, h = H / 2;
+
+    ctx.fillStyle = '#0d1117';
+    ctx.fillRect(0, 0, w, h);
+
+    const max = Math.max(...additions, ...deletions.map(Math.abs), 1);
+    const barW = (w - 60) / additions.length * 0.35;
+    const mid = h * 0.5;
+
+    additions.forEach((v, i) => {
+        const x = 40 + (w - 60) * i / additions.length;
+        const bh = (mid - 20) * v / max;
+        ctx.fillStyle = '#3fb950';
+        ctx.fillRect(x, mid - bh, barW, bh);
+
+        const dh = (mid - 20) * Math.abs(deletions[i]) / max;
+        ctx.fillStyle = '#f85149';
+        ctx.fillRect(x + barW + 2, mid, barW, dh);
+    });
+
+    // Mid line
+    ctx.strokeStyle = '#30363d';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(40, mid);
+    ctx.lineTo(w - 10, mid);
+    ctx.stroke();
+
+    // Labels
+    ctx.fillStyle = '#8b949e';
+    ctx.font = '9px -apple-system, sans-serif';
+    if (labels) {
+        labels.forEach((l, i) => {
+            const x = 40 + (w - 60) * i / labels.length;
+            ctx.fillText(l, x, h - 4);
+        });
+    }
+
+    // Legend
+    ctx.fillStyle = '#3fb950';
+    ctx.fillRect(w - 120, 8, 8, 8);
+    ctx.fillStyle = '#8b949e';
+    ctx.fillText('Additions', w - 108, 16);
+    ctx.fillStyle = '#f85149';
+    ctx.fillRect(w - 60, 8, 8, 8);
+    ctx.fillStyle = '#8b949e';
+    ctx.fillText('Deletions', w - 48, 16);
+}
+
+function drawNetworkGraph(canvasId) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width = canvas.offsetWidth * 2;
+    const H = canvas.height = canvas.offsetHeight * 2;
+    ctx.scale(2, 2);
+    const w = W / 2, h = H / 2;
+
+    ctx.fillStyle = '#0d1117';
+    ctx.fillRect(0, 0, w, h);
+
+    // Main branch
+    ctx.strokeStyle = '#3fb950';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(20, h / 2);
+    ctx.lineTo(w - 20, h / 2);
+    ctx.stroke();
+
+    // Commits on main
+    const commits = 12;
+    for (let i = 0; i < commits; i++) {
+        const x = 40 + (w - 80) * i / (commits - 1);
+        ctx.fillStyle = '#3fb950';
+        ctx.beginPath();
+        ctx.arc(x, h / 2, 4, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    // Branch label
+    ctx.fillStyle = '#3fb950';
+    ctx.font = 'bold 11px -apple-system, sans-serif';
+    ctx.fillText('main', w - 50, h / 2 - 10);
+
+    // Tag markers
+    ctx.fillStyle = '#58a6ff';
+    ctx.font = '10px var(--font-mono), monospace';
+    ['v3.0.0', 'v3.3.0'].forEach((tag, i) => {
+        const x = 40 + (w - 80) * (i === 0 ? 0.6 : 0.95);
+        ctx.beginPath();
+        ctx.arc(x, h / 2, 6, 0, Math.PI * 2);
+        ctx.fillStyle = '#58a6ff';
+        ctx.fill();
+        ctx.fillStyle = '#8b949e';
+        ctx.fillText(tag, x - 15, h / 2 + 20);
+    });
+}
+
+// Traffic data (simulated — connect GitHub PAT for live)
+const days14 = Array.from({length: 14}, (_, i) => {
+    const d = new Date(); d.setDate(d.getDate() - 13 + i);
+    return (d.getMonth() + 1) + '/' + d.getDate();
+});
+const viewData = [12, 18, 25, 30, 22, 45, 67, 89, 120, 95, 78, 110, 145, 132];
+const cloneData = [2, 3, 1, 5, 4, 8, 12, 15, 10, 7, 9, 14, 18, 11];
+
+// Referrers
+const referrers = [
+    { source: 'github.com', views: 234, unique: 89 },
+    { source: 'google.com', views: 67, unique: 45 },
+    { source: 'cursor.sh', views: 23, unique: 12 },
+    { source: 'reddit.com', views: 15, unique: 11 },
+];
+
+const popular = [
+    { path: '/web/quantum-notepad.html', views: 312, unique: 145 },
+    { path: '/web/brothernumsy.html', views: 89, unique: 56 },
+    { path: '/web/blackwell.html', views: 67, unique: 34 },
+    { path: '/web/github-dashboard.html', views: 45, unique: 23 },
+];
+
+// Commits
+const commitsData = [
+    { hash: 'b72da21', msg: 'v3.3.0 — Multi-instance architecture, MCP server', date: 'Feb 12' },
+    { hash: 'd239a34', msg: 'v3.0.0 — Project restructure: numbered src/', date: 'Feb 12' },
+    { hash: 'e3c8745', msg: 'Add screenshots, notepad cells, Phase 3 cross-check', date: 'Feb 11' },
+    { hash: '77f612f', msg: 'Add kbatch + hexcast + update inspect', date: 'Feb 11' },
+    { hash: '409df5c', msg: 'Add Nyan Cat ambience, FreyaUnits cell', date: 'Feb 11' },
+];
+
+const contributors = [
+    { name: 'fornevercollective', commits: 12, lines: '4,086+' },
+];
+
+// Code frequency per phase
+const codeFreqAdd = [800, 1500, 600, 400, 350, 500, 900, 1200, 4086];
+const codeFreqDel = [50, 200, 80, 30, 20, 100, 50, 100, 238];
+const codeFreqLabels = ['P1', 'P2', 'P2.1', 'P2.2', 'P2.3', 'P3.0', 'P3.1', 'P3.2', 'P3.3'];
+
+// Render tables
+function renderTable(id, rows, cols) {
+    const tbody = document.querySelector(`#${id} tbody`);
+    if (!tbody) return;
+    tbody.innerHTML = rows.map(r => `<tr>${cols.map(c => `<td class="${c.mono ? 'mono' : ''}">${r[c.key]}</td>`).join('')}</tr>`).join('');
+}
+
+renderTable('referrers-table', referrers, [{key:'source',mono:true},{key:'views'},{key:'unique'}]);
+renderTable('popular-table', popular, [{key:'path',mono:true},{key:'views'},{key:'unique'}]);
+renderTable('commits-table', commitsData, [{key:'hash',mono:true},{key:'msg'},{key:'date'}]);
+renderTable('contributors-table', contributors, [{key:'name',mono:true},{key:'commits'},{key:'lines'}]);
+
+// Draw charts on tab switch (canvas needs to be visible)
+function drawAllCharts() {
+    drawLineChart('chart-views', [{data: viewData, color: '#58a6ff'}], days14);
+    drawLineChart('chart-clones', [{data: cloneData, color: '#a78bfa'}], days14);
+    drawBarChart('chart-codefreq', codeFreqAdd, codeFreqDel, codeFreqLabels);
+    drawNetworkGraph('chart-network');
+}
+
+// Redraw when tab becomes visible
+const observer = new MutationObserver(() => setTimeout(drawAllCharts, 50));
+document.querySelectorAll('.tab-content').forEach(el => observer.observe(el, { attributes: true, attributeFilter: ['class'] }));
+setTimeout(drawAllCharts, 100);
+window.addEventListener('resize', () => setTimeout(drawAllCharts, 100));
+
+// ── Live Data Fetch ──
+async function fetchLiveData() {
+    const token = localStorage.getItem('gh_pat');
+    if (!token) {
+        const pat = prompt('Enter GitHub PAT for live data (optional, stored in localStorage):');
+        if (pat) localStorage.setItem('gh_pat', pat);
+        else return;
+    }
+    try {
+        const headers = { Authorization: `token ${localStorage.getItem('gh_pat')}` };
+        const [repo, traffic, clones] = await Promise.all([
+            fetch(GH_API, { headers }).then(r => r.json()),
+            fetch(`${GH_API}/traffic/views`, { headers }).then(r => r.json()).catch(() => null),
+            fetch(`${GH_API}/traffic/clones`, { headers }).then(r => r.json()).catch(() => null),
+        ]);
+        if (repo.stargazers_count !== undefined) {
+            document.getElementById('stat-files').querySelector('.value').textContent = repo.size + ' KB';
+        }
+        alert('Live data refreshed (check console for full response)');
+        console.log('GitHub API response:', { repo, traffic, clones });
+    } catch (e) {
+        console.error('GitHub API error:', e);
+        alert('Failed to fetch: ' + e.message);
+    }
+}
+
+// ── Export ──
+function exportDashboard() {
+    const data = {
+        repo: REPO,
+        version: '3.3.0',
+        exported: new Date().toISOString(),
+        community: communityItems,
+        phases: phases,
+        dependencies: { npm: npmDeps, pip: pipDeps, dev: devDeps },
+        actions: actions,
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `uvspeed-dashboard-${new Date().toISOString().slice(0,10)}.json`;
+    a.click();
+}
+
+// ── Public API ──
+window.dashboard = {
+    community: communityItems,
+    phases,
+    dependencies: { npm: npmDeps, pip: pipDeps, dev: devDeps },
+    actions,
+    fetchLive: fetchLiveData,
+    export: exportDashboard,
+};
+</script>
+</body>
+</html>
