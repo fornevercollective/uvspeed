@@ -1,6 +1,8 @@
 <!-- beyondBINARY quantum-prefixed | uvspeed | {+1, 1, -1, +0, 0, -0, +n, n, -n} -->
 
-# uvspeed — Quantum beyondBINARY Notepad
+<p align="center">
+<img src="icons/nyan-banner.png" alt="uvspeed — Quantum beyondBINARY notepad — pixel-art Nyan Cat with rainbow trail, dimensional code addressing" width="100%">
+</p>
 
 > A new code architecture paradigm that replaces binary `{0, 1}` with a 9-symbol directional prefix system `{+1, 1, -1, +0, 0, -0, +n, n, -n}`, enabling any codebase — in any language — to be structurally re-addressed in 3D space.
 
