@@ -4686,7 +4686,10 @@
                 // ===== CHARTGPU INTEGRATION =====
                 this._hexMode = 'color';
                 this._hexData = new Uint8Array(360 * 360);
-                crypto.getRandomValues(this._hexData); // seed with random data
+                // Seed with random data (chunked — browser limit is 65536 bytes per call)
+                for (let i = 0; i < this._hexData.length; i += 65536) {
+                    crypto.getRandomValues(this._hexData.subarray(i, Math.min(i + 65536, this._hexData.length)));
+                }
 
                 document.getElementById('chartgpu-launch')?.addEventListener('click', () => {
                     window.open('http://localhost:3444', '_blank');
@@ -7179,8 +7182,17 @@ print("Position:", quantum_position)`);
         }
 
         // Initialize
-        const notebook = new QuantumNotebookWeb();
-        window.notebook = notebook;
+        let notebook;
+        try {
+            notebook = new QuantumNotebookWeb();
+            window.notebook = notebook;
+        } catch (e) {
+            console.error('QuantumNotebook init failed:', e);
+            document.getElementById('cells-container').innerHTML =
+                '<div style="padding:2rem;color:#f85149;font-family:monospace;">' +
+                '<h3>⚠ Initialization Error</h3><pre>' + e.message + '</pre>' +
+                '<p style="color:#8b949e;">Try refreshing the page. If this persists, open locally: <code>open web/quantum-notepad.html</code></p></div>';
+        }
 
         // --- Inspect panel toggle ---
         (() => {
