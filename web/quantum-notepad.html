@@ -2324,181 +2324,75 @@
                         <li><strong>Universal code conversion</strong> &mdash; any file in any language can be shifted into quantum-prefixed form. The prefix set works on Python, JS, Rust, C, Go, and shell scripts identically.</li>
                     </ul>
 
-                    <!-- Language Quantum Benchmark Chart -->
+                    <!-- Language Quantum Benchmark Chart — with checkmarks + AI/quantum sort -->
                     <div class="lang-chart" style="background:var(--cursor-bg-tertiary);border:1px solid var(--cursor-border);border-radius:var(--cursor-radius-md);padding:var(--cursor-space-md);">
-                        <div style="font-size:0.75rem;font-weight:700;color:var(--cursor-text);margin-bottom:var(--cursor-space-sm);display:flex;align-items:center;gap:var(--cursor-space-xs);">
+                        <div style="font-size:0.75rem;font-weight:700;color:var(--cursor-text);margin-bottom:4px;display:flex;align-items:center;gap:var(--cursor-space-xs);">
                             📊 Language Quantum Benchmarks
-                            <span style="font-size:0.625rem;font-weight:400;color:var(--cursor-text-muted);margin-left:auto;">prefix coverage &middot; parse speed &middot; pack status</span>
+                            <span style="font-size:0.625rem;font-weight:400;color:var(--cursor-text-muted);margin-left:auto;">sorted by quantum/AI/LLM relevance</span>
+                        </div>
+                        <div style="font-size:0.5625rem;color:var(--cursor-text-muted);margin-bottom:var(--cursor-space-sm);">
+                            ✅ = supported &amp; shipped &emsp; ⬜ = planned &emsp;
+                            <span style="color:#7ee787;">■</span> quantum/AI/tinygrad tier &emsp;
+                            <span style="color:#58a6ff;">■</span> systems tier &emsp;
+                            <span style="color:#f0d852;">■</span> config/markup &emsp;
+                            Source: <a href="https://github.com/collections/programming-languages" target="_blank" style="color:var(--cursor-accent);text-decoration:underline;">GitHub Languages Collection</a>
                         </div>
 
-                        <!-- Python -->
-                        <div class="lang-chart-row">
-                            <div class="lang-chart-label">🐍 Python</div>
-                            <div class="lang-chart-bar-wrap">
-                                <div class="lang-chart-bar" style="width:98%;background:linear-gradient(90deg,#3572A5,#58a6ff);">9/9 prefixes</div>
-                            </div>
-                            <div class="lang-chart-value">98%</div>
-                        </div>
+                        <!-- ═══ TIER 1: QUANTUM / AI / LLM / TINYGRAD ═══ -->
+                        <div style="font-size:0.5625rem;font-weight:700;color:#7ee787;text-transform:uppercase;letter-spacing:1px;margin:8px 0 4px;padding:2px 0;border-bottom:1px solid rgba(126,231,135,0.2);">Tier 1 — Quantum · AI · LLM · tinygrad</div>
 
-                        <!-- JavaScript -->
-                        <div class="lang-chart-row">
-                            <div class="lang-chart-label">🟨 JavaScript</div>
-                            <div class="lang-chart-bar-wrap">
-                                <div class="lang-chart-bar" style="width:96%;background:linear-gradient(90deg,#f1e05a 0%,#e8d44d 100%);color:#1a1a2e;">9/9 prefixes</div>
-                            </div>
-                            <div class="lang-chart-value">96%</div>
-                        </div>
+                        <div class="lang-chart-row"><div class="lang-chart-label"><span style="color:#7ee787;">✅</span> 🐍 Python</div><div class="lang-chart-bar-wrap"><div class="lang-chart-bar" style="width:98%;background:linear-gradient(90deg,#3572A5,#58a6ff);">9/9</div></div><div class="lang-chart-value">98%</div><div style="font-size:0.5rem;color:#7ee787;width:110px;text-align:right;">tinygrad · torch · jax</div></div>
+                        <div class="lang-chart-row"><div class="lang-chart-label"><span style="color:#7ee787;">✅</span> ⚙️ C / C++</div><div class="lang-chart-bar-wrap"><div class="lang-chart-bar" style="width:91%;background:linear-gradient(90deg,#555555,#8b949e);">9/9</div></div><div class="lang-chart-value">91%</div><div style="font-size:0.5rem;color:#7ee787;width:110px;text-align:right;">llama.cpp · ggml · CUDA</div></div>
+                        <div class="lang-chart-row"><div class="lang-chart-label"><span style="color:#7ee787;">✅</span> 🦀 Rust</div><div class="lang-chart-bar-wrap"><div class="lang-chart-bar" style="width:94%;background:linear-gradient(90deg,#dea584,#f97583);">9/9</div></div><div class="lang-chart-value">94%</div><div style="font-size:0.5rem;color:#7ee787;width:110px;text-align:right;">candle · burn · nushell</div></div>
+                        <div class="lang-chart-row"><div class="lang-chart-label"><span style="color:#7ee787;">✅</span> ⚡ Zig</div><div class="lang-chart-bar-wrap"><div class="lang-chart-bar" style="width:90%;background:linear-gradient(90deg,#ec915c,#f9c74f);color:#1a1a2e;">9/9</div></div><div class="lang-chart-value">90%</div><div style="font-size:0.5rem;color:#7ee787;width:110px;text-align:right;">ghostty · bun · tinygrad</div></div>
+                        <div class="lang-chart-row"><div class="lang-chart-label"><span style="color:#7ee787;">✅</span> 🐹 Go</div><div class="lang-chart-bar-wrap"><div class="lang-chart-bar" style="width:93%;background:linear-gradient(90deg,#00ADD8,#58d1f0);">9/9</div></div><div class="lang-chart-value">93%</div><div style="font-size:0.5rem;color:#7ee787;width:110px;text-align:right;">ollama · k8s · charm</div></div>
+                        <div class="lang-chart-row"><div class="lang-chart-label"><span style="color:#7ee787;">✅</span> 🟨 JavaScript</div><div class="lang-chart-bar-wrap"><div class="lang-chart-bar" style="width:96%;background:linear-gradient(90deg,#f1e05a,#e8d44d);color:#1a1a2e;">9/9</div></div><div class="lang-chart-value">96%</div><div style="font-size:0.5rem;color:#7ee787;width:110px;text-align:right;">transformers.js · onnx</div></div>
+                        <div class="lang-chart-row"><div class="lang-chart-label"><span style="color:#7ee787;">✅</span> 🔷 TypeScript</div><div class="lang-chart-bar-wrap"><div class="lang-chart-bar" style="width:95%;background:linear-gradient(90deg,#3178c6,#58a6ff);">9/9</div></div><div class="lang-chart-value">95%</div><div style="font-size:0.5rem;color:#7ee787;width:110px;text-align:right;">langchain · vercel ai</div></div>
 
-                        <!-- TypeScript -->
-                        <div class="lang-chart-row">
-                            <div class="lang-chart-label">🔷 TypeScript</div>
-                            <div class="lang-chart-bar-wrap">
-                                <div class="lang-chart-bar" style="width:95%;background:linear-gradient(90deg,#3178c6,#58a6ff);">9/9 prefixes</div>
-                            </div>
-                            <div class="lang-chart-value">95%</div>
-                        </div>
+                        <!-- ═══ TIER 2: SYSTEMS / ENTERPRISE ═══ -->
+                        <div style="font-size:0.5625rem;font-weight:700;color:#58a6ff;text-transform:uppercase;letter-spacing:1px;margin:10px 0 4px;padding:2px 0;border-bottom:1px solid rgba(88,166,255,0.2);">Tier 2 — Systems · Enterprise · Mobile</div>
 
-                        <!-- Rust -->
-                        <div class="lang-chart-row">
-                            <div class="lang-chart-label">🦀 Rust</div>
-                            <div class="lang-chart-bar-wrap">
-                                <div class="lang-chart-bar" style="width:94%;background:linear-gradient(90deg,#dea584,#f97583);">9/9 prefixes</div>
-                            </div>
-                            <div class="lang-chart-value">94%</div>
-                        </div>
+                        <div class="lang-chart-row"><div class="lang-chart-label"><span style="color:#7ee787;">✅</span> ☕ Java</div><div class="lang-chart-bar-wrap"><div class="lang-chart-bar" style="width:92%;background:linear-gradient(90deg,#b07219,#d4983b);">9/9</div></div><div class="lang-chart-value">92%</div><div style="font-size:0.5rem;color:#58a6ff;width:110px;text-align:right;">deeplearning4j · spark</div></div>
+                        <div class="lang-chart-row"><div class="lang-chart-label"><span style="color:#7ee787;">✅</span> 🍎 Swift</div><div class="lang-chart-bar-wrap"><div class="lang-chart-bar" style="width:91%;background:linear-gradient(90deg,#F05138,#ff7b6b);">9/9</div></div><div class="lang-chart-value">91%</div><div style="font-size:0.5rem;color:#58a6ff;width:110px;text-align:right;">coreml · mlx · vision</div></div>
+                        <div class="lang-chart-row"><div class="lang-chart-label"><span style="color:#7ee787;">✅</span> 🟣 Kotlin</div><div class="lang-chart-bar-wrap"><div class="lang-chart-bar" style="width:90%;background:linear-gradient(90deg,#A97BFF,#d2a8ff);">9/9</div></div><div class="lang-chart-value">90%</div><div style="font-size:0.5rem;color:#58a6ff;width:110px;text-align:right;">android · ktor · kmp</div></div>
+                        <div class="lang-chart-row"><div class="lang-chart-label"><span style="color:#7ee787;">✅</span> 💎 Ruby</div><div class="lang-chart-bar-wrap"><div class="lang-chart-bar" style="width:89%;background:linear-gradient(90deg,#701516,#CC342D);">9/9</div></div><div class="lang-chart-value">89%</div><div style="font-size:0.5rem;color:#58a6ff;width:110px;text-align:right;">rails · gems</div></div>
+                        <div class="lang-chart-row"><div class="lang-chart-label"><span style="color:#7ee787;">✅</span> 🐚 Shell</div><div class="lang-chart-bar-wrap"><div class="lang-chart-bar" style="width:90%;background:linear-gradient(90deg,#89e051,#7ee787);">9/9</div></div><div class="lang-chart-value">90%</div><div style="font-size:0.5rem;color:#58a6ff;width:110px;text-align:right;">bash · zsh · CI/CD</div></div>
+                        <div class="lang-chart-row"><div class="lang-chart-label"><span style="color:#7ee787;">✅</span> 🐚 Nushell</div><div class="lang-chart-bar-wrap"><div class="lang-chart-bar" style="width:87%;background:linear-gradient(90deg,#3aa675,#7ee787);">8/9</div></div><div class="lang-chart-value">87%</div><div style="font-size:0.5rem;color:#58a6ff;width:110px;text-align:right;">structured data shell</div></div>
+                        <div class="lang-chart-row"><div class="lang-chart-label"><span style="color:#7ee787;">✅</span> 🌐 HTML/CSS</div><div class="lang-chart-bar-wrap"><div class="lang-chart-bar" style="width:88%;background:linear-gradient(90deg,#e34c26,#f06529);">8/9</div></div><div class="lang-chart-value">88%</div><div style="font-size:0.5rem;color:#58a6ff;width:110px;text-align:right;">web · DOM · wasm host</div></div>
 
-                        <!-- Go -->
-                        <div class="lang-chart-row">
-                            <div class="lang-chart-label">🐹 Go</div>
-                            <div class="lang-chart-bar-wrap">
-                                <div class="lang-chart-bar" style="width:93%;background:linear-gradient(90deg,#00ADD8,#58d1f0);">9/9 prefixes</div>
-                            </div>
-                            <div class="lang-chart-value">93%</div>
-                        </div>
+                        <!-- ═══ TIER 3: CONFIG / MARKUP / DATA ═══ -->
+                        <div style="font-size:0.5625rem;font-weight:700;color:#f0d852;text-transform:uppercase;letter-spacing:1px;margin:10px 0 4px;padding:2px 0;border-bottom:1px solid rgba(240,216,82,0.2);">Tier 3 — Config · Data · Low-Level</div>
 
-                        <!-- C / C++ -->
-                        <div class="lang-chart-row">
-                            <div class="lang-chart-label">⚙️ C / C++</div>
-                            <div class="lang-chart-bar-wrap">
-                                <div class="lang-chart-bar" style="width:91%;background:linear-gradient(90deg,#555555,#8b949e);">9/9 prefixes</div>
-                            </div>
-                            <div class="lang-chart-value">91%</div>
-                        </div>
+                        <div class="lang-chart-row"><div class="lang-chart-label"><span style="color:#7ee787;">✅</span> 🗄️ SQL</div><div class="lang-chart-bar-wrap"><div class="lang-chart-bar" style="width:82%;background:linear-gradient(90deg,#e38c00,#f0d852);color:#1a1a2e;">8/9</div></div><div class="lang-chart-value">82%</div><div style="font-size:0.5rem;color:#f0d852;width:110px;text-align:right;">duckdb · sqlite · pg</div></div>
+                        <div class="lang-chart-row"><div class="lang-chart-label"><span style="color:#7ee787;">✅</span> 📄 YAML/TOML</div><div class="lang-chart-bar-wrap"><div class="lang-chart-bar" style="width:78%;background:linear-gradient(90deg,#cb171e,#f0d852);color:#1a1a2e;">7/9</div></div><div class="lang-chart-value">78%</div><div style="font-size:0.5rem;color:#f0d852;width:110px;text-align:right;">k8s · pyproject · cargo</div></div>
+                        <div class="lang-chart-row"><div class="lang-chart-label"><span style="color:#7ee787;">✅</span> 🐳 Dockerfile</div><div class="lang-chart-bar-wrap"><div class="lang-chart-bar" style="width:76%;background:linear-gradient(90deg,#384d54,#0db7ed);">7/9</div></div><div class="lang-chart-value">76%</div><div style="font-size:0.5rem;color:#f0d852;width:110px;text-align:right;">containers · CI</div></div>
+                        <div class="lang-chart-row"><div class="lang-chart-label"><span style="color:#7ee787;">✅</span> 🔩 Assembly</div><div class="lang-chart-bar-wrap"><div class="lang-chart-bar" style="width:68%;background:linear-gradient(90deg,#484f58,#6e7681);">6/9</div></div><div class="lang-chart-value">68%</div><div style="font-size:0.5rem;color:#f0d852;width:110px;text-align:right;">x86 · ARM · RISC-V</div></div>
 
-                        <!-- Shell / Bash -->
-                        <div class="lang-chart-row">
-                            <div class="lang-chart-label">🐚 Shell</div>
-                            <div class="lang-chart-bar-wrap">
-                                <div class="lang-chart-bar" style="width:90%;background:linear-gradient(90deg,#89e051,#7ee787);">9/9 prefixes</div>
-                            </div>
-                            <div class="lang-chart-value">90%</div>
-                        </div>
+                        <!-- ═══ TIER 4: PLANNED (not yet supported) ═══ -->
+                        <div style="font-size:0.5625rem;font-weight:700;color:#484f58;text-transform:uppercase;letter-spacing:1px;margin:10px 0 4px;padding:2px 0;border-bottom:1px solid rgba(72,79,88,0.3);">Planned — GitHub Top Languages (not yet supported)</div>
 
-                        <!-- HTML / CSS -->
-                        <div class="lang-chart-row">
-                            <div class="lang-chart-label">🌐 HTML/CSS</div>
-                            <div class="lang-chart-bar-wrap">
-                                <div class="lang-chart-bar" style="width:88%;background:linear-gradient(90deg,#e34c26,#f06529);">8/9 prefixes</div>
-                            </div>
-                            <div class="lang-chart-value">88%</div>
-                        </div>
-
-                        <!-- Java -->
-                        <div class="lang-chart-row">
-                            <div class="lang-chart-label">☕ Java</div>
-                            <div class="lang-chart-bar-wrap">
-                                <div class="lang-chart-bar" style="width:92%;background:linear-gradient(90deg,#b07219,#d4983b);">9/9 prefixes</div>
-                            </div>
-                            <div class="lang-chart-value">92%</div>
-                        </div>
-
-                        <!-- Swift -->
-                        <div class="lang-chart-row">
-                            <div class="lang-chart-label">🍎 Swift</div>
-                            <div class="lang-chart-bar-wrap">
-                                <div class="lang-chart-bar" style="width:91%;background:linear-gradient(90deg,#F05138,#ff7b6b);">9/9 prefixes</div>
-                            </div>
-                            <div class="lang-chart-value">91%</div>
-                        </div>
-
-                        <!-- Kotlin -->
-                        <div class="lang-chart-row">
-                            <div class="lang-chart-label">🟣 Kotlin</div>
-                            <div class="lang-chart-bar-wrap">
-                                <div class="lang-chart-bar" style="width:90%;background:linear-gradient(90deg,#A97BFF,#d2a8ff);">9/9 prefixes</div>
-                            </div>
-                            <div class="lang-chart-value">90%</div>
-                        </div>
-
-                        <!-- Ruby -->
-                        <div class="lang-chart-row">
-                            <div class="lang-chart-label">💎 Ruby</div>
-                            <div class="lang-chart-bar-wrap">
-                                <div class="lang-chart-bar" style="width:89%;background:linear-gradient(90deg,#701516,#CC342D);">9/9 prefixes</div>
-                            </div>
-                            <div class="lang-chart-value">89%</div>
-                        </div>
-
-                        <!-- YAML / TOML -->
-                        <div class="lang-chart-row">
-                            <div class="lang-chart-label">📄 YAML/TOML</div>
-                            <div class="lang-chart-bar-wrap">
-                                <div class="lang-chart-bar" style="width:78%;background:linear-gradient(90deg,#cb171e,#f0d852);color:#1a1a2e;">7/9 prefixes</div>
-                            </div>
-                            <div class="lang-chart-value">78%</div>
-                        </div>
-
-                        <!-- SQL -->
-                        <div class="lang-chart-row">
-                            <div class="lang-chart-label">🗄️ SQL</div>
-                            <div class="lang-chart-bar-wrap">
-                                <div class="lang-chart-bar" style="width:82%;background:linear-gradient(90deg,#e38c00,#f0d852);color:#1a1a2e;">8/9 prefixes</div>
-                            </div>
-                            <div class="lang-chart-value">82%</div>
-                        </div>
-
-                        <!-- Dockerfile -->
-                        <div class="lang-chart-row">
-                            <div class="lang-chart-label">🐳 Docker</div>
-                            <div class="lang-chart-bar-wrap">
-                                <div class="lang-chart-bar" style="width:76%;background:linear-gradient(90deg,#384d54,#0db7ed);">7/9 prefixes</div>
-                            </div>
-                            <div class="lang-chart-value">76%</div>
-                        </div>
-
-                        <!-- Nushell -->
-                        <div class="lang-chart-row">
-                            <div class="lang-chart-label">🐚 Nushell</div>
-                            <div class="lang-chart-bar-wrap">
-                                <div class="lang-chart-bar" style="width:87%;background:linear-gradient(90deg,#3aa675,#7ee787);">8/9 prefixes</div>
-                            </div>
-                            <div class="lang-chart-value">87%</div>
-                        </div>
-
-                        <!-- Zig -->
-                        <div class="lang-chart-row">
-                            <div class="lang-chart-label">⚡ Zig</div>
-                            <div class="lang-chart-bar-wrap">
-                                <div class="lang-chart-bar" style="width:90%;background:linear-gradient(90deg,#ec915c,#f9c74f);color:#1a1a2e;">9/9 prefixes</div>
-                            </div>
-                            <div class="lang-chart-value">90%</div>
-                        </div>
-
-                        <!-- Assembly -->
-                        <div class="lang-chart-row">
-                            <div class="lang-chart-label">🔩 Assembly</div>
-                            <div class="lang-chart-bar-wrap">
-                                <div class="lang-chart-bar" style="width:68%;background:linear-gradient(90deg,#484f58,#6e7681);">6/9 prefixes</div>
-                            </div>
-                            <div class="lang-chart-value">68%</div>
-                        </div>
+                        <div class="lang-chart-row" style="opacity:0.6;"><div class="lang-chart-label"><span style="color:#484f58;">⬜</span> 🟢 Elixir</div><div class="lang-chart-bar-wrap"><div class="lang-chart-bar" style="width:0%;background:#484f58;"></div></div><div class="lang-chart-value">&mdash;</div><div style="font-size:0.5rem;color:#484f58;width:110px;text-align:right;">Nx · Livebook · BEAM</div></div>
+                        <div class="lang-chart-row" style="opacity:0.6;"><div class="lang-chart-label"><span style="color:#484f58;">⬜</span> 🔮 Julia</div><div class="lang-chart-bar-wrap"><div class="lang-chart-bar" style="width:0%;background:#484f58;"></div></div><div class="lang-chart-value">&mdash;</div><div style="font-size:0.5rem;color:#484f58;width:110px;text-align:right;">Flux.jl · quantum sim</div></div>
+                        <div class="lang-chart-row" style="opacity:0.6;"><div class="lang-chart-label"><span style="color:#484f58;">⬜</span> 🧪 Scala</div><div class="lang-chart-bar-wrap"><div class="lang-chart-bar" style="width:0%;background:#484f58;"></div></div><div class="lang-chart-value">&mdash;</div><div style="font-size:0.5rem;color:#484f58;width:110px;text-align:right;">Spark ML · Chisel HDL</div></div>
+                        <div class="lang-chart-row" style="opacity:0.6;"><div class="lang-chart-label"><span style="color:#484f58;">⬜</span> 🔗 Clojure</div><div class="lang-chart-bar-wrap"><div class="lang-chart-bar" style="width:0%;background:#484f58;"></div></div><div class="lang-chart-value">&mdash;</div><div style="font-size:0.5rem;color:#484f58;width:110px;text-align:right;">cortex · deep-diamond</div></div>
+                        <div class="lang-chart-row" style="opacity:0.6;"><div class="lang-chart-label"><span style="color:#484f58;">⬜</span> 📐 Nim</div><div class="lang-chart-bar-wrap"><div class="lang-chart-bar" style="width:0%;background:#484f58;"></div></div><div class="lang-chart-value">&mdash;</div><div style="font-size:0.5rem;color:#484f58;width:110px;text-align:right;">arraymancer · compile</div></div>
+                        <div class="lang-chart-row" style="opacity:0.6;"><div class="lang-chart-label"><span style="color:#484f58;">⬜</span> 🔷 C#</div><div class="lang-chart-bar-wrap"><div class="lang-chart-bar" style="width:0%;background:#484f58;"></div></div><div class="lang-chart-value">&mdash;</div><div style="font-size:0.5rem;color:#484f58;width:110px;text-align:right;">ML.NET · Unity · .NET</div></div>
+                        <div class="lang-chart-row" style="opacity:0.6;"><div class="lang-chart-label"><span style="color:#484f58;">⬜</span> 🐘 PHP</div><div class="lang-chart-bar-wrap"><div class="lang-chart-bar" style="width:0%;background:#484f58;"></div></div><div class="lang-chart-value">&mdash;</div><div style="font-size:0.5rem;color:#484f58;width:110px;text-align:right;">laravel · wordpress</div></div>
+                        <div class="lang-chart-row" style="opacity:0.6;"><div class="lang-chart-label"><span style="color:#484f58;">⬜</span> ☕ Erlang/OTP</div><div class="lang-chart-bar-wrap"><div class="lang-chart-bar" style="width:0%;background:#484f58;"></div></div><div class="lang-chart-value">&mdash;</div><div style="font-size:0.5rem;color:#484f58;width:110px;text-align:right;">BEAM · distributed</div></div>
+                        <div class="lang-chart-row" style="opacity:0.6;"><div class="lang-chart-label"><span style="color:#484f58;">⬜</span> 💠 Crystal</div><div class="lang-chart-bar-wrap"><div class="lang-chart-bar" style="width:0%;background:#484f58;"></div></div><div class="lang-chart-value">&mdash;</div><div style="font-size:0.5rem;color:#484f58;width:110px;text-align:right;">ruby-like compiled</div></div>
+                        <div class="lang-chart-row" style="opacity:0.6;"><div class="lang-chart-label"><span style="color:#484f58;">⬜</span> 🔵 PowerShell</div><div class="lang-chart-bar-wrap"><div class="lang-chart-bar" style="width:0%;background:#484f58;"></div></div><div class="lang-chart-value">&mdash;</div><div style="font-size:0.5rem;color:#484f58;width:110px;text-align:right;">windows · automation</div></div>
+                        <div class="lang-chart-row" style="opacity:0.6;"><div class="lang-chart-label"><span style="color:#484f58;">⬜</span> 🟪 Haskell</div><div class="lang-chart-bar-wrap"><div class="lang-chart-bar" style="width:0%;background:#484f58;"></div></div><div class="lang-chart-value">&mdash;</div><div style="font-size:0.5rem;color:#484f58;width:110px;text-align:right;">hasktorch · quantum</div></div>
+                        <div class="lang-chart-row" style="opacity:0.6;"><div class="lang-chart-label"><span style="color:#484f58;">⬜</span> 🧊 WASM</div><div class="lang-chart-bar-wrap"><div class="lang-chart-bar" style="width:0%;background:#484f58;"></div></div><div class="lang-chart-value">&mdash;</div><div style="font-size:0.5rem;color:#484f58;width:110px;text-align:right;">wasmtime · edge AI</div></div>
+                        <div class="lang-chart-row" style="opacity:0.6;"><div class="lang-chart-label"><span style="color:#484f58;">⬜</span> ☕ CoffeeScript</div><div class="lang-chart-bar-wrap"><div class="lang-chart-bar" style="width:0%;background:#484f58;"></div></div><div class="lang-chart-value">&mdash;</div><div style="font-size:0.5rem;color:#484f58;width:110px;text-align:right;">legacy JS transpile</div></div>
+                        <div class="lang-chart-row" style="opacity:0.6;"><div class="lang-chart-label"><span style="color:#484f58;">⬜</span> 🔲 MicroPython</div><div class="lang-chart-bar-wrap"><div class="lang-chart-bar" style="width:0%;background:#484f58;"></div></div><div class="lang-chart-value">&mdash;</div><div style="font-size:0.5rem;color:#484f58;width:110px;text-align:right;">IoT · edge · TinyML</div></div>
 
                         <!-- Legend -->
-                        <div class="lang-chart-legend">
-                            <div class="lang-chart-legend-item"><div class="ldot" style="background:#7ee787;"></div> 9/9 full pack (90%+)</div>
-                            <div class="lang-chart-legend-item"><div class="ldot" style="background:#f0d852;"></div> 7-8/9 partial (76-89%)</div>
-                            <div class="lang-chart-legend-item"><div class="ldot" style="background:#6e7681;"></div> &le;6/9 limited (&lt;76%)</div>
-                            <div class="lang-chart-legend-item" style="margin-left:auto;color:var(--cursor-text-muted);font-size:0.5625rem;">benchmark = prefix AST coverage &times; parse-speed factor</div>
+                        <div class="lang-chart-legend" style="margin-top:10px;">
+                            <div class="lang-chart-legend-item"><span style="color:#7ee787;">✅</span> Supported (20)</div>
+                            <div class="lang-chart-legend-item"><span style="color:#484f58;">⬜</span> Planned (14)</div>
+                            <div class="lang-chart-legend-item"><div class="ldot" style="background:#7ee787;"></div> 9/9 full (90%+)</div>
+                            <div class="lang-chart-legend-item"><div class="ldot" style="background:#f0d852;"></div> 7-8/9 (76-89%)</div>
+                            <div class="lang-chart-legend-item"><div class="ldot" style="background:#6e7681;"></div> &le;6/9 (&lt;76%)</div>
                         </div>
                     </div>
 
