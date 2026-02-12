@@ -1,0 +1,80 @@
+// beyondBINARY quantum-prefixed | uvspeed | {+1, 1, -1, +0, 0, -0, +n, n, -n}
+// Service Worker — Offline-first PWA cache for quantum notepad
+// Phase 3.4 · Caches all web assets for full offline operation
+
+const CACHE_NAME = 'uvspeed-v3.3';
+const OFFLINE_URLS = [
+    './',
+    'quantum-notepad.html',
+    'brothernumsy.html',
+    'hexcast.html',
+    'kbatch.html',
+    'blackwell.html',
+    'questcast.html',
+    'archflow.html',
+    'jawta-audio.html',
+    'github-dashboard.html',
+    '../icons/nyan-banner.png',
+    '../icons/favicon.png',
+];
+
+// Install — pre-cache core shell
+self.addEventListener('install', (e) => {
+    e.waitUntil(
+        caches.open(CACHE_NAME).then(cache => {
+            return cache.addAll(OFFLINE_URLS).catch(() => {
+                // Individual failures are OK — cache what we can
+                return Promise.allSettled(OFFLINE_URLS.map(url =>
+                    cache.add(url).catch(() => console.log('SW: skip cache', url))
+                ));
+            });
+        })
+    );
+    self.skipWaiting();
+});
+
+// Activate — clean old caches
+self.addEventListener('activate', (e) => {
+    e.waitUntil(
+        caches.keys().then(keys =>
+            Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
+        )
+    );
+    self.clients.claim();
+});
+
+// Fetch — network-first with cache fallback
+self.addEventListener('fetch', (e) => {
+    const url = new URL(e.request.url);
+
+    // Skip non-GET, API calls, and cross-origin except CDN
+    if (e.request.method !== 'GET') return;
+    if (url.pathname.startsWith('/api/')) return;
+    if (url.hostname === 'localhost' || url.hostname === '127.0.0.1') return;
+
+    e.respondWith(
+        fetch(e.request)
+            .then(response => {
+                // Clone and cache successful responses
+                if (response.ok) {
+                    const clone = response.clone();
+                    caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
+                }
+                return response;
+            })
+            .catch(() => {
+                // Network failed — serve from cache
+                return caches.match(e.request).then(cached => {
+                    if (cached) return cached;
+                    // For navigation requests, return the cached notepad
+                    if (e.request.mode === 'navigate') {
+                        return caches.match('quantum-notepad.html');
+                    }
+                    return new Response('Offline — cached version not available', {
+                        status: 503,
+                        headers: { 'Content-Type': 'text/plain' }
+                    });
+                });
+            })
+    );
+});

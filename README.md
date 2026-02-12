@@ -156,7 +156,7 @@ open web/quantum-notepad.html
 | `src/06-extensions/` | Browser extensions — Chrome manifest, Firefox, PWA service worker, quantum theme CSS, content scripts | 39 | 664 KB | Phase 2.1 |
 | `src/07-archive/` | Historical versions v1-core / v2-terminal / v3-complete, old configs, shared tools | 58 | 628 KB | Phase 1–3 |
 | `web/` | Web tools — notepad, brotherNumsy, kbatch, hexcast, Blackwell, questcast, archflow, jawta-audio, legacy | 14 | 1.1 MB | Phase 1–3.2 |
-| `icons/` | 23 numbered screenshots + favicon + nyan-banner + icon-192 | 27 | 3.7 MB | Phase 1–3 |
+| `icons/` | 27 numbered screenshots + favicon + nyan-banner + icon-192 | 31 | 5.3 MB | Phase 1–3.3 |
 | `.cursor/rules/` | IDE rules — quantum-prefix-gutter.mdc, quantum-commands.mdc | 2 | 12 KB | Phase 2 |
 | `.github/workflows/` | CI/CD — Pages auto-deploy, tagged release builder | 2 | 12 KB | Phase 3 |
 
@@ -173,7 +173,7 @@ uvspeed/
 │   ├── 06-extensions/     664 KB   Phase 2.1    Chrome/Firefox/PWA extensions
 │   └── 07-archive/        628 KB   Phase 1–3    v1/v2/v3 historical versions
 ├── web/                   1.1 MB   Phase 1–3.2  9 web apps + legacy
-├── icons/                 3.7 MB   Phase 1–3    23 screenshots + assets
+├── icons/                 5.3 MB   Phase 1–3.3  27 screenshots + assets
 ├── .cursor/rules/          12 KB   Phase 2      IDE quantum rules
 ├── .github/workflows/      12 KB   Phase 3      CI/CD pipelines
 ├── package.json                    Phase 2      npm: Electron 40.4, express, ws, xterm
@@ -489,6 +489,12 @@ Real-time visualization of NVIDIA Blackwell Ultra architecture — live SM heatm
 
 **[Launch Blackwell Live](https://fornevercollective.github.io/uvspeed/web/blackwell.html)** | Also accessible from the notepad footer (`🟢 Blackwell` button)
 
+<p align="center">
+<img src="icons/25-blackwell-live-dashboard.png" alt="Blackwell Live — NVIDIA Blackwell Ultra GPU architecture, SM heatmap, data streams, deploy targets, quantum navigation sidebar" width="100%">
+</p>
+
+<p align="center"><em>Blackwell Live — NVIDIA Blackwell Ultra architecture, SM heatmap (192 cells), live data streams, Transformer Engine 2.0, deploy targets, quantum navigation sidebar</em></p>
+
 | Feature | Details |
 |---------|---------|
 | **SM Heatmap** | 192 streaming multiprocessor cells with live utilization coloring (idle → saturated) |
@@ -514,6 +520,12 @@ Real-time visualization of NVIDIA Blackwell Ultra architecture — live SM heatm
 4-panel real-time broadcast page for Meta Quest development with integrated Meta (Facebook) Research models for object detection, tracking, segmentation, and depth estimation.
 
 **[Launch questcast](https://fornevercollective.github.io/uvspeed/web/questcast.html)** | Also accessible from the notepad footer (`🥽 questcast` button)
+
+<p align="center">
+<img src="icons/27-questcast-meta-research.png" alt="questcast — Meta Quest broadcast with 4-panel view: source feed, Detectron2 detection + BabyTrack tracking, SAM3 segmentation, DINOv3 depth features" width="100%">
+</p>
+
+<p align="center"><em>questcast — 4-panel broadcast: test feed source, Detectron2 + BabyTrack detection/tracking, SAM3 segmentation masks, DINOv3 depth features</em></p>
 
 | Feature | Details |
 |---------|---------|
@@ -546,6 +558,12 @@ Interactive node-based architecture visualizer with draggable nodes, Bezier curv
 
 **[Launch archflow](https://fornevercollective.github.io/uvspeed/web/archflow.html)** | Also accessible from the notepad footer (`🔀 archflow` button)
 
+<p align="center">
+<img src="icons/26-archflow-node-visualizer.png" alt="archflow — n8n-style architecture visualizer with draggable nodes, Bezier connections, node palette, preset layouts for uvspeed full stack" width="100%">
+</p>
+
+<p align="center"><em>archflow — n8n-style node visualizer: uvspeed Full Stack preset with 19 nodes, 12 connections, node palette, and preset layouts</em></p>
+
 | Feature | Details |
 |---------|---------|
 | **Node Canvas** | Infinite scrollable grid with drag-to-move nodes and auto-routing connections |
@@ -575,6 +593,12 @@ window.archflow.exportJSON()     // Full state as JSON
 Spatial audio handler and analyzer with Dolby Atmos 7.1.4 surround visualization, binaural HRTF processing, 8-band parametric EQ, and Strudel-style live coding for music patterns.
 
 **[Launch jawta audio](https://fornevercollective.github.io/uvspeed/web/jawta-audio.html)** | Also accessible from the notepad footer (`🎵 jawta` button)
+
+<p align="center">
+<img src="icons/24-jawta-audio-spatial.png" alt="jawta audio — Dolby Atmos 7.1.4 spatial field, 8-band parametric EQ, waveform + spectrum analysis, 12-channel metering, Strudel live code editor" width="100%">
+</p>
+
+<p align="center"><em>jawta audio — Dolby Atmos 7.1.4 spatial field with 12-channel speaker metering, 8-band parametric EQ, frequency spectrum, Strudel live code editor</em></p>
 
 | Feature | Details |
 |---------|---------|
@@ -851,7 +875,7 @@ uvspeed/
 │   ├── jawta-audio.html              #   Spatial audio (Dolby Atmos, binaural, EQ, Strudel)
 │   └── legacy/                       #   Old terminal UIs (P2P, Claude terminal)
 │
-├── icons/                            # Screenshots + assets (01–23 numbered, favicon, banner)
+├── icons/                            # Screenshots + assets (01–27 numbered, favicon, banner)
 │
 ├── src/
 │   ├── 01-core/                      #   Python backend + MCP
