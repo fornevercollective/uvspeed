@@ -125,7 +125,7 @@ Desktop.ini
 .directory
 
 # IDE
-.vscode/
+# .vscode/ — kept for project settings (quantum prefix config)
 .idea/
 *.swp
 *.swo

@@ -1,0 +1,48 @@
+---
+description: Quantum bridge server commands and API shortcuts for terminal operations
+alwaysApply: false
+---
+
+# Quantum Bridge Server Commands
+
+## Start Server
+```bash
+cd /Users/tref/uvspeed && uv run python quantum_bridge_server.py
+```
+
+## Common API Calls
+
+### Prefix Code
+```bash
+curl -s POST http://localhost:8085/api/prefix -H "Content-Type: application/json" -d '{"code": "CODE_HERE", "language": "python"}'
+```
+
+### Security Scan
+```bash
+curl -s POST http://localhost:8085/api/security/scan -H "Content-Type: application/json" -d '{"directory": "."}'
+```
+
+### Install Git Hook
+```bash
+curl -s POST http://localhost:8085/api/git/hook/install -H "Content-Type: application/json" -d '{"repo": "."}'
+```
+
+### PR Diff Report
+```bash
+curl -s POST http://localhost:8085/api/git/diff-report -H "Content-Type: application/json" -d '{"old": "OLD", "new": "NEW", "language": "python", "filename": "file.py"}'
+```
+
+### Scan Roadmap
+```bash
+curl -s POST http://localhost:8085/api/roadmap/scan -H "Content-Type: application/json" -d '{"directory": "."}'
+```
+
+### Stamp All Files
+```bash
+python3 tools/prefix_all_files.py
+```
+
+### Launch Notepad
+```bash
+open web/quantum-notepad.html
+```

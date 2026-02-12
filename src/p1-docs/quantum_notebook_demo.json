@@ -1,0 +1,68 @@
+{
+  "cells": [
+    {
+      "id": "cell_0_1770785186",
+      "content": "# Quantum Computing with Tinygrad\n\nThis notebook demonstrates quantum algorithms using **tinygrad** for high-performance computing.",
+      "cell_type": "markdown",
+      "output": [],
+      "execution_count": 1,
+      "quantum_position": [
+        0,
+        0,
+        0
+      ],
+      "metadata": {},
+      "created_at": "2026-02-10T20:46:26.902683",
+      "modified_at": "2026-02-10T20:46:26.902693"
+    },
+    {
+      "id": "cell_1_1770785186",
+      "content": "\n# Quantum state simulation with tinygrad\nfrom tinygrad.tensor import Tensor\nimport numpy as np\n\n# Create quantum state vector\nquantum_state = Tensor.randn(8)  # 3-qubit state\nquantum_state = quantum_state / quantum_state.norm()\n\nprint(\"\ud83c\udf0c Quantum state created:\")\nprint(f\"State shape: {quantum_state.shape}\")\nprint(f\"State norm: {quantum_state.norm().numpy()}\")\n\n# Quantum navigation\nnavigate('+1', 1)  # Move in quantum space\n        ",
+      "cell_type": "code",
+      "output": [
+        {
+          "error": "unexpected indent (<string>, line 1)",
+          "traceback": "Traceback (most recent call last):\n  File \"/Users/tref/uvspeed/quantum_notepad.py\", line 179, in _execute_python_code\n    exec(quantum_code, namespace)\n  File \"<string>\", line 1\n    +1:   1 # Quantum state simulation with tinygrad\nIndentationError: unexpected indent\n",
+          "execution_count": 2,
+          "status": "error"
+        }
+      ],
+      "execution_count": 2,
+      "quantum_position": [
+        0,
+        0,
+        0
+      ],
+      "metadata": {},
+      "created_at": "2026-02-10T20:46:26.902701",
+      "modified_at": "2026-02-10T20:46:26.902703"
+    },
+    {
+      "id": "cell_2_1770785186",
+      "content": "\nimport matplotlib.pyplot as plt\nimport numpy as np\n\n# Quantum probability visualization\nfig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))\n\n# Quantum state probabilities\nprobabilities = np.abs(quantum_state)**2\nax1.bar(range(len(probabilities)), probabilities)\nax1.set_title('Quantum State Probabilities')\nax1.set_xlabel('Basis State')\nax1.set_ylabel('Probability')\n\n# Quantum phase visualization\nphases = np.angle(quantum_state)\nax2.plot(phases, 'ro-')\nax2.set_title('Quantum Phases')\nax2.set_xlabel('Basis State')\nax2.set_ylabel('Phase (radians)')\n\nplt.tight_layout()\nplt.show()\n        ",
+      "cell_type": "visualization",
+      "output": [],
+      "execution_count": 3,
+      "quantum_position": [
+        0,
+        0,
+        0
+      ],
+      "metadata": {},
+      "created_at": "2026-02-10T20:46:26.902943",
+      "modified_at": "2026-02-10T20:46:26.902946"
+    }
+  ],
+  "quantum_position": [
+    0,
+    0,
+    0
+  ],
+  "execution_count": 3,
+  "metadata": {
+    "kernel": "uvspeed-quantum",
+    "tinygrad_available": true,
+    "rich_available": true,
+    "created": "2026-02-10T20:46:27.097079"
+  }
+}

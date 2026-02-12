@@ -1993,11 +1993,144 @@
     <div class="inspect-overlay" id="inspect-overlay">
         <div class="inspect-backdrop" id="inspect-backdrop"></div>
         <div class="inspect-panel">
-            <div class="inspect-header">
+            <div class="inspect-header" style="position:relative;">
                 <h2>🔍 Inspect &mdash; uvspeed &middot; Quantum beyond<span style="font-weight:900;">BINARY</span> notepad</h2>
+                <div style="position:absolute;right:48px;top:50%;transform:translateY(-50%);font-family:var(--cursor-font-mono);font-size:0.5625rem;color:var(--cursor-text-muted);text-align:right;line-height:1.4;">
+                    <span style="color:var(--cursor-accent);font-weight:700;">last updated</span><br>
+                    <span id="inspect-unix-ts" style="color:#7ee787;font-weight:600;font-size:0.625rem;"></span>
+                </div>
                 <button class="inspect-close" id="inspect-close">&times;</button>
             </div>
             <div class="inspect-body">
+
+                <!-- ====== DEV TIMELINE ====== -->
+                <div class="inspect-section" style="border-bottom:2px solid var(--cursor-accent);">
+                    <h3>uvspeed &mdash; Development Timeline</h3>
+                    <p style="margin-bottom:var(--cursor-space-sm);font-size:0.75rem;color:var(--cursor-text-muted);">
+                        Git commit history + file signatures. <strong style="color:#7ee787;">Phase 2 shipped &amp; pushed to GitHub.</strong>
+                    </p>
+
+                    <!-- Commit history -->
+                    <div style="font-size:0.6875rem;font-weight:700;color:var(--cursor-text);margin-bottom:6px;">Git Commits</div>
+                    <div style="display:grid;grid-template-columns:1fr;gap:4px;margin-bottom:var(--cursor-space-md);font-family:var(--cursor-font-mono);font-size:0.625rem;">
+                        <div style="display:grid;grid-template-columns:64px 60px 1fr;gap:8px;padding:6px 10px;background:rgba(126,231,135,0.06);border:1px solid rgba(126,231,135,0.25);border-radius:var(--cursor-radius-sm);">
+                            <span style="color:var(--cursor-accent);">9a32201</span>
+                            <span style="color:var(--cursor-text-muted);">Feb 11</span>
+                            <span style="color:#7ee787;">Add IDE .mdc prefix gutter rule section to Inspect page</span>
+                        </div>
+                        <div style="display:grid;grid-template-columns:64px 60px 1fr;gap:8px;padding:6px 10px;background:rgba(126,231,135,0.06);border:1px solid rgba(126,231,135,0.25);border-radius:var(--cursor-radius-sm);">
+                            <span style="color:var(--cursor-accent);">abb4a61</span>
+                            <span style="color:var(--cursor-text-muted);">Feb 11</span>
+                            <span style="color:#7ee787;">uvspeed &mdash; Phase 2: security scanner + git hooks + 25 API endpoints</span>
+                        </div>
+                        <div style="display:grid;grid-template-columns:64px 60px 1fr;gap:8px;padding:6px 10px;background:var(--cursor-bg-tertiary);border:1px solid var(--cursor-border);border-radius:var(--cursor-radius-sm);">
+                            <span style="color:var(--cursor-accent);">d61107b</span>
+                            <span style="color:var(--cursor-text-muted);">Feb 10</span>
+                            <span style="color:var(--cursor-text);">Fix pyproject.toml syntax and quantum example</span>
+                        </div>
+                        <div style="display:grid;grid-template-columns:64px 60px 1fr;gap:8px;padding:6px 10px;background:var(--cursor-bg-tertiary);border:1px solid var(--cursor-border);border-radius:var(--cursor-radius-sm);">
+                            <span style="color:var(--cursor-accent);">77f24ac</span>
+                            <span style="color:var(--cursor-text-muted);">Feb 10</span>
+                            <span style="color:var(--cursor-text);">Initial UV-Speed Quantum Terminal package</span>
+                        </div>
+                    </div>
+
+                    <!-- File signatures -->
+                    <div style="font-size:0.6875rem;font-weight:700;color:var(--cursor-text);margin-bottom:6px;">Core File Signatures</div>
+                    <div style="display:grid;grid-template-columns:1fr;gap:2px;margin-bottom:var(--cursor-space-md);font-family:var(--cursor-font-mono);font-size:0.5625rem;">
+                        <div style="display:grid;grid-template-columns:24px 60px 260px 1fr;gap:6px;padding:4px 10px;background:rgba(126,231,135,0.04);border-radius:2px;">
+                            <span style="color:var(--cursor-accent);font-weight:700;">+0:</span>
+                            <span style="color:#f0883e;">344 KB</span>
+                            <span style="color:var(--cursor-text);">web/quantum-notepad.html</span>
+                            <span style="color:var(--cursor-text-muted);">Main UI &mdash; notepad, gutter, timeline, inspect</span>
+                        </div>
+                        <div style="display:grid;grid-template-columns:24px 60px 260px 1fr;gap:6px;padding:4px 10px;background:rgba(126,231,135,0.04);border-radius:2px;">
+                            <span style="color:var(--cursor-accent);font-weight:700;">0:</span>
+                            <span style="color:#f0883e;">68 KB</span>
+                            <span style="color:var(--cursor-text);">quantum_bridge_server.py</span>
+                            <span style="color:var(--cursor-text-muted);">Backend &mdash; 25 API endpoints, security, git hooks</span>
+                        </div>
+                        <div style="display:grid;grid-template-columns:24px 60px 260px 1fr;gap:6px;padding:4px 10px;">
+                            <span style="color:var(--cursor-accent);font-weight:700;">0:</span>
+                            <span style="color:var(--cursor-text-muted);">20 KB</span>
+                            <span style="color:var(--cursor-text);">quantum_notepad.py</span>
+                            <span style="color:var(--cursor-text-muted);">Python TUI notepad</span>
+                        </div>
+                        <div style="display:grid;grid-template-columns:24px 60px 260px 1fr;gap:6px;padding:4px 10px;">
+                            <span style="color:var(--cursor-accent);font-weight:700;">0:</span>
+                            <span style="color:var(--cursor-text-muted);">13 KB</span>
+                            <span style="color:var(--cursor-text);">quantum_prototype.py</span>
+                            <span style="color:var(--cursor-text-muted);">Standalone prototype terminal</span>
+                        </div>
+                        <div style="display:grid;grid-template-columns:24px 60px 260px 1fr;gap:6px;padding:4px 10px;background:rgba(126,231,135,0.04);border-radius:2px;">
+                            <span style="color:var(--cursor-accent);font-weight:700;">+1:</span>
+                            <span style="color:var(--cursor-text-muted);">3 KB</span>
+                            <span style="color:var(--cursor-text);">.cursor/rules/quantum-prefix-gutter.mdc</span>
+                            <span style="color:var(--cursor-text-muted);">IDE rule &mdash; always-on prefix AI training</span>
+                        </div>
+                        <div style="display:grid;grid-template-columns:24px 60px 260px 1fr;gap:6px;padding:4px 10px;">
+                            <span style="color:var(--cursor-accent);font-weight:700;">0:</span>
+                            <span style="color:var(--cursor-text-muted);">4 KB</span>
+                            <span style="color:var(--cursor-text);">tools/prefix_all_files.py</span>
+                            <span style="color:var(--cursor-text-muted);">Batch prefix header stamper (91+ files)</span>
+                        </div>
+                        <div style="display:grid;grid-template-columns:24px 60px 260px 1fr;gap:6px;padding:4px 10px;">
+                            <span style="color:var(--cursor-accent);font-weight:700;">0:</span>
+                            <span style="color:var(--cursor-text-muted);">20 KB</span>
+                            <span style="color:var(--cursor-text);">electron-app/main.js</span>
+                            <span style="color:var(--cursor-text-muted);">Electron main process</span>
+                        </div>
+                        <div style="display:grid;grid-template-columns:24px 60px 260px 1fr;gap:6px;padding:4px 10px;">
+                            <span style="color:var(--cursor-accent);font-weight:700;">0:</span>
+                            <span style="color:var(--cursor-text-muted);">17 KB</span>
+                            <span style="color:var(--cursor-text);">electron-app/src/renderer.js</span>
+                            <span style="color:var(--cursor-text-muted);">Electron UI + quantum nav</span>
+                        </div>
+                        <div style="display:grid;grid-template-columns:24px 60px 260px 1fr;gap:6px;padding:4px 10px;">
+                            <span style="color:var(--cursor-accent);font-weight:700;">n:</span>
+                            <span style="color:var(--cursor-text-muted);">15 KB</span>
+                            <span style="color:var(--cursor-text);">launch.sh</span>
+                            <span style="color:var(--cursor-text-muted);">Environment launcher</span>
+                        </div>
+                        <div style="display:grid;grid-template-columns:24px 60px 260px 1fr;gap:6px;padding:4px 10px;">
+                            <span style="color:var(--cursor-accent);font-weight:700;">1:</span>
+                            <span style="color:var(--cursor-text-muted);">6 KB</span>
+                            <span style="color:var(--cursor-text);">README.md</span>
+                            <span style="color:var(--cursor-text-muted);">Project documentation</span>
+                        </div>
+                    </div>
+
+                    <!-- Phase milestones -->
+                    <div style="font-size:0.6875rem;font-weight:700;color:var(--cursor-text);margin-bottom:6px;">Phase Milestones</div>
+                    <div style="display:flex;gap:6px;align-items:stretch;margin-bottom:var(--cursor-space-sm);">
+                        <div style="flex:1;background:rgba(126,231,135,0.08);border:1px solid rgba(126,231,135,0.3);border-radius:var(--cursor-radius-sm);padding:8px 10px;text-align:center;">
+                            <div style="font-size:0.625rem;color:#7ee787;font-weight:700;">Phase 1 ✓</div>
+                            <div style="font-size:0.5625rem;color:var(--cursor-text-muted);">Structural Bootstrap</div>
+                            <div style="font-size:0.5rem;color:#484f58;">Feb 10</div>
+                        </div>
+                        <div style="flex:1;background:rgba(126,231,135,0.08);border:1px solid rgba(126,231,135,0.3);border-radius:var(--cursor-radius-sm);padding:8px 10px;text-align:center;">
+                            <div style="font-size:0.625rem;color:#7ee787;font-weight:700;">Phase 2 ✓</div>
+                            <div style="font-size:0.5625rem;color:var(--cursor-text-muted);">Bridge + Security + Git</div>
+                            <div style="font-size:0.5rem;color:#484f58;">Feb 11</div>
+                        </div>
+                        <div style="flex:1;background:var(--cursor-bg-tertiary);border:1px solid var(--cursor-border);border-radius:var(--cursor-radius-sm);padding:8px 10px;text-align:center;">
+                            <div style="font-size:0.625rem;color:var(--cursor-text);font-weight:700;">Phase 3</div>
+                            <div style="font-size:0.5625rem;color:var(--cursor-text-muted);">Agent Orchestration</div>
+                            <div style="font-size:0.5rem;color:#484f58;">Next</div>
+                        </div>
+                        <div style="flex:1;background:var(--cursor-bg-tertiary);border:1px solid var(--cursor-border);border-radius:var(--cursor-radius-sm);padding:8px 10px;text-align:center;">
+                            <div style="font-size:0.625rem;color:var(--cursor-text);font-weight:700;">Phase 4</div>
+                            <div style="font-size:0.5625rem;color:var(--cursor-text-muted);">Production &amp; Scale</div>
+                            <div style="font-size:0.5rem;color:#484f58;">Future</div>
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:var(--cursor-space-sm);flex-wrap:wrap;">
+                        <span class="tag tag--green">4 commits &middot; 2 days</span>
+                        <span class="tag tag--green">Phase 2 complete &amp; pushed</span>
+                        <span class="tag tag--blue">~500 KB total source</span>
+                        <span class="tag tag--purple">github.com/fornevercollective/uvspeed</span>
+                    </div>
+                </div>
 
                 <!-- ====== AGENT-READY STATUS DASHBOARD ====== -->
                 <div class="inspect-section">
@@ -3696,6 +3829,62 @@
                         <span class="tag tag--green">Live gutter + timeline</span>
                         <span class="tag tag--blue">Zero config &middot; copy 1 file</span>
                         <span class="tag tag--purple">Works with any AI model in Cursor</span>
+                    </div>
+
+                    <!-- Multi-IDE Config Files -->
+                    <div style="font-size:0.6875rem;font-weight:700;color:var(--cursor-text);margin:var(--cursor-space-md) 0 6px;">Shipped IDE Configuration Files</div>
+                    <div style="display:grid;grid-template-columns:1fr;gap:3px;margin-bottom:var(--cursor-space-md);font-family:var(--cursor-font-mono);font-size:0.5625rem;">
+                        <div style="display:grid;grid-template-columns:24px 280px 1fr;gap:6px;padding:4px 10px;background:rgba(126,231,135,0.06);border-radius:2px;">
+                            <span style="color:var(--cursor-accent);font-weight:700;">+1:</span>
+                            <span style="color:var(--cursor-text);">.cursor/rules/quantum-prefix-gutter.mdc</span>
+                            <span style="color:#7ee787;">Cursor &mdash; always-on prefix rule (alwaysApply: true)</span>
+                        </div>
+                        <div style="display:grid;grid-template-columns:24px 280px 1fr;gap:6px;padding:4px 10px;background:rgba(126,231,135,0.06);border-radius:2px;">
+                            <span style="color:var(--cursor-accent);font-weight:700;">+1:</span>
+                            <span style="color:var(--cursor-text);">.cursor/rules/quantum-commands.mdc</span>
+                            <span style="color:#7ee787;">Cursor &mdash; bridge API commands reference</span>
+                        </div>
+                        <div style="display:grid;grid-template-columns:24px 280px 1fr;gap:6px;padding:4px 10px;background:rgba(126,231,135,0.06);border-radius:2px;">
+                            <span style="color:var(--cursor-accent);font-weight:700;">+1:</span>
+                            <span style="color:var(--cursor-text);">.cursor/skills/quantum-prefix-skill.md</span>
+                            <span style="color:#7ee787;">Cursor &mdash; prefix conversion skill + API reference</span>
+                        </div>
+                        <div style="display:grid;grid-template-columns:24px 280px 1fr;gap:6px;padding:4px 10px;background:rgba(126,231,135,0.06);border-radius:2px;">
+                            <span style="color:var(--cursor-accent);font-weight:700;">+1:</span>
+                            <span style="color:var(--cursor-text);">.github/copilot-instructions.md</span>
+                            <span style="color:#7ee787;">GitHub Copilot &mdash; 9-symbol training + Q<sub>w</sub> formula</span>
+                        </div>
+                        <div style="display:grid;grid-template-columns:24px 280px 1fr;gap:6px;padding:4px 10px;background:rgba(126,231,135,0.06);border-radius:2px;">
+                            <span style="color:var(--cursor-accent);font-weight:700;">+1:</span>
+                            <span style="color:var(--cursor-text);">.vscode/settings.json</span>
+                            <span style="color:#7ee787;">VS Code &mdash; project settings, file associations, env</span>
+                        </div>
+                        <div style="display:grid;grid-template-columns:24px 280px 1fr;gap:6px;padding:4px 10px;background:rgba(126,231,135,0.06);border-radius:2px;">
+                            <span style="color:var(--cursor-accent);font-weight:700;">+1:</span>
+                            <span style="color:var(--cursor-text);">.windsurf/rules/quantum-prefix.md</span>
+                            <span style="color:#7ee787;">Windsurf &mdash; AI rule for prefix-aware generation</span>
+                        </div>
+                    </div>
+
+                    <!-- Quantum Folder Structure -->
+                    <div style="font-size:0.6875rem;font-weight:700;color:var(--cursor-text);margin-bottom:6px;">Quantum-Organized Folder Structure (<code>src/MANIFEST.md</code>)</div>
+                    <div style="background:var(--cursor-bg);border:1px solid var(--cursor-border);border-radius:var(--cursor-radius-sm);padding:12px 14px;margin-bottom:var(--cursor-space-md);font-family:var(--cursor-font-mono);font-size:0.5625rem;line-height:1.8;">
+                        <span style="color:var(--cursor-text-muted);">uvspeed/src/</span><br>
+                        <span style="color:#f97583;font-weight:700;">&ensp;n:</span>&ensp; <span style="color:var(--cursor-text);">n-entry/</span> <span style="color:var(--cursor-text-muted);">&mdash; launchers, entry points, shell scripts</span><br>
+                        <span style="color:#7ee787;font-weight:700;">+1:</span>&ensp; <span style="color:var(--cursor-text);">p1-docs/</span> <span style="color:var(--cursor-text-muted);">&mdash; README, docs, config, themes, demo data</span><br>
+                        <span style="color:#d2a8ff;font-weight:700;">-n:</span>&ensp; <span style="color:var(--cursor-text);">mn-deps/</span> <span style="color:var(--cursor-text-muted);">&mdash; pyproject.toml, package.json, manifest.json</span><br>
+                        <span style="color:#79c0ff;font-weight:700;">+0:</span>&ensp; <span style="color:var(--cursor-text);">p0-core/</span> <span style="color:var(--cursor-text-muted);">&mdash; bridge server, notepad, prototype (main app)</span><br>
+                        <span style="color:#79c0ff;font-weight:700;">&ensp;0:</span>&ensp; <span style="color:var(--cursor-text);">z-functions/</span> <span style="color:var(--cursor-text-muted);">&mdash; tools, utilities, helper scripts</span><br>
+                        <span style="color:#f97583;font-weight:700;">-1:</span>&ensp; <span style="color:var(--cursor-text);">m1-tests/</span> <span style="color:var(--cursor-text-muted);">&mdash; test scripts, verification, QA</span><br>
+                        <span style="color:#f0d852;font-weight:700;">+n:</span>&ensp; <span style="color:var(--cursor-text);">pn-platforms/</span> <span style="color:var(--cursor-text-muted);">&mdash; platform-specific builds (Firefox, multi)</span><br>
+                        <span style="color:#f0883e;font-weight:700;">+2:</span>&ensp; <span style="color:var(--cursor-text);">p2-versions/</span> <span style="color:var(--cursor-text-muted);">&mdash; progressive version snapshots</span><br>
+                        <span style="color:#f0d852;font-weight:700;">-0:</span>&ensp; <span style="color:var(--cursor-text);">m0-output/</span> <span style="color:var(--cursor-text-muted);">&mdash; build output, dist, compiled assets</span><br>
+                    </div>
+
+                    <div style="display:flex;gap:var(--cursor-space-sm);flex-wrap:wrap;">
+                        <span class="tag tag--green">6 IDE config files shipped</span>
+                        <span class="tag tag--green">9 prefix-mapped folders</span>
+                        <span class="tag tag--blue">MANIFEST.md index for AI navigation</span>
                     </div>
                 </div>
 
@@ -6095,7 +6284,15 @@ print("Position:", quantum_position)`);
             const closeBtn  = document.getElementById('inspect-close');
             const openBtn   = document.getElementById('inspect-btn');
 
-            const open  = () => overlay.classList.add('open');
+            const open  = () => {
+                overlay.classList.add('open');
+                const tsEl = document.getElementById('inspect-unix-ts');
+                if (tsEl) {
+                    const now = Math.floor(Date.now() / 1000);
+                    tsEl.textContent = now;
+                    tsEl.title = new Date(now * 1000).toISOString();
+                }
+            };
             const close = () => overlay.classList.remove('open');
 
             openBtn.addEventListener('click', open);
