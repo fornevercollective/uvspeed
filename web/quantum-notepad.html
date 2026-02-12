@@ -2245,6 +2245,9 @@
                 <button class="btn btn--xs" id="f-play-numsy" title="Play brotherNumsy &amp; Freya — beyondBINARY runner with FreyaUnits conversion engine" style="background:#e6b42222;border-color:#e6b42255;color:#e6b422;">🎮 brotherNumsy &amp; Freya</button>
                 <button class="btn btn--xs" id="f-open-kbatch" title="kbatch — keyboard contrail/pattern analyzer with thermal heatmaps &amp; 3D modeling" style="background:#f0883e22;border-color:#f0883e55;color:#f0883e;">⌨ kbatch</button>
                 <button class="btn btn--xs" id="f-open-hexcast" title="hexcast — live video hex broadcast with latency benchmarks" style="background:#da363322;border-color:#da363355;color:#f97583;">&#x1F4E1; hexcast</button>
+                <span style="opacity:0.3;margin:0 2px;">│</span>
+                <button class="btn btn--xs" id="f-add-kbatch" title="Add kbatch keyboard analyzer cell" style="background:#f0883e22;border-color:#f0883e55;color:#f0883e;">⌨ + kbatch cell</button>
+                <button class="btn btn--xs" id="f-add-hexcast" title="Add hexcast video broadcast cell" style="background:#da363322;border-color:#da363355;color:#f97583;">📡 + hexcast cell</button>
                 <button class="btn btn--xs quick-cmd" data-cmd="help">❓ Help</button>
                 <button class="btn btn--xs quick-cmd" data-cmd="pos">📍 Position</button>
                 <button class="btn btn--xs quick-cmd" data-cmd="cells">📋 Cells</button>
@@ -4254,6 +4257,7 @@
 
                     <div style="display:flex;gap:var(--cursor-space-sm);align-items:center;margin-bottom:var(--cursor-space-md);flex-wrap:wrap;">
                         <span class="tag tag--green" style="font-size:0.6875rem;padding:3px 10px;">✅ TOOL LIVE</span>
+                        <span class="tag tag--green" style="font-size:0.6875rem;padding:3px 10px;">✅ NOTEPAD CELL</span>
                         <span class="tag tag--green" style="font-size:0.6875rem;padding:3px 10px;">✅ API: window.kbatch</span>
                         <span class="tag tag--yellow" style="font-size:0.6875rem;padding:3px 10px;">4 viz panels &middot; 8 stats &middot; terminal + code cell</span>
                     </div>
@@ -4302,6 +4306,7 @@
 
                     <div style="display:flex;gap:var(--cursor-space-sm);align-items:center;margin-bottom:var(--cursor-space-md);flex-wrap:wrap;">
                         <span class="tag tag--green" style="font-size:0.6875rem;padding:3px 10px;">✅ TOOL LIVE</span>
+                        <span class="tag tag--green" style="font-size:0.6875rem;padding:3px 10px;">✅ NOTEPAD CELL</span>
                         <span class="tag tag--green" style="font-size:0.6875rem;padding:3px 10px;">✅ API: window.hexcast</span>
                         <span class="tag tag--red" style="font-size:0.6875rem;padding:3px 10px;">📡 BroadcastChannel cross-tab</span>
                     </div>
@@ -4350,6 +4355,125 @@
                             <code>hexcast.setEncode('fax')</code> / <code>setResolution(108)</code> / <code>setFPS(30)</code><br>
                             <code>hexcast.exportJSON()</code> — full state + latency history
                         </div>
+                    </div>
+                </div>
+
+                <!-- ====== PHASE 3 READINESS — NEXT PHASE CROSS-CHECK ====== -->
+                <div class="inspect-section">
+                    <h3>uvspeed &mdash; Phase 3 Readiness — What Our New Tools Unlock</h3>
+                    <p style="margin-bottom:var(--cursor-space-sm);font-size:0.75rem;color:var(--cursor-text-muted);">
+                        Cross-check: how each Phase 2.x tool feeds into Phase 3 (Agent Orchestration) and Phase 4 (Production &amp; Scale).
+                        <strong style="color:#7ee787;">Green = ready now.</strong>
+                        <strong style="color:#e6b422;">Yellow = partial / needs integration.</strong>
+                        <strong style="color:#f97583;">Red = blocked / needs new work.</strong>
+                    </p>
+
+                    <div style="display:grid;grid-template-columns:1fr;gap:6px;margin-bottom:var(--cursor-space-md);">
+                        <!-- kbatch → Agent -->
+                        <div style="display:grid;grid-template-columns:120px 1fr 80px;gap:8px;padding:8px 12px;background:rgba(126,231,135,0.06);border:1px solid rgba(126,231,135,0.25);border-radius:var(--cursor-radius-sm);font-size:0.6875rem;">
+                            <span style="color:#f0883e;font-weight:700;">⌨ kbatch</span>
+                            <div>
+                                <div style="color:#7ee787;">✅ <strong>Agent input analysis</strong> — agents can call <code>kbatch.analyze()</code> to measure keyboard efficiency of generated code snippets</div>
+                                <div style="color:#7ee787;">✅ <strong>Language model training</strong> — word frequency + hapax detection feeds into vocabulary optimization</div>
+                                <div style="color:#e6b422;">⚠ <strong>Cross-device sync</strong> — needs WebSocket bridge to stream analysis between devices</div>
+                                <div style="color:#e6b422;">⚠ <strong>Neural enhancement</strong> — kbatch Python has neural analyzer (128→64→2 arch) — needs WASM port</div>
+                                <div style="color:#f97583;">❌ <strong>TinyGrad acceleration</strong> — kbatch Python supports tinygrad quantum mode — needs Pyodide/WebGPU</div>
+                            </div>
+                            <div style="text-align:right;"><span class="tag tag--green" style="font-size:0.5625rem;">2/5 ready</span></div>
+                        </div>
+
+                        <!-- hexcast → Agent -->
+                        <div style="display:grid;grid-template-columns:120px 1fr 80px;gap:8px;padding:8px 12px;background:rgba(126,231,135,0.06);border:1px solid rgba(126,231,135,0.25);border-radius:var(--cursor-radius-sm);font-size:0.6875rem;">
+                            <span style="color:#da3633;font-weight:700;">📡 hexcast</span>
+                            <div>
+                                <div style="color:#7ee787;">✅ <strong>Visual testing agent</strong> — agents snapshot hex frames to verify UI state</div>
+                                <div style="color:#7ee787;">✅ <strong>Latency benchmarking</strong> — automated encode/decode profiling across resolutions</div>
+                                <div style="color:#7ee787;">✅ <strong>Cross-tab broadcast</strong> — BroadcastChannel already working for multi-tab orchestration</div>
+                                <div style="color:#e6b422;">⚠ <strong>WebRTC P2P</strong> — upgrade BroadcastChannel to WebRTC for true cross-device streaming</div>
+                                <div style="color:#e6b422;">⚠ <strong>WebSocket bridge</strong> — connect hexcast to bridge server for device-to-server streaming</div>
+                                <div style="color:#f97583;">❌ <strong>WebCodecs API</strong> — hardware-accelerated encode/decode for real video compression</div>
+                            </div>
+                            <div style="text-align:right;"><span class="tag tag--green" style="font-size:0.5625rem;">3/6 ready</span></div>
+                        </div>
+
+                        <!-- brotherNumsy → Agent -->
+                        <div style="display:grid;grid-template-columns:120px 1fr 80px;gap:8px;padding:8px 12px;background:rgba(126,231,135,0.06);border:1px solid rgba(126,231,135,0.25);border-radius:var(--cursor-radius-sm);font-size:0.6875rem;">
+                            <span style="color:#e6b422;font-weight:700;">🎮 brotherNumsy</span>
+                            <div>
+                                <div style="color:#7ee787;">✅ <strong>RL training API</strong> — <code>numsyAI.getState()</code> + <code>numsyAI.act()</code> + <code>numsyAI.onFrame(cb)</code> ready for agents</div>
+                                <div style="color:#7ee787;">✅ <strong>Live code cell</strong> — inline JS execution with game state sync</div>
+                                <div style="color:#7ee787;">✅ <strong>Terminal integration</strong> — CLI commands for game control + FreyaUnits</div>
+                                <div style="color:#e6b422;">⚠ <strong>Headless mode</strong> — needs canvas-free mode for server-side RL training</div>
+                                <div style="color:#e6b422;">⚠ <strong>Multi-agent tournament</strong> — needs agent-vs-agent scoring infrastructure</div>
+                            </div>
+                            <div style="text-align:right;"><span class="tag tag--green" style="font-size:0.5625rem;">3/5 ready</span></div>
+                        </div>
+
+                        <!-- FreyaUnits → Agent -->
+                        <div style="display:grid;grid-template-columns:120px 1fr 80px;gap:8px;padding:8px 12px;background:rgba(126,231,135,0.06);border:1px solid rgba(126,231,135,0.25);border-radius:var(--cursor-radius-sm);font-size:0.6875rem;">
+                            <span style="color:#a78bfa;font-weight:700;">🔬 FreyaUnits</span>
+                            <div>
+                                <div style="color:#7ee787;">✅ <strong>Conversion API</strong> — agents call <code>FreyaUnits.convert()</code> for physics/math tasks</div>
+                                <div style="color:#7ee787;">✅ <strong>Scale awareness</strong> — agents understand Planck→Parsec scale for quantum/astro code</div>
+                                <div style="color:#7ee787;">✅ <strong>Notebook cell</strong> — interactive converter with quantum properties</div>
+                                <div style="color:#e6b422;">⚠ <strong>MCP tool</strong> — needs <code>FreyaUnits.convert</code> exposed as MCP tool resource</div>
+                                <div style="color:#7ee787;">✅ <strong>Game companion</strong> — Freya character integrated with distance tracking</div>
+                            </div>
+                            <div style="text-align:right;"><span class="tag tag--green" style="font-size:0.5625rem;">4/5 ready</span></div>
+                        </div>
+
+                        <!-- Notepad → Agent -->
+                        <div style="display:grid;grid-template-columns:120px 1fr 80px;gap:8px;padding:8px 12px;background:rgba(126,231,135,0.06);border:1px solid rgba(126,231,135,0.25);border-radius:var(--cursor-radius-sm);font-size:0.6875rem;">
+                            <span style="color:#58a6ff;font-weight:700;">📝 Notepad Core</span>
+                            <div>
+                                <div style="color:#7ee787;">✅ <strong>8 cell types</strong> — code, markdown, visualization, quantum, mermaid, freya, kbatch, hexcast</div>
+                                <div style="color:#7ee787;">✅ <strong>Bridge API</strong> — 40+ endpoints for agent-driven cell management</div>
+                                <div style="color:#7ee787;">✅ <strong>6 JavaScript APIs</strong> — numsyAI, FreyaUnits, kbatch, hexcast, bridge, security</div>
+                                <div style="color:#e6b422;">⚠ <strong>Pyodide</strong> — WebAssembly Python for in-browser compute (unblocks agent code execution)</div>
+                                <div style="color:#e6b422;">⚠ <strong>Yjs CRDT</strong> — real-time collab needed for multi-agent simultaneous editing</div>
+                                <div style="color:#f97583;">❌ <strong>Persistent storage</strong> — localStorage only, needs IndexedDB/cloud for agent state persistence</div>
+                            </div>
+                            <div style="text-align:right;"><span class="tag tag--green" style="font-size:0.5625rem;">3/6 ready</span></div>
+                        </div>
+                    </div>
+
+                    <!-- Summary -->
+                    <div style="background:var(--cursor-bg);border:2px solid var(--cursor-accent);border-radius:var(--cursor-radius-md);padding:var(--cursor-space-md);margin-bottom:var(--cursor-space-md);font-size:0.6875rem;">
+                        <div style="font-weight:700;color:var(--cursor-accent);margin-bottom:8px;">Phase 3 Unlock Checklist — Agent Orchestration</div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                            <div>
+                                <div style="font-weight:700;color:#7ee787;margin-bottom:4px;">✅ Ready (15/27)</div>
+                                <ul style="font-size:0.625rem;color:var(--cursor-text-muted);">
+                                    <li>6 browser-side APIs exposed</li>
+                                    <li>8 interactive cell types</li>
+                                    <li>40+ bridge endpoints</li>
+                                    <li>AI training API (RL game)</li>
+                                    <li>Cross-tab broadcast</li>
+                                    <li>Latency benchmarking</li>
+                                    <li>Keyboard pattern analysis</li>
+                                    <li>27-unit conversion engine</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <div style="font-weight:700;color:#f97583;margin-bottom:4px;">🔓 Boundary-Breaking Targets</div>
+                                <ul style="font-size:0.625rem;color:var(--cursor-text-muted);">
+                                    <li><strong style="color:#e6b422;">WebRTC P2P</strong> — hexcast → true device-to-device streaming</li>
+                                    <li><strong style="color:#e6b422;">Pyodide WASM</strong> — execute Python in-browser, no server</li>
+                                    <li><strong style="color:#e6b422;">WebGPU compute</strong> — tinygrad + kbatch neural in browser</li>
+                                    <li><strong style="color:#e6b422;">MCP tool server</strong> — expose all APIs as MCP resources</li>
+                                    <li><strong style="color:#f97583;">WebCodecs</strong> — hardware video encode for hexcast</li>
+                                    <li><strong style="color:#f97583;">IndexedDB persistence</strong> — agent state across sessions</li>
+                                    <li><strong style="color:#f97583;">Yjs CRDT collab</strong> — multi-agent live editing</li>
+                                    <li><strong style="color:#f97583;">Headless game mode</strong> — server-side RL training</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:var(--cursor-space-sm);flex-wrap:wrap;">
+                        <span class="tag tag--green">15/27 capabilities Phase 3 ready</span>
+                        <span class="tag tag--yellow">8 partial — need integration work</span>
+                        <span class="tag tag--red">4 blocked — new technology required</span>
+                        <span class="tag tag--purple">Top priority: WebRTC + Pyodide + MCP tools</span>
                     </div>
                 </div>
 
@@ -4901,6 +5025,20 @@
                     window.open('hexcast.html', '_blank');
                 });
 
+                // kbatch cell — add inline keyboard analyzer
+                document.getElementById('f-add-kbatch').addEventListener('click', () => {
+                    const id = this.addCell('kbatch', '# ⌨ kbatch — Keyboard Pattern Analyzer\n# Thermal heatmap, contrails, geometric patterns');
+                    this.executeCell(id);
+                    setTimeout(() => { document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 100);
+                });
+
+                // hexcast cell — add inline video broadcast
+                document.getElementById('f-add-hexcast').addEventListener('click', () => {
+                    const id = this.addCell('hexcast', '# 📡 hexcast — Live Video Hex Broadcast\n# Camera/screen/test → hex stream + latency bench');
+                    this.executeCell(id);
+                    setTimeout(() => { document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 100);
+                });
+
                 // Stream pipe in/out buttons
                 document.getElementById('stream-pipe-in').addEventListener('click', () => {
                     const src = document.getElementById('stream-source');
@@ -5155,7 +5293,7 @@ print("Position:", quantum_position)`);
                 cellElement.className = 'quantum-cell';
                 cellElement.id = cell.id;
 
-                const typeEmoji = { code: '⚡', markdown: '📝', visualization: '📊', quantum: '🌌', mermaid: '🧜', freya: '🔬' };
+                const typeEmoji = { code: '⚡', markdown: '📝', visualization: '📊', quantum: '🌌', mermaid: '🧜', freya: '🔬', kbatch: '⌨', hexcast: '📡' };
 
                 cellElement.innerHTML = `
                     <div class="cell-header">
@@ -5205,7 +5343,7 @@ print("Position:", quantum_position)`);
                 const t0 = performance.now();
 
                 // Non-code cells execute locally
-                if (cell.type === 'markdown' || cell.type === 'mermaid') {
+                if (cell.type === 'markdown' || cell.type === 'mermaid' || cell.type === 'kbatch' || cell.type === 'hexcast') {
                     const result = this._localExecution(cell);
                     this.displayOutput(cellId, result);
                     this._lastExecMs = Math.round(performance.now() - t0);
@@ -5286,6 +5424,10 @@ print("Position:", quantum_position)`);
                 } else if (cell.type === 'freya') {
                     // Run FreyaUnits interactive converter cell
                     return { type: 'html', data: this._runFreyaCell(cell) };
+                } else if (cell.type === 'kbatch') {
+                    return { type: 'html', data: this._runKbatchCell(cell) };
+                } else if (cell.type === 'hexcast') {
+                    return { type: 'html', data: this._runHexcastCell(cell) };
                 } else {
                     return {
                         type: 'text',
@@ -5952,6 +6094,192 @@ print("Position:", quantum_position)`);
 
     // Initial convert
     convert();
+})();
+<` + `/script>`;
+            }
+
+            /* ══════════════════════════════════════════════════════
+               KBATCH — KEYBOARD PATTERN ANALYZER CELL
+               ══════════════════════════════════════════════════════ */
+
+            _runKbatchCell(cell) {
+                const uid = `kbatch_${cell.id}_${Date.now()}`;
+                return `
+<div id="${uid}" style="padding:0;background:#0d1117;border-radius:var(--cursor-radius-md);overflow:hidden;font-family:ui-monospace,SFMono-Regular,'SF Mono',Menlo,monospace;">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 12px;background:#161b22;border-bottom:1px solid #21262d;">
+        <span style="font-weight:700;color:#f0883e;font-size:0.8125rem;">⌨ kbatch — Keyboard Pattern Analyzer</span>
+        <span style="font-size:0.5625rem;color:#484f58;">Type below — all panels update live</span>
+    </div>
+    <div style="display:flex;gap:8px;padding:4px 12px;background:#161b22;border-bottom:1px solid #21262d;font-size:0.625rem;flex-wrap:wrap;">
+        <span>WPM: <b style="color:#58a6ff;" id="${uid}_wpm">0</b></span>
+        <span>Eff: <b style="color:#7ee787;" id="${uid}_eff">0%</b></span>
+        <span>Cpx: <b style="color:#f97583;" id="${uid}_cpx">0%</b></span>
+        <span>Keys: <b style="color:#d2a8ff;" id="${uid}_keys">0</b></span>
+        <span>Words: <b style="color:#c9d1d9;" id="${uid}_words">0</b></span>
+        <span>Hapax: <b style="color:#e6b422;" id="${uid}_hapax">0</b></span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;grid-template-rows:140px 140px;gap:1px;background:#21262d;">
+        <div style="background:#0d1117;position:relative;"><div style="padding:2px 6px;font-size:0.5rem;color:#f0883e;background:#161b22;">🔥 Thermal</div><canvas id="${uid}_thermal" style="width:100%;height:calc(100% - 16px);"></canvas></div>
+        <div style="background:#0d1117;position:relative;"><div style="padding:2px 6px;font-size:0.5rem;color:#58a6ff;background:#161b22;">✈ Contrails</div><canvas id="${uid}_contrails" style="width:100%;height:calc(100% - 16px);"></canvas></div>
+        <div style="background:#0d1117;position:relative;"><div style="padding:2px 6px;font-size:0.5rem;color:#d2a8ff;background:#161b22;">⬡ Geometric</div><canvas id="${uid}_geo" style="width:100%;height:calc(100% - 16px);"></canvas></div>
+        <div style="background:#0d1117;position:relative;"><div style="padding:2px 6px;font-size:0.5rem;color:#7ee787;background:#161b22;">🎹 Language</div><canvas id="${uid}_lang" style="width:100%;height:calc(100% - 16px);"></canvas></div>
+    </div>
+    <div style="padding:6px 12px;background:#161b22;border-top:1px solid #21262d;">
+        <input id="${uid}_input" type="text" placeholder="Start typing to analyze keyboard patterns..." autocomplete="off" spellcheck="false"
+            style="width:100%;padding:8px 12px;background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#c9d1d9;font-family:inherit;font-size:0.875rem;outline:none;">
+    </div>
+    <div style="padding:4px 12px 6px;font-size:0.5rem;color:#484f58;text-align:center;">
+        kbatch — keyboard contrail/pattern analyzer | <a href="kbatch.html" target="_blank" style="color:#58a6ff;">Open Full Page</a>
+    </div>
+</div>
+<` + `script>
+(function(){
+    const id = '${uid}';
+    const ROWS = [['q','w','e','r','t','y','u','i','o','p'],['a','s','d','f','g','h','j','k','l',';'],['z','x','c','v','b','n','m',',','.','/']];
+    const KP = {}; ROWS.forEach((r,ri) => r.forEach((k,ci) => { KP[k] = {x:ci+ri*0.25, y:ri}; })); KP[' '] = {x:4.5,y:3.2};
+    const hm = {}, trans = []; let totalK = 0, totalD = 0, lastK = null, words = 0, wf = {}, buf = '';
+    function tc(v){ const n=v/255; if(n<0.4) return 'rgb('+(n*2.5*80)+','+(120+n*2.5*100)+','+(180+n*75)+')'; if(n<0.7) return 'rgb('+(200+n*55)+','+(200-n*80)+',0)'; return 'rgb(255,'+(120-n*80)+','+(n*200)+')'; }
+    function dir(dx,dy){ if(dx>0.3&&dy<-0.3) return '↗'; if(dx>0.3&&dy>0.3) return '↘'; if(dx<-0.3&&dy<-0.3) return '↖'; if(dx<-0.3&&dy>0.3) return '↙'; if(dx>0.3) return '→'; if(dx<-0.3) return '←'; if(dy<-0.3) return '↑'; if(dy>0.3) return '↓'; return '·'; }
+    function pk(key){ const k=key.toLowerCase(); if(!KP[k]&&k!==' ') return; totalK++; hm[k]=(hm[k]||0)+1;
+        if(lastK&&KP[k]&&KP[lastK]){ const f=KP[lastK],t=KP[k],dx=t.x-f.x,dy=t.y-f.y,d=Math.sqrt(dx*dx+dy*dy); totalD+=d; trans.push({from:lastK,to:k,dx,dy,dist:d}); if(trans.length>400) trans.shift(); }
+        lastK=k; if(k===' '){ const w=buf.trim(); if(w){ words++; wf[w]=(wf[w]||0)+1; } buf=''; } else buf+=k; }
+    function render(){
+        // Thermal
+        const ct=document.getElementById(id+'_thermal'); if(!ct) return; const cx=ct.getContext('2d'); ct.width=ct.clientWidth; ct.height=ct.clientHeight;
+        const W=ct.width,H=ct.height; cx.fillStyle='#0d1117'; cx.fillRect(0,0,W,H);
+        const mx=Math.max(1,...Object.values(hm)), kw=W/11.5, kh=H/4.2, pl=(W-10*kw)/2;
+        ROWS.forEach((row,r)=>{ const off=r*0.4*kw; row.forEach((key,c)=>{ const x=pl+off+c*kw,y=4+r*(kh+3),cnt=hm[key]||0,int=cnt/mx;
+            cx.fillStyle=cnt>0?tc(int*255):'#21262d'; cx.fillRect(x+1,y+1,kw-2,kh-2); cx.strokeStyle=cnt>0?'#f0883e33':'#30363d'; cx.lineWidth=0.5; cx.strokeRect(x+1,y+1,kw-2,kh-2);
+            cx.fillStyle=int>0.5?'#0d1117':'#8b949e'; cx.font=Math.max(7,kh*0.32)+'px monospace'; cx.textAlign='center'; cx.fillText(key.toUpperCase(),x+kw/2,y+kh*0.55);
+            if(cnt>0){ cx.fillStyle=int>0.5?'#0d1117':'#58a6ff'; cx.font=Math.max(6,kh*0.2)+'px monospace'; cx.fillText(cnt,x+kw/2,y+kh*0.82); } cx.textAlign='start'; }); });
+        // Contrails
+        const cc=document.getElementById(id+'_contrails'); if(!cc) return; const cx2=cc.getContext('2d'); cc.width=cc.clientWidth; cc.height=cc.clientHeight;
+        const W2=cc.width,H2=cc.height; cx2.fillStyle='#0d1117'; cx2.fillRect(0,0,W2,H2);
+        function kx(k){ const p=KP[k]; return p?(p.x/10)*(W2-20)+10:W2/2; } function ky(k){ const p=KP[k]; return p?(p.y/3.5)*(H2-20)+10:H2/2; }
+        const ln=trans.length; for(let i=Math.max(0,ln-150);i<ln;i++){ const t=trans[i],a=(ln-i)/150,al=0.05+(1-a)*0.6;
+            cx2.strokeStyle='rgba(240,136,62,'+al+')'; cx2.lineWidth=1+(1-a)*2; cx2.beginPath(); cx2.moveTo(kx(t.from),ky(t.from)); cx2.lineTo(kx(t.to),ky(t.to)); cx2.stroke(); }
+        if(lastK&&KP[lastK]){ cx2.fillStyle='#f0883e'; cx2.beginPath(); cx2.arc(kx(lastK),ky(lastK),4,0,Math.PI*2); cx2.fill(); }
+        // Geometric
+        const cg=document.getElementById(id+'_geo'); if(!cg) return; const cx3=cg.getContext('2d'); cg.width=cg.clientWidth; cg.height=cg.clientHeight;
+        const W3=cg.width,H3=cg.height; cx3.fillStyle='#0d1117'; cx3.fillRect(0,0,W3,H3);
+        const cxc=W3/2,cyc=H3/2,rad=Math.min(W3,H3)*0.38; const allK=ROWS.flat(),n=allK.length;
+        allK.forEach((key,i)=>{ const ang=(i/n)*Math.PI*2-Math.PI/2,cnt=hm[key]||0,int=cnt/mx,r2=rad*(0.6+int*0.4);
+            const x=cxc+Math.cos(ang)*r2,y=cyc+Math.sin(ang)*r2; cx3.fillStyle=cnt>0?tc(int*255):'#30363d'; cx3.beginPath(); cx3.arc(x,y,2+int*5,0,Math.PI*2); cx3.fill();
+            cx3.strokeStyle='rgba(210,168,255,'+(0.03+int*0.1)+')'; cx3.lineWidth=0.3; cx3.beginPath(); cx3.moveTo(cxc,cyc); cx3.lineTo(x,y); cx3.stroke(); });
+        // Language
+        const cl=document.getElementById(id+'_lang'); if(!cl) return; const cx4=cl.getContext('2d'); cl.width=cl.clientWidth; cl.height=cl.clientHeight;
+        const W4=cl.width,H4=cl.height; cx4.fillStyle='#0d1117'; cx4.fillRect(0,0,W4,H4);
+        const wds=Object.entries(wf).sort((a,b)=>b[1]-a[1]).slice(0,20); if(wds.length===0){ cx4.fillStyle='#484f58'; cx4.font='10px monospace'; cx4.textAlign='center'; cx4.fillText('Type words...',W4/2,H4/2); cx4.textAlign='start'; return; }
+        const mf=Math.max(1,wds[0][1]),cols=Math.ceil(Math.sqrt(wds.length)),cw2=W4/(cols+1),ch2=H4/(Math.ceil(wds.length/cols)+1);
+        wds.forEach(([w,f],i)=>{ const col=i%cols,row=Math.floor(i/cols),x=cw2*(col+0.5),y=ch2*(row+0.5),sz=Math.max(7,8+(f/mf)*8);
+            cx4.fillStyle=f>1?'#7ee787':'#e6b422'; cx4.font=sz+'px monospace'; cx4.textAlign='center'; cx4.fillText(w,x,y);
+            if(f>1){ cx4.fillStyle='#484f58'; cx4.font=Math.max(6,sz*0.5)+'px monospace'; cx4.fillText('x'+f,x,y-sz*0.5); } cx4.textAlign='start'; });
+    }
+    function stats(){ const el=(d,v)=>{ const e=document.getElementById(d); if(e) e.textContent=v; };
+        const elapsed=(Date.now()-st)/1000, wpm=elapsed>0?(words/elapsed)*60:0, avgD=totalK>1?totalD/(totalK-1):0;
+        const eff=avgD>0?Math.max(0,100-avgD*30):100, strain=Math.min(100,avgD*25);
+        const rowCh=trans.filter(t=>Math.abs(t.dy)>0.3).length, cpx=trans.length>0?Math.min(100,(rowCh/trans.length)*150):0;
+        const hpx=Object.values(wf).filter(c=>c===1).length;
+        el(id+'_wpm',wpm.toFixed(1)); el(id+'_eff',eff.toFixed(0)+'%'); el(id+'_cpx',cpx.toFixed(0)+'%');
+        el(id+'_keys',totalK); el(id+'_words',words); el(id+'_hapax',hpx);
+    }
+    const st=Date.now(); let timer=null;
+    const inp=document.getElementById(id+'_input'); if(!inp) return;
+    inp.addEventListener('input',()=>{ if(inp.value.length>0) pk(inp.value[inp.value.length-1]); clearTimeout(timer); timer=setTimeout(()=>{render();stats();},30); });
+    inp.addEventListener('keydown',e=>{ e.stopPropagation(); if(e.key==='Enter'){ if(buf.trim()){words++;const w=buf.trim();wf[w]=(wf[w]||0)+1;buf='';} render();stats(); } });
+    render();
+})();
+<` + `/script>`;
+            }
+
+            /* ══════════════════════════════════════════════════════
+               HEXCAST — LIVE VIDEO HEX BROADCAST CELL
+               ══════════════════════════════════════════════════════ */
+
+            _runHexcastCell(cell) {
+                const uid = `hexcast_${cell.id}_${Date.now()}`;
+                return `
+<div id="${uid}" style="padding:0;background:#0d1117;border-radius:var(--cursor-radius-md);overflow:hidden;font-family:ui-monospace,SFMono-Regular,'SF Mono',Menlo,monospace;">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 12px;background:#161b22;border-bottom:1px solid #21262d;">
+        <span style="font-weight:700;color:#da3633;font-size:0.8125rem;">📡 hexcast — Live Video Hex Broadcast</span>
+        <span id="${uid}_dot" style="width:8px;height:8px;border-radius:50%;background:#484f58;display:inline-block;"></span>
+    </div>
+    <div style="display:flex;gap:4px;padding:4px 12px;background:#161b22;border-bottom:1px solid #21262d;font-size:0.625rem;flex-wrap:wrap;align-items:center;">
+        <button id="${uid}_cam" style="padding:2px 8px;border:1px solid #30363d;border-radius:4px;background:#da3633;color:#fff;font-family:inherit;font-size:0.625rem;cursor:pointer;">📷 Camera</button>
+        <button id="${uid}_scr" style="padding:2px 8px;border:1px solid #30363d;border-radius:4px;background:#21262d;color:#c9d1d9;font-family:inherit;font-size:0.625rem;cursor:pointer;">🖵 Screen</button>
+        <button id="${uid}_tst" style="padding:2px 8px;border:1px solid #30363d;border-radius:4px;background:#21262d;color:#c9d1d9;font-family:inherit;font-size:0.625rem;cursor:pointer;">▦ Test</button>
+        <select id="${uid}_mode" style="padding:2px 6px;background:#0d1117;border:1px solid #30363d;border-radius:4px;color:#c9d1d9;font-family:inherit;font-size:0.625rem;">
+            <option value="color">Color</option><option value="gray">Gray</option><option value="fax">Fax</option><option value="signal">Signal</option>
+        </select>
+        <span style="flex:1;"></span>
+        <span>FPS: <b style="color:#58a6ff;" id="${uid}_fps">0</b></span>
+        <span>Enc: <b style="color:#f0883e;" id="${uid}_enc">0ms</b></span>
+        <span>Dec: <b style="color:#d2a8ff;" id="${uid}_dec">0ms</b></span>
+        <span>RT: <b style="color:#7ee787;" id="${uid}_rt">0ms</b></span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:#21262d;">
+        <div style="background:#0d1117;position:relative;height:200px;">
+            <div style="padding:2px 6px;font-size:0.5rem;color:#da3633;background:#161b22;">◉ Source</div>
+            <video id="${uid}_video" autoplay muted playsinline style="width:100%;height:calc(100% - 16px);object-fit:cover;background:#000;display:none;"></video>
+            <canvas id="${uid}_src" style="width:100%;height:calc(100% - 16px);display:none;"></canvas>
+            <div id="${uid}_ph" style="position:absolute;inset:16px 0 0 0;display:flex;align-items:center;justify-content:center;color:#484f58;font-size:0.6875rem;">Click Camera, Screen, or Test</div>
+        </div>
+        <div style="background:#0d1117;position:relative;height:200px;">
+            <div style="padding:2px 6px;font-size:0.5rem;color:#f0883e;background:#161b22;">⬡ Hex Stream</div>
+            <canvas id="${uid}_hex" style="width:100%;height:calc(100% - 16px);"></canvas>
+        </div>
+    </div>
+    <div style="position:relative;height:60px;background:#161b22;border-top:1px solid #21262d;">
+        <div style="padding:2px 6px;font-size:0.5rem;color:#7ee787;">📈 Latency</div>
+        <canvas id="${uid}_lat" style="width:100%;height:calc(100% - 16px);"></canvas>
+    </div>
+    <div style="padding:4px 12px 6px;font-size:0.5rem;color:#484f58;text-align:center;">
+        hexcast — live video hex broadcast + latency bench | <a href="hexcast.html" target="_blank" style="color:#58a6ff;">Open Full Page</a>
+    </div>
+</div>
+<` + `script>
+(function(){
+    const id = '${uid}';
+    const vid = document.getElementById(id+'_video');
+    const cvSrc = document.getElementById(id+'_src');
+    const cvHex = document.getElementById(id+'_hex');
+    const cvLat = document.getElementById(id+'_lat');
+    const ph = document.getElementById(id+'_ph');
+    const dot = document.getElementById(id+'_dot');
+    const ctxSrc = cvSrc.getContext('2d',{willReadFrequently:true});
+    let stream=null, source='none', mode='color', res=48, animId=null, fc=0, startT=0, latHist=[];
+    function tc(v,m){ const n=v/255; if(m==='gray'){const g=Math.floor(n*220);return 'rgb('+g+','+g+','+g+')';} if(m==='fax') return n>0.5?'#fff':'#000'; if(m==='signal'){const g=Math.floor(n*200);return 'rgb(0,'+g+','+Math.floor(g*0.3)+')';} const h=(1-n)*200; return 'hsl('+h+',85%,'+(20+n*50)+'%)'; }
+    function stopSrc(){ if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;} vid.srcObject=null;vid.style.display='none';cvSrc.style.display='none';source='none';dot.style.background='#484f58';if(animId)cancelAnimationFrame(animId); ph.style.display=''; }
+    async function startCam(){ stopSrc(); try{ stream=await navigator.mediaDevices.getUserMedia({video:{width:{ideal:320},height:{ideal:240}},audio:false}); vid.srcObject=stream;vid.style.display='block';ph.style.display='none';source='camera';dot.style.background='#da3633';startT=performance.now();fc=0;latHist=[];loop(); }catch(e){ph.textContent='Camera denied: '+e.message;} }
+    async function startScr(){ stopSrc(); try{ stream=await navigator.mediaDevices.getDisplayMedia({video:true}); vid.srcObject=stream;vid.style.display='block';ph.style.display='none';source='screen';dot.style.background='#da3633';startT=performance.now();fc=0;latHist=[];stream.getVideoTracks()[0].onended=stopSrc;loop(); }catch(e){} }
+    function startTest(){ stopSrc(); source='test';ph.style.display='none';cvSrc.style.display='block';dot.style.background='#da3633';startT=performance.now();fc=0;latHist=[];loop(); }
+    let lastFT=0;
+    function loop(now){ if(source==='none') return; const interval=1000/15; if(now-lastFT<interval){animId=requestAnimationFrame(loop);return;} lastFT=now;
+        cvSrc.width=res;cvSrc.height=res;
+        if(source==='test'){ const t=(performance.now()/50)%res; for(let y=0;y<res;y++) for(let x=0;x<res;x++){ const bi=Math.floor(x/(res/8)),cs=[[255,255,255],[255,255,0],[0,255,255],[0,255,0],[255,0,255],[255,0,0],[0,0,255],[0,0,0]],c=cs[bi]||[0,0,0]; const sd=Math.abs(y-t),sb=sd<2?1.4:1; ctxSrc.fillStyle='rgb('+Math.min(255,c[0]*sb)+','+Math.min(255,c[1]*sb)+','+Math.min(255,c[2]*sb)+')'; ctxSrc.fillRect(x,y,1,1); }
+        } else if(vid.readyState>=vid.HAVE_CURRENT_DATA){ ctxSrc.drawImage(vid,0,0,res,res); } else { animId=requestAnimationFrame(loop); return; }
+        const img=ctxSrc.getImageData(0,0,res,res); const t0=performance.now(); const hex=new Uint8Array(res*res);
+        for(let i=0;i<res*res;i++){ const o=i*4,r=img.data[o],g=img.data[o+1],b=img.data[o+2]; hex[i]=Math.floor(0.299*r+0.587*g+0.114*b); }
+        const encT=performance.now()-t0;
+        const ctx=cvHex.getContext('2d'); cvHex.width=cvHex.clientWidth;cvHex.height=cvHex.clientHeight; const W=cvHex.width,H=cvHex.height; ctx.fillStyle='#0d1117'; ctx.fillRect(0,0,W,H);
+        const t1=performance.now(); const cw=W/res,ch=H/res; const m=document.getElementById(id+'_mode').value;
+        for(let r2=0;r2<res;r2++) for(let c=0;c<res;c++){ ctx.fillStyle=tc(hex[r2*res+c],m); ctx.fillRect(c*cw,r2*ch,cw-0.2,ch-0.2); }
+        const decT=performance.now()-t1; const rt=encT+decT; fc++;
+        latHist.push({enc:encT,dec:decT,rt:rt}); if(latHist.length>200) latHist.shift();
+        const el=(d,v)=>{const e=document.getElementById(d);if(e)e.textContent=v;};
+        const elapsed=(performance.now()-startT)/1000;
+        el(id+'_fps',(elapsed>0?(fc/elapsed):0).toFixed(1)); el(id+'_enc',encT.toFixed(1)+'ms'); el(id+'_dec',decT.toFixed(1)+'ms'); el(id+'_rt',rt.toFixed(1)+'ms');
+        // Latency chart
+        const cl=cvLat.getContext('2d'); cvLat.width=cvLat.clientWidth; cvLat.height=cvLat.clientHeight;
+        const LW=cvLat.width,LH=cvLat.height; cl.fillStyle='#161b22'; cl.fillRect(0,0,LW,LH);
+        if(latHist.length>1){ const mx2=Math.max(1,...latHist.map(d=>d.rt)),xs=LW/(latHist.length-1);
+            [{k:'enc',c:'#f0883e'},{k:'dec',c:'#d2a8ff'},{k:'rt',c:'#7ee787'}].forEach(s=>{ cl.strokeStyle=s.c; cl.lineWidth=1; cl.beginPath();
+                latHist.forEach((d,i)=>{ const x=i*xs,y=LH-(d[s.k]/mx2)*LH*0.9; i===0?cl.moveTo(x,y):cl.lineTo(x,y); }); cl.stroke(); }); }
+        animId=requestAnimationFrame(loop);
+    }
+    document.getElementById(id+'_cam').addEventListener('click',startCam);
+    document.getElementById(id+'_scr').addEventListener('click',startScr);
+    document.getElementById(id+'_tst').addEventListener('click',startTest);
 })();
 <` + `/script>`;
             }
@@ -7570,7 +7898,7 @@ print("Position:", quantum_position)`);
                 const overlay = document.getElementById('cell-overlay');
                 const title = document.getElementById('cell-overlay-title');
                 const body = document.getElementById('cell-overlay-body');
-                const typeEmoji = { code: '⚡', markdown: '📝', visualization: '📊', quantum: '🌌', mermaid: '🧜', freya: '🔬' };
+                const typeEmoji = { code: '⚡', markdown: '📝', visualization: '📊', quantum: '🌌', mermaid: '🧜', freya: '🔬', kbatch: '⌨', hexcast: '📡' };
 
                 title.innerHTML = `${typeEmoji[cell.type] || '⚡'} ${cell.type} — [${cell.quantumPosition.join(', ')}]`;
 
@@ -7813,7 +8141,7 @@ print("Position:", quantum_position)`);
 
             /* ---------- Sidebar: Cell List ---------- */
             updateCellList() {
-                const typeEmoji = { code: '⚡', markdown: '📝', visualization: '📊', quantum: '🌌', mermaid: '🧜', freya: '🔬' };
+                const typeEmoji = { code: '⚡', markdown: '📝', visualization: '📊', quantum: '🌌', mermaid: '🧜', freya: '🔬', kbatch: '⌨', hexcast: '📡' };
                 const cellList = document.getElementById('cell-list');
                 cellList.innerHTML = this.cells.map((cell, i) => {
                     const emoji = typeEmoji[cell.type] || '⚡';

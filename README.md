@@ -6,7 +6,7 @@
 
 > A new code architecture paradigm that replaces binary `{0, 1}` with a 9-symbol directional prefix system `{+1, 1, -1, +0, 0, -0, +n, n, -n}`, enabling any codebase — in any language — to be structurally re-addressed in 3D space.
 
-[![Phase](https://img.shields.io/badge/Phase_2.2-Complete-brightgreen)](#phase-tracking)
+[![Phase](https://img.shields.io/badge/Phase_2.3-Complete-brightgreen)](#phase-tracking)
 [![Languages](https://img.shields.io/badge/Languages-20_supported-blue)](#language-benchmark-coverage)
 [![Endpoints](https://img.shields.io/badge/API-40+_endpoints-purple)](#api-surface)
 [![PyPI](https://img.shields.io/badge/PyPI-uvspeed--quantum-blue)](https://pypi.org/project/uvspeed-quantum/)
@@ -35,7 +35,8 @@
 | **Phase 1** | Complete | Structural Bootstrap — prefix system, notepad UI, navigation, mermaid | Feb 10 |
 | **Phase 2** | Complete | Execution Bridge — 25 API endpoints, security scanner, git hooks, IDE rules | Feb 11 |
 | **Phase 2.1** | Complete | Cross-Project Integration — ChartGPU, Day CLI, Quest Hub, Jawta, Lark, Media | Feb 11 |
-| **Phase 2.2** | Complete | Release Infrastructure — GitHub Actions, PyPI, npm, CHANGELOG, `.gitattributes` | Feb 11 |
+| **Phase 2.2** | Complete | Release + Game — GitHub Actions, PyPI, brotherNumsy & Freya, FreyaUnits converter | Feb 11 |
+| **Phase 2.3** | Complete | Interactive Tools — kbatch keyboard analyzer, hexcast video broadcast, notepad cells | Feb 12 |
 | **Phase 3** | Next | Agent Orchestration — multi-agent protocol, role-based prefix access | — |
 | **Phase 4** | Future | Production & Scale — CUDA-Q offload, real-time collab, SaaS deploy | — |
 
@@ -49,6 +50,10 @@
 | Security scanning | LIVE | Prefix-aware static analysis (Python/JS/Shell), severity scoring |
 | PR / diff automation | LIVE | Git pre-commit hook + PR-ready quantum diff reports |
 | Cross-project tools | LIVE | ChartGPU, Day CLI (kbatch/signal/geokey/youtube), Quest Hub, Jawta, Lark, Media Pipeline |
+| brotherNumsy & Freya | LIVE | Side-scroller game, pixel-art sprites, FreyaUnits 27-unit engine, AI training API |
+| kbatch analyzer | LIVE | Thermal heatmap, contrails, geometric patterns, 3D language model, `window.kbatch` |
+| hexcast broadcast | LIVE | Video → hex stream, 4 encode modes, latency benchmarks, BroadcastChannel cross-tab |
+| FreyaUnits converter | LIVE | Planck→Parsec 27-unit precision system, notebook cell + game companion |
 | Multi-agent orchestration | Phase 3 | 5 agents registered — inter-agent protocol pending |
 
 <details>
@@ -220,12 +225,16 @@ Interactive mermaid diagrams with pan/zoom/drag, SVG export, and expand overlay:
 <img src="icons/11-qstatus-output.png" alt="qstatus output — quantum position, hardware info, CPU benchmarks, network trace, and UV-Speed Stack status" width="100%">
 </p>
 
-### Quantum Navigation
+### Quantum Navigation + Thermal Panels
 
-3D code-space navigation with the 9-symbol grid. X = dependencies, Y = lines, Z = complexity.
+3D code-space navigation with the 9-symbol grid. X = dependencies, Y = lines, Z = complexity. Thermal panel shows quantum lattice (Lattice/Flow/GPU↔Q) with temperature map and Nyan Cat hex stream.
 
 <p align="center">
-<img src="icons/12-quantum-navigation.png" alt="Quantum navigation sidebar — 9-button grid with layer up/down, position display" width="200">
+<img src="icons/16-quantum-navigation-panel.png" alt="Quantum navigation sidebar — 9-button grid with layer up/down, position display" width="160">
+<img src="icons/17-thermal-lattice-panel.png" alt="Quantum thermal state — lattice view with 4x4x4 qubit grid, cryo core temperatures" width="160">
+<img src="icons/19-thermal-flow-panel.png" alt="Quantum thermal flow view — heat flow visualization" width="160">
+<img src="icons/21-thermal-gpu-qubit-panel.png" alt="Quantum GPU↔Q scaling — NVIDIA B200 qubit mapping" width="160">
+<img src="icons/18-nyancat-hex-stream.png" alt="Nyan Cat in HF Fax hex stream" width="160">
 </p>
 
 ---
@@ -234,7 +243,11 @@ Interactive mermaid diagrams with pan/zoom/drag, SVG export, and expand overlay:
 
 An endless side-scrolling runner built entirely in one self-contained HTML file. Play as **brotherNumsy** — a robed, golden-aura figure inspired by Sardo Numspa from *The Golden Child* — dodging binary agents (`0` and `1`) while collecting quantum prefix symbols. Your companion **Freya** flies alongside you, measuring every meter of your journey using the **FreyaUnits** precision conversion engine (Planck length to Parsec).
 
-**[Play Now](https://fornevercollective.github.io/uvspeed/web/brothernumsy.html)** | Also launchable from the notepad footer (`🎮 brotherNumsy & Freya` button)
+**[Play Now](https://fornevercollective.github.io/uvspeed/web/brothernumsy.html)** | Also launchable from the notepad footer (`🎮 brotherNumsy & Freya` button) | Also runs as a notepad cell
+
+<p align="center">
+<img src="icons/14-brothernumsy-game-full.png" alt="brotherNumsy & Freya game — title screen with live code cell and terminal" width="100%">
+</p>
 
 | Feature | Details |
 |---------|---------|
@@ -263,6 +276,14 @@ window.numsyAI.reset()     // restart the game
 window.numsyAI.onFrame(cb) // register per-frame callback for RL training loops
 ```
 
+### FreyaUnits Precision Converter (Notebook Cell)
+
+<p align="center">
+<img src="icons/15-freyaunits-converter-cell.png" alt="FreyaUnits precision converter cell — Planck to Parsec, 27 units, logarithmic scale, quantum wave properties" width="100%">
+</p>
+
+<p align="center"><em>Full 27-unit precision converter running as a notepad cell — logarithmic scale visualization, conversion table, quantum & wave properties</em></p>
+
 ### FreyaUnits Conversion API
 
 ```javascript
@@ -281,7 +302,11 @@ window.FreyaUnits.listUnits()                   // all 27 units with meter value
 
 A real-time keyboard analysis tool with thermal heatmaps, finger contrails, geometric pattern mapping, and 3D language modeling — all in one self-contained HTML file.
 
-**[Launch kbatch](https://fornevercollective.github.io/uvspeed/web/kbatch.html)** | Also accessible from the notepad footer (`⌨ kbatch` button)
+**[Launch kbatch](https://fornevercollective.github.io/uvspeed/web/kbatch.html)** | Also accessible from the notepad footer (`⌨ kbatch` button) | Also runs as a notepad cell
+
+<p align="center">
+<img src="icons/22-kbatch-keyboard-analyzer.png" alt="kbatch keyboard analyzer — thermal heatmap, contrails, geometric pattern, 3D language model, terminal" width="100%">
+</p>
 
 | Feature | Details |
 |---|---|
@@ -314,7 +339,11 @@ window.kbatch.exportJSON()    // full state as JSON string
 
 Real-time video capture → hex stream encoding → cross-device broadcast with full latency benchmarking. Streams camera, screen, or test patterns through the same thermal/fax hex grid used in the notepad — measuring encode, decode, round-trip, and jitter on every frame.
 
-**[Launch hexcast](https://fornevercollective.github.io/uvspeed/web/hexcast.html)** | Also accessible from the notepad footer (`📡 hexcast` button)
+**[Launch hexcast](https://fornevercollective.github.io/uvspeed/web/hexcast.html)** | Also accessible from the notepad footer (`📡 hexcast` button) | Also runs as a notepad cell
+
+<p align="center">
+<img src="icons/23-hexcast-video-broadcast.png" alt="hexcast live video broadcast — test pattern source, hex stream encoding, latency benchmark chart" width="100%">
+</p>
 
 | Feature | Details |
 |---|---|
