@@ -1,0 +1,1045 @@
+<!-- beyondBINARY quantum-prefixed | uvspeed | {+1, 1, -1, +0, 0, -0, +n, n, -n} -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>kbatch — Keyboard Pattern Analyzer</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="../icons/favicon.png">
+    <link rel="icon" type="image/x-icon" href="../icons/favicon.ico">
+    <style>
+        /* ═══════════════════════════════════════════════
+           uvspeed TEMPLATE — reusable project page
+           Clone this file for new tools/projects
+           ═══════════════════════════════════════════════ */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0d1117;
+            color: #c9d1d9;
+            font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, monospace;
+            overflow-y: auto;
+            overflow-x: hidden;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* ── Header ── */
+        #header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 16px;
+            background: #161b22;
+            border-bottom: 1px solid #30363d;
+            font-size: 0.8125rem;
+            z-index: 10;
+        }
+        #header a { color: #58a6ff; text-decoration: none; margin-left: 12px; }
+        #header a:hover { text-decoration: underline; }
+        .hdr-title { font-weight: 700; color: #f0883e; }
+        .hdr-sub { color: #8b949e; font-size: 0.6875rem; }
+
+        /* ── Fullscreen ── */
+        .fullscreen-btn {
+            background: none; border: 1px solid #30363d; border-radius: 4px;
+            color: #8b949e; font-family: inherit; font-size: 0.6875rem;
+            padding: 2px 8px; cursor: pointer; margin-left: 10px; transition: all 0.15s;
+        }
+        .fullscreen-btn:hover { background: #21262d; color: #c9d1d9; }
+        body.fullscreen #header, body.fullscreen #footer, body.fullscreen #bottom-panels { display: none; }
+        body.fullscreen #main-area { height: 100vh; }
+        body.fullscreen .fs-exit { display: block; }
+        .fs-exit {
+            display: none; position: fixed; top: 8px; right: 8px; z-index: 100;
+            background: rgba(13,17,23,0.85); border: 1px solid #30363d; border-radius: 6px;
+            color: #8b949e; font-family: inherit; font-size: 0.75rem; padding: 4px 12px; cursor: pointer;
+        }
+        .fs-exit:hover { background: rgba(33,38,45,0.95); color: #c9d1d9; }
+
+        /* ── Main Area ── */
+        #main-area {
+            flex: 0 0 auto;
+            display: flex;
+            flex-direction: column;
+            min-height: min(65vh, 600px);
+            position: relative;
+        }
+
+        /* ── Stats Bar ── */
+        #stats-bar {
+            display: flex; gap: 12px; padding: 6px 16px; flex-wrap: wrap;
+            background: #161b22; border-bottom: 1px solid #21262d; font-size: 0.6875rem;
+        }
+        .stat { display: flex; align-items: center; gap: 4px; }
+        .stat-label { color: #484f58; }
+        .stat-val { font-weight: 700; }
+        .stat-eff { color: #7ee787; }
+        .stat-cpx { color: #f97583; }
+        .stat-wpm { color: #58a6ff; }
+        .stat-strain { color: #e6b422; }
+        .stat-keys { color: #d2a8ff; }
+        .stat-dist { color: #f0883e; }
+
+        /* ── Viz Panels ── */
+        #viz-grid {
+            flex: 1; display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 1px; background: #21262d; min-height: 0;
+        }
+        .viz-panel { background: #0d1117; display: flex; flex-direction: column; overflow: hidden; }
+        .viz-title {
+            padding: 4px 10px; font-size: 0.625rem; font-weight: 700;
+            background: #161b22; border-bottom: 1px solid #21262d;
+        }
+        .viz-canvas-wrap { flex: 1; position: relative; min-height: 0; }
+        .viz-canvas-wrap canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+        /* ── Typing Input ── */
+        #typing-area {
+            padding: 8px 16px; background: #161b22; border-top: 1px solid #30363d;
+            border-bottom: 1px solid #30363d;
+        }
+        #typing-input {
+            width: 100%; padding: 10px 14px; background: #0d1117; border: 1px solid #30363d;
+            border-radius: 6px; color: #c9d1d9; font-family: inherit; font-size: 0.9375rem;
+            outline: none; user-select: text; -webkit-user-select: text;
+        }
+        #typing-input:focus { border-color: #f0883e; }
+        #typing-input::placeholder { color: #484f58; }
+        #typing-hint { font-size: 0.5625rem; color: #484f58; margin-top: 4px; }
+
+        /* ── Footer ── */
+        #footer {
+            display: flex; align-items: center; justify-content: center; gap: 16px;
+            padding: 6px 16px; background: #161b22; border-top: 1px solid #30363d;
+            font-size: 0.6875rem; color: #484f58; flex-wrap: wrap; z-index: 10;
+        }
+        #footer a { color: #58a6ff; text-decoration: none; }
+
+        /* ═══ Reusable: Code Cell & Terminal (from brotherNumsy template) ═══ */
+        #bottom-panels { display: flex; flex-direction: column; border-top: 1px solid #30363d; }
+        .panel-section { border-bottom: 1px solid #21262d; }
+        .panel-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 6px 16px; background: #161b22; cursor: pointer;
+            font-size: 0.75rem; font-weight: 700;
+        }
+        .panel-header:hover { background: #1c2129; }
+        .panel-header .tag { font-size: 0.5625rem; padding: 2px 6px; border-radius: 4px; }
+        .panel-body { padding: 0; overflow: hidden; transition: max-height 0.3s ease; }
+        .panel-body.collapsed { max-height: 0 !important; }
+        .code-cell-area { display: grid; grid-template-columns: 1fr 1fr; gap: 0; min-height: 200px; }
+        .code-editor { display: flex; flex-direction: column; border-right: 1px solid #21262d; }
+        .code-editor textarea {
+            flex: 1; background: #0d1117; color: #c9d1d9; border: none; padding: 12px;
+            font-family: inherit; font-size: 0.8125rem; line-height: 1.6; resize: none;
+            outline: none; min-height: 180px; user-select: text; -webkit-user-select: text;
+        }
+        .code-toolbar {
+            display: flex; align-items: center; gap: 6px; padding: 4px 12px;
+            background: #161b22; border-bottom: 1px solid #21262d; font-size: 0.6875rem;
+        }
+        .code-toolbar button {
+            padding: 3px 10px; border: 1px solid #30363d; border-radius: 4px;
+            background: #21262d; color: #c9d1d9; font-family: inherit; font-size: 0.6875rem; cursor: pointer;
+        }
+        .code-toolbar button:hover { background: #30363d; }
+        .code-toolbar .btn-run { background: #238636; border-color: #2ea043; color: #fff; }
+        .code-toolbar .btn-run:hover { background: #2ea043; }
+        .code-output {
+            background: #0d1117; padding: 12px; font-size: 0.75rem; line-height: 1.5;
+            overflow-y: auto; max-height: 300px; min-height: 180px; white-space: pre-wrap; word-break: break-all;
+        }
+        .code-output .out-line { color: #8b949e; }
+        .code-output .out-result { color: #7ee787; }
+        .code-output .out-error { color: #f97583; }
+        .code-output .out-info { color: #58a6ff; }
+        .terminal-area {
+            background: #0d1117; padding: 8px 12px; min-height: 120px; max-height: 300px;
+            overflow-y: auto; font-size: 0.75rem; line-height: 1.6;
+        }
+        .terminal-area .term-line { color: #8b949e; }
+        .terminal-area .term-line.result { color: #7ee787; }
+        .terminal-area .term-line.error { color: #f97583; }
+        .terminal-area .term-line.info { color: #58a6ff; }
+        .terminal-area .term-line.warn { color: #e6b422; }
+        .term-input-row {
+            display: flex; align-items: center; padding: 4px 12px;
+            background: #161b22; border-top: 1px solid #21262d;
+        }
+        .term-prompt { color: #f0883e; font-size: 0.75rem; margin-right: 6px; white-space: nowrap; }
+        .term-input-row input {
+            flex: 1; background: transparent; border: none; color: #c9d1d9;
+            font-family: inherit; font-size: 0.75rem; outline: none;
+            user-select: text; -webkit-user-select: text;
+        }
+        @media (max-width: 700px) {
+            #viz-grid { grid-template-columns: 1fr; }
+            .code-cell-area { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div id="header">
+        <div>
+            <span class="hdr-title">kbatch</span>
+            <span class="hdr-sub"> — keyboard contrail/pattern analyzer</span>
+        </div>
+        <div>
+            <button class="fullscreen-btn" id="btn-fullscreen">&#x26F6; Fullscreen</button>
+            <a href="hexcast.html">hexcast</a>
+            <a href="brothernumsy.html">Game</a>
+            <a href="quantum-notepad.html">Notepad</a>
+        </div>
+    </div>
+
+    <!-- ═══ Main Visualization Area ═══ -->
+    <div id="main-area">
+        <button class="fs-exit" id="btn-fs-exit">&#x2716; Exit</button>
+
+        <!-- Stats Bar -->
+        <div id="stats-bar">
+            <div class="stat"><span class="stat-label">WPM</span> <span class="stat-val stat-wpm" id="s-wpm">0</span></div>
+            <div class="stat"><span class="stat-label">Efficiency</span> <span class="stat-val stat-eff" id="s-eff">0%</span></div>
+            <div class="stat"><span class="stat-label">Complexity</span> <span class="stat-val stat-cpx" id="s-cpx">0%</span></div>
+            <div class="stat"><span class="stat-label">Strain</span> <span class="stat-val stat-strain" id="s-strain">0%</span></div>
+            <div class="stat"><span class="stat-label">Keys</span> <span class="stat-val stat-keys" id="s-keys">0</span></div>
+            <div class="stat"><span class="stat-label">Distance</span> <span class="stat-val stat-dist" id="s-dist">0.0</span></div>
+            <div class="stat"><span class="stat-label">Words</span> <span class="stat-val" style="color:#c9d1d9;" id="s-words">0</span></div>
+            <div class="stat"><span class="stat-label">Hapax</span> <span class="stat-val" style="color:#d2a8ff;" id="s-hapax">0</span></div>
+        </div>
+
+        <!-- 4-panel visualization grid -->
+        <div id="viz-grid">
+            <div class="viz-panel">
+                <div class="viz-title" style="color:#f0883e;">&#x1F525; Thermal Heatmap</div>
+                <div class="viz-canvas-wrap"><canvas id="cv-thermal"></canvas></div>
+            </div>
+            <div class="viz-panel">
+                <div class="viz-title" style="color:#58a6ff;">&#x2708; Contrails</div>
+                <div class="viz-canvas-wrap"><canvas id="cv-contrails"></canvas></div>
+            </div>
+            <div class="viz-panel">
+                <div class="viz-title" style="color:#d2a8ff;">&#x2B22; Geometric Pattern</div>
+                <div class="viz-canvas-wrap"><canvas id="cv-geometric"></canvas></div>
+            </div>
+            <div class="viz-panel">
+                <div class="viz-title" style="color:#7ee787;">&#x1F3B9; 3D Language Model</div>
+                <div class="viz-canvas-wrap"><canvas id="cv-3d"></canvas></div>
+            </div>
+        </div>
+
+        <!-- Typing input -->
+        <div id="typing-area">
+            <input type="text" id="typing-input" placeholder="Start typing to analyze keyboard patterns in real-time..." autocomplete="off" spellcheck="false">
+            <div id="typing-hint">All visualizations update live as you type. Press <b>Enter</b> to analyze the full text.</div>
+        </div>
+    </div>
+
+    <div id="footer">
+        <span>{+1, 1, -1, +0, 0, -0, +n, n, -n}</span>
+        <span>&middot;</span>
+        <span style="color:#f0883e;">kbatch: keyboard contrail analyzer</span>
+        <span>&middot;</span>
+        <a href="quantum-notepad.html">uvspeed notepad</a>
+        <span>&middot;</span>
+        <a href="hexcast.html">hexcast</a>
+        <span>&middot;</span>
+        <span>API: <code>window.kbatch</code></span>
+    </div>
+
+    <!-- ═══ Bottom Panels: Code Cell + Terminal (template) ═══ -->
+    <div id="bottom-panels">
+        <div class="panel-section">
+            <div class="panel-header" id="code-panel-toggle">
+                <span style="color:#7ee787;">&#9889; Live Code Cell</span>
+                <span>
+                    <span class="tag" style="background:#238636;color:#fff;">JS</span>
+                    <span class="tag" style="background:#21262d;color:#8b949e;">kbatch + FreyaUnits</span>
+                    <span style="color:#484f58;margin-left:6px;">&#9660;</span>
+                </span>
+            </div>
+            <div class="panel-body collapsed" id="code-panel-body">
+                <div class="code-cell-area">
+                    <div class="code-editor">
+                        <div class="code-toolbar">
+                            <button class="btn-run" id="code-run">&#9654; Run</button>
+                            <button id="code-clear">Clear</button>
+                            <button id="code-example">Example</button>
+                            <button id="code-sync">Sync State</button>
+                            <span style="flex:1;"></span>
+                            <span style="color:#484f58;">Ctrl+Enter to run</span>
+                        </div>
+                        <textarea id="code-input" placeholder="// Write JavaScript here&#10;// Access: kbatch, kbatch.state, kbatch.analyze()&#10;" spellcheck="false">// Get current analysis state
+const state = kbatch.state;
+console.log('Words typed:', state.words);
+console.log('WPM:', state.wpm.toFixed(1));
+console.log('Efficiency:', state.efficiency.toFixed(1) + '%');
+
+// Analyze a specific word
+const analysis = kbatch.analyze('quantum');
+console.log('\\n"quantum" analysis:');
+console.log('  Efficiency:', analysis.efficiency.toFixed(1) + '%');
+console.log('  Complexity:', analysis.complexity.toFixed(1) + '%');
+console.log('  Path:', analysis.path);
+console.log('  Distance:', analysis.distance.toFixed(2));
+
+// Top 5 most-used keys
+const top = kbatch.topKeys(5);
+console.log('\\nTop keys:', top.map(k => k.key + ':' + k.count).join(', '));</textarea>
+                    </div>
+                    <div>
+                        <div class="code-toolbar" style="justify-content:space-between;">
+                            <span style="color:#7ee787;">Output</span>
+                            <button id="output-clear">Clear Output</button>
+                        </div>
+                        <div class="code-output" id="code-output">
+                            <div class="out-info">// Output appears here when you run code</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="panel-section">
+            <div class="panel-header" id="term-panel-toggle">
+                <span style="color:#f0883e;">&#x2622; Terminal</span>
+                <span>
+                    <span class="tag" style="background:#f0883e22;color:#f0883e;">kbatch</span>
+                    <span style="color:#484f58;margin-left:6px;">&#9660;</span>
+                </span>
+            </div>
+            <div class="panel-body collapsed" id="term-panel-body">
+                <div class="terminal-area" id="term-output">
+                    <div class="term-line info">Welcome to kbatch terminal — keyboard pattern analyzer</div>
+                    <div class="term-line">Type <b style="color:#f0883e;">help</b> for commands. Analyze text, view contrails, export data.</div>
+                    <div class="term-line" style="color:#484f58;">───────────────────────────────────────────────</div>
+                </div>
+                <div class="term-input-row">
+                    <span class="term-prompt">kb&gt;</span>
+                    <input type="text" id="term-input" placeholder="help, analyze, heatmap, contrails, efficiency, export ..." autocomplete="off" spellcheck="false">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // ================================================================
+    //  kbatch — Keyboard Pattern Analyzer
+    //  Thermal heatmaps, contrails, geometric patterns, 3D language
+    //  analysis — all in one self-contained file.
+    // ================================================================
+
+    // ──────────────────── QWERTY LAYOUT ────────────────────
+    const ROWS = [
+        ['q','w','e','r','t','y','u','i','o','p'],
+        ['a','s','d','f','g','h','j','k','l',';'],
+        ['z','x','c','v','b','n','m',',','.','/'],
+    ];
+
+    // Key positions (col, row) for distance calculation
+    const KEY_POS = {};
+    ROWS.forEach((row, r) => {
+        row.forEach((key, c) => {
+            KEY_POS[key] = { x: c + r * 0.25, y: r }; // staggered offset
+        });
+    });
+    // Space bar
+    KEY_POS[' '] = { x: 4.5, y: 3.2 };
+
+    // Finger assignments (0=left pinky ... 4=left thumb, 5=right thumb ... 9=right pinky)
+    const FINGER_MAP = {};
+    const fingerCols = [[0],[1],[2],[3,4],[],[],[5,6],[7],[8],[9]];
+    ROWS.forEach((row, r) => {
+        row.forEach((key, c) => {
+            if (c <= 1) FINGER_MAP[key] = c;
+            else if (c <= 3) FINGER_MAP[key] = 2 + (c - 2);
+            else if (c <= 4) FINGER_MAP[key] = 3;
+            else if (c <= 5) FINGER_MAP[key] = 5;
+            else if (c <= 7) FINGER_MAP[key] = 5 + (c - 5);
+            else FINGER_MAP[key] = 7 + (c - 8);
+        });
+    });
+
+    // Direction symbols
+    function dirSymbol(dx, dy) {
+        if (dx > 0.3 && dy < -0.3) return '↗';
+        if (dx > 0.3 && dy > 0.3) return '↘';
+        if (dx < -0.3 && dy < -0.3) return '↖';
+        if (dx < -0.3 && dy > 0.3) return '↙';
+        if (dx > 0.3) return '→';
+        if (dx < -0.3) return '←';
+        if (dy < -0.3) return '↑';
+        if (dy > 0.3) return '↓';
+        return '·';
+    }
+
+    // ──────────────────── ANALYSIS ENGINE ────────────────────
+    class KBatchAnalyzer {
+        constructor() {
+            this.heatmap = {};       // key -> count
+            this.transitions = [];   // [{from, to, dx, dy, dist}]
+            this.words = 0;
+            this.totalDist = 0;
+            this.totalKeys = 0;
+            this.startTime = Date.now();
+            this.lastKey = null;
+            this.wordFreq = {};
+            this.buffer = '';        // current typed text
+            this.history = [];       // analysis history
+        }
+
+        reset() {
+            this.heatmap = {};
+            this.transitions = [];
+            this.words = 0;
+            this.totalDist = 0;
+            this.totalKeys = 0;
+            this.startTime = Date.now();
+            this.lastKey = null;
+            this.wordFreq = {};
+            this.buffer = '';
+            this.history = [];
+        }
+
+        processKey(key) {
+            const k = key.toLowerCase();
+            if (!KEY_POS[k] && k !== ' ') return;
+
+            this.totalKeys++;
+            this.heatmap[k] = (this.heatmap[k] || 0) + 1;
+
+            if (this.lastKey && KEY_POS[k] && KEY_POS[this.lastKey]) {
+                const from = KEY_POS[this.lastKey];
+                const to = KEY_POS[k];
+                const dx = to.x - from.x;
+                const dy = to.y - from.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                this.totalDist += dist;
+                this.transitions.push({ from: this.lastKey, to: k, dx, dy, dist });
+                // Keep last 500 transitions
+                if (this.transitions.length > 500) this.transitions.shift();
+            }
+            this.lastKey = k;
+
+            if (k === ' ') {
+                const word = this.buffer.trim();
+                if (word.length > 0) {
+                    this.words++;
+                    this.wordFreq[word] = (this.wordFreq[word] || 0) + 1;
+                }
+                this.buffer = '';
+            } else {
+                this.buffer += k;
+            }
+        }
+
+        analyzeWord(word) {
+            let dist = 0, path = '', complexity = 0;
+            const chars = word.toLowerCase().split('');
+            for (let i = 1; i < chars.length; i++) {
+                const a = KEY_POS[chars[i-1]], b = KEY_POS[chars[i]];
+                if (a && b) {
+                    const dx = b.x - a.x, dy = b.y - a.y;
+                    const d = Math.sqrt(dx * dx + dy * dy);
+                    dist += d;
+                    path += dirSymbol(dx, dy);
+                    // Row changes add complexity
+                    if (Math.abs(dy) > 0.3) complexity += 15;
+                    // Long horizontal moves
+                    if (Math.abs(dx) > 2) complexity += 10;
+                }
+            }
+            const maxDist = (chars.length - 1) * 3; // worst case
+            const efficiency = maxDist > 0 ? Math.max(0, 100 - (dist / maxDist) * 100) : 100;
+            complexity = Math.min(100, complexity);
+            return { word, efficiency, complexity, distance: dist, path, length: word.length };
+        }
+
+        get state() {
+            const elapsed = (Date.now() - this.startTime) / 1000;
+            const wpm = elapsed > 0 ? (this.words / elapsed) * 60 : 0;
+            const avgDist = this.totalKeys > 1 ? this.totalDist / (this.totalKeys - 1) : 0;
+            const efficiency = avgDist > 0 ? Math.max(0, 100 - avgDist * 30) : 100;
+            const strain = Math.min(100, avgDist * 25);
+
+            // Hapax legomena (words appearing exactly once)
+            const hapax = Object.values(this.wordFreq).filter(c => c === 1).length;
+
+            // Complexity from row transitions
+            const rowChanges = this.transitions.filter(t => Math.abs(t.dy) > 0.3).length;
+            const complexity = this.transitions.length > 0
+                ? Math.min(100, (rowChanges / this.transitions.length) * 100 * 1.5) : 0;
+
+            return {
+                wpm, efficiency, complexity, strain,
+                totalKeys: this.totalKeys, totalDist: this.totalDist,
+                words: this.words, hapax,
+                avgDist, elapsed,
+                heatmap: { ...this.heatmap },
+                transitions: [...this.transitions],
+                wordFreq: { ...this.wordFreq },
+            };
+        }
+
+        topKeys(n = 10) {
+            return Object.entries(this.heatmap)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, n)
+                .map(([key, count]) => ({ key: key === ' ' ? 'SPC' : key, count }));
+        }
+    }
+
+    // ──────────────────── RENDERERS ────────────────────
+    const analyzer = new KBatchAnalyzer();
+
+    // Thermal colors: cold blue → green → yellow → orange → red → white
+    function thermalColor(intensity) {
+        const i = Math.min(1, Math.max(0, intensity));
+        if (i < 0.2) return `rgb(${Math.floor(i*5*80)},${Math.floor(i*5*120)},${Math.floor(180+i*5*75)})`;
+        if (i < 0.4) return `rgb(${Math.floor(40+(i-0.2)*5*100)},${Math.floor(180-(i-0.2)*5*40)},${Math.floor(100-(i-0.2)*5*100)})`;
+        if (i < 0.6) return `rgb(${Math.floor(200+(i-0.4)*5*55)},${Math.floor(200-(i-0.4)*5*80)},0)`;
+        if (i < 0.8) return `rgb(255,${Math.floor(120-(i-0.6)*5*80)},0)`;
+        return `rgb(255,${Math.floor(40+(i-0.8)*5*200)},${Math.floor((i-0.8)*5*200)})`;
+    }
+
+    function renderThermal(canvas) {
+        const ctx = canvas.getContext('2d');
+        const W = canvas.width = canvas.parentElement.clientWidth;
+        const H = canvas.height = canvas.parentElement.clientHeight;
+        ctx.fillStyle = '#0d1117'; ctx.fillRect(0, 0, W, H);
+
+        const hm = analyzer.heatmap;
+        const maxCount = Math.max(1, ...Object.values(hm));
+        const keyW = W / 11.5, keyH = H / 4.5;
+        const padL = (W - 10 * keyW) / 2;
+
+        ROWS.forEach((row, r) => {
+            const offset = r * 0.4 * keyW;
+            row.forEach((key, c) => {
+                const x = padL + offset + c * keyW;
+                const y = 10 + r * (keyH + 4);
+                const count = hm[key] || 0;
+                const intensity = count / maxCount;
+
+                // Key background (thermal)
+                if (count > 0) {
+                    // Glow
+                    ctx.fillStyle = thermalColor(intensity);
+                    ctx.globalAlpha = 0.15 + intensity * 0.4;
+                    ctx.beginPath();
+                    ctx.arc(x + keyW/2, y + keyH/2, keyW * 0.8, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.globalAlpha = 1;
+                }
+
+                ctx.fillStyle = count > 0 ? thermalColor(intensity) : '#21262d';
+                ctx.fillRect(x + 2, y + 2, keyW - 4, keyH - 4);
+
+                // Border
+                ctx.strokeStyle = count > 0 ? thermalColor(Math.min(1, intensity + 0.2)) : '#30363d';
+                ctx.lineWidth = count > 0 ? 1.5 : 0.5;
+                ctx.strokeRect(x + 2, y + 2, keyW - 4, keyH - 4);
+
+                // Label
+                ctx.fillStyle = intensity > 0.5 ? '#0d1117' : '#8b949e';
+                ctx.font = `${Math.max(9, keyH * 0.35)}px monospace`;
+                ctx.textAlign = 'center';
+                ctx.fillText(key.toUpperCase(), x + keyW/2, y + keyH * 0.55);
+
+                // Count
+                if (count > 0) {
+                    ctx.fillStyle = intensity > 0.5 ? '#0d1117' : '#58a6ff';
+                    ctx.font = `${Math.max(7, keyH * 0.22)}px monospace`;
+                    ctx.fillText(String(count), x + keyW/2, y + keyH * 0.82);
+                }
+                ctx.textAlign = 'start';
+            });
+        });
+    }
+
+    function renderContrails(canvas) {
+        const ctx = canvas.getContext('2d');
+        const W = canvas.width = canvas.parentElement.clientWidth;
+        const H = canvas.height = canvas.parentElement.clientHeight;
+        ctx.fillStyle = '#0d1117'; ctx.fillRect(0, 0, W, H);
+
+        const trans = analyzer.transitions;
+        if (trans.length < 2) {
+            ctx.fillStyle = '#484f58'; ctx.font = '12px monospace'; ctx.textAlign = 'center';
+            ctx.fillText('Type to see contrails...', W/2, H/2);
+            ctx.textAlign = 'start';
+            return;
+        }
+
+        // Map key positions to canvas
+        function kx(key) { const p = KEY_POS[key]; return p ? (p.x / 10) * (W - 40) + 20 : W/2; }
+        function ky(key) { const p = KEY_POS[key]; return p ? (p.y / 3.5) * (H - 40) + 20 : H/2; }
+
+        // Draw trails with fading
+        const len = trans.length;
+        for (let i = Math.max(0, len - 200); i < len; i++) {
+            const t = trans[i];
+            const age = (len - i) / 200;
+            const alpha = 0.05 + (1 - age) * 0.6;
+            const fx = kx(t.from), fy = ky(t.from);
+            const tx = kx(t.to), ty = ky(t.to);
+
+            // Trail line
+            ctx.strokeStyle = `rgba(240,136,62,${alpha})`;
+            ctx.lineWidth = 1 + (1 - age) * 2;
+            ctx.beginPath(); ctx.moveTo(fx, fy); ctx.lineTo(tx, ty); ctx.stroke();
+
+            // Endpoint glow
+            if (i > len - 20) {
+                ctx.fillStyle = `rgba(240,136,62,${alpha * 0.4})`;
+                ctx.beginPath(); ctx.arc(tx, ty, 4 + (1 - age) * 6, 0, Math.PI * 2); ctx.fill();
+            }
+        }
+
+        // Current position marker
+        if (analyzer.lastKey && KEY_POS[analyzer.lastKey]) {
+            const cx = kx(analyzer.lastKey), cy = ky(analyzer.lastKey);
+            ctx.fillStyle = '#f0883e';
+            ctx.beginPath(); ctx.arc(cx, cy, 5, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = 'rgba(240,136,62,0.2)';
+            ctx.beginPath(); ctx.arc(cx, cy, 15, 0, Math.PI * 2); ctx.fill();
+        }
+
+        // Key position dots
+        for (const key in KEY_POS) {
+            if (key === ' ') continue;
+            const x = kx(key), y = ky(key);
+            ctx.fillStyle = '#30363d';
+            ctx.fillRect(x - 1, y - 1, 3, 3);
+        }
+    }
+
+    function renderGeometric(canvas) {
+        const ctx = canvas.getContext('2d');
+        const W = canvas.width = canvas.parentElement.clientWidth;
+        const H = canvas.height = canvas.parentElement.clientHeight;
+        ctx.fillStyle = '#0d1117'; ctx.fillRect(0, 0, W, H);
+
+        const cx = W / 2, cy = H / 2;
+        const radius = Math.min(W, H) * 0.4;
+        const hm = analyzer.heatmap;
+        const maxCount = Math.max(1, ...Object.values(hm));
+        const allKeys = ROWS.flat();
+
+        // Draw hexagonal grid
+        const n = allKeys.length;
+        allKeys.forEach((key, i) => {
+            const angle = (i / n) * Math.PI * 2 - Math.PI / 2;
+            const count = hm[key] || 0;
+            const intensity = count / maxCount;
+            const r = radius * (0.6 + intensity * 0.4);
+            const x = cx + Math.cos(angle) * r;
+            const y = cy + Math.sin(angle) * r;
+
+            // Connection lines to neighbors
+            if (i > 0) {
+                const prevAngle = ((i - 1) / n) * Math.PI * 2 - Math.PI / 2;
+                const prevCount = hm[allKeys[i-1]] || 0;
+                const prevInt = prevCount / maxCount;
+                const pr = radius * (0.6 + prevInt * 0.4);
+                const px = cx + Math.cos(prevAngle) * pr;
+                const py = cy + Math.sin(prevAngle) * pr;
+                ctx.strokeStyle = `rgba(210,168,255,${0.1 + intensity * 0.3})`;
+                ctx.lineWidth = 0.5 + intensity * 1.5;
+                ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(x, y); ctx.stroke();
+            }
+
+            // Connection to center
+            ctx.strokeStyle = `rgba(210,168,255,${0.03 + intensity * 0.1})`;
+            ctx.lineWidth = 0.3;
+            ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(x, y); ctx.stroke();
+
+            // Key node
+            const nodeR = 3 + intensity * 8;
+            if (count > 0) {
+                ctx.fillStyle = `rgba(210,168,255,${0.1 + intensity * 0.3})`;
+                ctx.beginPath(); ctx.arc(x, y, nodeR + 6, 0, Math.PI * 2); ctx.fill();
+            }
+            ctx.fillStyle = count > 0 ? thermalColor(intensity) : '#30363d';
+            ctx.beginPath(); ctx.arc(x, y, nodeR, 0, Math.PI * 2); ctx.fill();
+
+            // Label
+            ctx.fillStyle = '#c9d1d9';
+            ctx.font = `${Math.max(8, nodeR)}px monospace`;
+            ctx.textAlign = 'center';
+            ctx.fillText(key.toUpperCase(), x, y + nodeR + 12);
+            ctx.textAlign = 'start';
+        });
+
+        // Close the ring
+        if (allKeys.length > 1) {
+            const first = 0, last = allKeys.length - 1;
+            const a1 = (first / n) * Math.PI * 2 - Math.PI / 2;
+            const a2 = (last / n) * Math.PI * 2 - Math.PI / 2;
+            const c1 = hm[allKeys[first]] || 0, c2 = hm[allKeys[last]] || 0;
+            const r1 = radius * (0.6 + (c1/maxCount) * 0.4);
+            const r2 = radius * (0.6 + (c2/maxCount) * 0.4);
+            ctx.strokeStyle = 'rgba(210,168,255,0.1)';
+            ctx.lineWidth = 0.5;
+            ctx.beginPath();
+            ctx.moveTo(cx + Math.cos(a2) * r2, cy + Math.sin(a2) * r2);
+            ctx.lineTo(cx + Math.cos(a1) * r1, cy + Math.sin(a1) * r1);
+            ctx.stroke();
+        }
+    }
+
+    function render3D(canvas) {
+        const ctx = canvas.getContext('2d');
+        const W = canvas.width = canvas.parentElement.clientWidth;
+        const H = canvas.height = canvas.parentElement.clientHeight;
+        ctx.fillStyle = '#0d1117'; ctx.fillRect(0, 0, W, H);
+
+        const trans = analyzer.transitions;
+        const wf = analyzer.wordFreq;
+        const words = Object.entries(wf).sort((a, b) => b[1] - a[1]);
+
+        if (words.length === 0) {
+            ctx.fillStyle = '#484f58'; ctx.font = '12px monospace'; ctx.textAlign = 'center';
+            ctx.fillText('Type words to see 3D language model...', W/2, H/2);
+            ctx.textAlign = 'start';
+            return;
+        }
+
+        // Simple 3D isometric word cloud with efficiency coloring
+        const maxFreq = Math.max(1, words[0][1]);
+        const cols = Math.ceil(Math.sqrt(words.length));
+        const cellW = W / (cols + 1), cellH = H / (Math.ceil(words.length / cols) + 1);
+
+        words.forEach(([word, freq], i) => {
+            const col = i % cols, row = Math.floor(i / cols);
+            const x = cellW * (col + 0.5);
+            const y = cellH * (row + 0.5);
+            const analysis = analyzer.analyzeWord(word);
+            const eff = analysis.efficiency / 100;
+            const size = Math.max(8, 10 + (freq / maxFreq) * 14);
+
+            // 3D shadow
+            ctx.fillStyle = `rgba(${Math.floor(120 - eff * 120)},${Math.floor(eff * 200)},${Math.floor(100 + eff * 100)},0.15)`;
+            ctx.fillRect(x - size * word.length * 0.15, y + 2, size * word.length * 0.35, size * 0.6);
+
+            // Efficiency bar
+            const barW = Math.min(cellW * 0.8, size * word.length * 0.35);
+            ctx.fillStyle = '#21262d';
+            ctx.fillRect(x - barW/2, y + size * 0.6, barW, 3);
+            ctx.fillStyle = eff > 0.6 ? '#7ee787' : eff > 0.3 ? '#e6b422' : '#f97583';
+            ctx.fillRect(x - barW/2, y + size * 0.6, barW * eff, 3);
+
+            // Word
+            ctx.fillStyle = eff > 0.6 ? '#7ee787' : eff > 0.3 ? '#e6b422' : '#f97583';
+            ctx.font = `${size}px monospace`;
+            ctx.textAlign = 'center';
+            ctx.fillText(word, x, y);
+
+            // Frequency badge
+            if (freq > 1) {
+                ctx.fillStyle = '#484f58';
+                ctx.font = `${Math.max(7, size * 0.5)}px monospace`;
+                ctx.fillText('×' + freq, x, y - size * 0.5);
+            }
+            ctx.textAlign = 'start';
+        });
+    }
+
+    function renderAll() {
+        renderThermal(document.getElementById('cv-thermal'));
+        renderContrails(document.getElementById('cv-contrails'));
+        renderGeometric(document.getElementById('cv-geometric'));
+        render3D(document.getElementById('cv-3d'));
+    }
+
+    function updateStats() {
+        const s = analyzer.state;
+        document.getElementById('s-wpm').textContent = s.wpm.toFixed(1);
+        document.getElementById('s-eff').textContent = s.efficiency.toFixed(1) + '%';
+        document.getElementById('s-cpx').textContent = s.complexity.toFixed(1) + '%';
+        document.getElementById('s-strain').textContent = s.strain.toFixed(1) + '%';
+        document.getElementById('s-keys').textContent = s.totalKeys;
+        document.getElementById('s-dist').textContent = s.totalDist.toFixed(1);
+        document.getElementById('s-words').textContent = s.words;
+        document.getElementById('s-hapax').textContent = s.hapax;
+    }
+
+    // ──────────────────── INPUT HANDLING ────────────────────
+    const typingInput = document.getElementById('typing-input');
+    let renderTimer = null;
+
+    typingInput.addEventListener('input', e => {
+        const val = typingInput.value;
+        // Process new characters
+        if (val.length > 0) {
+            const lastChar = val[val.length - 1];
+            analyzer.processKey(lastChar);
+        }
+        // Debounced render
+        clearTimeout(renderTimer);
+        renderTimer = setTimeout(() => { renderAll(); updateStats(); }, 30);
+    });
+
+    typingInput.addEventListener('keydown', e => {
+        e.stopPropagation(); // don't trigger game/fullscreen keys
+        if (e.key === 'Enter') {
+            // Process remaining buffer as a word
+            if (analyzer.buffer.trim()) {
+                analyzer.words++;
+                const word = analyzer.buffer.trim();
+                analyzer.wordFreq[word] = (analyzer.wordFreq[word] || 0) + 1;
+                analyzer.buffer = '';
+            }
+            renderAll(); updateStats();
+        }
+    });
+
+    // ──────────────────── GLOBAL API ────────────────────
+    window.kbatch = {
+        get state() { return analyzer.state; },
+        analyze: (word) => analyzer.analyzeWord(word),
+        topKeys: (n) => analyzer.topKeys(n),
+        reset: () => { analyzer.reset(); renderAll(); updateStats(); },
+        processText: (text) => {
+            for (const ch of text) analyzer.processKey(ch);
+            renderAll(); updateStats();
+        },
+        heatmap: () => ({ ...analyzer.heatmap }),
+        transitions: () => [...analyzer.transitions],
+        wordFreq: () => ({ ...analyzer.wordFreq }),
+        exportJSON: () => JSON.stringify(analyzer.state, null, 2),
+    };
+
+    // ──────────────────── RESIZE ────────────────────
+    window.addEventListener('resize', () => renderAll());
+    renderAll();
+
+    // ──────────────────── CODE CELL (template) ────────────────────
+    (function(){
+        const codeInput = document.getElementById('code-input');
+        const codeOutput = document.getElementById('code-output');
+
+        function appendOutput(text, cls = 'out-line') {
+            const div = document.createElement('div');
+            div.className = cls; div.textContent = text;
+            codeOutput.appendChild(div);
+            codeOutput.scrollTop = codeOutput.scrollHeight;
+        }
+
+        function runCode() {
+            const code = codeInput.value;
+            if (!code.trim()) return;
+            appendOutput('▶ Running...', 'out-info');
+            const origLog = console.log, origWarn = console.warn, origError = console.error;
+            const logs = [];
+            console.log = (...a) => { logs.push({t:'log',m:a.map(String).join(' ')}); origLog(...a); };
+            console.warn = (...a) => { logs.push({t:'warn',m:a.map(String).join(' ')}); origWarn(...a); };
+            console.error = (...a) => { logs.push({t:'error',m:a.map(String).join(' ')}); origError(...a); };
+            try {
+                const result = eval(code);
+                logs.forEach(l => appendOutput(l.m, l.t==='error'?'out-error':l.t==='warn'?'out-info':'out-line'));
+                if (result !== undefined) appendOutput('→ ' + String(result), 'out-result');
+            } catch (e) {
+                logs.forEach(l => appendOutput(l.m, 'out-line'));
+                appendOutput('Error: ' + e.message, 'out-error');
+            }
+            console.log = origLog; console.warn = origWarn; console.error = origError;
+        }
+
+        document.getElementById('code-run').addEventListener('click', runCode);
+        document.getElementById('code-clear').addEventListener('click', () => { codeInput.value = ''; });
+        document.getElementById('output-clear').addEventListener('click', () => { codeOutput.innerHTML = ''; });
+        codeInput.addEventListener('keydown', e => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); runCode(); }
+            e.stopPropagation();
+        });
+        document.getElementById('code-example').addEventListener('click', () => {
+            codeInput.value = `// Analyze a sentence
+kbatch.processText('the quick brown fox jumps over the lazy dog');
+
+// Show analysis
+const state = kbatch.state;
+console.log('Words:', state.words);
+console.log('WPM:', state.wpm.toFixed(1));
+console.log('Efficiency:', state.efficiency.toFixed(1) + '%');
+console.log('Total distance:', state.totalDist.toFixed(2));
+
+// Analyze individual words
+['quantum', 'binary', 'freya', 'kbatch'].forEach(w => {
+    const a = kbatch.analyze(w);
+    console.log(w + ': eff=' + a.efficiency.toFixed(0) + '% path=' + a.path);
+});
+
+// Top keys
+console.log('\\nTop keys:', kbatch.topKeys(5).map(k => k.key + ':' + k.count).join(', '));`;
+        });
+        document.getElementById('code-sync').addEventListener('click', () => {
+            appendOutput('── kbatch State ──', 'out-info');
+            appendOutput(kbatch.exportJSON(), 'out-result');
+        });
+        document.getElementById('code-panel-toggle').addEventListener('click', () => {
+            document.getElementById('code-panel-body').classList.toggle('collapsed');
+        });
+    })();
+
+    // ──────────────────── TERMINAL (template) ────────────────────
+    (function(){
+        const termOutput = document.getElementById('term-output');
+        const termInput = document.getElementById('term-input');
+        const termHistory = [];
+        let historyIdx = -1;
+
+        function termPrint(text, cls = '') {
+            const div = document.createElement('div');
+            div.className = 'term-line ' + cls;
+            div.innerHTML = text;
+            termOutput.appendChild(div);
+            termOutput.scrollTop = termOutput.scrollHeight;
+        }
+
+        const CMDS = {
+            help: () => {
+                termPrint('─── kbatch Commands ───', 'info');
+                termPrint('<b>status</b>      — current analysis summary');
+                termPrint('<b>heatmap</b>     — key usage counts');
+                termPrint('<b>contrails</b>   — recent movement paths');
+                termPrint('<b>analyze &lt;word&gt;</b> — analyze a specific word');
+                termPrint('<b>efficiency</b>  — current efficiency breakdown');
+                termPrint('<b>process &lt;text&gt;</b> — process text for analysis');
+                termPrint('<b>topkeys</b>     — top 10 most-used keys');
+                termPrint('<b>words</b>       — word frequency list');
+                termPrint('<b>hapax</b>       — words appearing only once');
+                termPrint('<b>export</b>      — export full JSON state');
+                termPrint('<b>reset</b>       — reset all analysis');
+                termPrint('<b>eval &lt;js&gt;</b>   — evaluate JavaScript');
+                termPrint('<b>clear</b>       — clear terminal');
+            },
+            status: () => {
+                const s = kbatch.state;
+                termPrint(`WPM: <b style="color:#58a6ff;">${s.wpm.toFixed(1)}</b> | Efficiency: <b style="color:#7ee787;">${s.efficiency.toFixed(1)}%</b> | Complexity: <b style="color:#f97583;">${s.complexity.toFixed(1)}%</b>`);
+                termPrint(`Keys: ${s.totalKeys} | Distance: ${s.totalDist.toFixed(2)} | Words: ${s.words} | Hapax: ${s.hapax}`);
+            },
+            heatmap: () => {
+                const hm = kbatch.heatmap();
+                const sorted = Object.entries(hm).sort((a,b) => b[1]-a[1]);
+                termPrint('─── Key Heatmap ───', 'info');
+                sorted.forEach(([k,v]) => {
+                    const bar = '█'.repeat(Math.min(30, v));
+                    termPrint(`<span style="color:#f0883e;">${k === ' ' ? 'SPC' : k}</span> ${bar} ${v}`);
+                });
+            },
+            contrails: () => {
+                const trans = kbatch.transitions().slice(-20);
+                termPrint('─── Recent Contrails ───', 'info');
+                trans.forEach(t => {
+                    const dir = dirSymbol(t.dx, t.dy);
+                    termPrint(`${t.from} ${dir} ${t.to} (dist: ${t.dist.toFixed(2)})`);
+                });
+            },
+            efficiency: () => {
+                const s = kbatch.state;
+                termPrint('─── Efficiency Breakdown ───', 'info');
+                termPrint(`Overall: <b style="color:#7ee787;">${s.efficiency.toFixed(1)}%</b>`);
+                termPrint(`Avg key distance: ${s.avgDist.toFixed(3)} units`);
+                termPrint(`Finger strain: <b style="color:#e6b422;">${s.strain.toFixed(1)}%</b>`);
+                termPrint(`Row-change complexity: <b style="color:#f97583;">${s.complexity.toFixed(1)}%</b>`);
+            },
+            topkeys: () => {
+                termPrint('─── Top 10 Keys ───', 'info');
+                kbatch.topKeys(10).forEach((k,i) => {
+                    termPrint(`${i+1}. <b style="color:#f0883e;">${k.key}</b> — ${k.count} presses`);
+                });
+            },
+            words: () => {
+                const wf = kbatch.wordFreq();
+                const sorted = Object.entries(wf).sort((a,b) => b[1]-a[1]).slice(0, 20);
+                termPrint('─── Word Frequency (top 20) ───', 'info');
+                sorted.forEach(([w,c]) => termPrint(`<b>${w}</b> ×${c}`));
+            },
+            hapax: () => {
+                const wf = kbatch.wordFreq();
+                const hapax = Object.entries(wf).filter(([,c]) => c === 1).map(([w]) => w);
+                termPrint(`─── Hapax Legomena (${hapax.length}) ───`, 'info');
+                termPrint(hapax.join(', ') || '(none yet)');
+            },
+            export: () => {
+                termPrint('─── JSON Export ───', 'info');
+                termPrint(kbatch.exportJSON(), 'result');
+            },
+            reset: () => { kbatch.reset(); termPrint('🔄 Analysis reset', 'info'); },
+            clear: () => { termOutput.innerHTML = ''; },
+        };
+
+        function processCommand(input) {
+            const trimmed = input.trim();
+            if (!trimmed) return;
+            termPrint(`<span style="color:#f0883e;">kb&gt;</span> ${trimmed}`);
+            termHistory.unshift(trimmed);
+            historyIdx = -1;
+            const parts = trimmed.split(/\s+/);
+            const cmd = parts[0].toLowerCase();
+
+            if (cmd === 'analyze' && parts.length >= 2) {
+                const word = parts.slice(1).join(' ');
+                const a = kbatch.analyze(word);
+                termPrint(`"${word}" — Eff: <b style="color:#7ee787;">${a.efficiency.toFixed(1)}%</b> | Cpx: <b style="color:#f97583;">${a.complexity.toFixed(1)}%</b> | Dist: ${a.distance.toFixed(2)} | Path: ${a.path}`);
+            } else if (cmd === 'process' && parts.length >= 2) {
+                const text = parts.slice(1).join(' ');
+                kbatch.processText(text);
+                termPrint(`Processed ${text.length} characters`, 'result');
+            } else if ((cmd === 'eval' || cmd === 'js') && parts.length >= 2) {
+                try {
+                    const result = eval(trimmed.slice(cmd.length).trim());
+                    if (result !== undefined) termPrint('→ ' + String(result), 'result');
+                } catch (e) { termPrint('Error: ' + e.message, 'error'); }
+            } else if (CMDS[cmd]) {
+                CMDS[cmd]();
+            } else {
+                try {
+                    const result = eval(trimmed);
+                    if (result !== undefined) termPrint('→ ' + String(result), 'result');
+                } catch (e) { termPrint(`Unknown: <b>${cmd}</b>. Type <b>help</b>.`, 'error'); }
+            }
+        }
+
+        termInput.addEventListener('keydown', e => {
+            e.stopPropagation();
+            if (e.key === 'Enter') { processCommand(termInput.value); termInput.value = ''; }
+            else if (e.key === 'ArrowUp') { if (termHistory.length) { historyIdx = Math.min(historyIdx+1, termHistory.length-1); termInput.value = termHistory[historyIdx]; } }
+            else if (e.key === 'ArrowDown') { if (historyIdx > 0) { historyIdx--; termInput.value = termHistory[historyIdx]; } else { historyIdx=-1; termInput.value=''; } }
+        });
+
+        document.getElementById('term-panel-toggle').addEventListener('click', () => {
+            document.getElementById('term-panel-body').classList.toggle('collapsed');
+        });
+    })();
+
+    // ──────────────────── FULLSCREEN (template) ────────────────────
+    (function(){
+        function enter() {
+            document.body.classList.add('fullscreen');
+            renderAll();
+            if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(()=>{});
+        }
+        function exit() {
+            document.body.classList.remove('fullscreen');
+            renderAll();
+            if (document.fullscreenElement) document.exitFullscreen().catch(()=>{});
+        }
+        document.getElementById('btn-fullscreen').addEventListener('click', enter);
+        document.getElementById('btn-fs-exit').addEventListener('click', exit);
+        document.addEventListener('fullscreenchange', () => {
+            if (!document.fullscreenElement) { document.body.classList.remove('fullscreen'); renderAll(); }
+        });
+        window.addEventListener('keydown', e => {
+            if (e.key === 'Escape' && document.body.classList.contains('fullscreen')) exit();
+        });
+    })();
+
+    </script>
+</body>
+</html>

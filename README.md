@@ -14,7 +14,7 @@
 [![License](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
 [![Live Demo](https://img.shields.io/badge/Live-GitHub_Pages-00c853)](https://fornevercollective.github.io/uvspeed/web/quantum-notepad.html)
 
-**[Launch Live Demo](https://fornevercollective.github.io/uvspeed/web/quantum-notepad.html)** | **[Play brotherNumsy & Freya](https://fornevercollective.github.io/uvspeed/web/brothernumsy.html)** | [GitHub Repo](https://github.com/fornevercollective/uvspeed)
+**[Launch Live Demo](https://fornevercollective.github.io/uvspeed/web/quantum-notepad.html)** | **[Play brotherNumsy & Freya](https://fornevercollective.github.io/uvspeed/web/brothernumsy.html)** | **[kbatch Analyzer](https://fornevercollective.github.io/uvspeed/web/kbatch.html)** | **[hexcast Broadcast](https://fornevercollective.github.io/uvspeed/web/hexcast.html)** | [GitHub Repo](https://github.com/fornevercollective/uvspeed)
 
 ---
 
@@ -273,6 +273,78 @@ window.FreyaUnits.toMeters(100, 'nm')           // 1e-7
 window.FreyaUnits.fromMeters(0.0254, 'mil')     // 1000
 window.FreyaUnits.bestUnit(42195)               // {sym:'km', name:'Kilometer', m:1000}
 window.FreyaUnits.listUnits()                   // all 27 units with meter values
+```
+
+---
+
+## kbatch — Keyboard Pattern Analyzer
+
+A real-time keyboard analysis tool with thermal heatmaps, finger contrails, geometric pattern mapping, and 3D language modeling — all in one self-contained HTML file.
+
+**[Launch kbatch](https://fornevercollective.github.io/uvspeed/web/kbatch.html)** | Also accessible from the notepad footer (`⌨ kbatch` button)
+
+| Feature | Details |
+|---|---|
+| 🔥 Thermal Heatmap | Live keyboard heat visualization — cold blue → green → yellow → red → white |
+| ✈ Contrails | Finger movement path tracking with fading trails and glow markers |
+| ⬡ Geometric Pattern | Radial key frequency mapping — keys orbit based on usage intensity |
+| 🎹 3D Language Model | Word cloud with efficiency coloring, frequency badges, and analysis bars |
+| 📊 Stats Bar | WPM, efficiency, complexity, strain, key count, distance, hapax legomena |
+| ⌨ Real-time Analysis | All visualizations update live as you type |
+| ⚡ Code Cell | Scriptable JS environment — `kbatch.analyze()`, `kbatch.processText()` |
+| ☢ Terminal | Built-in CLI — `analyze`, `heatmap`, `contrails`, `efficiency`, `export` |
+| ⛶ Fullscreen | Immersive analysis mode with native browser fullscreen |
+
+### kbatch API
+
+```javascript
+window.kbatch.state           // {wpm, efficiency, complexity, strain, totalKeys, hapax, ...}
+window.kbatch.analyze('word') // {efficiency, complexity, distance, path, length}
+window.kbatch.processText(t)  // feed text for batch analysis
+window.kbatch.topKeys(5)      // [{key, count}, ...] most-used keys
+window.kbatch.heatmap()       // {key: count} raw heatmap
+window.kbatch.transitions()   // [{from, to, dx, dy, dist}] movement data
+window.kbatch.wordFreq()      // {word: count} frequency map
+window.kbatch.exportJSON()    // full state as JSON string
+```
+
+---
+
+## hexcast — Live Video Hex Broadcast
+
+Real-time video capture → hex stream encoding → cross-device broadcast with full latency benchmarking. Streams camera, screen, or test patterns through the same thermal/fax hex grid used in the notepad — measuring encode, decode, round-trip, and jitter on every frame.
+
+**[Launch hexcast](https://fornevercollective.github.io/uvspeed/web/hexcast.html)** | Also accessible from the notepad footer (`📡 hexcast` button)
+
+| Feature | Details |
+|---|---|
+| 📷 Camera Capture | Live webcam feed → hex stream encoding at configurable resolution |
+| 🖵 Screen Capture | Screen share → hex stream for remote display testing |
+| ▦ Test Pattern | Synthetic SMPTE-style color bars with moving scan line |
+| 🔥 Encode Modes | Color Thermal, Grayscale, Fax B/W, Signal (green phosphor) |
+| 📊 Latency Chart | Real-time line graph: encode (orange), decode (purple), round-trip (green), jitter (yellow) |
+| 📡 BroadcastChannel | Cross-tab broadcast — one tab sends, another receives |
+| ⏱ Benchmark | Automated encode/decode speed test across all resolutions × modes |
+| 📸 Snapshot | Export current hex frame as PNG |
+| ⚡ Code Cell | Full JS scripting — `hexcast.startCamera()`, `hexcast.benchmark()` |
+| ☢ Terminal | CLI commands — `camera`, `screen`, `bench`, `latency`, `export` |
+
+### hexcast API
+
+```javascript
+window.hexcast.state              // {source, fps, latency, throughput, frameSize, ...}
+window.hexcast.startCamera()      // open webcam → hex stream
+window.hexcast.startScreen()      // screen share → hex stream
+window.hexcast.startTestPattern() // synthetic color bars
+window.hexcast.stopSource()       // stop capture
+window.hexcast.startBroadcast()   // send frames via BroadcastChannel
+window.hexcast.startReceive()     // receive frames from another tab
+window.hexcast.benchmark()        // [{resolution, mode, encodeMs, throughputMB}, ...]
+window.hexcast.snapshot()         // save hex frame as PNG
+window.hexcast.setEncode('fax')   // switch encode mode
+window.hexcast.setResolution(108) // set grid resolution
+window.hexcast.setFPS(30)         // set target framerate
+window.hexcast.exportJSON()       // full state + latency history
 ```
 
 ---

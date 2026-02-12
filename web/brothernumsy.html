@@ -130,6 +130,45 @@
         #footer a { color: #58a6ff; text-decoration: none; }
         .freya-tag { color: #a78bfa; }
 
+        /* ===== Fullscreen Mode ===== */
+        .fullscreen-btn {
+            background: none;
+            border: 1px solid #30363d;
+            border-radius: 4px;
+            color: #8b949e;
+            font-family: inherit;
+            font-size: 0.6875rem;
+            padding: 2px 8px;
+            cursor: pointer;
+            margin-left: 10px;
+            transition: all 0.15s;
+        }
+        .fullscreen-btn:hover { background: #21262d; color: #c9d1d9; border-color: #484f58; }
+        body.game-fullscreen #header { display: none; }
+        body.game-fullscreen #footer { display: none; }
+        body.game-fullscreen #bottom-panels { display: none; }
+        body.game-fullscreen #game-wrap {
+            height: 100vh;
+            flex: 1;
+        }
+        body.game-fullscreen .fullscreen-exit {
+            position: fixed;
+            top: 8px;
+            right: 8px;
+            z-index: 100;
+            background: rgba(13,17,23,0.85);
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            color: #8b949e;
+            font-family: inherit;
+            font-size: 0.75rem;
+            padding: 4px 12px;
+            cursor: pointer;
+            display: block;
+        }
+        body.game-fullscreen .fullscreen-exit:hover { background: rgba(33,38,45,0.95); color: #c9d1d9; }
+        .fullscreen-exit { display: none; }
+
         /* ===== Code Cell & Terminal ===== */
         #bottom-panels {
             display: flex;
@@ -265,12 +304,16 @@
             <span class="hdr-sub"> — beyondBINARY endless runner</span>
         </div>
         <div>
-            <a href="quantum-notepad.html">Back to Notepad</a>
+            <button class="fullscreen-btn" id="btn-fullscreen" title="Fullscreen game">&#x26F6; Fullscreen</button>
+            <a href="hexcast.html">hexcast</a>
+            <a href="kbatch.html">kbatch</a>
+            <a href="quantum-notepad.html">Notepad</a>
         </div>
     </div>
 
     <div id="game-wrap">
         <canvas id="game"></canvas>
+        <button class="fullscreen-exit" id="btn-fs-exit">&#x2716; Exit Fullscreen</button>
 
         <div id="hud">
             <div class="hud-left">
@@ -323,6 +366,10 @@
         <span>&middot;</span>
         <a href="quantum-notepad.html">uvspeed notepad</a>
         <span>&middot;</span>
+        <a href="kbatch.html">kbatch analyzer</a>
+        <span>&middot;</span>
+        <a href="hexcast.html">hexcast broadcast</a>
+        <span>&middot;</span>
         <span>AI API: <code>window.numsyAI</code></span>
     </div>
 
@@ -338,7 +385,7 @@
                     <span style="color:#484f58;margin-left:6px;">&#9660;</span>
                 </span>
             </div>
-            <div class="panel-body" id="code-panel-body">
+            <div class="panel-body collapsed" id="code-panel-body">
                 <div class="code-cell-area">
                     <div class="code-editor">
                         <div class="code-toolbar">
@@ -387,7 +434,7 @@ state.obstacles.forEach((o, i) => {
                     <span style="color:#484f58;margin-left:6px;">&#9660;</span>
                 </span>
             </div>
-            <div class="panel-body" id="term-panel-body">
+            <div class="panel-body collapsed" id="term-panel-body">
                 <div class="terminal-area" id="term-output">
                     <div class="term-line info">Welcome to brotherNumsy &amp; Freya terminal</div>
                     <div class="term-line">Type <b style="color:#c084fc;">help</b> for commands. Access <b>numsyAI</b>, <b>FreyaUnits</b>, and full JS eval.</div>
@@ -1990,6 +2037,50 @@ FreyaUnits.units.forEach(u => {
         // Panel toggle
         document.getElementById('term-panel-toggle').addEventListener('click', () => {
             document.getElementById('term-panel-body').classList.toggle('collapsed');
+        });
+    })();
+
+    // ──────────────────── FULLSCREEN TOGGLE ────────────────────
+    (function(){
+        const btnFs = document.getElementById('btn-fullscreen');
+        const btnExit = document.getElementById('btn-fs-exit');
+
+        function enterFullscreen() {
+            document.body.classList.add('game-fullscreen');
+            game.resize();
+            if (!game.running) game.render();
+            // Also try browser native fullscreen
+            if (document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen().catch(() => {});
+            }
+        }
+
+        function exitFullscreen() {
+            document.body.classList.remove('game-fullscreen');
+            game.resize();
+            if (!game.running) game.render();
+            if (document.fullscreenElement) {
+                document.exitFullscreen().catch(() => {});
+            }
+        }
+
+        btnFs.addEventListener('click', enterFullscreen);
+        btnExit.addEventListener('click', exitFullscreen);
+
+        // Esc key exits fullscreen mode
+        document.addEventListener('fullscreenchange', () => {
+            if (!document.fullscreenElement && document.body.classList.contains('game-fullscreen')) {
+                document.body.classList.remove('game-fullscreen');
+                game.resize();
+                if (!game.running) game.render();
+            }
+        });
+
+        // Also handle Esc when not in native fullscreen
+        window.addEventListener('keydown', e => {
+            if (e.key === 'Escape' && document.body.classList.contains('game-fullscreen')) {
+                exitFullscreen();
+            }
         });
     })();
 
