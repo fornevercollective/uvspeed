@@ -111,6 +111,10 @@ tools/bin/
 *.quantum
 config/.initialized
 
+# Node — ALWAYS ignore node_modules (install via npm ci)
+node_modules/
+package-lock.json
+
 # macOS
 .DS_Store
 .AppleDouble

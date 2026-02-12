@@ -5,9 +5,70 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>uvspeed - Quantum beyondBINARY notepad</title>
-    <link rel="stylesheet" href="../cursor-theme.css">
     <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
     <style>
+        /* ===== Inlined Design System (cursor-theme.css) ===== */
+        :root {
+            --cursor-bg: #0d1117;
+            --cursor-bg-secondary: #161b22;
+            --cursor-bg-tertiary: #21262d;
+            --cursor-bg-hover: #30363d;
+            --cursor-text: #ffffff;
+            --cursor-text-secondary: #c9d1d9;
+            --cursor-text-muted: #8b949e;
+            --cursor-accent: #58a6ff;
+            --cursor-accent-hover: #79c0ff;
+            --cursor-accent-subtle: #1f6feb;
+            --cursor-border: #30363d;
+            --cursor-border-muted: #21262d;
+            --cursor-success: #3fb950;
+            --cursor-warning: #d29922;
+            --cursor-danger: #f85149;
+            --cursor-font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            --cursor-font-mono: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+            --cursor-space-xs: 0.25rem;
+            --cursor-space-sm: 0.5rem;
+            --cursor-space-md: 1rem;
+            --cursor-space-lg: 1.5rem;
+            --cursor-space-xl: 2rem;
+            --cursor-space-2xl: 3rem;
+            --cursor-radius-sm: 4px;
+            --cursor-radius-md: 6px;
+            --cursor-radius-lg: 8px;
+            --cursor-radius-xl: 12px;
+            --cursor-shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+            --cursor-shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4);
+            --cursor-shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.4);
+            --cursor-shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.5);
+            color-scheme: dark;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: var(--cursor-font-sans);
+            background: var(--cursor-bg);
+            color: var(--cursor-text);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        .btn {
+            display: inline-flex; align-items: center; gap: var(--cursor-space-sm);
+            padding: var(--cursor-space-sm) var(--cursor-space-md);
+            border: 1px solid var(--cursor-border); border-radius: var(--cursor-radius-md);
+            background: var(--cursor-bg-secondary); color: var(--cursor-text);
+            font-size: 0.875rem; font-weight: 500; cursor: pointer;
+            transition: all 0.15s ease; white-space: nowrap; text-decoration: none;
+        }
+        .btn:hover { background: var(--cursor-bg-hover); border-color: var(--cursor-border); color: var(--cursor-text); }
+        .btn:focus { outline: 2px solid var(--cursor-accent); outline-offset: 2px; }
+        .btn--primary { background: var(--cursor-accent); border-color: var(--cursor-accent); color: #fff; }
+        .btn--primary:hover { background: var(--cursor-accent-hover); border-color: var(--cursor-accent-hover); color: #fff; }
+        .btn--sm { padding: calc(var(--cursor-space-sm) * 0.75) var(--cursor-space-sm); font-size: 0.8125rem; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--cursor-bg); }
+        ::-webkit-scrollbar-thumb { background: var(--cursor-border); border-radius: var(--cursor-radius-sm); }
+        ::-webkit-scrollbar-thumb:hover { background: var(--cursor-bg-hover); }
+
         /* ===== Layout Shell ===== */
         .notepad-container {
             height: 100vh;
@@ -513,6 +574,119 @@
             margin-bottom: var(--cursor-space-sm);
             letter-spacing: 0.5px;
         }
+
+        /* ===== Sidebar Tabs ===== */
+        .sidebar-tabs {
+            display: flex; gap: 0; border-bottom: 1px solid var(--cursor-border-muted);
+        }
+        .sidebar-tab {
+            flex: 1; padding: 6px 4px; font-size: 0.625rem; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 0.5px; text-align: center;
+            color: var(--cursor-text-muted); background: transparent; border: none;
+            cursor: pointer; transition: all 0.15s ease; border-bottom: 2px solid transparent;
+        }
+        .sidebar-tab:hover { color: var(--cursor-text-secondary); background: var(--cursor-bg-hover); }
+        .sidebar-tab.active { color: var(--cursor-accent); border-bottom-color: var(--cursor-accent); }
+        .sidebar-tab-panel { display: none; }
+        .sidebar-tab-panel.active { display: block; }
+
+        /* ===== Quantum Thermal Viz ===== */
+        .thermal-viz { padding: var(--cursor-space-sm); }
+        .thermal-canvas-wrap {
+            position: relative; width: 100%; aspect-ratio: 1;
+            background: #0a0e14; border-radius: var(--cursor-radius-md);
+            border: 1px solid var(--cursor-border); overflow: hidden; margin-bottom: 8px;
+        }
+        .thermal-canvas-wrap canvas { width: 100%; height: 100%; display: block; }
+        .thermal-controls {
+            display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 8px;
+        }
+        .thermal-btn {
+            flex: 1; min-width: 48px; padding: 4px 6px; font-size: 0.625rem; font-weight: 600;
+            border: 1px solid var(--cursor-border); border-radius: var(--cursor-radius-sm);
+            background: var(--cursor-bg-tertiary); color: var(--cursor-text-secondary);
+            cursor: pointer; transition: all 0.15s ease; text-align: center;
+        }
+        .thermal-btn:hover { background: var(--cursor-bg-hover); color: var(--cursor-text); }
+        .thermal-btn.active { background: var(--cursor-accent-subtle); color: #fff; border-color: var(--cursor-accent); }
+        .thermal-legend {
+            display: flex; align-items: center; gap: 4px; margin-bottom: 6px;
+        }
+        .thermal-gradient {
+            flex: 1; height: 10px; border-radius: 5px;
+            background: linear-gradient(90deg, #00bfff 0%, #3fb950 30%, #f0883e 60%, #f85149 85%, #ff4500 100%);
+        }
+        .thermal-legend-label { font-size: 0.5625rem; color: var(--cursor-text-muted); white-space: nowrap; }
+        .thermal-stat-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 3px 0; font-size: 0.625rem; color: var(--cursor-text-secondary);
+            border-bottom: 1px solid var(--cursor-border-muted);
+        }
+        .thermal-stat-row:last-child { border-bottom: none; }
+        .thermal-stat-val {
+            font-family: var(--cursor-font-mono); font-weight: 600; font-size: 0.6875rem;
+        }
+        .thermal-stat-val.cryo { color: #00bfff; }
+        .thermal-stat-val.warm { color: #f0883e; }
+        .thermal-stat-val.hot { color: #f85149; }
+        .thermal-stat-val.qbit { color: #d2a8ff; }
+        .gpu-qubit-bar {
+            height: 6px; border-radius: 3px; background: var(--cursor-bg);
+            overflow: hidden; margin: 3px 0;
+        }
+        .gpu-qubit-fill {
+            height: 100%; border-radius: 3px;
+            transition: width 0.6s ease;
+        }
+        .thermal-section-label {
+            font-size: 0.5625rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.6px; color: var(--cursor-text-muted); margin: 8px 0 4px;
+        }
+        .lattice-info {
+            font-size: 0.5625rem; color: var(--cursor-text-muted); line-height: 1.5;
+            padding: 4px 6px; background: var(--cursor-bg); border-radius: var(--cursor-radius-sm);
+        }
+        .lattice-info strong { color: var(--cursor-text-secondary); }
+
+        /* ===== Hex/Fax Overlay ===== */
+        .hex-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.92); z-index: 10000;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .hex-overlay canvas {
+            width: min(100vw, 100vh); height: min(100vw, 100vh);
+            image-rendering: pixelated; border: 1px solid var(--cursor-border);
+        }
+        .hex-overlay-bar {
+            display: flex; gap: 8px; padding: 8px; background: var(--cursor-bg-secondary);
+            border-radius: var(--cursor-radius-md); margin-bottom: 8px;
+        }
+        .hex-overlay-bar button {
+            padding: 4px 12px; font-size: 0.75rem; border: 1px solid var(--cursor-border);
+            border-radius: var(--cursor-radius-sm); background: var(--cursor-bg-tertiary);
+            color: var(--cursor-text-secondary); cursor: pointer;
+        }
+        .hex-overlay-bar button:hover { background: var(--cursor-bg-hover); }
+        .hex-overlay-bar button.active { background: var(--cursor-accent-subtle); color: #fff; border-color: var(--cursor-accent); }
+
+        /* ===== Tools Dropdown ===== */
+        .tools-dropdown {
+            position: absolute; bottom: 100%; left: 0; min-width: 220px;
+            background: var(--cursor-bg-secondary); border: 1px solid var(--cursor-border);
+            border-radius: var(--cursor-radius-md); box-shadow: 0 -4px 16px rgba(0,0,0,0.4);
+            padding: 4px 0; display: none; z-index: 900; max-height: 320px; overflow-y: auto;
+        }
+        .tools-dropdown.show { display: block; }
+        .tools-dropdown-header {
+            padding: 4px 10px; font-size: 0.5625rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.6px; color: var(--cursor-text-muted);
+        }
+        .tools-dropdown-item {
+            padding: 6px 10px; font-size: 0.6875rem; color: var(--cursor-text-secondary);
+            cursor: pointer; display: flex; align-items: center; gap: 6px;
+        }
+        .tools-dropdown-item:hover { background: var(--cursor-bg-hover); color: var(--cursor-text); }
 
         /* ===== Quantum Nav Grid ===== */
         .quantum-nav-mini {
@@ -1815,6 +1989,7 @@
                     <button class="btn btn--sm" id="load-btn" title="Load .json notebook">📂 Load</button>
                     <button class="btn btn--sm" id="inspect-btn" title="Inspect: limits, comparisons, trade-offs">🔍 Inspect</button>
                     <span id="bridge-status" style="font-size:0.625rem;color:var(--cursor-text-muted);padding:4px 8px;">🔴 Bridge: offline</span>
+                    <span id="quest-status" style="font-size:0.625rem;color:var(--cursor-text-muted);padding:4px 8px;cursor:pointer;" title="Click to check Quest device">🥽 Quest: —</span>
                 </div>
             </div>
         </div>
@@ -1865,6 +2040,14 @@
 
             <!-- Quantum Sidebar -->
             <div class="quantum-sidebar">
+                <!-- Sidebar Tab Bar -->
+                <div class="sidebar-tabs">
+                    <button class="sidebar-tab active" data-tab="nav-tab" id="tab-nav">⚛ Nav</button>
+                    <button class="sidebar-tab" data-tab="thermal-tab" id="tab-thermal">🌡 Thermal</button>
+                </div>
+
+                <!-- ===== TAB 1: Navigation ===== -->
+                <div class="sidebar-tab-panel active" id="nav-tab">
                 <div class="sidebar-section">
                     <div class="sidebar-title">Quantum Navigation</div>
                     <div class="quantum-nav-mini">
@@ -1906,7 +2089,93 @@
                         </div>
                     </div>
                 </div>
+                </div><!-- /nav-tab -->
 
+                <!-- ===== TAB 2: Thermal Visualization ===== -->
+                <div class="sidebar-tab-panel" id="thermal-tab">
+                <div class="sidebar-section thermal-viz">
+                    <div class="sidebar-title">Quantum Thermal State</div>
+
+                    <!-- Temperature legend -->
+                    <div class="thermal-legend">
+                        <span class="thermal-legend-label">15 mK</span>
+                        <div class="thermal-gradient"></div>
+                        <span class="thermal-legend-label">300 K</span>
+                    </div>
+
+                    <!-- Mode buttons -->
+                    <div class="thermal-controls">
+                        <button class="thermal-btn active" data-thermal-mode="lattice" title="Optical lattice — egg-crate cold-atom simulator">Lattice</button>
+                        <button class="thermal-btn" data-thermal-mode="flow" title="Live layer data-flow heat map">Flow</button>
+                        <button class="thermal-btn" data-thermal-mode="gpu" title="GPU ↔ Qubit scaling comparison">GPU↔Q</button>
+                    </div>
+
+                    <!-- Animated canvas -->
+                    <div class="thermal-canvas-wrap">
+                        <canvas id="thermal-canvas" width="480" height="480"></canvas>
+                    </div>
+
+                    <!-- Unit toggle -->
+                    <div style="display:flex;gap:4px;margin-bottom:6px;">
+                        <button class="thermal-btn active" id="unit-c" style="flex:0 0 36px;">°C</button>
+                        <button class="thermal-btn" id="unit-f" style="flex:0 0 36px;">°F</button>
+                        <button class="thermal-btn" id="unit-k" style="flex:0 0 36px;">K</button>
+                    </div>
+
+                    <!-- Stats: current thermal reading -->
+                    <div class="thermal-section-label">Layer Thermal Map</div>
+                    <div class="thermal-stat-row"><span>Cryo core (qubit)</span><span class="thermal-stat-val cryo" id="th-cryo">15 mK</span></div>
+                    <div class="thermal-stat-row"><span>Dilution fridge</span><span class="thermal-stat-val cryo" id="th-fridge">−272.87 °C</span></div>
+                    <div class="thermal-stat-row"><span>Photonic (Xanadu)</span><span class="thermal-stat-val warm" id="th-photonic">25.0 °C</span></div>
+                    <div class="thermal-stat-row"><span>GPU junction</span><span class="thermal-stat-val hot" id="th-gpu">83.2 °C</span></div>
+
+                    <!-- GPU ↔ Qubit comparison -->
+                    <div class="thermal-section-label">GPU ↔ Qubit Scaling</div>
+                    <div class="thermal-stat-row"><span>Qubit count</span><span class="thermal-stat-val qbit" id="th-qubits">50</span></div>
+                    <div class="thermal-stat-row"><span>B200 GPUs needed</span><span class="thermal-stat-val hot" id="th-gpus">∞ (impossible)</span></div>
+                    <div class="gpu-qubit-bar"><div class="gpu-qubit-fill" id="gpu-fill" style="width:100%;background:linear-gradient(90deg,#3fb950,#f0883e,#f85149);"></div></div>
+
+                    <!-- Qubit slider -->
+                    <div style="display:flex;align-items:center;gap:6px;margin-top:4px;">
+                        <span style="font-size:0.5625rem;color:var(--cursor-text-muted);">1</span>
+                        <input type="range" id="qubit-slider" min="1" max="60" value="50" style="flex:1;accent-color:var(--cursor-accent);">
+                        <span style="font-size:0.5625rem;color:var(--cursor-text-muted);">60</span>
+                    </div>
+
+                    <!-- Lattice info -->
+                    <div class="thermal-section-label">Quantum Lattice</div>
+                    <div class="lattice-info">
+                        <strong>Optical egg-crate</strong> — 0.5 µm spacing<br>
+                        Rydberg excitation → atom entanglement<br>
+                        Rubik's-cube multi-stack: <strong id="lattice-dim">5×5×5</strong> = <strong id="lattice-sites">125</strong> sites<br>
+                        <span style="color:#d2a8ff;">Photonic (Xanadu)</span> — room-temp ✓
+                    </div>
+
+                    <!-- ChartGPU Integration -->
+                    <div class="thermal-section-label">ChartGPU</div>
+                    <div style="display:flex;gap:4px;margin-bottom:4px;">
+                        <button class="thermal-btn" id="chartgpu-launch" title="Open ChartGPU dashboard">📊 Dashboard</button>
+                        <button class="thermal-btn" id="chartgpu-metrics" title="Fetch live metrics">⚡ Metrics</button>
+                    </div>
+                    <div class="thermal-stat-row"><span>ChartGPU</span><span class="thermal-stat-val" id="chartgpu-status-val" style="color:var(--cursor-text-muted);">offline</span></div>
+                    <div class="thermal-stat-row"><span>CPU</span><span class="thermal-stat-val warm" id="cg-cpu">—</span></div>
+                    <div class="thermal-stat-row"><span>Memory</span><span class="thermal-stat-val warm" id="cg-mem">—</span></div>
+
+                    <!-- Hex / Fax Stream Viewer -->
+                    <div class="thermal-section-label">HF Fax / Hex Stream</div>
+                    <div style="display:flex;gap:4px;margin-bottom:4px;">
+                        <button class="thermal-btn active" id="hex-mode-color" data-hex-mode="color">Color</button>
+                        <button class="thermal-btn" id="hex-mode-gray" data-hex-mode="gray">Gray</button>
+                        <button class="thermal-btn" id="hex-mode-fax" data-hex-mode="fax">Fax</button>
+                        <button class="thermal-btn" id="hex-expand" title="Expand hex viewer overlay">↗</button>
+                    </div>
+                    <div class="thermal-canvas-wrap" style="aspect-ratio:1;max-height:180px;">
+                        <canvas id="hex-canvas" width="360" height="360"></canvas>
+                    </div>
+                </div>
+                </div><!-- /thermal-tab -->
+
+                <!-- ===== ALWAYS-VISIBLE SECTIONS ===== -->
                 <div class="sidebar-section">
                     <div class="sidebar-title">Cell Overview</div>
                     <ul class="cell-list" id="cell-list">
@@ -1971,6 +2240,31 @@
                 <button class="btn btn--xs quick-cmd" data-cmd="help">❓ Help</button>
                 <button class="btn btn--xs quick-cmd" data-cmd="pos">📍 Position</button>
                 <button class="btn btn--xs quick-cmd" data-cmd="cells">📋 Cells</button>
+                <span style="opacity:0.3;margin:0 2px;">│</span>
+                <!-- Cross-project tools -->
+                <div style="position:relative;display:inline-block;">
+                    <button class="btn btn--xs" id="f-tools" title="External tools" style="background:#7c3aed22;border-color:#7c3aed55;color:#7c3aed;">🔧 Tools ▾</button>
+                    <div class="tools-dropdown" id="tools-dropdown">
+                        <div class="tools-dropdown-header">Day Terminal</div>
+                        <div class="tools-dropdown-item" data-tool="kbatch">⌨ Kbatch — Keyboard Analysis</div>
+                        <div class="tools-dropdown-item" data-tool="signal">📡 Signal — Morse/Binary/Waveform</div>
+                        <div class="tools-dropdown-item" data-tool="geokey">🔷 GeoKey — Geometric Mapper</div>
+                        <div class="tools-dropdown-item" data-tool="youtube">🎬 YouTube — Transcript</div>
+                        <div class="tools-dropdown-header">ChartGPU</div>
+                        <div class="tools-dropdown-item" data-tool="chartgpu-dash">📊 ChartGPU Dashboard</div>
+                        <div class="tools-dropdown-item" data-tool="chartgpu-metrics">⚡ Live Metrics + AI</div>
+                        <div class="tools-dropdown-header">Media Pipeline</div>
+                        <div class="tools-dropdown-item" data-tool="jawta">📡 Jawta Signal Intel</div>
+                        <div class="tools-dropdown-item" data-tool="media">🎞 Media Process</div>
+                        <div class="tools-dropdown-header">Meta Quest</div>
+                        <div class="tools-dropdown-item" data-tool="quest-status">🥽 Quest Status</div>
+                        <div class="tools-dropdown-item" data-tool="quest-logs">📜 Quest Logs</div>
+                        <div class="tools-dropdown-item" data-tool="quest-screenshot">📸 Quest Screenshot</div>
+                        <div class="tools-dropdown-header">Lark / Jawta</div>
+                        <div class="tools-dropdown-item" data-tool="lark-status">🐦 Lark IANA Status</div>
+                    </div>
+                </div>
+                <button class="btn btn--xs" id="f-quest" title="Quest device status" style="background:#1877f222;border-color:#1877f255;color:#1877f2;">🥽 Quest</button>
             </div>
         </div>
     </div>
@@ -4335,6 +4629,124 @@
                     document.getElementById('stream-pipe-in').classList.remove('active');
                 });
 
+                // ===== SIDEBAR TAB SWITCHING =====
+                document.querySelectorAll('.sidebar-tab').forEach(tab => {
+                    tab.addEventListener('click', () => {
+                        document.querySelectorAll('.sidebar-tab').forEach(t => t.classList.remove('active'));
+                        document.querySelectorAll('.sidebar-tab-panel').forEach(p => p.classList.remove('active'));
+                        tab.classList.add('active');
+                        const panel = document.getElementById(tab.dataset.tab);
+                        if (panel) panel.classList.add('active');
+                        if (tab.dataset.tab === 'thermal-tab') {
+                            this._initThermalViz();
+                        } else {
+                            this._stopThermalViz();
+                        }
+                    });
+                });
+
+                // ===== QUANTUM THERMAL VISUALIZATION =====
+                this._thermalMode = 'lattice';
+                this._thermalUnit = 'C';
+                this._thermalAnim = null;
+                this._thermalFrame = 0;
+                this._thermalQubits = 50;
+
+                // Thermal mode buttons
+                document.querySelectorAll('[data-thermal-mode]').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        document.querySelectorAll('[data-thermal-mode]').forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        this._thermalMode = btn.dataset.thermalMode;
+                        this._thermalFrame = 0;
+                    });
+                });
+
+                // Unit toggle
+                ['c','f','k'].forEach(u => {
+                    const btn = document.getElementById('unit-' + u);
+                    if (!btn) return;
+                    btn.addEventListener('click', () => {
+                        document.querySelectorAll('#unit-c,#unit-f,#unit-k').forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        this._thermalUnit = u.toUpperCase();
+                        this._updateThermalStats();
+                    });
+                });
+
+                // Qubit slider
+                const qSlider = document.getElementById('qubit-slider');
+                if (qSlider) {
+                    qSlider.addEventListener('input', () => {
+                        this._thermalQubits = parseInt(qSlider.value);
+                        this._updateGpuQubitScaling();
+                    });
+                }
+
+                // ===== CHARTGPU INTEGRATION =====
+                this._hexMode = 'color';
+                this._hexData = new Uint8Array(360 * 360);
+                crypto.getRandomValues(this._hexData); // seed with random data
+
+                document.getElementById('chartgpu-launch')?.addEventListener('click', () => {
+                    window.open('http://localhost:3444', '_blank');
+                });
+
+                document.getElementById('chartgpu-metrics')?.addEventListener('click', () => {
+                    this._fetchChartGPUMetrics();
+                });
+
+                // Hex mode buttons
+                document.querySelectorAll('[data-hex-mode]').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        document.querySelectorAll('[data-hex-mode]').forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        this._hexMode = btn.dataset.hexMode;
+                        this._drawHexCanvas();
+                    });
+                });
+
+                document.getElementById('hex-expand')?.addEventListener('click', () => {
+                    this._openHexOverlay();
+                });
+
+                // Start hex canvas mini animation
+                this._hexCanvas = document.getElementById('hex-canvas');
+                this._hexCtx = this._hexCanvas?.getContext('2d');
+                setInterval(() => {
+                    if (document.getElementById('thermal-tab')?.classList.contains('active')) {
+                        // Shift hex data to simulate streaming
+                        for (let i = 0; i < 128; i++) {
+                            const idx = Math.floor(Math.random() * this._hexData.length);
+                            this._hexData[idx] = (this._hexData[idx] + Math.floor(Math.random() * 16)) & 0xFF;
+                        }
+                        this._drawHexCanvas();
+                    }
+                }, 200);
+
+                // ===== TOOLS DROPDOWN =====
+                const toolsBtn = document.getElementById('f-tools');
+                const toolsDropdown = document.getElementById('tools-dropdown');
+                if (toolsBtn && toolsDropdown) {
+                    toolsBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        toolsDropdown.classList.toggle('show');
+                    });
+                    document.addEventListener('click', () => toolsDropdown.classList.remove('show'));
+                    toolsDropdown.addEventListener('click', (e) => e.stopPropagation());
+
+                    toolsDropdown.querySelectorAll('.tools-dropdown-item').forEach(item => {
+                        item.addEventListener('click', () => {
+                            toolsDropdown.classList.remove('show');
+                            this._runTool(item.dataset.tool);
+                        });
+                    });
+                }
+
+                // ===== QUEST STATUS =====
+                document.getElementById('f-quest')?.addEventListener('click', () => this._checkQuestStatus());
+                document.getElementById('quest-status')?.addEventListener('click', () => this._checkQuestStatus());
+
                 // Global keyboard shortcuts
                 document.addEventListener('keydown', (e) => {
                     if (e.shiftKey && e.key === 'Enter' && this.currentCellId) {
@@ -5156,6 +5568,593 @@ print("Position:", quantum_position)`);
                 });
             }
 
+            /* ========== QUANTUM THERMAL VISUALIZATION ========== */
+            _stopThermalViz() {
+                if (this._thermalAnim) {
+                    cancelAnimationFrame(this._thermalAnim);
+                    this._thermalAnim = null;
+                }
+            }
+
+            _initThermalViz() {
+                if (this._thermalAnim) return; // already running
+                const canvas = document.getElementById('thermal-canvas');
+                if (!canvas) return;
+                this._thermalCtx = canvas.getContext('2d');
+                this._thermalFrame = 0;
+                this._updateThermalStats();
+                this._updateGpuQubitScaling();
+                const tick = () => {
+                    this._thermalFrame++;
+                    this._drawThermalCanvas();
+                    this._thermalAnim = requestAnimationFrame(tick);
+                };
+                tick();
+            }
+
+            _drawThermalCanvas() {
+                const ctx = this._thermalCtx;
+                if (!ctx) return;
+                const W = ctx.canvas.width, H = ctx.canvas.height;
+                const t = this._thermalFrame;
+
+                // Background fade
+                ctx.fillStyle = 'rgba(10,14,20,0.15)';
+                ctx.fillRect(0, 0, W, H);
+
+                if (this._thermalMode === 'lattice') {
+                    this._drawLattice(ctx, W, H, t);
+                } else if (this._thermalMode === 'flow') {
+                    this._drawFlow(ctx, W, H, t);
+                } else if (this._thermalMode === 'gpu') {
+                    this._drawGpuVsQubit(ctx, W, H, t);
+                }
+            }
+
+            /* --- Lattice: egg-crate optical lattice with Rydberg excitation --- */
+            _drawLattice(ctx, W, H, t) {
+                const grid = 8; // 8x8 visible slice of the Rubik multi-stack
+                const spacing = W / (grid + 1);
+                const layer = Math.abs(this.quantumPosition[2]) % 6;
+                const qPos = this.quantumPosition;
+
+                for (let r = 0; r < grid; r++) {
+                    for (let c = 0; c < grid; c++) {
+                        const x = spacing * (c + 1);
+                        const y = spacing * (r + 1);
+
+                        // Rydberg entanglement — atoms near the quantum position glow
+                        const dx = (c - qPos[0] % grid + grid) % grid;
+                        const dy = (r - qPos[1] % grid + grid) % grid;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+
+                        // Entanglement oscillation
+                        const phase = Math.sin(t * 0.04 + r * 0.7 + c * 0.5 + layer) * 0.5 + 0.5;
+                        const excited = dist < 2.5 && phase > 0.5;
+
+                        // Thermal color: cryo-blue → warm-green → hot-red
+                        const temp = excited ? 0.7 + phase * 0.3 : 0.05 + phase * 0.15;
+                        const hue = (1 - temp) * 200; // 200=blue, 0=red
+                        const alpha = 0.4 + phase * 0.6;
+                        const radius = spacing * 0.18 * (excited ? 1.4 + Math.sin(t * 0.1) * 0.3 : 0.8);
+
+                        // Entanglement lines
+                        if (excited && r > 0 && c > 0) {
+                            ctx.strokeStyle = `hsla(${hue}, 80%, 70%, ${alpha * 0.3})`;
+                            ctx.lineWidth = 1;
+                            ctx.beginPath();
+                            ctx.moveTo(x, y);
+                            ctx.lineTo(x - spacing, y);
+                            ctx.moveTo(x, y);
+                            ctx.lineTo(x, y - spacing);
+                            ctx.stroke();
+                        }
+
+                        // Atom
+                        ctx.beginPath();
+                        ctx.arc(x, y, radius, 0, Math.PI * 2);
+                        const grad = ctx.createRadialGradient(x, y, 0, x, y, radius);
+                        grad.addColorStop(0, `hsla(${hue}, 90%, 75%, ${alpha})`);
+                        grad.addColorStop(1, `hsla(${hue}, 70%, 40%, 0)`);
+                        ctx.fillStyle = grad;
+                        ctx.fill();
+                    }
+                }
+
+                // Layer label
+                ctx.fillStyle = 'rgba(255,255,255,0.5)';
+                ctx.font = '10px monospace';
+                ctx.fillText(`Lattice Z=${qPos[2]}  Slice ${grid}x${grid}  ` +
+                    `Spacing 0.5µm  Rydberg:${this._thermalQubits}q`, 6, H - 6);
+            }
+
+            /* --- Flow: live data heat-map of quantum prefix layers --- */
+            _drawFlow(ctx, W, H, t) {
+                const prefixes = ['+1','1','-1','+0','0','-0','+n','n','-n'];
+                const cols = prefixes.length;
+                const colW = W / cols;
+                const rows = 32;
+                const rowH = H / rows;
+
+                for (let c = 0; c < cols; c++) {
+                    for (let r = 0; r < rows; r++) {
+                        const flow = Math.sin(t * 0.03 + c * 1.2 + r * 0.25) * 0.5 + 0.5;
+                        const burst = Math.sin(t * 0.07 + c * 0.9) > 0.8 ? 0.3 : 0;
+                        const val = Math.min(1, flow + burst);
+                        const hue = (1 - val) * 200;
+                        ctx.fillStyle = `hsla(${hue}, 85%, ${30 + val * 45}%, ${0.6 + val * 0.4})`;
+                        ctx.fillRect(c * colW, r * rowH, colW - 1, rowH - 1);
+                    }
+                    // Prefix label
+                    ctx.fillStyle = 'rgba(255,255,255,0.7)';
+                    ctx.font = 'bold 9px monospace';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(prefixes[c], c * colW + colW / 2, H - 4);
+                }
+                ctx.textAlign = 'start';
+
+                // Flow title
+                ctx.fillStyle = 'rgba(255,255,255,0.4)';
+                ctx.font = '10px monospace';
+                ctx.fillText('Data Flow — 9-prefix layers — live heat', 6, 12);
+            }
+
+            /* --- GPU vs Qubit: scaling comparison visualization --- */
+            _drawGpuVsQubit(ctx, W, H, t) {
+                const q = this._thermalQubits;
+                ctx.clearRect(0, 0, W, H);
+                ctx.fillStyle = '#0a0e14';
+                ctx.fillRect(0, 0, W, H);
+
+                // --- Left side: GPU tower ---
+                const gpuCount = this._gpuForQubits(q);
+                const maxBars = 20;
+                const gpuBars = Math.min(maxBars, typeof gpuCount === 'number' ? Math.ceil(Math.log2(gpuCount + 1)) : maxBars);
+                const barH = (H - 60) / maxBars;
+
+                ctx.fillStyle = 'rgba(255,255,255,0.5)';
+                ctx.font = 'bold 11px monospace';
+                ctx.fillText('NVIDIA B200', 10, 20);
+                ctx.font = '9px monospace';
+                ctx.fillText(typeof gpuCount === 'number' ? `${gpuCount.toLocaleString()} GPUs` : '∞ impossible', 10, 34);
+
+                for (let i = 0; i < gpuBars; i++) {
+                    const prog = Math.min(1, (t * 0.02 - i * 0.15));
+                    if (prog <= 0) continue;
+                    const pulse = Math.sin(t * 0.05 + i * 0.4) * 0.15 + 0.85;
+                    const w = (W / 2 - 30) * prog * pulse;
+                    const y = 44 + i * barH;
+                    const grad = ctx.createLinearGradient(10, y, 10 + w, y);
+                    grad.addColorStop(0, '#f85149');
+                    grad.addColorStop(0.6, '#f0883e');
+                    grad.addColorStop(1, '#e3b341');
+                    ctx.fillStyle = grad;
+                    ctx.fillRect(10, y, w, barH - 2);
+                }
+
+                // --- Right side: Qubit sphere ---
+                const cx = W * 0.72, cy = H * 0.45, R = Math.min(W, H) * 0.25;
+
+                // Bloch-like sphere
+                ctx.strokeStyle = 'rgba(0,191,255,0.25)';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.arc(cx, cy, R, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.ellipse(cx, cy, R, R * 0.35, 0, 0, Math.PI * 2);
+                ctx.stroke();
+
+                // Qubit nodes orbiting
+                const nNodes = Math.min(q, 30);
+                for (let i = 0; i < nNodes; i++) {
+                    const angle = (Math.PI * 2 / nNodes) * i + t * 0.015;
+                    const rr = R * (0.6 + Math.sin(t * 0.02 + i) * 0.35);
+                    const nx = cx + Math.cos(angle) * rr;
+                    const ny = cy + Math.sin(angle) * rr * 0.6;
+                    const pulse = Math.sin(t * 0.06 + i * 0.8) * 0.4 + 0.6;
+                    ctx.beginPath();
+                    ctx.arc(nx, ny, 3 + pulse * 3, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(210,168,255,${pulse})`;
+                    ctx.fill();
+                }
+
+                ctx.fillStyle = 'rgba(255,255,255,0.5)';
+                ctx.font = 'bold 11px monospace';
+                ctx.textAlign = 'center';
+                ctx.fillText(`${q} Qubits`, cx, cy + R + 18);
+                ctx.font = '9px monospace';
+                const state = q <= 30 ? 'classical sim OK' : q <= 40 ? 'cluster needed' : q < 50 ? 'supercomputer' : 'quantum only';
+                ctx.fillText(state, cx, cy + R + 32);
+                ctx.textAlign = 'start';
+
+                // Photonic badge
+                ctx.fillStyle = '#d2a8ff';
+                ctx.font = '9px monospace';
+                ctx.fillText('◈ Xanadu photonic — 25°C room temp', 10, H - 8);
+            }
+
+            _gpuForQubits(q) {
+                if (q <= 30) return 1;
+                if (q <= 33) return 1;
+                if (q <= 34) return 8;
+                if (q <= 36) return 64;
+                if (q <= 38) return 256;
+                if (q <= 40) return 1024;
+                if (q <= 45) return 32768;
+                if (q <= 49) return 1048576;
+                return null; // impossible
+            }
+
+            _updateGpuQubitScaling() {
+                const q = this._thermalQubits;
+                const gpuCount = this._gpuForQubits(q);
+                const qEl = document.getElementById('th-qubits');
+                const gEl = document.getElementById('th-gpus');
+                if (qEl) qEl.textContent = q;
+                if (gEl) gEl.textContent = gpuCount !== null ? gpuCount.toLocaleString() + ' GPUs' : '∞ (impossible)';
+
+                // Fill bar
+                const fill = document.getElementById('gpu-fill');
+                if (fill) {
+                    const pct = gpuCount !== null ? Math.min(100, Math.log2(gpuCount + 1) * 5) : 100;
+                    fill.style.width = pct + '%';
+                    fill.style.background = pct < 30 ? '#3fb950' : pct < 70 ? 'linear-gradient(90deg,#3fb950,#f0883e)' : 'linear-gradient(90deg,#3fb950,#f0883e,#f85149)';
+                }
+
+                // Update lattice dims
+                const dim = Math.max(2, Math.ceil(Math.pow(q, 1/3)));
+                const dimEl = document.getElementById('lattice-dim');
+                const sitesEl = document.getElementById('lattice-sites');
+                if (dimEl) dimEl.textContent = `${dim}x${dim}x${dim}`;
+                if (sitesEl) sitesEl.textContent = dim * dim * dim;
+            }
+
+            _updateThermalStats() {
+                const unit = this._thermalUnit;
+                // Base values in Celsius
+                const vals = {
+                    cryo: -273.135,     // 15mK
+                    fridge: -272.87,    // dilution
+                    photonic: 25.0,     // Xanadu room-temp
+                    gpu: 83.2,          // GPU junction
+                };
+                const convert = (c) => {
+                    if (unit === 'C') return c.toFixed(c < -200 ? 3 : 1) + ' °C';
+                    if (unit === 'F') return (c * 9/5 + 32).toFixed(1) + ' °F';
+                    return (c + 273.15).toFixed(c < -200 ? 3 : 1) + ' K';
+                };
+                const special = (mK) => {
+                    if (unit === 'C') return (mK / 1000 - 273.15).toFixed(3) + ' °C';
+                    if (unit === 'F') return ((mK / 1000 - 273.15) * 9/5 + 32).toFixed(3) + ' °F';
+                    return (mK / 1000).toFixed(3) + ' K';
+                };
+
+                const el = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
+                el('th-cryo', special(15));
+                el('th-fridge', convert(vals.fridge));
+                el('th-photonic', convert(vals.photonic));
+                el('th-gpu', convert(vals.gpu));
+            }
+
+            /* ========== CHARTGPU INTEGRATION ========== */
+            async _fetchChartGPUMetrics() {
+                try {
+                    const resp = await fetch('http://localhost:8085/api/chartgpu/metrics');
+                    const data = await resp.json();
+                    if (data.metrics) {
+                        const m = data.metrics;
+                        const el = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
+                        el('cg-cpu', m.cpu.toFixed(1) + '%');
+                        el('cg-mem', m.memory.toFixed(1) + '%');
+                        el('chartgpu-status-val', 'live');
+                        document.getElementById('chartgpu-status-val').style.color = '#3fb950';
+                        this._logStream('chartgpu', `CPU ${m.cpu.toFixed(1)}% MEM ${m.memory.toFixed(1)}%`, 'data');
+                    }
+                } catch(e) {
+                    const el = document.getElementById('chartgpu-status-val');
+                    if (el) { el.textContent = 'offline'; el.style.color = 'var(--cursor-text-muted)'; }
+                }
+            }
+
+            /* ========== HEX / FAX STREAM VIEWER ========== */
+            _drawHexCanvas() {
+                const ctx = this._hexCtx;
+                if (!ctx) return;
+                const W = ctx.canvas.width, H = ctx.canvas.height;
+                const cols = 36, rows = 36;
+                const cw = W / cols, ch = H / rows;
+                const mode = this._hexMode;
+
+                ctx.clearRect(0, 0, W, H);
+
+                for (let r = 0; r < rows; r++) {
+                    for (let c = 0; c < cols; c++) {
+                        const val = this._hexData[r * cols + c] || 0;
+                        const norm = val / 255;
+
+                        if (mode === 'color') {
+                            // Thermal color map: blue → green → orange → red
+                            const hue = (1 - norm) * 200;
+                            ctx.fillStyle = `hsl(${hue}, 85%, ${20 + norm * 50}%)`;
+                        } else if (mode === 'gray') {
+                            const g = Math.floor(norm * 255);
+                            ctx.fillStyle = `rgb(${g},${g},${g})`;
+                        } else { // fax
+                            const g = norm > 0.5 ? 255 : 0;
+                            ctx.fillStyle = `rgb(${g},${g},${g})`;
+                        }
+                        ctx.fillRect(c * cw, r * ch, cw - 0.5, ch - 0.5);
+                    }
+                }
+
+                // Overlay hex labels on first few rows
+                ctx.fillStyle = 'rgba(255,255,255,0.6)';
+                ctx.font = `${Math.max(6, cw * 0.5)}px monospace`;
+                ctx.textAlign = 'center';
+                for (let r = 0; r < Math.min(6, rows); r++) {
+                    for (let c = 0; c < cols; c++) {
+                        const val = this._hexData[r * cols + c] || 0;
+                        ctx.fillText(val.toString(16).toUpperCase().padStart(2, '0'),
+                            c * cw + cw / 2, r * ch + ch * 0.75);
+                    }
+                }
+                ctx.textAlign = 'start';
+            }
+
+            _openHexOverlay() {
+                // Create full-screen hex viewer overlay
+                let overlay = document.getElementById('hex-overlay');
+                if (overlay) { overlay.remove(); return; }
+
+                overlay = document.createElement('div');
+                overlay.id = 'hex-overlay';
+                overlay.className = 'hex-overlay';
+                overlay.innerHTML = `
+                    <div class="hex-overlay-bar">
+                        <button class="active" data-omode="color">Color</button>
+                        <button data-omode="gray">Grayscale</button>
+                        <button data-omode="fax">Fax</button>
+                        <button data-omode="signal">Signal</button>
+                        <span style="flex:1;"></span>
+                        <span style="font-size:0.6875rem;color:#888;padding:0 8px;">HF Fax / Hex Stream — 1080x1080 Instagram</span>
+                        <button id="hex-overlay-close">✕ Close</button>
+                    </div>
+                    <canvas id="hex-overlay-canvas" width="1080" height="1080"></canvas>
+                `;
+                document.body.appendChild(overlay);
+
+                const canvas = document.getElementById('hex-overlay-canvas');
+                const ctx = canvas.getContext('2d');
+                const bigData = new Uint8Array(1080 * 1080);
+                // Stretch hex data to fill
+                for (let i = 0; i < bigData.length; i++) {
+                    bigData[i] = this._hexData[i % this._hexData.length];
+                    bigData[i] = (bigData[i] + Math.floor(Math.random() * 4)) & 0xFF;
+                }
+
+                let oMode = this._hexMode;
+                const draw = () => {
+                    const W = 1080, H = 1080, cols = 108, rows = 108;
+                    const cw = W / cols, ch = H / rows;
+                    ctx.fillStyle = '#000';
+                    ctx.fillRect(0, 0, W, H);
+                    for (let r = 0; r < rows; r++) {
+                        for (let c = 0; c < cols; c++) {
+                            const val = bigData[r * cols + c] || 0;
+                            const norm = val / 255;
+                            if (oMode === 'color') {
+                                const hue = (1 - norm) * 200;
+                                ctx.fillStyle = `hsl(${hue}, 85%, ${20 + norm * 50}%)`;
+                            } else if (oMode === 'gray') {
+                                const g = Math.floor(norm * 255);
+                                ctx.fillStyle = `rgb(${g},${g},${g})`;
+                            } else if (oMode === 'fax') {
+                                const g = norm > 0.5 ? 255 : 0;
+                                ctx.fillStyle = `rgb(${g},${g},${g})`;
+                            } else { // signal
+                                const r2 = Math.floor(norm * 128);
+                                const g2 = Math.floor(Math.sin(norm * Math.PI) * 255);
+                                const b2 = Math.floor((1 - norm) * 200);
+                                ctx.fillStyle = `rgb(${r2},${g2},${b2})`;
+                            }
+                            ctx.fillRect(c * cw, r * ch, cw - 0.3, ch - 0.3);
+                        }
+                    }
+                };
+                draw();
+
+                // Animate
+                const anim = setInterval(() => {
+                    for (let i = 0; i < 500; i++) {
+                        const idx = Math.floor(Math.random() * bigData.length);
+                        bigData[idx] = (bigData[idx] + Math.floor(Math.random() * 8)) & 0xFF;
+                    }
+                    draw();
+                }, 150);
+
+                overlay.querySelectorAll('[data-omode]').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        overlay.querySelectorAll('[data-omode]').forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        oMode = btn.dataset.omode;
+                        draw();
+                    });
+                });
+
+                document.getElementById('hex-overlay-close').addEventListener('click', () => {
+                    clearInterval(anim);
+                    overlay.remove();
+                });
+            }
+
+            /* ========== TOOLS DROPDOWN RUNNER ========== */
+            async _runTool(toolId) {
+                this._logStream('tool', toolId, 'exec');
+                const BRIDGE = 'http://localhost:8085';
+
+                const toolMap = {
+                    'kbatch': async () => {
+                        const text = prompt('Enter text for keyboard analysis:');
+                        if (!text) return;
+                        const resp = await fetch(`${BRIDGE}/api/day/kbatch`, {
+                            method: 'POST', headers: {'Content-Type':'application/json'},
+                            body: JSON.stringify({text, mode: 'analyze'}),
+                        });
+                        const data = await resp.json();
+                        const id = this.addCell('code', `# Kbatch Keyboard Analysis\n# Input: "${text.slice(0,50)}..."`);
+                        this.displayOutput(id, {type:'text', data: (data.output || data.error || JSON.stringify(data)).split('\\n')});
+                    },
+                    'signal': async () => {
+                        const text = prompt('Enter text for signal analysis:');
+                        if (!text) return;
+                        const resp = await fetch(`${BRIDGE}/api/day/signal`, {
+                            method: 'POST', headers: {'Content-Type':'application/json'},
+                            body: JSON.stringify({text}),
+                        });
+                        const data = await resp.json();
+                        const id = this.addCell('code', '# Signal Analysis — Morse / Binary / Waveform');
+                        this.displayOutput(id, {type:'text', data: [
+                            `Input: ${data.input || text}`,
+                            `Morse: ${data.morse || '—'}`,
+                            `Binary: ${(data.binary || '').slice(0, 200)}`,
+                            `Chars: ${data.char_count || 0}`,
+                            '',
+                            'Waveform (first 20 chars):',
+                            ...(data.waveform || []).slice(0, 20).map(w => `  ${w.char} → ${w.freq}Hz  ${w.morse}`),
+                        ]});
+                    },
+                    'geokey': async () => {
+                        const text = prompt('Enter text for geometric key mapping:');
+                        if (!text) return;
+                        const resp = await fetch(`${BRIDGE}/api/day/geokey`, {
+                            method: 'POST', headers: {'Content-Type':'application/json'},
+                            body: JSON.stringify({text, layout: 'hex'}),
+                        });
+                        const data = await resp.json();
+                        const id = this.addCell('code', '# GeoKey — Geometric Keyboard Mapper');
+                        this.displayOutput(id, {type:'text', data: (data.output || JSON.stringify(data.mapping || data, null, 2)).split('\\n')});
+                    },
+                    'youtube': async () => {
+                        const url = prompt('Enter YouTube URL:');
+                        if (!url) return;
+                        this._showProgress('Fetching transcript...');
+                        const resp = await fetch(`${BRIDGE}/api/day/youtube`, {
+                            method: 'POST', headers: {'Content-Type':'application/json'},
+                            body: JSON.stringify({url}),
+                        });
+                        const data = await resp.json();
+                        this._hideProgress(300);
+                        const id = this.addCell('code', `# YouTube Transcript\n# ${url}`);
+                        this.displayOutput(id, {type:'text', data: (data.transcript || data.error || 'No transcript available').split('\\n')});
+                    },
+                    'chartgpu-dash': () => window.open('http://localhost:3444', '_blank'),
+                    'chartgpu-metrics': () => this._fetchChartGPUMetrics(),
+                    'jawta': async () => {
+                        const text = prompt('Enter text for Jawta signal intel:');
+                        if (!text) return;
+                        const resp = await fetch(`${BRIDGE}/api/jawta/signal`, {
+                            method: 'POST', headers: {'Content-Type':'application/json'},
+                            body: JSON.stringify({text, mode: 'morse'}),
+                        });
+                        const data = await resp.json();
+                        const id = this.addCell('code', '# Jawta Signal Intel — Spectrum Analysis');
+                        this.displayOutput(id, {type:'text', data: [
+                            `Morse: ${data.morse || '—'}`,
+                            `Binary: ${(data.binary || '').slice(0, 200)}`,
+                            `Spectrum points: ${(data.spectrum || []).length}`,
+                            '',
+                            ...(data.spectrum || []).slice(0, 20).map(s => `  [${s.index}] ${s.freq}Hz  amp:${s.amplitude}`),
+                        ]});
+                    },
+                    'media': async () => {
+                        const source = prompt('Enter source URL or text:');
+                        if (!source) return;
+                        this._showProgress('Processing media...');
+                        const resp = await fetch(`${BRIDGE}/api/media/process`, {
+                            method: 'POST', headers: {'Content-Type':'application/json'},
+                            body: JSON.stringify({source, type: 'auto'}),
+                        });
+                        const data = await resp.json();
+                        this._hideProgress(300);
+                        const id = this.addCell('code', `# Media Pipeline — ${data.type || 'auto'}`);
+                        const lines = [`Pipeline: ${data.type}`, `Source: ${data.source}`, `Stages: ${data.stage_count}`, ''];
+                        (data.stages || []).forEach(s => {
+                            lines.push(`--- ${s.name} ---`);
+                            lines.push(JSON.stringify(s.result || s, null, 2));
+                        });
+                        this.displayOutput(id, {type:'text', data: lines});
+                    },
+                    'quest-status': () => this._checkQuestStatus(),
+                    'quest-logs': async () => {
+                        const resp = await fetch('http://localhost:8085/api/quest/logs');
+                        const data = await resp.json();
+                        const id = this.addCell('code', '# Quest Logcat');
+                        this.displayOutput(id, {type:'text', data: JSON.stringify(data, null, 2).split('\\n')});
+                    },
+                    'quest-screenshot': async () => {
+                        const resp = await fetch('http://localhost:8085/api/quest/screenshot');
+                        const data = await resp.json();
+                        const id = this.addCell('code', '# Quest Screenshot');
+                        this.displayOutput(id, {type:'text', data: JSON.stringify(data, null, 2).split('\\n')});
+                    },
+                    'lark-status': async () => {
+                        const resp = await fetch('http://localhost:8085/api/lark/status');
+                        const data = await resp.json();
+                        const id = this.addCell('code', '# Lark IANA Status');
+                        this.displayOutput(id, {type:'text', data: [
+                            `Available: ${data.available}`,
+                            `Path: ${data.path}`,
+                            `Version: ${data.version}`,
+                            `Components: ${(data.components || []).join(', ')}`,
+                            `Embed URL: ${data.embed_url || 'none'}`,
+                        ]});
+                    },
+                };
+
+                const handler = toolMap[toolId];
+                if (handler) {
+                    try { await handler(); }
+                    catch(e) {
+                        const id = this.addCell('code', `# Tool Error: ${toolId}`);
+                        this.displayOutput(id, {type:'text', data: [
+                            'Error: ' + e.message,
+                            '',
+                            'Make sure the quantum bridge server is running:',
+                            '  cd /Users/tref/uvspeed && python3 quantum_bridge_server.py',
+                        ]});
+                    }
+                }
+            }
+
+            /* ========== QUEST STATUS CHECK ========== */
+            async _checkQuestStatus() {
+                const el = document.getElementById('quest-status');
+                try {
+                    const resp = await fetch('http://localhost:8085/api/quest/status');
+                    const data = await resp.json();
+                    if (data.quest_connected) {
+                        if (el) { el.textContent = '🥽 Quest: connected'; el.style.color = '#3fb950'; }
+                        this._logStream('quest', `${data.adb_devices.length} device(s)`, 'data');
+                    } else if (data.hub_online) {
+                        if (el) { el.textContent = '🥽 Quest: hub only'; el.style.color = '#f0883e'; }
+                    } else {
+                        if (el) { el.textContent = '🥽 Quest: offline'; el.style.color = 'var(--cursor-text-muted)'; }
+                    }
+                    // Show details in a cell
+                    const id = this.addCell('code', '# Quest Device Status');
+                    this.displayOutput(id, {type:'text', data: [
+                        `Hub Online: ${data.hub_online}`,
+                        `Hub URL: ${data.hub_url}`,
+                        `Quest Connected: ${data.quest_connected}`,
+                        `ADB Devices: ${data.adb_devices?.length || 0}`,
+                        ...(data.adb_devices || []).map(d => `  ${d.serial} — ${d.state}`),
+                    ]});
+                } catch(e) {
+                    if (el) { el.textContent = '🥽 Quest: —'; el.style.color = 'var(--cursor-text-muted)'; }
+                }
+            }
+
             _pipeStreamOut() {
                 const lines = this._streamHistory.map(e =>
                     `${e.ts} | ${e.type.padEnd(6)} | ${e.action.padEnd(20)} | ${e.detail}`
@@ -5749,6 +6748,18 @@ print("Position:", quantum_position)`);
                     'bridge': () => `🔌 Bridge Status: ${this.wsConnected ? '🟢 Connected' : '🔴 Offline'}\n   HTTP: ${this.apiUrl}\n   WS: ${this.bridgeUrl}`,
                     'save': () => { this._saveToLocalStorage(); return '💾 Saved to localStorage'; },
                     'load': () => { this.loadNotebook(); return '📂 Opening file picker...'; },
+                    'kbatch': () => { this._runTool('kbatch'); return '⌨ Launching kbatch analysis...'; },
+                    'signal': () => { this._runTool('signal'); return '📡 Launching signal analysis...'; },
+                    'geokey': () => { this._runTool('geokey'); return '🔷 Launching GeoKey mapper...'; },
+                    'youtube': () => { this._runTool('youtube'); return '🎬 Launching YouTube transcript...'; },
+                    'chartgpu': () => { this._fetchChartGPUMetrics(); return '📊 Fetching ChartGPU metrics...'; },
+                    'quest': () => { this._checkQuestStatus(); return '🥽 Checking Quest status...'; },
+                    'jawta': () => { this._runTool('jawta'); return '📡 Launching Jawta signal intel...'; },
+                    'media': () => { this._runTool('media'); return '🎞 Launching media pipeline...'; },
+                    'lark': () => { this._runTool('lark-status'); return '🐦 Checking Lark status...'; },
+                    'tools': () => {
+                        return '🔧 Available tools:\n  kbatch   — keyboard analysis\n  signal   — Morse/binary/waveform\n  geokey   — geometric keyboard mapper\n  youtube  — transcript extraction\n  chartgpu — GPU metrics + AI analysis\n  quest    — Meta Quest device status\n  jawta    — signal intel + spectrum\n  media    — audio/video pipeline\n  lark     — Lark IANA status';
+                    },
                 };
 
                 const showOutput = (output) => {

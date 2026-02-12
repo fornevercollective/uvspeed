@@ -1,7 +1,15 @@
 {
-  "name": "uvspeed-quantum-terminal",
-  "version": "1.0.0",
-  "description": "UV-Speed Quantum Terminal - Electron Desktop App with AI Integration",
+  "name": "uvspeed-quantum",
+  "version": "2.1.0",
+  "description": "beyondBINARY quantum-prefixed code architecture — 9-symbol prefix system for any language",
+  "homepage": "https://fornevercollective.github.io/uvspeed/web/quantum-notepad.html",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fornevercollective/uvspeed.git"
+  },
+  "bugs": {
+    "url": "https://github.com/fornevercollective/uvspeed/issues"
+  },
   "main": "electron-app/main.js",
   "scripts": {
     "start": "electron .",

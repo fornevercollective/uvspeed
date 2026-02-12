@@ -1,0 +1,127 @@
+# Create GitHub Release + build artifacts on version tags
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Extract version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Validate Python syntax
+        run: python -c "import ast; ast.parse(open('quantum_bridge_server.py').read()); print('bridge server OK')"
+
+      - name: Build Python package
+        run: |
+          pip install build
+          python -m build
+          ls -la dist/
+
+      - name: Create release archive
+        run: |
+          # Create lightweight archive (no node_modules, no .git)
+          tar czf uvspeed-${{ steps.version.outputs.VERSION }}.tar.gz \
+            --exclude='node_modules' \
+            --exclude='.git' \
+            --exclude='dist' \
+            --exclude='__pycache__' \
+            --exclude='.venv' \
+            --exclude='*.egg-info' \
+            web/ quantum_bridge_server.py pyproject.toml package.json \
+            .cursor/ .github/ .windsurf/ .vscode/ \
+            icons/ src/ tools/ electron-app/ shared/ versions/ \
+            README.md LICENSE launch.sh .gitignore .gitattributes
+
+      - name: Generate release notes
+        id: notes
+        run: |
+          # Get commits since last tag
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          if [ -n "$PREV_TAG" ]; then
+            COMMITS=$(git log ${PREV_TAG}..HEAD --oneline --no-merges)
+          else
+            COMMITS=$(git log --oneline --no-merges -20)
+          fi
+          
+          cat > release_notes.md << 'NOTES'
+          ## uvspeed v${{ steps.version.outputs.VERSION }}
+          
+          **beyondBINARY quantum-prefixed code architecture**
+          
+          ### What's Included
+          - `web/quantum-notepad.html` — zero-install web notepad
+          - `quantum_bridge_server.py` — 40+ API endpoint bridge server
+          - Cross-project integration (ChartGPU, Day CLI, Quest Hub, Jawta, Lark)
+          - 6 IDE configurations (Cursor, Copilot, VS Code, Windsurf)
+          - 20-language quantum prefix support
+          
+          ### Install
+          ```bash
+          # Web (zero install)
+          open web/quantum-notepad.html
+          
+          # Bridge server
+          uv run python quantum_bridge_server.py
+          
+          # Python package
+          pip install dist/uvspeed_quantum-*.whl
+          ```
+          
+          ### Changes
+          NOTES
+          echo "$COMMITS" >> release_notes.md
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          body_path: release_notes.md
+          draft: false
+          prerelease: false
+          files: |
+            uvspeed-${{ steps.version.outputs.VERSION }}.tar.gz
+            dist/*.whl
+            dist/*.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Optional: publish to PyPI (enable when ready)
+  # pypi:
+  #   needs: release
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: actions/setup-python@v5
+  #       with: { python-version: '3.13' }
+  #     - run: pip install build twine
+  #     - run: python -m build
+  #     - run: twine upload dist/*
+  #       env:
+  #         TWINE_USERNAME: __token__
+  #         TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}

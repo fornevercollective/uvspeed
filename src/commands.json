@@ -1,0 +1,187 @@
+{
+  "commands": {
+    "uvspeed": {
+      "name": "uvspeed Quantum Tools",
+      "description": "beyondBINARY quantum bridge — prefix system, execution, AI, tools",
+      "basePath": "/Users/tref/uvspeed",
+      "commands": {
+        "uv-bridge": {
+          "command": "cd /Users/tref/uvspeed && python3 quantum_bridge_server.py",
+          "description": "Start quantum bridge server (HTTP :8085 + WS :8086)",
+          "category": "uvspeed"
+        },
+        "uv-notepad": {
+          "command": "open /Users/tref/uvspeed/web/quantum-notepad.html",
+          "description": "Open quantum notepad in browser",
+          "category": "uvspeed"
+        },
+        "uv-status": {
+          "command": "curl -s http://localhost:8085/api/status | python3 -m json.tool",
+          "description": "Check bridge server status",
+          "category": "uvspeed"
+        },
+        "uv-kbatch": {
+          "command": "POST /api/day/kbatch",
+          "description": "Keyboard analysis via quantum bridge",
+          "category": "uvspeed",
+          "api": true,
+          "bridge_endpoint": "/api/day/kbatch"
+        },
+        "uv-signal": {
+          "command": "POST /api/day/signal",
+          "description": "Jawta signal analysis (Morse/binary/waveform)",
+          "category": "uvspeed",
+          "api": true,
+          "bridge_endpoint": "/api/day/signal"
+        },
+        "uv-geokey": {
+          "command": "POST /api/day/geokey",
+          "description": "Geometric keyboard mapper (hex/star/contrails)",
+          "category": "uvspeed",
+          "api": true,
+          "bridge_endpoint": "/api/day/geokey"
+        },
+        "uv-youtube": {
+          "command": "POST /api/day/youtube",
+          "description": "YouTube transcript extraction",
+          "category": "uvspeed",
+          "api": true,
+          "bridge_endpoint": "/api/day/youtube"
+        },
+        "uv-chartgpu": {
+          "command": "GET /api/chartgpu/metrics",
+          "description": "ChartGPU system metrics + AI analysis",
+          "category": "uvspeed",
+          "api": true,
+          "bridge_endpoint": "/api/chartgpu/metrics"
+        },
+        "uv-quest": {
+          "command": "GET /api/quest/status",
+          "description": "Quest device status via Hub",
+          "category": "uvspeed",
+          "api": true,
+          "bridge_endpoint": "/api/quest/status"
+        },
+        "uv-jawta": {
+          "command": "POST /api/jawta/signal",
+          "description": "Jawta signal processing + spectrum",
+          "category": "uvspeed",
+          "api": true,
+          "bridge_endpoint": "/api/jawta/signal"
+        },
+        "uv-media": {
+          "command": "POST /api/media/process",
+          "description": "Media pipeline (audio/video/transcript/spatial)",
+          "category": "uvspeed",
+          "api": true,
+          "bridge_endpoint": "/api/media/process"
+        },
+        "uv-scan": {
+          "command": "POST /api/security/scan",
+          "description": "Security scan code via bridge",
+          "category": "uvspeed",
+          "api": true,
+          "bridge_endpoint": "/api/security/scan"
+        },
+        "uv-prefix": {
+          "command": "POST /api/prefix",
+          "description": "Apply quantum prefix to code",
+          "category": "uvspeed",
+          "api": true,
+          "bridge_endpoint": "/api/prefix"
+        }
+      }
+    },
+    "chartgpu": {
+      "name": "ChartGPU",
+      "description": "WebGPU-accelerated charts with AI analysis",
+      "basePath": "/Users/tref/day",
+      "commands": {
+        "chartgpu-server": {
+          "command": "cd /Users/tref/day && node chartgpu-server.js",
+          "description": "Start ChartGPU dashboard server (:3444)",
+          "category": "chartgpu"
+        },
+        "chartgpu-dashboard": {
+          "command": "open http://localhost:3444",
+          "description": "Open ChartGPU dashboard in browser",
+          "category": "chartgpu"
+        }
+      }
+    },
+    "quest": {
+      "name": "Meta Quest",
+      "description": "Quest VR device management and deployment",
+      "basePath": "/Users/tref/MetaQuestDev",
+      "commands": {
+        "quest-hub": {
+          "command": "cd /Users/tref/MetaQuestDev/Projects/Templates/synced-app/hub && node server.js",
+          "description": "Start Quest synced-app Hub (:3000)",
+          "category": "quest"
+        },
+        "quest-devices": {
+          "command": "adb devices -l",
+          "description": "List connected ADB devices",
+          "category": "quest"
+        },
+        "quest-screenshot": {
+          "command": "adb exec-out screencap -p > /tmp/quest-screenshot.png && open /tmp/quest-screenshot.png",
+          "description": "Take Quest screenshot",
+          "category": "quest"
+        },
+        "quest-logs": {
+          "command": "adb logcat -d -t 100",
+          "description": "Dump recent Quest logcat",
+          "category": "quest"
+        },
+        "quest-camera": {
+          "command": "bash /Users/tref/MetaQuestDev/directors-lens/cli/quest-camera stream",
+          "description": "Start quest-camera passthrough streaming",
+          "category": "quest"
+        }
+      }
+    },
+    "jawta": {
+      "name": "Jawta Signal Intel",
+      "description": "Signal processing, Morse, audio, steganography",
+      "basePath": "/Users/tref/Documents/figma/jawta+sigintel",
+      "commands": {
+        "jawta-dev": {
+          "command": "cd /Users/tref/Documents/figma/jawta+sigintel && npm run dev",
+          "description": "Start jawta dev server",
+          "category": "jawta"
+        }
+      }
+    },
+    "lark": {
+      "name": "Lark IANA",
+      "description": "Unified AI development environment",
+      "basePath": "/Users/tref/lark",
+      "commands": {
+        "lark-dev": {
+          "command": "cd /Users/tref/lark && npm run dev",
+          "description": "Start Lark dev server (:5173)",
+          "category": "lark"
+        },
+        "lark-build": {
+          "command": "cd /Users/tref/lark && npm run build",
+          "description": "Build Lark for production",
+          "category": "lark"
+        }
+      }
+    }
+  },
+  "categories": {
+    "uvspeed": { "name": "uvspeed", "icon": "⚛", "color": "#7c3aed" },
+    "chartgpu": { "name": "ChartGPU", "icon": "📊", "color": "#00ff88" },
+    "quest": { "name": "Meta Quest", "icon": "🥽", "color": "#1877f2" },
+    "jawta": { "name": "Jawta", "icon": "📡", "color": "#ff6644" },
+    "lark": { "name": "Lark", "icon": "🐦", "color": "#44ffaa" }
+  },
+  "quickCommands": {
+    "bridge": "cd /Users/tref/uvspeed && python3 quantum_bridge_server.py",
+    "chartgpu": "cd /Users/tref/day && node chartgpu-server.js",
+    "quest-hub": "cd /Users/tref/MetaQuestDev/Projects/Templates/synced-app/hub && node server.js",
+    "notepad": "open /Users/tref/uvspeed/web/quantum-notepad.html"
+  }
+}

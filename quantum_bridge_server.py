@@ -1198,6 +1198,453 @@ agent_bus.register_agent("deploy-agent", AgentRole.DEPLOY, ["docker", "uv", "npm
 agent_bus.register_agent("test-agent", AgentRole.TEST, ["pytest", "jest", "cargo-test"])
 
 
+# ╔═══════════════════════════════════════════════════════════════════════════╗
+# ║  EXTERNAL TOOL INTEGRATION HANDLERS                                      ║
+# ║  ChartGPU · Day CLI · Quest Hub · Jawta · Lark · Media Pipeline         ║
+# ╚═══════════════════════════════════════════════════════════════════════════╝
+
+# ── Config paths ─────────────────────────────────
+DAY_DIR = Path("/Users/tref/day")
+QUEST_HUB_URL = "http://localhost:3000"
+CHARTGPU_URL = "http://localhost:3444"
+COMMANDS_JSON_PATHS = [
+    Path("/Users/tref/uvspeed/src/commands.json"),
+    Path("/Users/tref/MetaQuestDev/Projects/Templates/synced-app/shared/commands.json"),
+]
+JAWTA_DIR = Path("/Users/tref/Documents/figma/jawta+sigintel")
+LARK_DIR = Path("/Users/tref/lark")
+
+
+# ── Helper: run subprocess async ─────────────────
+async def _run_subprocess(cmd, timeout=30):
+    """Run a shell command asynchronously, return stdout/stderr."""
+    try:
+        proc = await asyncio.create_subprocess_shell(
+            cmd,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=timeout)
+        return {
+            'exit_code': proc.returncode,
+            'stdout': stdout.decode(errors='replace').strip(),
+            'stderr': stderr.decode(errors='replace').strip(),
+        }
+    except asyncio.TimeoutError:
+        return {'exit_code': -1, 'stdout': '', 'stderr': f'Command timed out after {timeout}s'}
+    except Exception as e:
+        return {'exit_code': -1, 'stdout': '', 'stderr': str(e)}
+
+
+# ── Helper: HTTP proxy to external service ───────
+async def _http_proxy(base_url, method, path, data=None, timeout=10):
+    """Proxy an HTTP request to an external service."""
+    import urllib.request
+    import urllib.error
+    url = f"{base_url}{path}"
+    try:
+        body_bytes = json.dumps(data).encode() if data else None
+        req = urllib.request.Request(
+            url, data=body_bytes, method=method,
+            headers={'Content-Type': 'application/json'} if body_bytes else {},
+        )
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            return json.loads(resp.read().decode())
+    except urllib.error.URLError as e:
+        return {'error': f'Service unavailable at {base_url}: {e.reason}', 'online': False}
+    except Exception as e:
+        return {'error': str(e), 'online': False}
+
+
+# ═══════════════════════════════════════════════════
+#   CHARTGPU HANDLERS
+# ═══════════════════════════════════════════════════
+
+_chartgpu_history = []  # in-memory metrics ring buffer
+
+async def _chartgpu_status():
+    """Check if ChartGPU server is running at :3444."""
+    result = await _http_proxy(CHARTGPU_URL, 'GET', '/api/status')
+    if 'error' in result:
+        return {'online': False, 'url': CHARTGPU_URL, 'message': 'ChartGPU server not running. Start with: cd /Users/tref/day && node chartgpu-server.js'}
+    result['online'] = True
+    result['url'] = CHARTGPU_URL
+    return result
+
+async def _chartgpu_metrics():
+    """Get current system metrics with AI trend analysis."""
+    try:
+        import psutil
+        cpu = psutil.cpu_percent(interval=0.1)
+        mem = psutil.virtual_memory()
+        metrics = {
+            'cpu': cpu,
+            'memory': mem.percent,
+            'memory_used_gb': round(mem.used / (1024**3), 2),
+            'memory_total_gb': round(mem.total / (1024**3), 2),
+            'gpu': 0,  # placeholder — real GPU via ChartGPU WebSocket
+            'timestamp': datetime.now().isoformat(),
+        }
+        _chartgpu_history.append(metrics)
+        if len(_chartgpu_history) > 120:
+            _chartgpu_history.pop(0)
+        return {'metrics': metrics, 'history_size': len(_chartgpu_history)}
+    except ImportError:
+        return {'error': 'psutil not available', 'metrics': {'cpu': 0, 'memory': 0, 'gpu': 0}}
+
+async def _chartgpu_analyze(data):
+    """AI-powered trend analysis of metrics history."""
+    window = data.get('window', 10)
+    history = _chartgpu_history[-window:] if _chartgpu_history else []
+    if len(history) < 3:
+        return {'status': 'insufficient_data', 'message': f'Need at least 3 data points, have {len(history)}'}
+
+    def trend(key):
+        vals = [m.get(key, 0) for m in history]
+        n = len(vals)
+        if n < 2:
+            return 0.0
+        x_sum = sum(range(n))
+        y_sum = sum(vals)
+        xy_sum = sum(i * vals[i] for i in range(n))
+        x2_sum = sum(i * i for i in range(n))
+        denom = n * x2_sum - x_sum * x_sum
+        return (n * xy_sum - x_sum * y_sum) / denom if denom else 0.0
+
+    insights = []
+    alerts = []
+    cpu_t, mem_t = trend('cpu'), trend('memory')
+    latest = history[-1]
+    if cpu_t > 5:
+        insights.append('CPU trending upward — check active processes')
+    if latest.get('cpu', 0) > 80:
+        alerts.append({'level': 'warning', 'msg': 'High CPU usage'})
+    if mem_t > 3:
+        insights.append('Memory climbing — potential leak')
+
+    return {
+        'status': 'analyzed',
+        'trends': {'cpu': round(cpu_t, 2), 'memory': round(mem_t, 2)},
+        'insights': insights,
+        'alerts': alerts,
+        'predictions': {
+            'cpu_5min': min(100, max(0, latest.get('cpu', 0) + cpu_t * 2)),
+            'memory_5min': min(100, max(0, latest.get('memory', 0) + mem_t * 2)),
+        },
+        'data_points': len(history),
+    }
+
+async def _chartgpu_push_config(data):
+    """Push chart configuration to ChartGPU server."""
+    return await _http_proxy(CHARTGPU_URL, 'POST', '/api/chart/config', data)
+
+
+# ═══════════════════════════════════════════════════
+#   DAY TOOL HANDLERS
+# ═══════════════════════════════════════════════════
+
+async def _day_kbatch(data):
+    """Run kbatch keyboard analysis on provided text."""
+    text = data.get('text', '')
+    mode = data.get('mode', 'analyze')  # analyze | quantum | neural
+    if not text:
+        return {'error': 'No text provided'}
+
+    # Write text to temp file, run kbatch
+    import tempfile
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False) as f:
+        f.write(text)
+        tmp = f.name
+    try:
+        cmd = f"cd {DAY_DIR} && python3 train/keyboard/kbatch.py {mode} {tmp} 2>&1"
+        result = await _run_subprocess(cmd, timeout=30)
+        return {
+            'tool': 'kbatch',
+            'mode': mode,
+            'input_length': len(text),
+            'output': result['stdout'] or result['stderr'],
+            'exit_code': result['exit_code'],
+        }
+    finally:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+
+async def _day_signal(data):
+    """Run Jawta signal analysis (Morse/binary/waveform)."""
+    text = data.get('text', '')
+    if not text:
+        return {'error': 'No text provided'}
+
+    # Use JawtaSignalUtils from day_cli.py inline
+    morse_map = {
+        'A': '.-', 'B': '-...', 'C': '-.-.', 'D': '-..', 'E': '.', 'F': '..-.',
+        'G': '--.', 'H': '....', 'I': '..', 'J': '.---', 'K': '-.-', 'L': '.-..',
+        'M': '--', 'N': '-.', 'O': '---', 'P': '.--.', 'Q': '--.-', 'R': '.-.',
+        'S': '...', 'T': '-', 'U': '..-', 'V': '...-', 'W': '.--', 'X': '-..-',
+        'Y': '-.--', 'Z': '--..', '0': '-----', '1': '.----', '2': '..---',
+        '3': '...--', '4': '....-', '5': '.....', '6': '-....', '7': '--...',
+        '8': '---..', '9': '----.', ' ': '/',
+    }
+    morse = ' '.join(morse_map.get(c.upper(), '?') for c in text)
+    binary = ' '.join(format(ord(c), '08b') for c in text)
+    freq_base = 440
+    waveform = [{'char': c, 'freq': freq_base + (ord(c) % 64) * 8, 'morse': morse_map.get(c.upper(), '?')} for c in text[:100]]
+
+    return {
+        'tool': 'signal',
+        'input': text[:200],
+        'morse': morse,
+        'binary': binary,
+        'waveform': waveform,
+        'char_count': len(text),
+    }
+
+async def _day_geokey(data):
+    """Run geometric keyboard mapping."""
+    text = data.get('text', '')
+    layout = data.get('layout', 'hex')  # hex | star | contrails
+    cmd = f"cd {DAY_DIR} && python3 geometric_keyboard_mapper.py --layout {layout} --text '{text[:200]}' 2>&1"
+    result = await _run_subprocess(cmd, timeout=15)
+    if result['exit_code'] != 0:
+        # Fallback: generate simple hex grid mapping inline
+        hex_grid = {}
+        for i, c in enumerate(set(text.upper())):
+            row, col = divmod(i, 6)
+            hex_grid[c] = {'row': row, 'col': col, 'hex_x': col * 1.5, 'hex_y': row * 1.732}
+        return {'tool': 'geokey', 'layout': layout, 'mapping': hex_grid, 'fallback': True}
+    return {'tool': 'geokey', 'layout': layout, 'output': result['stdout'], 'exit_code': result['exit_code']}
+
+async def _day_youtube(data):
+    """Fetch YouTube transcript."""
+    url = data.get('url', '')
+    if not url:
+        return {'error': 'No URL provided'}
+    cmd = f"cd {DAY_DIR} && python3 youtube_transcript.py '{url}' 2>&1"
+    result = await _run_subprocess(cmd, timeout=60)
+    return {
+        'tool': 'youtube_transcript',
+        'url': url,
+        'transcript': result['stdout'],
+        'exit_code': result['exit_code'],
+        'error': result['stderr'] if result['exit_code'] != 0 else None,
+    }
+
+
+# ═══════════════════════════════════════════════════
+#   TOOLS REGISTRY
+# ═══════════════════════════════════════════════════
+
+def _load_commands_json():
+    """Load unified commands registry from available JSON files."""
+    merged = {'commands': {}, 'categories': {}, 'quickCommands': {}}
+    for p in COMMANDS_JSON_PATHS:
+        if p.exists():
+            try:
+                with open(p) as f:
+                    data = json.load(f)
+                merged['commands'].update(data.get('commands', {}))
+                merged['categories'].update(data.get('categories', {}))
+                merged['quickCommands'].update(data.get('quickCommands', {}))
+            except Exception:
+                pass
+    return merged
+
+def _tools_list():
+    """Return all registered tools grouped by category."""
+    registry = _load_commands_json()
+    # Add built-in uvspeed tools
+    registry['commands']['uvspeed'] = {
+        'name': 'uvspeed Quantum Tools',
+        'description': 'Built-in quantum bridge tools',
+        'basePath': '/Users/tref/uvspeed',
+        'commands': {
+            'uv-bridge': {'command': 'cd /Users/tref/uvspeed && python3 quantum_bridge_server.py', 'description': 'Start quantum bridge server', 'category': 'uvspeed'},
+            'uv-kbatch': {'command': 'POST /api/day/kbatch', 'description': 'Keyboard analysis via bridge', 'category': 'uvspeed', 'api': True},
+            'uv-signal': {'command': 'POST /api/day/signal', 'description': 'Signal analysis via bridge', 'category': 'uvspeed', 'api': True},
+            'uv-youtube': {'command': 'POST /api/day/youtube', 'description': 'YouTube transcript via bridge', 'category': 'uvspeed', 'api': True},
+            'uv-chartgpu': {'command': 'POST /api/chartgpu/metrics', 'description': 'ChartGPU metrics via bridge', 'category': 'uvspeed', 'api': True},
+            'uv-quest': {'command': 'GET /api/quest/status', 'description': 'Quest device status via bridge', 'category': 'uvspeed', 'api': True},
+        },
+    }
+    registry['categories']['uvspeed'] = {'name': 'uvspeed', 'icon': '⚛', 'color': '#7c3aed'}
+    return registry
+
+async def _tools_exec(data):
+    """Execute a registered tool command by ID."""
+    command_id = data.get('id', '')
+    args = data.get('args', '')
+    registry = _load_commands_json()
+    # Search all groups for the command
+    for group in registry['commands'].values():
+        cmds = group.get('commands', {})
+        if command_id in cmds:
+            cmd_def = cmds[command_id]
+            if cmd_def.get('api'):
+                return {'error': 'API-only command — call the endpoint directly', 'endpoint': cmd_def['command']}
+            cmd = cmd_def['command']
+            if args:
+                cmd += f' {args}'
+            result = await _run_subprocess(cmd, timeout=60)
+            return {'tool': command_id, 'output': result['stdout'], 'stderr': result['stderr'], 'exit_code': result['exit_code']}
+    return {'error': f'Command not found: {command_id}'}
+
+
+# ═══════════════════════════════════════════════════
+#   QUEST DEVICE HANDLERS
+# ═══════════════════════════════════════════════════
+
+async def _quest_proxy(method, path, data=None):
+    """Proxy request to Quest synced-app Hub at :3000."""
+    return await _http_proxy(QUEST_HUB_URL, method, path, data, timeout=15)
+
+async def _quest_status():
+    """Check Quest Hub connectivity and device status."""
+    hub = await _http_proxy(QUEST_HUB_URL, 'GET', '/api/status')
+    hub_online = 'error' not in hub
+
+    # Also check ADB directly
+    adb_result = await _run_subprocess('adb devices 2>&1', timeout=5)
+    devices = []
+    if adb_result['exit_code'] == 0:
+        for line in adb_result['stdout'].split('\n')[1:]:
+            parts = line.strip().split('\t')
+            if len(parts) == 2:
+                devices.append({'serial': parts[0], 'state': parts[1]})
+
+    return {
+        'hub_online': hub_online,
+        'hub_url': QUEST_HUB_URL,
+        'hub_response': hub if hub_online else None,
+        'adb_devices': devices,
+        'quest_connected': any(d['state'] == 'device' for d in devices),
+    }
+
+
+# ═══════════════════════════════════════════════════
+#   JAWTA / LARK HANDLERS
+# ═══════════════════════════════════════════════════
+
+async def _jawta_signal(data):
+    """Run jawta signal processing — Morse, frequency analysis."""
+    text = data.get('text', '')
+    mode = data.get('mode', 'morse')  # morse | binary | steganography
+    if not text:
+        return {'error': 'No text provided'}
+
+    # Re-use our built-in signal processor (same as _day_signal) plus extras
+    base = await _day_signal(data)
+    # Add jawta-specific fields
+    base['tool'] = 'jawta'
+    base['mode'] = mode
+
+    # Frequency spectrum (simplified)
+    spectrum = []
+    for i, c in enumerate(text[:64]):
+        freq = 200 + (ord(c) % 128) * 6
+        amplitude = 0.5 + (ord(c) % 10) / 20
+        spectrum.append({'index': i, 'freq': freq, 'amplitude': round(amplitude, 3)})
+    base['spectrum'] = spectrum
+    return base
+
+async def _jawta_audio(data):
+    """Generate audio waveform data from text."""
+    text = data.get('text', '')
+    sample_rate = data.get('sample_rate', 8000)
+    if not text:
+        return {'error': 'No text provided'}
+
+    import math
+    samples = []
+    t = 0
+    for c in text[:100]:
+        freq = 300 + (ord(c) % 100) * 5
+        for i in range(int(sample_rate * 0.05)):  # 50ms per char
+            samples.append(round(math.sin(2 * math.pi * freq * t / sample_rate) * 0.8, 4))
+            t += 1
+
+    return {
+        'tool': 'jawta_audio',
+        'sample_rate': sample_rate,
+        'duration_ms': len(text[:100]) * 50,
+        'samples_count': len(samples),
+        'samples_preview': samples[:200],  # first 200 samples for visualization
+        'text_length': len(text),
+    }
+
+def _lark_status():
+    """Check Lark IANA availability."""
+    lark_exists = LARK_DIR.exists()
+    pkg = None
+    if lark_exists:
+        pkg_path = LARK_DIR / 'package.json'
+        if pkg_path.exists():
+            try:
+                with open(pkg_path) as f:
+                    pkg = json.load(f)
+            except Exception:
+                pass
+    return {
+        'available': lark_exists,
+        'path': str(LARK_DIR),
+        'name': pkg.get('name', 'lark') if pkg else 'lark',
+        'version': pkg.get('version', 'unknown') if pkg else 'unknown',
+        'components': ['editor', 'terminal', 'ai-chat', 'file-manager', 'waveform'] if lark_exists else [],
+        'embed_url': 'http://localhost:5173' if lark_exists else None,
+    }
+
+
+# ═══════════════════════════════════════════════════
+#   MEDIA PIPELINE HANDLER
+# ═══════════════════════════════════════════════════
+
+async def _media_process(data):
+    """Orchestrate media processing pipeline."""
+    media_type = data.get('type', 'auto')  # audio | video | transcript | spatial
+    source = data.get('source', '')
+    options = data.get('options', {})
+
+    if not source:
+        return {'error': 'No source provided'}
+
+    results = {'pipeline': media_type, 'source': source, 'stages': []}
+
+    if media_type in ('transcript', 'auto') and ('youtube.com' in source or 'youtu.be' in source):
+        yt = await _day_youtube({'url': source})
+        results['stages'].append({'name': 'youtube_transcript', 'result': yt})
+        if media_type == 'auto':
+            media_type = 'transcript'
+
+    if media_type in ('audio', 'spatial', 'auto'):
+        # Check for spatial audio tools
+        sa_path = Path("/Users/tref/MetaQuestDev/directors-lens/research/audio-spatial")
+        results['stages'].append({
+            'name': 'spatial_audio',
+            'available': sa_path.exists(),
+            'tools': ['beamforming', 'DOA', 'HRTF', 'classification'] if sa_path.exists() else [],
+            'message': 'Spatial audio processing available via Director\'s Lens' if sa_path.exists() else 'Install Director\'s Lens for spatial audio',
+        })
+
+    if media_type in ('video', 'auto'):
+        # Check for video segmentation tools
+        sam2 = Path("/Users/tref/MetaQuestDev/sam2-main")
+        results['stages'].append({
+            'name': 'video_segmentation',
+            'available': sam2.exists(),
+            'tools': ['SAM2', 'SAM3', 'ActionMesh', 'SlowFast'] if sam2.exists() else [],
+            'message': 'Video segmentation available via MetaQuestDev' if sam2.exists() else 'Install SAM2 for video processing',
+        })
+
+    if media_type in ('signal', 'auto'):
+        sig = await _jawta_signal({'text': source[:200]})
+        results['stages'].append({'name': 'signal_analysis', 'result': sig})
+
+    results['type'] = media_type
+    results['stage_count'] = len(results['stages'])
+    return results
+
+
 async def handle_http(reader, writer):
     """Minimal async HTTP server — no dependencies required."""
     try:
@@ -1284,7 +1731,7 @@ async def route_request(method: str, path: str, body: bytes, headers: dict) -> d
     if path == '/api/status':
         return {
             'status': 'running',
-            'version': '2.0.0',
+            'version': '2.1.0',
             'quantum_position': quantum_position,
             'cells': len(cells),
             'executions': exec_engine.execution_count,
@@ -1294,6 +1741,14 @@ async def route_request(method: str, path: str, body: bytes, headers: dict) -> d
             'numpy': NUMPY_AVAILABLE,
             'languages': prefix_engine.supported_languages(),
             'sessions': len(session_store.list_sessions()),
+            'integrations': {
+                'chartgpu': {'url': CHARTGPU_URL, 'port': 3444},
+                'day_cli': {'path': str(DAY_DIR), 'tools': ['kbatch', 'signal', 'geokey', 'youtube']},
+                'quest_hub': {'url': QUEST_HUB_URL, 'port': 3000},
+                'jawta': {'path': str(JAWTA_DIR)},
+                'lark': {'path': str(LARK_DIR)},
+                'media': {'pipelines': ['transcript', 'audio', 'video', 'spatial', 'signal']},
+            },
         }
 
     # ── EXECUTE CODE ────────────────────────────────
@@ -1453,6 +1908,90 @@ async def route_request(method: str, path: str, body: bytes, headers: dict) -> d
         filename = data.get('filename', '')
         return git_hook_engine.pr_diff_report(old, new, language, filename)
 
+    # ╔═══════════════════════════════════════════════════════════════════════╗
+    # ║  CHARTGPU  (/api/chartgpu/*)                                        ║
+    # ╚═══════════════════════════════════════════════════════════════════════╝
+
+    elif path == '/api/chartgpu/status' and method == 'GET':
+        return await _chartgpu_status()
+
+    elif path == '/api/chartgpu/metrics' and method == 'GET':
+        return await _chartgpu_metrics()
+
+    elif path == '/api/chartgpu/analyze' and method == 'POST':
+        return await _chartgpu_analyze(data)
+
+    elif path == '/api/chartgpu/config' and method == 'POST':
+        return await _chartgpu_push_config(data)
+
+    # ╔═══════════════════════════════════════════════════════════════════════╗
+    # ║  DAY TOOLS  (/api/day/*)                                            ║
+    # ╚═══════════════════════════════════════════════════════════════════════╝
+
+    elif path == '/api/day/kbatch' and method == 'POST':
+        return await _day_kbatch(data)
+
+    elif path == '/api/day/signal' and method == 'POST':
+        return await _day_signal(data)
+
+    elif path == '/api/day/geokey' and method == 'POST':
+        return await _day_geokey(data)
+
+    elif path == '/api/day/youtube' and method == 'POST':
+        return await _day_youtube(data)
+
+    # ╔═══════════════════════════════════════════════════════════════════════╗
+    # ║  TOOLS REGISTRY  (/api/tools/*)                                     ║
+    # ╚═══════════════════════════════════════════════════════════════════════╝
+
+    elif path == '/api/tools/list' and method == 'GET':
+        return _tools_list()
+
+    elif path == '/api/tools/exec' and method == 'POST':
+        return await _tools_exec(data)
+
+    # ╔═══════════════════════════════════════════════════════════════════════╗
+    # ║  QUEST DEVICE  (/api/quest/*)                                       ║
+    # ╚═══════════════════════════════════════════════════════════════════════╝
+
+    elif path == '/api/quest/device' and method == 'GET':
+        return await _quest_proxy('GET', '/api/device/info')
+
+    elif path == '/api/quest/deploy' and method == 'POST':
+        return await _quest_proxy('POST', '/api/apk/install', data)
+
+    elif path == '/api/quest/screenshot' and method == 'GET':
+        return await _quest_proxy('GET', '/api/screenshot')
+
+    elif path == '/api/quest/logs' and method == 'GET':
+        return await _quest_proxy('GET', '/api/logs')
+
+    elif path == '/api/quest/status' and method == 'GET':
+        return await _quest_status()
+
+    # ╔═══════════════════════════════════════════════════════════════════════╗
+    # ║  JAWTA / LARK  (/api/jawta/*, /api/lark/*)                         ║
+    # ╚═══════════════════════════════════════════════════════════════════════╝
+
+    elif path == '/api/jawta/signal' and method == 'POST':
+        return await _jawta_signal(data)
+
+    elif path == '/api/jawta/audio' and method == 'POST':
+        return await _jawta_audio(data)
+
+    elif path == '/api/lark/status' and method == 'GET':
+        return _lark_status()
+
+    # ╔═══════════════════════════════════════════════════════════════════════╗
+    # ║  MEDIA PIPELINE  (/api/media/*)                                     ║
+    # ╚═══════════════════════════════════════════════════════════════════════╝
+
+    elif path == '/api/media/process' and method == 'POST':
+        return await _media_process(data)
+
+    elif path == '/api/media/transcript' and method == 'POST':
+        return await _day_youtube(data)  # reuse youtube transcript
+
     # ── 404 ─────────────────────────────────────────
     else:
         return {'error': f'Not found: {method} {path}', 'endpoints': [
@@ -1481,6 +2020,26 @@ async def route_request(method: str, path: str, body: bytes, headers: dict) -> d
             'GET  /api/git/hook',
             'POST /api/git/hook/install',
             'POST /api/git/diff-report',
+            'GET  /api/chartgpu/status',
+            'GET  /api/chartgpu/metrics',
+            'POST /api/chartgpu/analyze',
+            'POST /api/chartgpu/config',
+            'POST /api/day/kbatch',
+            'POST /api/day/signal',
+            'POST /api/day/geokey',
+            'POST /api/day/youtube',
+            'GET  /api/tools/list',
+            'POST /api/tools/exec',
+            'GET  /api/quest/device',
+            'POST /api/quest/deploy',
+            'GET  /api/quest/screenshot',
+            'GET  /api/quest/logs',
+            'GET  /api/quest/status',
+            'POST /api/jawta/signal',
+            'POST /api/jawta/audio',
+            'GET  /api/lark/status',
+            'POST /api/media/process',
+            'POST /api/media/transcript',
         ]}
 
 
@@ -1593,19 +2152,27 @@ async def handle_ws_message(msg: dict) -> Optional[dict]:
 
 async def main():
     banner = f"""
-╔══════════════════════════════════════════════════════════╗
-║  UV-Speed Quantum Execution Bridge                       ║
-║  HTTP API:    http://localhost:{HTTP_PORT}                     ║
-║  WebSocket:   ws://localhost:{WS_PORT}                        ║
-╠══════════════════════════════════════════════════════════╣
-║  Engines:                                                ║
-║    Prefix:  18 languages · 9-symbol system               ║
-║    Exec:    Python + shell + uv run                      ║
-║    AI:      {'tinygrad ·' if TINYGRAD_AVAILABLE else ''} {'numpy ·' if NUMPY_AVAILABLE else ''} Ollama · OpenAI · Anthropic  ║
-║    Diff:    Prefix-aware quantum coordinate diffs        ║
-║    Agents:  {len(agent_bus.agents)} registered (code, review, prefix, deploy, test)   ║
-║    Storage: JSON sessions in .quantum_sessions/          ║
-╚══════════════════════════════════════════════════════════╝
+╔══════════════════════════════════════════════════════════════╗
+║  UV-Speed Quantum Execution Bridge v2.1                      ║
+║  HTTP API:    http://localhost:{HTTP_PORT}                         ║
+║  WebSocket:   ws://localhost:{WS_PORT}                            ║
+╠══════════════════════════════════════════════════════════════╣
+║  Engines:                                                    ║
+║    Prefix:   18 languages · 9-symbol system                  ║
+║    Exec:     Python + shell + uv run                         ║
+║    AI:       {'tinygrad ·' if TINYGRAD_AVAILABLE else ''} {'numpy ·' if NUMPY_AVAILABLE else ''} Ollama · OpenAI · Anthropic     ║
+║    Diff:     Prefix-aware quantum coordinate diffs           ║
+║    Agents:   {len(agent_bus.agents)} registered                                   ║
+║    Storage:  JSON sessions in .quantum_sessions/             ║
+╠══════════════════════════════════════════════════════════════╣
+║  Cross-Project Integration:                                  ║
+║    ChartGPU: proxy to :3444 · AI metrics · trend analysis    ║
+║    Day CLI:  kbatch · signal · geokey · youtube transcript   ║
+║    Quest:    proxy to Hub :3000 · ADB · deploy · logs        ║
+║    Jawta:    signal intel · Morse · spectrum · audio          ║
+║    Lark:     status · embed · editor sync                    ║
+║    Media:    pipeline orchestration · spatial · video seg     ║
+╚══════════════════════════════════════════════════════════════╝
 """
     print(banner)
 

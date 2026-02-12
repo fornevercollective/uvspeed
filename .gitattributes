@@ -1,0 +1,42 @@
+# beyondBINARY quantum-prefixed | uvspeed | {+1, 1, -1, +0, 0, -0, +n, n, -n}
+# GitHub Linguist overrides — controls repo language stats
+
+# Vendored / generated — exclude from language stats
+node_modules/**    linguist-vendored
+package-lock.json  linguist-generated
+uv.lock            linguist-generated
+dist/**            linguist-generated
+*.egg-info/**      linguist-generated
+
+# Electron copies — mark as vendored so they don't double-count
+electron-app/src/index_broken.html  linguist-vendored
+
+# src/ copies of root files — mark vendored to avoid double-counting
+src/p0-core/quantum_bridge_server.py  linguist-vendored
+src/p0-core/quantum_notepad.py        linguist-vendored
+src/n-entry/launch-quantum-notepad.sh linguist-vendored
+
+# Classify .mdc files as Markdown for stats
+*.mdc linguist-language=Markdown
+
+# Classify quantum notepad HTML correctly
+web/quantum-notepad.html linguist-detectable
+
+# Binary files
+*.png binary
+*.jpg binary
+*.ico binary
+*.icns binary
+
+# Normalize line endings
+*.py    text eol=lf
+*.js    text eol=lf
+*.ts    text eol=lf
+*.html  text eol=lf
+*.css   text eol=lf
+*.sh    text eol=lf
+*.md    text eol=lf
+*.json  text eol=lf
+*.toml  text eol=lf
+*.yaml  text eol=lf
+*.yml   text eol=lf
