@@ -2241,6 +2241,7 @@
                 <button class="btn btn--xs quick-cmd" data-cmd="uv sync">🔄 Sync</button>
                 <button class="btn btn--xs quick-cmd" data-cmd="q tinygrad">🔍 Search</button>
                 <span style="opacity:0.3;margin:0 2px;">│</span>
+                <button class="btn btn--xs" id="f-freya-units" title="Add FreyaUnits precision converter cell — Planck to Parsec" style="background:#7c3aed22;border-color:#7c3aed55;color:#a78bfa;">🔬 FreyaUnits</button>
                 <button class="btn btn--xs" id="f-play-numsy" title="Play brotherNumsy &amp; Freya — beyondBINARY runner with FreyaUnits conversion engine" style="background:#e6b42222;border-color:#e6b42255;color:#e6b422;">🎮 brotherNumsy &amp; Freya</button>
                 <button class="btn btn--xs quick-cmd" data-cmd="help">❓ Help</button>
                 <button class="btn btn--xs quick-cmd" data-cmd="pos">📍 Position</button>
@@ -4081,6 +4082,59 @@
                     </div>
                 </div>
 
+                <!-- ====== FREYA UNITS — PRECISION CONVERTER ====== -->
+                <div class="inspect-section">
+                    <h3>🔬 FreyaUnits &mdash; Precision Unit Converter</h3>
+                    <p style="margin-bottom:var(--cursor-space-sm);">
+                        <strong style="color:#a78bfa;">FreyaUnits</strong> is a full-stack precision conversion system spanning <strong style="color:#06b6d4;">Planck length</strong> (1.616&times;10&sup;⁻³⁵ m) to <strong style="color:#84cc16;">Parsec</strong> (3.086&times;10&sup;¹⁶ m).
+                        Integrated as both a <em>notebook cell tool</em> and a <em>game companion</em> in the brotherNumsy runner.
+                        <span style="color:var(--cursor-text-muted);font-style:italic;">"A father's love, measured in infinite precision."</span>
+                    </p>
+
+                    <div style="display:flex;gap:var(--cursor-space-sm);align-items:center;margin-bottom:var(--cursor-space-md);flex-wrap:wrap;">
+                        <span class="tag tag--green" style="font-size:0.6875rem;padding:3px 10px;">✅ CELL TOOL LIVE</span>
+                        <span class="tag tag--green" style="font-size:0.6875rem;padding:3px 10px;">✅ GAME COMPANION LIVE</span>
+                        <span class="tag tag--purple" style="font-size:0.6875rem;padding:3px 10px;">27 units &middot; 6 scale categories</span>
+                    </div>
+
+                    <div style="background:var(--cursor-bg);border:1px solid #7c3aed44;border-radius:var(--cursor-radius-md);padding:var(--cursor-space-md);margin-bottom:var(--cursor-space-md);font-size:0.6875rem;line-height:1.8;">
+                        <div style="color:#a78bfa;font-weight:700;margin-bottom:6px;">Unit Scale Coverage (27 units)</div>
+                        <div style="display:grid;grid-template-columns:90px 140px 1fr;gap:2px 12px;">
+                            <span style="color:#8b5cf6;">&#x2113;p</span> <span style="color:var(--cursor-text-muted);">Planck Length</span> <span style="color:var(--cursor-text-muted);">1.616&times;10⁻³⁵ m</span>
+                            <span style="color:#6366f1;">fm</span>  <span style="color:var(--cursor-text-muted);">Femtometer</span>   <span style="color:var(--cursor-text-muted);">10⁻¹⁵ m (nuclear)</span>
+                            <span style="color:#3b82f6;">&Aring;</span>   <span style="color:var(--cursor-text-muted);">Angstrom</span>     <span style="color:var(--cursor-text-muted);">10⁻¹⁰ m (atomic bonds)</span>
+                            <span style="color:#06b6d4;">nm</span>  <span style="color:var(--cursor-text-muted);">Nanometer</span>    <span style="color:var(--cursor-text-muted);">10⁻⁹ m (DNA, light)</span>
+                            <span style="color:#eab308;">&mu;m</span>  <span style="color:var(--cursor-text-muted);">Micrometer</span>   <span style="color:var(--cursor-text-muted);">10⁻⁶ m (cells, bacteria)</span>
+                            <span style="color:#ef4444;">mm, cm, in, ft, m</span> <span style="color:var(--cursor-text-muted);">Standard</span> <span style="color:var(--cursor-text-muted);">Human scale</span>
+                            <span style="color:#f97316;">&lambda;RF, &lambda;VHF, &lambda;AM</span> <span style="color:var(--cursor-text-muted);">EM Waves</span> <span style="color:var(--cursor-text-muted);">Radio to ELF spectrum</span>
+                            <span style="color:#dc2626;">km, mi, NM</span> <span style="color:var(--cursor-text-muted);">Large Scale</span> <span style="color:var(--cursor-text-muted);">Geographic distances</span>
+                            <span style="color:#84cc16;">AU, ly, pc</span> <span style="color:var(--cursor-text-muted);">Astronomical</span> <span style="color:var(--cursor-text-muted);">Solar &rarr; Parsec</span>
+                        </div>
+                    </div>
+
+                    <div style="background:var(--cursor-bg);border:1px solid var(--cursor-border);border-radius:var(--cursor-radius-md);padding:var(--cursor-space-md);margin-bottom:var(--cursor-space-md);font-size:0.6875rem;">
+                        <div style="color:#06b6d4;font-weight:700;margin-bottom:6px;">How to Use</div>
+                        <ul>
+                            <li>Click <strong style="color:#a78bfa;">🔬 FreyaUnits</strong> in the footer to add a converter cell</li>
+                            <li>Select units, enter a value &mdash; see all 27 conversions + quantum properties instantly</li>
+                            <li>Logarithmic scale visualization shows your position across the full range</li>
+                            <li>Quantum properties: frequency, energy (J + eV), momentum, period, light travel time</li>
+                            <li>Slow light mode: travel time at 17 m/s (BEC slow light)</li>
+                        </ul>
+                    </div>
+
+                    <div style="background:var(--cursor-bg);border:1px solid var(--cursor-border);border-radius:var(--cursor-radius-md);padding:var(--cursor-space-md);font-size:0.6875rem;">
+                        <div style="color:#e6b422;font-weight:700;margin-bottom:6px;">Game Integration: brotherNumsy &amp; Freya</div>
+                        <ul>
+                            <li><strong style="color:#c084fc;">Freya</strong> flies alongside the player as a 12x12 pixel companion</li>
+                            <li>Live HUD converts run distance through all 27 units in real-time</li>
+                            <li><strong style="color:#c084fc;">FreyaUnit tokens</strong> charge the conversion beam &mdash; collect 3 to fire</li>
+                            <li>Scale milestone facts appear as you pass real-world distances</li>
+                            <li><code>window.FreyaUnits.convert(1, 'mi', 'km')</code> &mdash; API available in console</li>
+                        </ul>
+                    </div>
+                </div>
+
                 <!-- ====== UPGRADE ENHANCEMENT PLANS ====== -->
                 <div class="inspect-section">
                     <h3>uvspeed &mdash; Upgrade Enhancement Roadmap</h3>
@@ -4604,6 +4658,16 @@
                     this._installGitHook();
                 });
 
+                // FreyaUnits converter cell button
+                document.getElementById('f-freya-units').addEventListener('click', () => {
+                    const id = this.addCell('freya', '# 🔬 FreyaUnits — Precision Converter\n# Planck Length to Parsec — 27 units');
+                    this.executeCell(id);
+                    requestAnimationFrame(() => {
+                        const el = document.getElementById(id);
+                        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    });
+                });
+
                 // brotherNumsy game button — opens in new tab
                 document.getElementById('f-play-numsy').addEventListener('click', () => {
                     window.open('brothernumsy.html', '_blank');
@@ -4863,7 +4927,7 @@ print("Position:", quantum_position)`);
                 cellElement.className = 'quantum-cell';
                 cellElement.id = cell.id;
 
-                const typeEmoji = { code: '⚡', markdown: '📝', visualization: '📊', quantum: '🌌', mermaid: '🧜' };
+                const typeEmoji = { code: '⚡', markdown: '📝', visualization: '📊', quantum: '🌌', mermaid: '🧜', freya: '🔬' };
 
                 cellElement.innerHTML = `
                     <div class="cell-header">
@@ -4991,6 +5055,9 @@ print("Position:", quantum_position)`);
                 } else if (cell.type === 'visualization') {
                     // Run inline visualization — return HTML with live canvas
                     return { type: 'html', data: this._runVisualizationCell(cell) };
+                } else if (cell.type === 'freya') {
+                    // Run FreyaUnits interactive converter cell
+                    return { type: 'html', data: this._runFreyaCell(cell) };
                 } else {
                     return {
                         type: 'text',
@@ -5431,6 +5498,234 @@ print("Position:", quantum_position)`);
 
                 log.appendChild(div);
                 log.scrollTop = log.scrollHeight;
+            }
+
+            /* ══════════════════════════════════════════════════════
+               FREYA UNITS — PRECISION CONVERTER CELL
+               ══════════════════════════════════════════════════════ */
+
+            _runFreyaCell(cell) {
+                const uid = `freya_${cell.id}_${Date.now()}`;
+                return `
+<div id="${uid}" style="padding:16px;background:var(--cursor-bg);border-radius:var(--cursor-radius-md);font-family:var(--cursor-font-mono);font-size:0.8125rem;">
+    <div style="text-align:center;margin-bottom:14px;">
+        <span style="font-size:1.25rem;font-weight:700;background:linear-gradient(135deg,#7c3aed,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">🔬 FreyaUnits — Precision Converter</span>
+        <div style="color:var(--cursor-text-muted);font-size:0.6875rem;margin-top:4px;">Planck Length (1.616×10⁻³⁵ m) → Parsec (3.086×10¹⁶ m) — 27 units</div>
+    </div>
+
+    <!-- Converter UI -->
+    <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:end;margin-bottom:14px;">
+        <div>
+            <label style="font-size:0.625rem;color:#a78bfa;display:block;margin-bottom:3px;">FROM</label>
+            <input type="number" id="${uid}_val" value="1" step="any" style="width:100%;padding:8px;background:var(--cursor-bg-secondary);border:1px solid var(--cursor-border);border-radius:var(--cursor-radius-sm);color:var(--cursor-text);font-family:inherit;font-size:0.875rem;">
+            <select id="${uid}_from" style="width:100%;padding:6px;margin-top:4px;background:var(--cursor-bg-secondary);border:1px solid var(--cursor-border);border-radius:var(--cursor-radius-sm);color:var(--cursor-text);font-family:inherit;font-size:0.75rem;"></select>
+        </div>
+        <div style="text-align:center;padding-bottom:14px;">
+            <button id="${uid}_swap" style="background:none;border:1px solid var(--cursor-border);border-radius:50%;width:32px;height:32px;cursor:pointer;color:#06b6d4;font-size:1rem;line-height:32px;">⇄</button>
+        </div>
+        <div>
+            <label style="font-size:0.625rem;color:#06b6d4;display:block;margin-bottom:3px;">TO</label>
+            <div id="${uid}_result" style="padding:8px;background:var(--cursor-bg-secondary);border:1px solid #7c3aed44;border-radius:var(--cursor-radius-sm);font-size:0.875rem;color:#c084fc;font-weight:700;min-height:36px;display:flex;align-items:center;">—</div>
+            <select id="${uid}_to" style="width:100%;padding:6px;margin-top:4px;background:var(--cursor-bg-secondary);border:1px solid var(--cursor-border);border-radius:var(--cursor-radius-sm);color:var(--cursor-text);font-family:inherit;font-size:0.75rem;"></select>
+        </div>
+    </div>
+
+    <!-- Quick convert buttons -->
+    <div id="${uid}_quick" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:14px;justify-content:center;"></div>
+
+    <!-- Scale visualization -->
+    <div style="background:var(--cursor-bg-secondary);border-radius:var(--cursor-radius-md);padding:12px;margin-bottom:12px;">
+        <div style="font-weight:700;margin-bottom:8px;color:#a78bfa;font-size:0.75rem;">📏 Logarithmic Scale Position</div>
+        <canvas id="${uid}_scale" width="600" height="60" style="width:100%;border-radius:4px;"></canvas>
+    </div>
+
+    <!-- Conversion table -->
+    <div style="background:var(--cursor-bg-secondary);border-radius:var(--cursor-radius-md);padding:12px;">
+        <div style="font-weight:700;margin-bottom:8px;color:#06b6d4;font-size:0.75rem;">📋 Full Conversion Table</div>
+        <div id="${uid}_table" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:4px;font-size:0.6875rem;max-height:240px;overflow-y:auto;"></div>
+    </div>
+
+    <!-- Quantum properties -->
+    <div style="background:var(--cursor-bg-secondary);border-radius:var(--cursor-radius-md);padding:12px;margin-top:12px;">
+        <div style="font-weight:700;margin-bottom:8px;color:#f0883e;font-size:0.75rem;">⚛ Quantum & Wave Properties</div>
+        <div id="${uid}_quantum" style="font-size:0.6875rem;color:var(--cursor-text-muted);"></div>
+    </div>
+
+    <div style="text-align:center;margin-top:10px;font-size:0.5625rem;color:var(--cursor-text-muted);">
+        FreyaUnits — "A father's love, measured in infinite precision" — <span style="color:#a78bfa;">..luvuFREYAbot</span>
+    </div>
+</div>
+<` + `script>
+(function(){
+    const id = '${uid}';
+    const c = 299792458; // speed of light m/s
+    const h = 6.62607015e-34; // Planck constant J·s
+    const units = [
+        {sym:'ℓp',  name:'Planck Length',    m:1.616255e-35, cat:'quantum'},
+        {sym:'am',  name:'Attometer',        m:1e-18,        cat:'quantum'},
+        {sym:'fm',  name:'Femtometer',       m:1e-15,        cat:'nuclear'},
+        {sym:'pm',  name:'Picometer',        m:1e-12,        cat:'atomic'},
+        {sym:'Å',   name:'Angstrom',         m:1e-10,        cat:'atomic'},
+        {sym:'nm',  name:'Nanometer',        m:1e-9,         cat:'molecular'},
+        {sym:'µin', name:'Microinch',        m:2.54e-8,      cat:'precision'},
+        {sym:'µm',  name:'Micrometer',       m:1e-6,         cat:'micro'},
+        {sym:'λIR', name:'IR Wavelength',    m:10e-6,        cat:'wave'},
+        {sym:'mil', name:'Mil (thou)',       m:2.54e-5,      cat:'precision'},
+        {sym:'mm',  name:'Millimeter',       m:1e-3,         cat:'standard'},
+        {sym:'cm',  name:'Centimeter',       m:1e-2,         cat:'standard'},
+        {sym:'in',  name:'Inch',             m:0.0254,       cat:'standard'},
+        {sym:'ft',  name:'Foot',             m:0.3048,       cat:'standard'},
+        {sym:'yd',  name:'Yard',             m:0.9144,       cat:'standard'},
+        {sym:'m',   name:'Meter',            m:1,            cat:'standard'},
+        {sym:'λRF', name:'RF Wavelength',    m:1,            cat:'wave'},
+        {sym:'λVHF',name:'VHF Wavelength',   m:3,            cat:'wave'},
+        {sym:'λAM', name:'AM Wavelength',    m:300,          cat:'wave'},
+        {sym:'km',  name:'Kilometer',        m:1e3,          cat:'large'},
+        {sym:'mi',  name:'Mile',             m:1609.34,      cat:'large'},
+        {sym:'NM',  name:'Nautical Mile',    m:1852,         cat:'large'},
+        {sym:'λLF', name:'Long Wave',        m:3000,         cat:'wave'},
+        {sym:'λELF',name:'ELF Wavelength',   m:5e6,          cat:'wave'},
+        {sym:'AU',  name:'Astronomical Unit',m:1.496e11,     cat:'astro'},
+        {sym:'ly',  name:'Light Year',       m:9.461e15,     cat:'astro'},
+        {sym:'pc',  name:'Parsec',           m:3.086e16,     cat:'astro'},
+    ];
+
+    const catColors = {quantum:'#8b5cf6',nuclear:'#6366f1',atomic:'#3b82f6',molecular:'#06b6d4',precision:'#a3a3a3',micro:'#eab308',wave:'#f97316',standard:'#ef4444',large:'#dc2626',astro:'#84cc16'};
+
+    // Populate selects
+    const fromSel = document.getElementById(id+'_from');
+    const toSel = document.getElementById(id+'_to');
+    units.forEach((u,i)=>{
+        const o1 = new Option(u.sym+' — '+u.name, i);
+        const o2 = new Option(u.sym+' — '+u.name, i);
+        fromSel.add(o1); toSel.add(o2);
+    });
+    fromSel.value = 15; // meter
+    toSel.value = 12;   // inch
+
+    // Quick buttons
+    const quickUnits = ['ℓp','nm','µm','mm','in','m','km','mi','AU','ly','pc'];
+    const quickDiv = document.getElementById(id+'_quick');
+    quickUnits.forEach(sym=>{
+        const u = units.find(x=>x.sym===sym);
+        if(!u) return;
+        const btn = document.createElement('button');
+        btn.textContent = sym;
+        btn.title = u.name;
+        btn.style.cssText = 'padding:3px 8px;border:1px solid var(--cursor-border);border-radius:4px;background:var(--cursor-bg-secondary);color:'+(catColors[u.cat]||'#888')+';font-family:inherit;font-size:0.6875rem;cursor:pointer;';
+        btn.addEventListener('click',()=>{
+            toSel.value = units.indexOf(u);
+            convert();
+        });
+        quickDiv.appendChild(btn);
+    });
+
+    function fmt(val){
+        if(val===0) return '0';
+        const a=Math.abs(val);
+        if(a>=1e12||a<1e-4) return val.toExponential(6);
+        if(a>=1e6) return val.toLocaleString(undefined,{maximumFractionDigits:4});
+        if(a>=1) return val.toLocaleString(undefined,{maximumFractionDigits:8});
+        return val.toFixed(10).replace(/0+$/,'').replace(/\\.$/,'');
+    }
+
+    function convert(){
+        const val = parseFloat(document.getElementById(id+'_val').value)||0;
+        const fromU = units[fromSel.value];
+        const toU = units[toSel.value];
+        const meters = val * fromU.m;
+        const result = meters / toU.m;
+        document.getElementById(id+'_result').textContent = fmt(result)+' '+toU.sym;
+
+        // Update table
+        const tbl = document.getElementById(id+'_table');
+        tbl.innerHTML = '';
+        units.forEach(u=>{
+            const v = meters / u.m;
+            const div = document.createElement('div');
+            div.style.cssText = 'padding:3px 6px;border-radius:3px;background:var(--cursor-bg);display:flex;justify-content:space-between;gap:8px;';
+            const isActive = u.sym===toU.sym;
+            div.innerHTML = '<span style="color:'+(catColors[u.cat]||'#888')+';">'+(isActive?'<b>►</b> ':'')+u.sym+'</span><span style="color:var(--cursor-text);'+(isActive?'font-weight:700;color:#c084fc;':'')+'">'+fmt(v)+'</span>';
+            tbl.appendChild(div);
+        });
+
+        // Update quantum/wave properties
+        const qDiv = document.getElementById(id+'_quantum');
+        if(meters > 0){
+            const freq = c / meters;
+            const energy = h * freq;
+            const eV = energy / 1.602176634e-19;
+            const momentum = h / meters;
+            const slowLight17 = meters / 17;
+            qDiv.innerHTML =
+                '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;">'+
+                '<div><b style="color:#f0883e;">Frequency:</b> '+freq.toExponential(4)+' Hz</div>'+
+                '<div><b style="color:#f0883e;">Energy:</b> '+energy.toExponential(4)+' J ('+eV.toExponential(4)+' eV)</div>'+
+                '<div><b style="color:#f0883e;">Momentum:</b> '+momentum.toExponential(4)+' kg·m/s</div>'+
+                '<div><b style="color:#f0883e;">Period:</b> '+(1/freq).toExponential(4)+' s</div>'+
+                '<div><b style="color:#06b6d4;">Slow light (17 m/s):</b> '+slowLight17.toExponential(4)+' s travel time</div>'+
+                '<div><b style="color:#06b6d4;">Light travel time:</b> '+(meters/c).toExponential(4)+' s</div>'+
+                '</div>';
+        } else {
+            qDiv.textContent = 'Enter a value to see quantum properties.';
+        }
+
+        // Draw scale
+        drawScale(meters);
+    }
+
+    function drawScale(meters){
+        const canvas = document.getElementById(id+'_scale');
+        const ctx = canvas.getContext('2d');
+        const W = canvas.width, H = canvas.height;
+        ctx.fillStyle = '#0d1117'; ctx.fillRect(0,0,W,H);
+
+        // Log scale: -35 (Planck) to +17 (Parsec)
+        const minLog = -35, maxLog = 17;
+        const range = maxLog - minLog;
+
+        // Draw unit markers
+        units.forEach(u=>{
+            const log = Math.log10(u.m);
+            const x = ((log - minLog) / range) * (W - 20) + 10;
+            ctx.fillStyle = catColors[u.cat] || '#888';
+            ctx.fillRect(x-1, 10, 2, H-20);
+            ctx.font = '8px monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText(u.sym, x, 8);
+        });
+
+        // Draw current position
+        if(meters > 0){
+            const log = Math.log10(meters);
+            const x = ((log - minLog) / range) * (W - 20) + 10;
+            ctx.fillStyle = '#c084fc';
+            ctx.beginPath();
+            ctx.moveTo(x, H-6); ctx.lineTo(x-5, H); ctx.lineTo(x+5, H);
+            ctx.fill();
+            ctx.fillStyle = '#c084fc';
+            ctx.fillRect(x-1, 10, 3, H-16);
+            // Glow
+            ctx.fillStyle = 'rgba(192,132,252,0.15)';
+            ctx.fillRect(x-8, 0, 16, H);
+        }
+    }
+
+    // Events
+    document.getElementById(id+'_val').addEventListener('input', convert);
+    fromSel.addEventListener('change', convert);
+    toSel.addEventListener('change', convert);
+    document.getElementById(id+'_swap').addEventListener('click',()=>{
+        const tmp = fromSel.value;
+        fromSel.value = toSel.value;
+        toSel.value = tmp;
+        convert();
+    });
+
+    // Initial convert
+    convert();
+})();
+<` + `/script>`;
             }
 
             /* ══════════════════════════════════════════════════════
@@ -7047,7 +7342,7 @@ print("Position:", quantum_position)`);
                 const overlay = document.getElementById('cell-overlay');
                 const title = document.getElementById('cell-overlay-title');
                 const body = document.getElementById('cell-overlay-body');
-                const typeEmoji = { code: '⚡', markdown: '📝', visualization: '📊', quantum: '🌌', mermaid: '🧜' };
+                const typeEmoji = { code: '⚡', markdown: '📝', visualization: '📊', quantum: '🌌', mermaid: '🧜', freya: '🔬' };
 
                 title.innerHTML = `${typeEmoji[cell.type] || '⚡'} ${cell.type} — [${cell.quantumPosition.join(', ')}]`;
 
@@ -7290,7 +7585,7 @@ print("Position:", quantum_position)`);
 
             /* ---------- Sidebar: Cell List ---------- */
             updateCellList() {
-                const typeEmoji = { code: '⚡', markdown: '📝', visualization: '📊', quantum: '🌌', mermaid: '🧜' };
+                const typeEmoji = { code: '⚡', markdown: '📝', visualization: '📊', quantum: '🌌', mermaid: '🧜', freya: '🔬' };
                 const cellList = document.getElementById('cell-list');
                 cellList.innerHTML = this.cells.map((cell, i) => {
                     const emoji = typeEmoji[cell.type] || '⚡';
