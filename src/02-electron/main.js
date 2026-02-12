@@ -1,6 +1,7 @@
 // beyondBINARY quantum-prefixed | uvspeed | {+1, 1, -1, +0, 0, -0, +n, n, -n}
 // UVspeed - Advanced Notes & Terminal Environment
 // Desktop app with quantum navigation and infinite notebooks
+// v3.0.0 — restructured from src/02-electron/
 
 const { app, BrowserWindow, Menu, ipcMain, dialog, shell } = require('electron');
 const path = require('path');
@@ -16,6 +17,9 @@ let wsServer;
 const isDev = process.argv.includes('--dev');
 const APP_NAME = 'UVspeed';
 const PORT = 3847; // UFFO in phone keypad
+
+// Project root is two levels up from src/02-electron/
+const PROJECT_ROOT = path.join(__dirname, '..', '..');
 
 class UVspeedApp {
     constructor() {
@@ -39,10 +43,10 @@ class UVspeedApp {
         // Express server for serving quantum web interfaces
         const server = express();
         
-        // Serve static files
-        server.use('/web', express.static(path.join(__dirname, '../web')));
-        server.use('/quantum', express.static(path.join(__dirname, '../quantum')));
-        server.use('/shared', express.static(path.join(__dirname, '../shared')));
+        // Serve static files (paths relative to project root)
+        server.use('/web', express.static(path.join(PROJECT_ROOT, 'web')));
+        server.use('/icons', express.static(path.join(PROJECT_ROOT, 'icons')));
+        server.use('/src', express.static(path.join(PROJECT_ROOT, 'src')));
         
         // API endpoints
         server.get('/api/status', (req, res) => {
@@ -99,7 +103,7 @@ class UVspeedApp {
             minWidth: 1000,
             minHeight: 600,
             title: APP_NAME,
-            icon: path.join(__dirname, 'assets', 'icon.png'),
+            icon: path.join(PROJECT_ROOT, 'icons', 'icon-192.png'),
             webPreferences: {
                 nodeIntegration: false,
                 contextIsolation: true,
@@ -317,12 +321,25 @@ class UVspeedApp {
                 label: 'View',
                 submenu: [
                     {
-                        label: 'Quantum Web Interface',
-                        click: () => this.openQuantumWebInterface()
+                        label: 'Quantum Notepad',
+                        click: () => this.openQuantumNotepad()
                     },
                     {
-                        label: 'P2P Collaborative Interface',
-                        click: () => this.openP2PInterface()
+                        label: 'brotherNumsy Game',
+                        click: () => this.openBrotherNumsy()
+                    },
+                    {
+                        label: 'kbatch Keyboard Analyzer',
+                        click: () => this.openKbatch()
+                    },
+                    {
+                        label: 'hexcast Video Broadcast',
+                        click: () => this.openHexcast()
+                    },
+                    { type: 'separator' },
+                    {
+                        label: 'Legacy Terminal',
+                        click: () => this.openLegacyTerminal()
                     },
                     { type: 'separator' },
                     {
@@ -448,7 +465,7 @@ class UVspeedApp {
     }
 
     launchProgressive(version) {
-        const script = path.join(__dirname, '..', 'launch-progressive.sh');
+        const script = path.join(PROJECT_ROOT, 'src', '03-tools', 'launch-progressive.sh');
         const terminal = spawn('bash', [script, version], {
             cwd: path.dirname(script),
             stdio: 'inherit'
@@ -460,13 +477,28 @@ class UVspeedApp {
         });
     }
 
-    openQuantumWebInterface() {
-        const url = `http://localhost:${PORT}/web/quantum-claude-terminal.html`;
+    openQuantumNotepad() {
+        const url = `http://localhost:${PORT}/web/quantum-notepad.html`;
         shell.openExternal(url);
     }
 
-    openP2PInterface() {
-        const url = `http://localhost:${PORT}/web/enhanced-p2p-terminal.html`;
+    openBrotherNumsy() {
+        const url = `http://localhost:${PORT}/web/brothernumsy.html`;
+        shell.openExternal(url);
+    }
+
+    openKbatch() {
+        const url = `http://localhost:${PORT}/web/kbatch.html`;
+        shell.openExternal(url);
+    }
+
+    openHexcast() {
+        const url = `http://localhost:${PORT}/web/hexcast.html`;
+        shell.openExternal(url);
+    }
+
+    openLegacyTerminal() {
+        const url = `http://localhost:${PORT}/web/legacy/quantum-claude-terminal.html`;
         shell.openExternal(url);
     }
 

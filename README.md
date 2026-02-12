@@ -6,7 +6,7 @@
 
 > A new code architecture paradigm that replaces binary `{0, 1}` with a 9-symbol directional prefix system `{+1, 1, -1, +0, 0, -0, +n, n, -n}`, enabling any codebase — in any language — to be structurally re-addressed in 3D space.
 
-[![Phase](https://img.shields.io/badge/Phase_2.3-Complete-brightgreen)](#phase-tracking)
+[![Phase](https://img.shields.io/badge/Phase_3.0-Restructured-brightgreen)](#phase-tracking)
 [![Languages](https://img.shields.io/badge/Languages-20_supported-blue)](#language-benchmark-coverage)
 [![Endpoints](https://img.shields.io/badge/API-40+_endpoints-purple)](#api-surface)
 [![PyPI](https://img.shields.io/badge/PyPI-uvspeed--quantum-blue)](https://pypi.org/project/uvspeed-quantum/)
@@ -36,9 +36,10 @@
 | **Phase 2** | Complete | Execution Bridge — 25 API endpoints, security scanner, git hooks, IDE rules | Feb 11 |
 | **Phase 2.1** | Complete | Cross-Project Integration — ChartGPU, Day CLI, Quest Hub, Jawta, Lark, Media | Feb 11 |
 | **Phase 2.2** | Complete | Release + Game — GitHub Actions, PyPI, brotherNumsy & Freya, FreyaUnits converter | Feb 11 |
-| **Phase 2.3** | Complete | Interactive Tools — kbatch keyboard analyzer, hexcast video broadcast, notepad cells | Feb 12 |
-| **Phase 3** | Next | Agent Orchestration — multi-agent protocol, role-based prefix access | — |
-| **Phase 4** | Future | Production & Scale — CUDA-Q offload, real-time collab, SaaS deploy | — |
+| **Phase 2.3** | Complete | Interactive Tools — kbatch keyboard analyzer, hexcast video broadcast, notepad cells | Feb 11 |
+| **Phase 3.0** | Complete | Project Restructure — numbered `src/` layout, Electron update, clean root, Phase 3 cross-check | Feb 12 |
+| **Phase 3.1** | Next | Agent Orchestration — multi-agent protocol, role-based prefix access, self-training | — |
+| **Phase 4** | Future | Terminal/OS App — prefix engine + live streaming + kbatch + FreyaUnits + thermal visuals, unified from the ground up | — |
 
 ### Agent-Ready Capabilities
 
@@ -54,7 +55,8 @@
 | kbatch analyzer | LIVE | Thermal heatmap, contrails, geometric patterns, 3D language model, `window.kbatch` |
 | hexcast broadcast | LIVE | Video → hex stream, 4 encode modes, latency benchmarks, BroadcastChannel cross-tab |
 | FreyaUnits converter | LIVE | Planck→Parsec 27-unit precision system, notebook cell + game companion |
-| Multi-agent orchestration | Phase 3 | 5 agents registered — inter-agent protocol pending |
+| Project structure | LIVE | Numbered `src/01-07`, clean root, Electron 40.4, version 3.0.0 |
+| Multi-agent orchestration | Phase 3.1 | 5 agents registered — inter-agent protocol pending |
 
 <details>
 <summary><strong>View: Development Timeline + Agent Dashboard</strong></summary>
@@ -393,7 +395,7 @@ open web/quantum-notepad.html
 
 ### Bridge Server (40+ API endpoints)
 ```bash
-uv run python quantum_bridge_server.py
+uv run python src/01-core/quantum_bridge_server.py
 # HTTP on :8085 · WebSocket on :8086
 ```
 
@@ -485,34 +487,45 @@ Zig (Ghostty) → Rust (Nushell/uv) → Semantic (GrepAI) → Visual (Charm + Me
 | Lark | IANA editor + terminal | Unified AI dev environment |
 | Media | Pipeline orchestrator | Spatial audio, video segmentation, transcripts |
 
-## Project Structure
+## Project Structure (v3.0)
 
 ```
 uvspeed/
-├── web/quantum-notepad.html      # +0: Main UI — notepad, gutter, timeline, thermal, inspect
-├── quantum_bridge_server.py      #  0: Backend — 40+ API endpoints + cross-project integration
-├── icons/                        # +1: Screenshots for README
-│   ├── 01-notepad-main.png       #     Main interface
-│   ├── 02-inspect-timeline.png   #     Dev timeline + agent dashboard
-│   ├── 03-language-benchmarks.png#     20-language coverage chart
-│   ├── 04-competitor-comparison.png#   vs Jupyter/Deepnote/Databricks
-│   ├── 05-prefix-everything.png  #     Universal prefix engine
-│   ├── 06-training-formula.png   #     Q_w formula for LLMs
-│   ├── 07-ide-plugin-rule.png    #     Cursor .mdc rule
-│   ├── 08-ide-install-configs.png#     Multi-IDE setup
-│   ├── 09-visual-benchmark.png   #     Machine profiler charts
-│   ├── 10-mermaid-architecture.png#    Architecture diagram
-│   ├── 11-qstatus-output.png     #     System status output
-│   └── 12-quantum-navigation.png #     3D navigation widget
-├── src/commands.json             #  0: Unified tool registry (23 commands)
-├── .cursor/rules/                # +1: IDE rules (prefix gutter, commands)
-├── .cursor/skills/               # +1: IDE skills (prefix conversion)
-├── .github/copilot-instructions.md  # +1: Copilot training
-├── .windsurf/rules/              # +1: Windsurf AI rule
-├── tools/prefix_all_files.py     #  0: Batch prefix stamper (91+ files)
-├── electron-app/                 # +0: Desktop app (Electron)
-├── src/                          #     Quantum-organized by prefix
-└── versions/                     # +2: Progressive v1/v2/v3
+├── web/                              # Web tools — GitHub Pages served from here
+│   ├── quantum-notepad.html          #   Main notepad (8 cell types, inspect, thermal, hex)
+│   ├── brothernumsy.html             #   Endless runner game (AI training API)
+│   ├── kbatch.html                   #   Keyboard pattern analyzer (thermal/3D)
+│   ├── hexcast.html                  #   Live video hex broadcast (latency benchmarks)
+│   └── legacy/                       #   Old terminal UIs (P2P, Claude terminal)
+│
+├── icons/                            # Screenshots + assets (01–23 numbered, favicon, banner)
+│
+├── src/
+│   ├── 01-core/                      #   Python backend
+│   │   ├── quantum_bridge_server.py  #     40+ API endpoint server
+│   │   ├── quantum_notepad.py        #     Notebook engine
+│   │   └── quantum_prototype.py      #     Prototype runtime
+│   ├── 02-electron/                  #   Desktop app (Electron 40.4)
+│   │   ├── main.js                   #     Main process + quantum menus
+│   │   ├── preload.js                #     IPC bridge
+│   │   └── src/index.html            #     Renderer UI
+│   ├── 03-tools/                     #   Scripts & utilities
+│   │   ├── launch.sh                 #     Main launcher
+│   │   ├── prefix_all_files.py       #     Batch prefix stamper
+│   │   └── *.sh                      #     Platform launchers, build scripts
+│   ├── 04-tests/                     #   All test files
+│   ├── 05-examples/                  #   Example projects
+│   ├── 06-extensions/                #   Browser extensions (Chrome, Firefox, PWA)
+│   └── 07-archive/                   #   Historical versions (v1, v2, v3, old configs)
+│
+├── .cursor/rules/                    # IDE rules (prefix gutter, commands)
+├── .github/workflows/                # CI/CD (Pages deploy, tagged releases)
+├── package.json                      # npm — Electron 40.4, express, ws, xterm
+├── pyproject.toml                    # PyPI — uvspeed-quantum 3.0.0
+├── uvspeed_cli.py                    # CLI entry point for pip install
+├── CHANGELOG.md                      # Release history
+├── README.md                         # This file
+└── LICENSE                           # MIT
 ```
 
 ---
@@ -556,8 +569,8 @@ Tagged releases auto-build via [GitHub Actions](.github/workflows/release.yml).
 To cut a release:
 
 ```bash
-git tag v2.1.0
-git push origin v2.1.0
+git tag v3.0.0
+git push origin v3.0.0
 ```
 
 Each release includes:

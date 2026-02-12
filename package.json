@@ -1,7 +1,7 @@
 {
   "name": "uvspeed-quantum",
-  "version": "2.1.0",
-  "description": "beyondBINARY quantum-prefixed code architecture — 9-symbol prefix system for any language",
+  "version": "3.0.0",
+  "description": "beyondBINARY quantum-prefixed code architecture — notepad, game engine, keyboard analyzer, video broadcast, and desktop terminal",
   "homepage": "https://fornevercollective.github.io/uvspeed/web/quantum-notepad.html",
   "repository": {
     "type": "git",
@@ -10,7 +10,7 @@
   "bugs": {
     "url": "https://github.com/fornevercollective/uvspeed/issues"
   },
-  "main": "electron-app/main.js",
+  "main": "src/02-electron/main.js",
   "scripts": {
     "start": "electron .",
     "dev": "electron . --dev",
@@ -27,37 +27,39 @@
     "ai",
     "terminal",
     "development",
-    "electron"
+    "electron",
+    "brothernumsy",
+    "kbatch",
+    "hexcast",
+    "freyaunits"
   ],
   "author": "UV-Speed Quantum Development Team",
   "license": "MIT",
   "devDependencies": {
-    "electron": "^40.3.0",
-    "electron-builder": "^24.0.0"
+    "electron": "^40.4.0",
+    "electron-builder": "^25.1.0"
   },
   "dependencies": {
-    "express": "^4.18.0",
+    "express": "^4.21.0",
     "node-pty": "^1.0.0",
-    "ws": "^8.14.0",
-    "xterm": "^5.3.0",
-    "xterm-addon-fit": "^0.8.0"
+    "ws": "^8.18.0",
+    "xterm": "^5.5.0",
+    "xterm-addon-fit": "^0.10.0"
   },
   "build": {
     "appId": "com.uvspeed.quantum-terminal",
-    "productName": "UV-Speed Quantum Terminal",
+    "productName": "UVspeed Quantum Terminal",
     "directories": {
       "output": "dist"
     },
     "files": [
-      "electron-app/**/*",
-      "quantum/**/*",
+      "src/02-electron/**/*",
+      "src/01-core/**/*",
       "web/**/*",
-      "shared/**/*",
-      "*.py",
-      "*.sh"
+      "icons/**/*"
     ],
     "mac": {
-      "icon": "electron-app/assets/icon.icns",
+      "icon": "icons/icon-192.png",
       "category": "public.app-category.developer-tools",
       "target": [
         {
@@ -70,7 +72,7 @@
       ]
     },
     "linux": {
-      "icon": "electron-app/assets/icon.png",
+      "icon": "icons/icon-192.png",
       "target": [
         {
           "target": "AppImage",
@@ -88,7 +90,7 @@
       ]
     },
     "win": {
-      "icon": "electron-app/assets/icon.ico",
+      "icon": "icons/favicon.ico",
       "target": [
         {
           "target": "nsis",

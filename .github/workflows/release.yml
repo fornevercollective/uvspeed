@@ -36,7 +36,7 @@ jobs:
         run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
 
       - name: Validate Python syntax
-        run: python -c "import ast; ast.parse(open('quantum_bridge_server.py').read()); print('bridge server OK')"
+        run: python -c "import ast; ast.parse(open('src/01-core/quantum_bridge_server.py').read()); print('bridge server OK')"
 
       - name: Build Python package
         run: |
@@ -54,10 +54,10 @@ jobs:
             --exclude='__pycache__' \
             --exclude='.venv' \
             --exclude='*.egg-info' \
-            web/ quantum_bridge_server.py pyproject.toml package.json \
+            web/ src/ icons/ \
+            pyproject.toml package.json uvspeed_cli.py \
             .cursor/ .github/ .windsurf/ .vscode/ \
-            icons/ src/ tools/ electron-app/ shared/ versions/ \
-            README.md LICENSE launch.sh .gitignore .gitattributes
+            README.md CHANGELOG.md LICENSE .gitignore .gitattributes
 
       - name: Generate release notes
         id: notes
@@ -77,8 +77,10 @@ jobs:
           
           ### What's Included
           - `web/quantum-notepad.html` — zero-install web notepad
-          - `quantum_bridge_server.py` — 40+ API endpoint bridge server
-          - Cross-project integration (ChartGPU, Day CLI, Quest Hub, Jawta, Lark)
+          - `src/01-core/quantum_bridge_server.py` — 40+ API endpoint bridge server
+          - `web/brothernumsy.html` — endless runner with AI training API
+          - `web/kbatch.html` — keyboard pattern analyzer
+          - `web/hexcast.html` — live video hex broadcast
           - 6 IDE configurations (Cursor, Copilot, VS Code, Windsurf)
           - 20-language quantum prefix support
           
@@ -88,7 +90,7 @@ jobs:
           open web/quantum-notepad.html
           
           # Bridge server
-          uv run python quantum_bridge_server.py
+          uv run python src/01-core/quantum_bridge_server.py
           
           # Python package
           pip install dist/uvspeed_quantum-*.whl

@@ -2,8 +2,8 @@
 
 [project]
 name = "uvspeed-quantum"
-version = "2.1.0"
-description = "beyondBINARY quantum-prefixed code architecture — 9-symbol prefix system for any language"
+version = "3.0.0"
+description = "beyondBINARY quantum-prefixed code architecture — notepad, game engine, keyboard analyzer, video broadcast, desktop terminal"
 readme = "README.md"
 license = {text = "MIT"}
 requires-python = ">=3.9"
@@ -12,7 +12,8 @@ authors = [
 ]
 keywords = [
     "quantum", "prefix", "beyondbinary", "code-architecture",
-    "tinygrad", "ai", "llm", "notebook", "developer-tools"
+    "tinygrad", "ai", "llm", "notebook", "developer-tools",
+    "brothernumsy", "kbatch", "hexcast", "freyaunits"
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -51,7 +52,7 @@ Documentation = "https://github.com/fornevercollective/uvspeed#readme"
 Issues = "https://github.com/fornevercollective/uvspeed/issues"
 
 [project.scripts]
-uvspeed-bridge = "quantum_bridge_server:main"
+uvspeed-bridge = "uvspeed_cli:main"
 
 [tool.uv]
 dev-dependencies = [
@@ -97,8 +98,8 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-py-modules = ["quantum_bridge_server"]
+py-modules = ["uvspeed_cli"]
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["quantum*", "tools*"]
+include = ["uvspeed*"]

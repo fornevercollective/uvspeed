@@ -7,6 +7,37 @@ All notable changes to uvspeed are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.0] - 2026-02-11
+
+### Added
+- **Numbered project structure** — `src/01-core/` through `src/07-archive/` for clean organization
+- **brotherNumsy game** — `web/brothernumsy.html` endless runner with AI training API, Freya companion, Nyan Cat ambience
+- **kbatch keyboard analyzer** — `web/kbatch.html` thermal heatmap, contrails, geometric patterns, 3D language model
+- **hexcast video broadcast** — `web/hexcast.html` live camera/screen capture, hex stream encoding, latency benchmarks
+- **FreyaUnits converter** — 27-unit precision conversion engine (Planck length to Parsec), notebook cell + game integration
+- **Notebook cell types** — 8 total: code, markdown, viz, quantum, mermaid, freya, kbatch, hexcast
+- **Live code editor + terminal** — collapsible panels on every tool page for inline JavaScript execution
+- **Fullscreen mode** — native + CSS fullscreen for all game/tool pages
+- **Nyan Cat pixel art** — banner, favicon, 3 in-game variants (original, Numsy, Freya) with rainbow trails
+- **Phase 3 readiness cross-check** — 15/27 ready, 8 partial, 4 blocked (documented in inspect panel)
+- **`uvspeed_cli.py`** — thin CLI wrapper for pip-installable `uvspeed-bridge` command
+
+### Changed
+- **BREAKING**: Project restructured — `electron-app/` → `src/02-electron/`, scripts → `src/03-tools/`, tests → `src/04-tests/`
+- **BREAKING**: `package.json` main entry → `src/02-electron/main.js`
+- Electron updated to v40.4.0 (Chromium 144, Node 24.13)
+- electron-builder updated to v25.1.0
+- express, ws, xterm dependencies bumped to latest
+- Version bumped to 3.0.0 across package.json, pyproject.toml
+- Legacy web terminals moved to `web/legacy/`
+- Old version archives moved to `src/07-archive/`
+- Root directory cleaned from ~40 scattered files to 6 essential entries
+
+### Removed
+- `dist/` directory (build artifact, now gitignored)
+- Duplicate Python files at root (moved to `src/01-core/`)
+- Old `src/p0-core/`, `src/p1-docs/`, etc. prefix scheme (replaced with numbered `01-07`)
+
 ## [2.1.0] - 2026-02-11
 
 ### Added

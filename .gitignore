@@ -110,6 +110,10 @@ tools/bin/
 .uvspeed_cache/
 *.quantum
 config/.initialized
+.quantum_sessions/
+
+# Electron build output
+dist/
 
 # Node — ALWAYS ignore node_modules (install via npm ci)
 node_modules/

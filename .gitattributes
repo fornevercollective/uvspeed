@@ -8,13 +8,12 @@ uv.lock            linguist-generated
 dist/**            linguist-generated
 *.egg-info/**      linguist-generated
 
-# Electron copies — mark as vendored so they don't double-count
-electron-app/src/index_broken.html  linguist-vendored
+# Electron index_broken — mark as vendored
+src/02-electron/src/index_broken.html  linguist-vendored
 
-# src/ copies of root files — mark vendored to avoid double-counting
-src/p0-core/quantum_bridge_server.py  linguist-vendored
-src/p0-core/quantum_notepad.py        linguist-vendored
-src/n-entry/launch-quantum-notepad.sh linguist-vendored
+# Archive / old version copies — exclude from language stats
+src/07-archive/**  linguist-vendored
+src/01-core/*_v2.py  linguist-vendored
 
 # Classify .mdc files as Markdown for stats
 *.mdc linguist-language=Markdown
