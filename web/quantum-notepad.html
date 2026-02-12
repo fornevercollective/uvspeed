@@ -4713,19 +4713,20 @@
                     this._openHexOverlay();
                 });
 
-                // Start hex canvas mini animation
+                // Start hex canvas mini animation (Nyan Cat loop)
                 this._hexCanvas = document.getElementById('hex-canvas');
                 this._hexCtx = this._hexCanvas?.getContext('2d');
+                this._nyanFrame = 0;
                 setInterval(() => {
                     if (document.getElementById('thermal-tab')?.classList.contains('active')) {
-                        // Shift hex data to simulate streaming
-                        for (let i = 0; i < 128; i++) {
+                        // Shift background hex data
+                        for (let i = 0; i < 64; i++) {
                             const idx = Math.floor(Math.random() * this._hexData.length);
-                            this._hexData[idx] = (this._hexData[idx] + Math.floor(Math.random() * 16)) & 0xFF;
+                            this._hexData[idx] = (this._hexData[idx] + Math.floor(Math.random() * 8)) & 0xFF;
                         }
                         this._drawHexCanvas();
                     }
-                }, 200);
+                }, 80);
 
                 // ===== TOOLS DROPDOWN =====
                 const toolsBtn = document.getElementById('f-tools');
@@ -5861,6 +5862,44 @@ print("Position:", quantum_position)`);
             }
 
             /* ========== HEX / FAX STREAM VIEWER ========== */
+
+            /* ----- Nyan Cat pixel sprite data ----- */
+            _nyanSprite() {
+                if (this.__nyanSpr) return this.__nyanSpr;
+                // 21×14 pixel art — 0=transparent, 1-7=palette indices
+                // Palette: 1=darkgray(feet), 2=gray(body), 3=pink(cheeks/nose), 4=poptart-tan, 5=poptart-pink, 6=white(eyes), 7=black(outline)
+                const rows = [
+                    [0,0,0,0,0,0,0,0,0,0,7,7,7,7,7,7,7,7,0,0,0],
+                    [0,0,0,0,0,0,0,0,0,7,4,4,5,4,5,4,5,4,7,0,0],
+                    [0,0,0,0,0,0,0,0,7,4,5,5,4,5,4,5,4,5,4,7,0],
+                    [0,0,0,0,0,0,0,0,7,4,4,5,5,4,5,4,5,4,5,7,0],
+                    [0,0,7,7,0,0,0,7,4,4,4,4,4,4,4,4,4,4,4,7,7,],
+                    [0,7,2,2,7,0,7,2,2,2,2,2,2,2,2,2,2,2,2,2,7],
+                    [7,2,2,2,2,7,2,6,7,2,2,2,2,2,6,7,2,2,2,2,7],
+                    [7,2,2,2,2,7,2,7,7,2,3,2,3,2,7,7,2,2,2,2,7],
+                    [0,7,2,2,7,0,7,2,2,2,2,3,2,2,2,2,2,2,2,2,7],
+                    [0,0,7,7,0,0,0,7,2,2,2,2,2,2,2,2,2,2,2,7,0],
+                    [0,0,0,0,0,0,7,2,2,7,0,0,0,0,7,2,2,7,0,0,0],
+                    [0,0,0,0,0,0,7,1,1,7,0,0,0,0,7,1,1,7,0,0,0],
+                    [0,0,0,0,0,0,0,7,7,0,0,0,0,0,0,7,7,0,0,0,0],
+                ];
+                // Rainbow colors for trail (red, orange, yellow, green, blue, violet)
+                const rainbow = ['#ff0000','#ff9900','#ffff00','#33ff00','#0099ff','#6633ff'];
+                this.__nyanSpr = { rows, rainbow, w: 21, h: rows.length };
+                return this.__nyanSpr;
+            }
+
+            _nyanPalette(mode) {
+                // Returns palette array indexed 1-7 per mode
+                if (mode === 'color') {
+                    return [null,'#555','#999','#ff6699','#ffcc99','#ff99cc','#fff','#222'];
+                } else if (mode === 'gray') {
+                    return [null,'#333','#888','#aaa','#bbb','#999','#ddd','#111'];
+                } else { // fax
+                    return [null,'#000','#888','#fff','#ccc','#aaa','#fff','#000'];
+                }
+            }
+
             _drawHexCanvas() {
                 const ctx = this._hexCtx;
                 if (!ctx) return;
@@ -5869,33 +5908,92 @@ print("Position:", quantum_position)`);
                 const cw = W / cols, ch = H / rows;
                 const mode = this._hexMode;
 
-                ctx.clearRect(0, 0, W, H);
+                // Dark space background
+                ctx.fillStyle = '#0d1117';
+                ctx.fillRect(0, 0, W, H);
 
+                // Background hex grid (dimmed)
                 for (let r = 0; r < rows; r++) {
                     for (let c = 0; c < cols; c++) {
                         const val = this._hexData[r * cols + c] || 0;
                         const norm = val / 255;
-
                         if (mode === 'color') {
-                            // Thermal color map: blue → green → orange → red
                             const hue = (1 - norm) * 200;
-                            ctx.fillStyle = `hsl(${hue}, 85%, ${20 + norm * 50}%)`;
+                            ctx.fillStyle = `hsla(${hue}, 85%, ${20 + norm * 50}%, 0.25)`;
                         } else if (mode === 'gray') {
-                            const g = Math.floor(norm * 255);
+                            const g = Math.floor(norm * 80);
                             ctx.fillStyle = `rgb(${g},${g},${g})`;
-                        } else { // fax
-                            const g = norm > 0.5 ? 255 : 0;
+                        } else {
+                            const g = norm > 0.5 ? 60 : 0;
                             ctx.fillStyle = `rgb(${g},${g},${g})`;
                         }
                         ctx.fillRect(c * cw, r * ch, cw - 0.5, ch - 0.5);
                     }
                 }
 
-                // Overlay hex labels on first few rows
-                ctx.fillStyle = 'rgba(255,255,255,0.6)';
-                ctx.font = `${Math.max(6, cw * 0.5)}px monospace`;
+                // --- Nyan Cat animation ---
+                const spr = this._nyanSprite();
+                const pal = this._nyanPalette(mode);
+                const t = this._nyanFrame || 0;
+                this._nyanFrame = (t + 1) % (cols + spr.w + 6);
+
+                const catX = t - spr.w; // scrolls left to right, wraps
+                const catY = Math.floor(rows / 2 - spr.h / 2) + Math.round(Math.sin(t * 0.3) * 1.5); // bobbing
+                const bounce = (t % 4 < 2) ? 0 : -1; // leg bounce
+
+                // Draw rainbow trail behind cat
+                const trailLen = Math.min(catX, cols);
+                for (let band = 0; band < 6; band++) {
+                    const bandY = catY + 3 + band;
+                    if (bandY < 0 || bandY >= rows) continue;
+                    for (let x = Math.max(0, catX - trailLen); x < Math.max(0, catX + 2); x++) {
+                        if (x >= cols) break;
+                        if (mode === 'color') {
+                            ctx.fillStyle = spr.rainbow[band];
+                        } else if (mode === 'gray') {
+                            const g = 180 - band * 25;
+                            ctx.fillStyle = `rgb(${g},${g},${g})`;
+                        } else { // fax
+                            ctx.fillStyle = band % 2 === 0 ? '#fff' : '#000';
+                        }
+                        ctx.fillRect(x * cw, bandY * ch, cw - 0.3, ch - 0.3);
+                    }
+                }
+
+                // Draw Nyan Cat sprite
+                for (let sr = 0; sr < spr.h; sr++) {
+                    const dy = catY + sr + (sr >= 10 ? bounce : 0); // bounce legs
+                    if (dy < 0 || dy >= rows) continue;
+                    for (let sc = 0; sc < spr.w; sc++) {
+                        const dx = catX + sc;
+                        if (dx < 0 || dx >= cols) continue;
+                        const pidx = spr.rows[sr]?.[sc];
+                        if (!pidx) continue;
+                        ctx.fillStyle = pal[pidx];
+                        ctx.fillRect(dx * cw, dy * ch, cw - 0.3, ch - 0.3);
+                    }
+                }
+
+                // Sparkle stars (small white pixels that blink)
+                ctx.fillStyle = mode === 'fax' ? '#fff' : 'rgba(255,255,255,0.8)';
+                const starSeed = t * 7;
+                for (let s = 0; s < 8; s++) {
+                    const sx = ((starSeed + s * 137) % cols);
+                    const sy = ((starSeed + s * 89) % rows);
+                    const phase = (t + s * 3) % 6;
+                    if (phase < 3) {
+                        const sz = phase === 1 ? 2 : 1;
+                        // Draw + shaped star
+                        ctx.fillRect(sx * cw + cw/2 - sz/2, sy * ch, sz, ch);
+                        ctx.fillRect(sx * cw, sy * ch + ch/2 - sz/2, cw, sz);
+                    }
+                }
+
+                // Hex labels on top rows (dimmer, behind animation if overlapping)
+                ctx.fillStyle = 'rgba(255,255,255,0.35)';
+                ctx.font = `${Math.max(6, cw * 0.45)}px monospace`;
                 ctx.textAlign = 'center';
-                for (let r = 0; r < Math.min(6, rows); r++) {
+                for (let r = 0; r < Math.min(4, rows); r++) {
                     for (let c = 0; c < cols; c++) {
                         const val = this._hexData[r * cols + c] || 0;
                         ctx.fillText(val.toString(16).toUpperCase().padStart(2, '0'),
@@ -5929,52 +6027,123 @@ print("Position:", quantum_position)`);
 
                 const canvas = document.getElementById('hex-overlay-canvas');
                 const ctx = canvas.getContext('2d');
-                const bigData = new Uint8Array(1080 * 1080);
-                // Stretch hex data to fill
+                const bigData = new Uint8Array(108 * 108);
+                // Seed from hex data
                 for (let i = 0; i < bigData.length; i++) {
                     bigData[i] = this._hexData[i % this._hexData.length];
                     bigData[i] = (bigData[i] + Math.floor(Math.random() * 4)) & 0xFF;
                 }
 
                 let oMode = this._hexMode;
+                const spr = this._nyanSprite();
+                let oFrame = 0;
+
                 const draw = () => {
                     const W = 1080, H = 1080, cols = 108, rows = 108;
                     const cw = W / cols, ch = H / rows;
-                    ctx.fillStyle = '#000';
+
+                    // Space background
+                    ctx.fillStyle = '#0d1117';
                     ctx.fillRect(0, 0, W, H);
+
+                    // Background hex grid (dimmed)
                     for (let r = 0; r < rows; r++) {
                         for (let c = 0; c < cols; c++) {
                             const val = bigData[r * cols + c] || 0;
                             const norm = val / 255;
                             if (oMode === 'color') {
                                 const hue = (1 - norm) * 200;
-                                ctx.fillStyle = `hsl(${hue}, 85%, ${20 + norm * 50}%)`;
+                                ctx.fillStyle = `hsla(${hue}, 85%, ${20 + norm * 50}%, 0.2)`;
                             } else if (oMode === 'gray') {
-                                const g = Math.floor(norm * 255);
+                                const g = Math.floor(norm * 60);
                                 ctx.fillStyle = `rgb(${g},${g},${g})`;
                             } else if (oMode === 'fax') {
-                                const g = norm > 0.5 ? 255 : 0;
+                                const g = norm > 0.5 ? 40 : 0;
                                 ctx.fillStyle = `rgb(${g},${g},${g})`;
                             } else { // signal
-                                const r2 = Math.floor(norm * 128);
-                                const g2 = Math.floor(Math.sin(norm * Math.PI) * 255);
-                                const b2 = Math.floor((1 - norm) * 200);
+                                const r2 = Math.floor(norm * 40);
+                                const g2 = Math.floor(Math.sin(norm * Math.PI) * 60);
+                                const b2 = Math.floor((1 - norm) * 50);
                                 ctx.fillStyle = `rgb(${r2},${g2},${b2})`;
                             }
                             ctx.fillRect(c * cw, r * ch, cw - 0.3, ch - 0.3);
                         }
                     }
+
+                    // Scale sprite to overlay (3x)
+                    const scale = 3;
+                    const pal = this._nyanPalette(oMode);
+                    const catX = oFrame - spr.w * scale;
+                    const catY = Math.floor(rows / 2 - (spr.h * scale) / 2) + Math.round(Math.sin(oFrame * 0.15) * 3);
+                    const bounce = (oFrame % 6 < 3) ? 0 : -1;
+
+                    // Rainbow trail (6 bands, scaled)
+                    const trailLen = Math.min(catX, cols);
+                    for (let band = 0; band < 6; band++) {
+                        for (let sy = 0; sy < scale; sy++) {
+                            const bandY = catY + (3 + band) * scale + sy;
+                            if (bandY < 0 || bandY >= rows) continue;
+                            for (let x = Math.max(0, catX - trailLen); x < Math.max(0, catX + scale * 2); x++) {
+                                if (x >= cols) break;
+                                if (oMode === 'color') {
+                                    ctx.fillStyle = spr.rainbow[band];
+                                } else if (oMode === 'gray') {
+                                    const g = 200 - band * 30;
+                                    ctx.fillStyle = `rgb(${g},${g},${g})`;
+                                } else if (oMode === 'signal') {
+                                    const hue = band * 50;
+                                    ctx.fillStyle = `hsl(${hue}, 70%, 50%)`;
+                                } else {
+                                    ctx.fillStyle = band % 2 === 0 ? '#fff' : '#000';
+                                }
+                                ctx.fillRect(x * cw, bandY * ch, cw - 0.2, ch - 0.2);
+                            }
+                        }
+                    }
+
+                    // Draw Nyan Cat sprite (scaled)
+                    for (let sr = 0; sr < spr.h; sr++) {
+                        for (let sc = 0; sc < spr.w; sc++) {
+                            const pidx = spr.rows[sr]?.[sc];
+                            if (!pidx) continue;
+                            ctx.fillStyle = pal[pidx];
+                            for (let py = 0; py < scale; py++) {
+                                for (let px = 0; px < scale; px++) {
+                                    const dy = catY + sr * scale + py + (sr >= 10 ? bounce * scale : 0);
+                                    const dx = catX + sc * scale + px;
+                                    if (dx < 0 || dx >= cols || dy < 0 || dy >= rows) continue;
+                                    ctx.fillRect(dx * cw, dy * ch, cw - 0.1, ch - 0.1);
+                                }
+                            }
+                        }
+                    }
+
+                    // Sparkle stars
+                    ctx.fillStyle = oMode === 'fax' ? '#fff' : 'rgba(255,255,255,0.85)';
+                    const ss = oFrame * 5;
+                    for (let s = 0; s < 20; s++) {
+                        const sx = (ss + s * 137) % cols;
+                        const sy2 = (ss + s * 89) % rows;
+                        const phase = (oFrame + s * 3) % 6;
+                        if (phase < 3) {
+                            const sz = (phase === 1 ? 3 : 1);
+                            ctx.fillRect(sx * cw + cw/2 - sz/2, sy2 * ch, sz, ch);
+                            ctx.fillRect(sx * cw, sy2 * ch + ch/2 - sz/2, cw, sz);
+                        }
+                    }
+
+                    oFrame = (oFrame + 1) % (cols + spr.w * scale + 10);
                 };
                 draw();
 
-                // Animate
+                // Animate at ~20fps for smooth nyan
                 const anim = setInterval(() => {
-                    for (let i = 0; i < 500; i++) {
+                    for (let i = 0; i < 200; i++) {
                         const idx = Math.floor(Math.random() * bigData.length);
-                        bigData[idx] = (bigData[idx] + Math.floor(Math.random() * 8)) & 0xFF;
+                        bigData[idx] = (bigData[idx] + Math.floor(Math.random() * 6)) & 0xFF;
                     }
                     draw();
-                }, 150);
+                }, 50);
 
                 overlay.querySelectorAll('[data-omode]').forEach(btn => {
                     btn.addEventListener('click', () => {
