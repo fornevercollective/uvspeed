@@ -737,6 +737,8 @@
             display: flex;
             flex-direction: column;
             overflow-y: auto;
+            overflow-x: hidden;
+            box-sizing: border-box;
         }
 
         .sidebar-section {
@@ -766,7 +768,7 @@
         }
         .sidebar-tabs-ext .sidebar-tab-ext:hover { color: var(--cursor-text-secondary); background: var(--cursor-bg-hover); }
         .sidebar-tabs-ext .sidebar-tab-ext.active { color: var(--cursor-accent); border-bottom-color: var(--cursor-accent); }
-        .sidebar-tab-ext-panel { display: none; overflow-y: auto; }
+        .sidebar-tab-ext-panel { display: none; overflow-y: auto; overflow-x: hidden; max-width: 100%; box-sizing: border-box; }
         .sidebar-tab-ext-panel.active { display: block; }
 
         /* --- AI/LLM Panel --- */
@@ -795,7 +797,20 @@
         }
 
         /* --- Language Panel --- */
-        .lang-panel { padding: var(--cursor-space-sm); }
+        .lang-panel { padding: var(--cursor-space-sm); overflow-x: hidden; }
+        .lang-subtabs {
+            display: flex; gap: 2px; margin-bottom: 8px;
+        }
+        .lang-subtab {
+            padding: 3px 8px; font-size: 0.5625rem; font-weight: 600;
+            border: 1px solid var(--cursor-border); border-radius: 4px;
+            background: var(--cursor-bg-tertiary); color: var(--cursor-text-muted);
+            cursor: pointer; transition: all 0.12s; white-space: nowrap;
+        }
+        .lang-subtab:hover { color: var(--cursor-text-secondary); border-color: var(--cursor-text-muted); }
+        .lang-subtab.active { background: var(--cursor-accent-subtle); color: var(--cursor-accent); border-color: var(--cursor-accent); }
+        .lang-subpanel { display: none; }
+        .lang-subpanel.active { display: block; }
         .lang-grid {
             display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin-bottom: 8px;
         }
@@ -814,15 +829,57 @@
         }
         .lang-info-box strong { color: var(--cursor-text); }
 
+        /* --- kbatch sub-tab in language panel --- */
+        .lkb-stats {
+            display: flex; flex-wrap: wrap; gap: 4px 10px; margin-bottom: 6px;
+            font-size: 0.5625rem; font-family: var(--cursor-font-mono);
+        }
+        .lkb-stats b { font-weight: 700; }
+        .lkb-canvas-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 1px;
+            background: #21262d; border-radius: var(--cursor-radius-sm);
+            overflow: hidden; margin-bottom: 6px;
+        }
+        .lkb-canvas-cell {
+            background: #0d1117; position: relative; height: 90px;
+        }
+        .lkb-canvas-cell canvas { width: 100%; height: calc(100% - 14px); display: block; }
+        .lkb-canvas-label {
+            padding: 1px 5px; font-size: 0.4375rem; font-weight: 600;
+            background: #161b22;
+        }
+        .lkb-input {
+            width: 100%; padding: 6px 8px; background: #0d1117;
+            border: 1px solid #30363d; border-radius: 4px; color: #c9d1d9;
+            font-family: var(--cursor-font-mono); font-size: 0.75rem; outline: none;
+            box-sizing: border-box;
+        }
+        .lkb-input:focus { border-color: #f0883e; }
+        .lkb-output {
+            margin-top: 6px; padding: 6px 8px; background: var(--cursor-bg-tertiary);
+            border: 1px solid var(--cursor-border); border-radius: var(--cursor-radius-sm);
+            font-family: var(--cursor-font-mono); font-size: 0.5rem;
+            color: var(--cursor-text-muted); max-height: 100px; overflow-y: auto;
+            line-height: 1.5;
+        }
+
         /* --- Blocks Panel (mini Pybricks builder) --- */
-        .blocks-panel { padding: var(--cursor-space-sm); }
+        .blocks-panel {
+            padding: var(--cursor-space-sm);
+            overflow-x: hidden;
+            max-width: 100%;
+            box-sizing: border-box;
+        }
         .nb-palette {
-            display: flex; flex-wrap: wrap; gap: 3px; margin-bottom: 6px;
+            display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px;
+            max-width: 100%; overflow: hidden;
         }
         .nb-chip {
-            padding: 2px 6px; font-size: 0.5rem; font-weight: 600;
-            border-radius: 3px; cursor: pointer; border: 1px solid transparent;
+            padding: 3px 7px; font-size: 0.5625rem; font-weight: 600;
+            border-radius: 4px; cursor: pointer; border: 1px solid transparent;
             transition: all 0.12s ease; white-space: nowrap;
+            flex-shrink: 0; max-width: calc(50% - 4px); box-sizing: border-box;
+            overflow: hidden; text-overflow: ellipsis;
         }
         .nb-chip:hover { filter: brightness(1.2); }
         .nb-chip.cat-hub    { background: rgba(88,166,255,0.15); color: #58a6ff; border-color: rgba(88,166,255,0.3); }
@@ -840,6 +897,8 @@
             border: 1px solid var(--cursor-border-muted);
             border-radius: var(--cursor-radius-sm);
             overflow: hidden;
+            max-width: 100%;
+            box-sizing: border-box;
         }
         .nb-canvas .nb-grid {
             position: absolute; inset: 0;
@@ -1062,14 +1121,35 @@
             padding: var(--cursor-space-xs);
             background: var(--cursor-bg);
             border-radius: var(--cursor-radius-md);
+            position: relative;
         }
 
+        /* Outer wrapper: arrows sit around the cube */
+        .nav-cube-orbit {
+            display: grid;
+            grid-template-areas:
+                ".  up  ."
+                "lt cube rt"
+                ".  dn  .";
+            grid-template-columns: 28px 1fr 28px;
+            grid-template-rows: 28px 1fr 28px;
+            place-items: center;
+            width: 180px;
+            height: 180px;
+            margin: 4px auto;
+            gap: 2px;
+        }
+        .nav-cube-orbit .nca-up    { grid-area: up; }
+        .nav-cube-orbit .nca-down  { grid-area: dn; }
+        .nav-cube-orbit .nca-left  { grid-area: lt; }
+        .nav-cube-orbit .nca-right { grid-area: rt; }
+
         .nav-cube-scene {
+            grid-area: cube;
             position: relative;
             perspective: 400px;
-            width: 110px;
-            height: 110px;
-            margin: 8px auto;
+            width: 118px;
+            height: 118px;
             cursor: grab;
             user-select: none;
         }
@@ -1086,77 +1166,71 @@
 
         .nav-cube-face {
             position: absolute;
-            width: 110px;
-            height: 110px;
+            width: 118px;
+            height: 118px;
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 2px;
-            padding: 2px;
+            gap: 3px;
+            padding: 3px;
             background: rgba(13, 17, 23, 0.55);
             border: 1px solid var(--cursor-border-muted);
             border-radius: 4px;
         }
-        .nav-cube-face.ncf-front  { transform: translateZ(55px); }
-        .nav-cube-face.ncf-back   { transform: rotateY(180deg) translateZ(55px); }
-        .nav-cube-face.ncf-right  { transform: rotateY(90deg) translateZ(55px); }
-        .nav-cube-face.ncf-left   { transform: rotateY(-90deg) translateZ(55px); }
-        .nav-cube-face.ncf-top    { transform: rotateX(90deg) translateZ(55px); }
-        .nav-cube-face.ncf-bottom { transform: rotateX(-90deg) translateZ(55px); }
+        .nav-cube-face.ncf-front  { transform: translateZ(59px); }
+        .nav-cube-face.ncf-back   { transform: rotateY(180deg) translateZ(59px); }
+        .nav-cube-face.ncf-right  { transform: rotateY(90deg) translateZ(59px); }
+        .nav-cube-face.ncf-left   { transform: rotateY(-90deg) translateZ(59px); }
+        .nav-cube-face.ncf-top    { transform: rotateX(90deg) translateZ(59px); }
+        .nav-cube-face.ncf-bottom { transform: rotateX(-90deg) translateZ(59px); }
 
+        /* Cells: neutral by default, prefix color only on hover/active */
         .nav-cube-face span {
-            border-radius: 2px;
+            border-radius: 3px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-family: var(--cursor-font-mono);
-            font-size: 7px;
-            font-weight: 700;
-            color: rgba(0, 0, 0, 0.55);
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.02em;
+            color: var(--cursor-text-muted);
+            background: rgba(48, 54, 61, 0.7);
             cursor: pointer;
-            transition: box-shadow 0.15s ease, transform 0.1s ease;
+            transition: background 0.2s ease, box-shadow 0.15s ease, transform 0.1s ease, color 0.2s ease;
         }
         .nav-cube-face span:hover {
-            box-shadow: 0 0 6px rgba(255,255,255,0.3);
+            background: var(--ncf-color, rgba(88, 100, 112, 0.6));
+            box-shadow: 0 0 8px var(--ncf-glow, rgba(255,255,255,0.15));
             transform: scale(1.08);
-            color: rgba(0,0,0,0.8);
+            color: #fff;
         }
         .nav-cube-face span.ncf-active {
-            box-shadow: 0 0 10px rgba(139, 92, 246, 0.7);
-            border: 1px solid rgba(139, 92, 246, 0.6);
-            color: rgba(0,0,0,0.9);
+            background: var(--ncf-color, rgba(139, 92, 246, 0.5));
+            box-shadow: 0 0 12px var(--ncf-glow, rgba(139, 92, 246, 0.7));
+            border: 1px solid var(--ncf-glow, rgba(139, 92, 246, 0.6));
+            color: #fff;
         }
 
-        /* Rotation arrow buttons around the cube */
-        .nav-cube-arrows {
-            display: grid;
-            grid-template-areas:
-                ".  up  ."
-                "lt  .  rt"
-                ".  dn  .";
-            grid-template-columns: 1fr 1fr 1fr;
-            grid-template-rows: auto 1fr auto;
-            place-items: center;
-            width: 150px;
-            margin: 0 auto;
+        /* Flat-face snap: when cube faces camera directly, enlarge text for readability */
+        .nav-cube-inner.ncf-flat .nav-cube-face span {
+            font-size: 15px;
         }
-        .nav-cube-arrows .nca-up    { grid-area: up; }
-        .nav-cube-arrows .nca-down  { grid-area: dn; }
-        .nav-cube-arrows .nca-left  { grid-area: lt; }
-        .nav-cube-arrows .nca-right { grid-area: rt; }
 
+        /* Rotation arrow buttons — positioned outside the cube */
         .nav-cube-arrow {
-            width: 28px;
-            height: 28px;
+            width: 26px;
+            height: 26px;
             border: 1px solid var(--cursor-border);
             border-radius: 50%;
             background: var(--cursor-bg-tertiary);
             color: var(--cursor-text-muted);
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             transition: all 0.12s ease;
+            padding: 0;
         }
         .nav-cube-arrow:hover {
             background: var(--cursor-bg-hover);
@@ -2262,8 +2336,8 @@
             background: var(--cursor-bg-tertiary);
             border-bottom: 1px solid var(--cursor-border-muted);
         }
-        .top-quick-cmds .fqc-tabbar { justify-content: center; }
-        .top-quick-cmds .fqc-panel { justify-content: center; }
+        .top-quick-cmds .fqc-tabbar { justify-content: flex-start; }
+        .top-quick-cmds .fqc-panel { justify-content: flex-start; }
         .top-quick-cmds .btn--xs {
             padding: 2px 8px;
             font-size: 0.625rem;
@@ -2285,6 +2359,7 @@
             display: flex;
             gap: 2px;
             flex-wrap: wrap;
+            justify-content: flex-start;
         }
         .fqc-tab {
             padding: 2px 7px;
@@ -2305,6 +2380,7 @@
             gap: 3px;
             flex-wrap: wrap;
             align-items: center;
+            justify-content: flex-start;
         }
         .fqc-panel.active { display: flex; }
 
@@ -2636,6 +2712,7 @@
             <!-- Panel: Add-ins (cell types) -->
             <div class="fqc-panel" data-tqc-panel="addins">
                 <button class="btn btn--xs" id="t-freya-units" title="FreyaUnits cell" style="background:#7c3aed22;border-color:#7c3aed55;color:#a78bfa;">🔬 FreyaUnits</button>
+                <button class="btn btn--xs" id="t-add-quantum" title="quantum visual cell" style="background:#8b5cf622;border-color:#8b5cf655;color:#c4b5fd;">🌌 + quantum</button>
                 <button class="btn btn--xs" id="t-add-kbatch" title="kbatch cell" style="background:#f0883e22;border-color:#f0883e55;color:#f0883e;">⌨ + kbatch</button>
                 <button class="btn btn--xs" id="t-add-hexcast" title="hexcast cell" style="background:#da363322;border-color:#da363355;color:#f97583;">📡 + hexcast</button>
                 <button class="btn btn--xs" id="t-add-hexbench" title="hexbench cell" style="background:#ffe13822;border-color:#ffe13855;color:#ffe138;">⚡ + hexbench</button>
@@ -2705,59 +2782,59 @@
                 <div class="sidebar-section">
                     <div class="sidebar-title">Quantum Navigation</div>
 
-                    <!-- 3D Rubik Cube Nav -->
+                    <!-- 3D Rubik Cube Nav — arrows orbit outside the cube -->
                     <div class="nav-cube-container" id="nav-cube-container">
-                        <div class="nav-cube-arrows">
+                        <div class="nav-cube-orbit">
                             <button class="nav-cube-arrow nca-up" id="nca-up" title="Rotate up">▲</button>
                             <button class="nav-cube-arrow nca-left" id="nca-left" title="Rotate left">◀</button>
-                            <button class="nav-cube-arrow nca-right" id="nca-right" title="Rotate right">▶</button>
-                            <button class="nav-cube-arrow nca-down" id="nca-down" title="Rotate down">▼</button>
-                        </div>
-                        <div class="nav-cube-scene" id="nav-cube-scene">
-                            <div class="nav-cube-inner" id="nav-cube-inner">
-                                <!-- Front face — the primary 9-symbol pad -->
-                                <div class="nav-cube-face ncf-front">
-                                    <span style="background:#ff3838" data-nav="+1">+1</span>
-                                    <span style="background:#58a6ff" data-nav="0">0</span>
-                                    <span style="background:#ff8c38" data-nav="-1">-1</span>
-                                    <span style="background:#ffe138" data-nav="+0">+0</span>
-                                    <span style="background:#8b949e" data-nav="⚛" class="ncf-active">∞</span>
-                                    <span style="background:#484f58" data-nav="-0">-0</span>
-                                    <span style="background:#bc8cff" data-nav="+n">+n</span>
-                                    <span style="background:#3fb950" data-nav="-n">-n</span>
-                                    <span style="background:#da3633" data-nav="+2">+2</span>
-                                </div>
-                                <!-- Back -->
-                                <div class="nav-cube-face ncf-back">
-                                    <span style="background:#3fb950">n</span><span style="background:#da3633">-n</span><span style="background:#bc8cff">+n</span>
-                                    <span style="background:#484f58">-0</span><span style="background:#8b949e">0</span><span style="background:#ffe138">+0</span>
-                                    <span style="background:#ff8c38">-1</span><span style="background:#58a6ff">1</span><span style="background:#ff3838">+1</span>
-                                </div>
-                                <!-- Right -->
-                                <div class="nav-cube-face ncf-right">
-                                    <span style="background:#ff8c38">-1</span><span style="background:#ffe138">+0</span><span style="background:#3fb950">n</span>
-                                    <span style="background:#ff3838">+1</span><span style="background:#8b949e">0</span><span style="background:#da3633">-n</span>
-                                    <span style="background:#58a6ff">1</span><span style="background:#484f58">-0</span><span style="background:#bc8cff">+n</span>
-                                </div>
-                                <!-- Left -->
-                                <div class="nav-cube-face ncf-left">
-                                    <span style="background:#bc8cff">+n</span><span style="background:#484f58">-0</span><span style="background:#58a6ff">1</span>
-                                    <span style="background:#da3633">-n</span><span style="background:#8b949e">0</span><span style="background:#ff3838">+1</span>
-                                    <span style="background:#3fb950">n</span><span style="background:#ffe138">+0</span><span style="background:#ff8c38">-1</span>
-                                </div>
-                                <!-- Top -->
-                                <div class="nav-cube-face ncf-top">
-                                    <span style="background:#bc8cff">+n</span><span style="background:#bc8cff">+n</span><span style="background:#bc8cff">+n</span>
-                                    <span style="background:#ff3838">+1</span><span style="background:#ff3838">+1</span><span style="background:#ff3838">+1</span>
-                                    <span style="background:#ffe138">+0</span><span style="background:#ffe138">+0</span><span style="background:#ffe138">+0</span>
-                                </div>
-                                <!-- Bottom -->
-                                <div class="nav-cube-face ncf-bottom">
-                                    <span style="background:#da3633">-n</span><span style="background:#da3633">-n</span><span style="background:#da3633">-n</span>
-                                    <span style="background:#ff8c38">-1</span><span style="background:#ff8c38">-1</span><span style="background:#ff8c38">-1</span>
-                                    <span style="background:#484f58">-0</span><span style="background:#484f58">-0</span><span style="background:#484f58">-0</span>
+                            <div class="nav-cube-scene" id="nav-cube-scene">
+                                <div class="nav-cube-inner" id="nav-cube-inner">
+                                    <!-- Front face — primary 9-symbol pad -->
+                                    <div class="nav-cube-face ncf-front">
+                                        <span data-nav="+1" style="--ncf-color:#ff383866;--ncf-glow:#ff383888">+1</span>
+                                        <span data-nav="0"  style="--ncf-color:#58a6ff66;--ncf-glow:#58a6ff88">0</span>
+                                        <span data-nav="-1" style="--ncf-color:#ff8c3866;--ncf-glow:#ff8c3888">-1</span>
+                                        <span data-nav="+0" style="--ncf-color:#ffe13866;--ncf-glow:#ffe13888">+0</span>
+                                        <span data-nav="⚛"  style="--ncf-color:#8b5cf666;--ncf-glow:#8b5cf688" class="ncf-active">∞</span>
+                                        <span data-nav="-0" style="--ncf-color:#484f5866;--ncf-glow:#484f5888">-0</span>
+                                        <span data-nav="+n" style="--ncf-color:#bc8cff66;--ncf-glow:#bc8cff88">+n</span>
+                                        <span data-nav="-n" style="--ncf-color:#3fb95066;--ncf-glow:#3fb95088">-n</span>
+                                        <span data-nav="+2" style="--ncf-color:#da363366;--ncf-glow:#da363388">+2</span>
+                                    </div>
+                                    <!-- Back -->
+                                    <div class="nav-cube-face ncf-back">
+                                        <span style="--ncf-color:#3fb95066;--ncf-glow:#3fb95088">n</span><span style="--ncf-color:#da363366;--ncf-glow:#da363388">-n</span><span style="--ncf-color:#bc8cff66;--ncf-glow:#bc8cff88">+n</span>
+                                        <span style="--ncf-color:#484f5866;--ncf-glow:#484f5888">-0</span><span style="--ncf-color:#8b949e66;--ncf-glow:#8b949e88">0</span><span style="--ncf-color:#ffe13866;--ncf-glow:#ffe13888">+0</span>
+                                        <span style="--ncf-color:#ff8c3866;--ncf-glow:#ff8c3888">-1</span><span style="--ncf-color:#58a6ff66;--ncf-glow:#58a6ff88">1</span><span style="--ncf-color:#ff383866;--ncf-glow:#ff383888">+1</span>
+                                    </div>
+                                    <!-- Right -->
+                                    <div class="nav-cube-face ncf-right">
+                                        <span style="--ncf-color:#ff8c3866;--ncf-glow:#ff8c3888">-1</span><span style="--ncf-color:#ffe13866;--ncf-glow:#ffe13888">+0</span><span style="--ncf-color:#3fb95066;--ncf-glow:#3fb95088">n</span>
+                                        <span style="--ncf-color:#ff383866;--ncf-glow:#ff383888">+1</span><span style="--ncf-color:#8b949e66;--ncf-glow:#8b949e88">0</span><span style="--ncf-color:#da363366;--ncf-glow:#da363388">-n</span>
+                                        <span style="--ncf-color:#58a6ff66;--ncf-glow:#58a6ff88">1</span><span style="--ncf-color:#484f5866;--ncf-glow:#484f5888">-0</span><span style="--ncf-color:#bc8cff66;--ncf-glow:#bc8cff88">+n</span>
+                                    </div>
+                                    <!-- Left -->
+                                    <div class="nav-cube-face ncf-left">
+                                        <span style="--ncf-color:#bc8cff66;--ncf-glow:#bc8cff88">+n</span><span style="--ncf-color:#484f5866;--ncf-glow:#484f5888">-0</span><span style="--ncf-color:#58a6ff66;--ncf-glow:#58a6ff88">1</span>
+                                        <span style="--ncf-color:#da363366;--ncf-glow:#da363388">-n</span><span style="--ncf-color:#8b949e66;--ncf-glow:#8b949e88">0</span><span style="--ncf-color:#ff383866;--ncf-glow:#ff383888">+1</span>
+                                        <span style="--ncf-color:#3fb95066;--ncf-glow:#3fb95088">n</span><span style="--ncf-color:#ffe13866;--ncf-glow:#ffe13888">+0</span><span style="--ncf-color:#ff8c3866;--ncf-glow:#ff8c3888">-1</span>
+                                    </div>
+                                    <!-- Top -->
+                                    <div class="nav-cube-face ncf-top">
+                                        <span style="--ncf-color:#bc8cff66;--ncf-glow:#bc8cff88">+n</span><span style="--ncf-color:#bc8cff66;--ncf-glow:#bc8cff88">+n</span><span style="--ncf-color:#bc8cff66;--ncf-glow:#bc8cff88">+n</span>
+                                        <span style="--ncf-color:#ff383866;--ncf-glow:#ff383888">+1</span><span style="--ncf-color:#ff383866;--ncf-glow:#ff383888">+1</span><span style="--ncf-color:#ff383866;--ncf-glow:#ff383888">+1</span>
+                                        <span style="--ncf-color:#ffe13866;--ncf-glow:#ffe13888">+0</span><span style="--ncf-color:#ffe13866;--ncf-glow:#ffe13888">+0</span><span style="--ncf-color:#ffe13866;--ncf-glow:#ffe13888">+0</span>
+                                    </div>
+                                    <!-- Bottom -->
+                                    <div class="nav-cube-face ncf-bottom">
+                                        <span style="--ncf-color:#da363366;--ncf-glow:#da363388">-n</span><span style="--ncf-color:#da363366;--ncf-glow:#da363388">-n</span><span style="--ncf-color:#da363366;--ncf-glow:#da363388">-n</span>
+                                        <span style="--ncf-color:#ff8c3866;--ncf-glow:#ff8c3888">-1</span><span style="--ncf-color:#ff8c3866;--ncf-glow:#ff8c3888">-1</span><span style="--ncf-color:#ff8c3866;--ncf-glow:#ff8c3888">-1</span>
+                                        <span style="--ncf-color:#484f5866;--ncf-glow:#484f5888">-0</span><span style="--ncf-color:#484f5866;--ncf-glow:#484f5888">-0</span><span style="--ncf-color:#484f5866;--ncf-glow:#484f5888">-0</span>
+                                    </div>
                                 </div>
                             </div>
+                            <button class="nav-cube-arrow nca-right" id="nca-right" title="Rotate right">▶</button>
+                            <button class="nav-cube-arrow nca-down" id="nca-down" title="Rotate down">▼</button>
                         </div>
                     </div>
 
@@ -2999,44 +3076,102 @@
                 <div class="sidebar-tab-ext-panel" id="lang-tab">
                 <div class="lang-panel">
                     <div class="sidebar-title">Language Packs</div>
-                    <div style="font-size:0.5625rem;color:var(--cursor-text-muted);margin-bottom:6px;">20 quantum-prefix language packs — select to view coverage &amp; AST rules</div>
 
-                    <div class="lang-grid" id="lang-grid">
-                        <span class="lang-chip active" data-lang="python">Python</span>
-                        <span class="lang-chip" data-lang="javascript">JS</span>
-                        <span class="lang-chip" data-lang="typescript">TS</span>
-                        <span class="lang-chip" data-lang="rust">Rust</span>
-                        <span class="lang-chip" data-lang="go">Go</span>
-                        <span class="lang-chip" data-lang="c">C</span>
-                        <span class="lang-chip" data-lang="cpp">C++</span>
-                        <span class="lang-chip" data-lang="java">Java</span>
-                        <span class="lang-chip" data-lang="shell">Shell</span>
-                        <span class="lang-chip" data-lang="ruby">Ruby</span>
-                        <span class="lang-chip" data-lang="swift">Swift</span>
-                        <span class="lang-chip" data-lang="kotlin">Kotlin</span>
-                        <span class="lang-chip" data-lang="php">PHP</span>
-                        <span class="lang-chip" data-lang="lua">Lua</span>
-                        <span class="lang-chip" data-lang="r">R</span>
-                        <span class="lang-chip" data-lang="sql">SQL</span>
-                        <span class="lang-chip" data-lang="html">HTML</span>
-                        <span class="lang-chip" data-lang="css">CSS</span>
-                        <span class="lang-chip" data-lang="yaml">YAML</span>
-                        <span class="lang-chip" data-lang="toml">TOML</span>
+                    <!-- Sub-tab bar -->
+                    <div class="lang-subtabs" id="lang-subtabs">
+                        <span class="lang-subtab active" data-lang-sub="lang-packs-sub">🌐 Packs</span>
+                        <span class="lang-subtab" data-lang-sub="lang-kbatch-sub">⌨ kbatch</span>
                     </div>
 
-                    <div class="lang-info-box" id="lang-info-box">
-                        <strong>Python</strong> — Coverage: <span style="color:#7ee787;">98%</span><br>
-                        AST rules: <span style="color:var(--cursor-accent);">47</span> patterns<br>
-                        Prefixes: all 9 symbols mapped<br>
-                        <span style="color:var(--cursor-text-muted);">+1: class/def · +0: assign · n: import · -n: return · 0: pass/comment · -0: del · +n: raise · -1: except · +2: yield</span>
+                    <!-- Sub-panel: Language Packs -->
+                    <div class="lang-subpanel active" id="lang-packs-sub">
+                        <div style="font-size:0.5625rem;color:var(--cursor-text-muted);margin-bottom:6px;">20 quantum-prefix language packs — select to view coverage &amp; AST rules</div>
+
+                        <div class="lang-grid" id="lang-grid">
+                            <span class="lang-chip active" data-lang="python">Python</span>
+                            <span class="lang-chip" data-lang="javascript">JS</span>
+                            <span class="lang-chip" data-lang="typescript">TS</span>
+                            <span class="lang-chip" data-lang="rust">Rust</span>
+                            <span class="lang-chip" data-lang="go">Go</span>
+                            <span class="lang-chip" data-lang="c">C</span>
+                            <span class="lang-chip" data-lang="cpp">C++</span>
+                            <span class="lang-chip" data-lang="java">Java</span>
+                            <span class="lang-chip" data-lang="shell">Shell</span>
+                            <span class="lang-chip" data-lang="ruby">Ruby</span>
+                            <span class="lang-chip" data-lang="swift">Swift</span>
+                            <span class="lang-chip" data-lang="kotlin">Kotlin</span>
+                            <span class="lang-chip" data-lang="php">PHP</span>
+                            <span class="lang-chip" data-lang="lua">Lua</span>
+                            <span class="lang-chip" data-lang="r">R</span>
+                            <span class="lang-chip" data-lang="sql">SQL</span>
+                            <span class="lang-chip" data-lang="html">HTML</span>
+                            <span class="lang-chip" data-lang="css">CSS</span>
+                            <span class="lang-chip" data-lang="yaml">YAML</span>
+                            <span class="lang-chip" data-lang="toml">TOML</span>
+                        </div>
+
+                        <div class="lang-info-box" id="lang-info-box">
+                            <strong>Python</strong> — Coverage: <span style="color:#7ee787;">98%</span><br>
+                            AST rules: <span style="color:var(--cursor-accent);">47</span> patterns<br>
+                            Prefixes: all 9 symbols mapped<br>
+                            <span style="color:var(--cursor-text-muted);">+1: class/def · +0: assign · n: import · -n: return · 0: pass/comment · -0: del · +n: raise · -1: except · +2: yield</span>
+                        </div>
+
+                        <div style="margin-top:8px;font-size:0.5625rem;color:var(--cursor-text-muted);font-weight:600;">DETECTION</div>
+                        <div style="display:flex;gap:4px;margin-top:4px;">
+                            <button class="btn btn--xs" id="lang-detect-btn" style="background:var(--cursor-accent-subtle);color:var(--cursor-accent);border-color:var(--cursor-accent);">🔍 Auto-detect</button>
+                            <button class="btn btn--xs" id="lang-apply-btn">Apply to cell</button>
+                        </div>
+                        <div id="lang-detect-result" style="margin-top:6px;font-size:0.5625rem;color:var(--cursor-text-muted);font-family:var(--cursor-font-mono);display:none;"></div>
                     </div>
 
-                    <div style="margin-top:8px;font-size:0.5625rem;color:var(--cursor-text-muted);font-weight:600;">DETECTION</div>
-                    <div style="display:flex;gap:4px;margin-top:4px;">
-                        <button class="btn btn--xs" id="lang-detect-btn" style="background:var(--cursor-accent-subtle);color:var(--cursor-accent);border-color:var(--cursor-accent);">🔍 Auto-detect</button>
-                        <button class="btn btn--xs" id="lang-apply-btn">Apply to cell</button>
+                    <!-- Sub-panel: kbatch Keyboard Analyzer -->
+                    <div class="lang-subpanel" id="lang-kbatch-sub">
+                        <div style="font-size:0.5625rem;color:var(--cursor-text-muted);margin-bottom:6px;">Live keyboard analysis — thermal heatmap, contrails, data output</div>
+
+                        <!-- Stats row -->
+                        <div class="lkb-stats">
+                            <span>WPM: <b style="color:#58a6ff;" id="lkb-wpm">0</b></span>
+                            <span>Eff: <b style="color:#7ee787;" id="lkb-eff">0%</b></span>
+                            <span>Keys: <b style="color:#d2a8ff;" id="lkb-keys">0</b></span>
+                            <span>Words: <b style="color:#c9d1d9;" id="lkb-words">0</b></span>
+                        </div>
+
+                        <!-- 2x2 canvas grid -->
+                        <div class="lkb-canvas-grid">
+                            <div class="lkb-canvas-cell">
+                                <div class="lkb-canvas-label" style="color:#f0883e;">🔥 Thermal</div>
+                                <canvas id="lkb-cv-thermal"></canvas>
+                            </div>
+                            <div class="lkb-canvas-cell">
+                                <div class="lkb-canvas-label" style="color:#58a6ff;">✈ Contrails</div>
+                                <canvas id="lkb-cv-contrails"></canvas>
+                            </div>
+                            <div class="lkb-canvas-cell">
+                                <div class="lkb-canvas-label" style="color:#d2a8ff;">⬡ Geometric</div>
+                                <canvas id="lkb-cv-geo"></canvas>
+                            </div>
+                            <div class="lkb-canvas-cell">
+                                <div class="lkb-canvas-label" style="color:#7ee787;">🎹 Language</div>
+                                <canvas id="lkb-cv-lang"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Input -->
+                        <input id="lkb-input" class="lkb-input" type="text" placeholder="Type here to analyze..." autocomplete="off" spellcheck="false">
+
+                        <!-- Data output log -->
+                        <div class="lkb-output" id="lkb-output">
+                            <div style="color:#484f58;">Keystroke data will appear here...</div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;">
+                            <button class="btn btn--xs" id="lkb-reset" style="background:rgba(240,136,62,.1);color:#f0883e;border-color:rgba(240,136,62,.3);">↺ Reset</button>
+                            <button class="btn btn--xs" id="lkb-export" style="background:rgba(88,166,255,.1);color:#58a6ff;border-color:rgba(88,166,255,.3);">📋 Export</button>
+                            <button class="btn btn--xs" id="lkb-fullpage" onclick="window.open('kbatch.html','_blank')" style="background:rgba(63,185,80,.1);color:#3fb950;border-color:rgba(63,185,80,.3);">↗ Full Page</button>
+                        </div>
                     </div>
-                    <div id="lang-detect-result" style="margin-top:6px;font-size:0.5625rem;color:var(--cursor-text-muted);font-family:var(--cursor-font-mono);display:none;"></div>
                 </div>
                 </div><!-- /lang-tab -->
 
@@ -3063,7 +3198,7 @@
                         <span class="nb-chip cat-stream" data-nb="stream_in">Stream</span>
                     </div>
 
-                    <div style="display:flex;gap:3px;margin-bottom:6px;">
+                    <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;max-width:100%;">
                         <button class="btn btn--xs" id="nb-preset-drive" style="background:rgba(255,225,56,.1);color:#ffe138;border-color:rgba(255,225,56,.3);">Drive Bot</button>
                         <button class="btn btn--xs" id="nb-preset-sorter" style="background:rgba(63,185,80,.1);color:#3fb950;border-color:rgba(63,185,80,.3);">Color Sorter</button>
                         <button class="btn btn--xs" id="nb-export" style="background:rgba(88,166,255,.1);color:#58a6ff;border-color:rgba(88,166,255,.3);">Export .py</button>
@@ -3201,6 +3336,7 @@
                 <!-- Panel: Add-ins (cell types) -->
                 <div class="fqc-panel" data-fqc-panel="addins">
                     <button class="btn btn--xs" id="f-freya-units" title="FreyaUnits cell" style="background:#7c3aed22;border-color:#7c3aed55;color:#a78bfa;">🔬 FreyaUnits</button>
+                    <button class="btn btn--xs" id="f-add-quantum" title="quantum visual cell" style="background:#8b5cf622;border-color:#8b5cf655;color:#c4b5fd;">🌌 + quantum</button>
                     <button class="btn btn--xs" id="f-add-kbatch" title="kbatch cell" style="background:#f0883e22;border-color:#f0883e55;color:#f0883e;">⌨ + kbatch</button>
                     <button class="btn btn--xs" id="f-add-hexcast" title="hexcast cell" style="background:#da363322;border-color:#da363355;color:#f97583;">📡 + hexcast</button>
                     <button class="btn btn--xs" id="f-add-hexbench" title="hexbench cell" style="background:#ffe13822;border-color:#ffe13855;color:#ffe138;">⚡ + hexbench</button>
@@ -6851,7 +6987,15 @@
                 const navCubeScene = document.getElementById('nav-cube-scene');
 
                 const updateNavCube = () => {
-                    if (navCubeInner) navCubeInner.style.transform = `rotateX(${this._navCubeRx}deg) rotateY(${this._navCubeRy}deg)`;
+                    if (!navCubeInner) return;
+                    navCubeInner.style.transform = `rotateX(${this._navCubeRx}deg) rotateY(${this._navCubeRy}deg)`;
+                    // Detect if a face is flat toward the viewer — enlarge numbers for readability
+                    const rx = ((this._navCubeRx % 360) + 360) % 360;
+                    const ry = ((this._navCubeRy % 360) + 360) % 360;
+                    const snapThreshold = 12;
+                    const nearSnap = (v) => [0, 90, 180, 270, 360].some(s => Math.abs(v - s) < snapThreshold);
+                    const isFlat = nearSnap(rx) && nearSnap(ry);
+                    navCubeInner.classList.toggle('ncf-flat', isFlat);
                 };
 
                 // Arrow buttons — rotate 45 degrees per click
@@ -6872,12 +7016,26 @@
                         if (!ncDrag) return;
                         this._navCubeRy = ncDrag.ry + (e.clientX - ncDrag.x) * 0.7;
                         this._navCubeRx = ncDrag.rx + (e.clientY - ncDrag.y) * 0.7;
-                        if (navCubeInner) navCubeInner.style.transition = 'none';
-                        updateNavCube();
+                        if (navCubeInner) {
+                            navCubeInner.style.transition = 'none';
+                            updateNavCube();
+                        }
                     });
                     navCubeScene.addEventListener('pointerup', () => {
                         ncDrag = null;
                         if (navCubeInner) navCubeInner.style.transition = 'transform 0.25s ease';
+                    });
+                }
+
+                // Double-click cube → snap to nearest face (flat view with big numbers)
+                if (navCubeScene) {
+                    navCubeScene.addEventListener('dblclick', (e) => {
+                        if (e.target.dataset && e.target.dataset.nav) return;
+                        const snap = (v) => Math.round(v / 90) * 90;
+                        this._navCubeRx = snap(this._navCubeRx);
+                        this._navCubeRy = snap(this._navCubeRy);
+                        if (navCubeInner) navCubeInner.style.transition = 'transform 0.35s ease';
+                        updateNavCube();
                     });
                 }
 
@@ -7004,6 +7162,11 @@
                 document.getElementById('t-play-numsy').addEventListener('click', () => openOverlay('brothernumsy.html', 'brotherNumsy & Freya'));
                 document.getElementById('t-open-kbatch').addEventListener('click', () => openOverlay('kbatch.html', 'kbatch — Keyboard Analyzer'));
                 document.getElementById('t-open-hexcast').addEventListener('click', () => openOverlay('hexcast.html', 'hexcast — Live Video Broadcast'));
+                document.getElementById('t-add-quantum').addEventListener('click', () => {
+                    const id = this.addCell('quantum', '# 🌌 Quantum Visual — Slice / Cube / Orb\n# Navigate code space in 3D. Click grid cells, scroll for Z-layer, drag to rotate cube.');
+                    this.executeCell(id);
+                    setTimeout(() => { document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 100);
+                });
                 document.getElementById('t-add-kbatch').addEventListener('click', () => {
                     const id = this.addCell('kbatch', '# ⌨ kbatch — Keyboard Pattern Analyzer\n# Thermal heatmap, contrails, geometric patterns');
                     this.executeCell(id);
@@ -7089,6 +7252,13 @@
                 // hexcast live video broadcast — opens in new tab
                 document.getElementById('f-open-hexcast').addEventListener('click', () => {
                     openOverlay('hexcast.html', 'hexcast — Live Video Broadcast');
+                });
+
+                // quantum cell — add inline visual slice/cube/orb
+                document.getElementById('f-add-quantum').addEventListener('click', () => {
+                    const id = this.addCell('quantum', '# 🌌 Quantum Visual — Slice / Cube / Orb\n# Navigate code space in 3D. Click grid cells, scroll for Z-layer, drag to rotate cube.');
+                    this.executeCell(id);
+                    setTimeout(() => { document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 100);
                 });
 
                 // kbatch cell — add inline keyboard analyzer
@@ -7266,6 +7436,215 @@
                         if (cell) { cell.language = activeChip.dataset.lang; this.renderCells(); }
                     }
                 });
+
+                // ===== Language sub-tab switching =====
+                document.querySelectorAll('.lang-subtab').forEach(tab => {
+                    tab.addEventListener('click', () => {
+                        document.querySelectorAll('.lang-subtab').forEach(t => t.classList.remove('active'));
+                        document.querySelectorAll('.lang-subpanel').forEach(p => p.classList.remove('active'));
+                        tab.classList.add('active');
+                        const panel = document.getElementById(tab.dataset.langSub);
+                        if (panel) panel.classList.add('active');
+                    });
+                });
+
+                // ===== kbatch sidebar analyzer =====
+                (function initLkb() {
+                    const ROWS = [
+                        ['q','w','e','r','t','y','u','i','o','p'],
+                        ['a','s','d','f','g','h','j','k','l',';'],
+                        ['z','x','c','v','b','n','m',',','.','/']
+                    ];
+                    const KP = {};
+                    ROWS.forEach((r, ri) => r.forEach((k, ci) => { KP[k] = { x: ci + ri * 0.25, y: ri }; }));
+                    KP[' '] = { x: 4.5, y: 3.2 };
+
+                    const hm = {}, trans = [];
+                    let totalK = 0, totalD = 0, lastK = null, words = 0, wf = {}, buf = '';
+                    let startTime = Date.now();
+                    const outputEl = document.getElementById('lkb-output');
+                    const logLines = [];
+
+                    function tc(v) {
+                        const n = v / 255;
+                        if (n < 0.4) return `rgb(${n*2.5*80},${120+n*2.5*100},${180+n*75})`;
+                        if (n < 0.7) return `rgb(${200+n*55},${200-n*80},0)`;
+                        return `rgb(255,${120-n*80},${n*200})`;
+                    }
+
+                    function addLog(msg) {
+                        logLines.push(msg);
+                        if (logLines.length > 50) logLines.shift();
+                        if (outputEl) {
+                            outputEl.innerHTML = logLines.map(l => `<div>${l}</div>`).join('');
+                            outputEl.scrollTop = outputEl.scrollHeight;
+                        }
+                    }
+
+                    function pk(key) {
+                        const k = key.toLowerCase();
+                        if (!KP[k] && k !== ' ') return;
+                        totalK++;
+                        hm[k] = (hm[k] || 0) + 1;
+                        if (lastK && KP[k] && KP[lastK]) {
+                            const f = KP[lastK], t = KP[k];
+                            const dx = t.x - f.x, dy = t.y - f.y;
+                            const d = Math.sqrt(dx * dx + dy * dy);
+                            totalD += d;
+                            trans.push({ from: lastK, to: k, dx, dy, dist: d });
+                            if (trans.length > 400) trans.shift();
+                            const arrow = dx > 0.3 ? (dy < -0.3 ? '↗' : dy > 0.3 ? '↘' : '→') : dx < -0.3 ? (dy < -0.3 ? '↖' : dy > 0.3 ? '↙' : '←') : dy < -0.3 ? '↑' : dy > 0.3 ? '↓' : '·';
+                            addLog(`<span style="color:#f0883e">${lastK}</span> ${arrow} <span style="color:#58a6ff">${k}</span> <span style="color:#484f58">d=${d.toFixed(1)}</span>`);
+                        }
+                        lastK = k;
+                        if (k === ' ') {
+                            const w = buf.trim();
+                            if (w) { words++; wf[w] = (wf[w] || 0) + 1; }
+                            buf = '';
+                        } else { buf += k; }
+                    }
+
+                    function render() {
+                        // Thermal
+                        const ct = document.getElementById('lkb-cv-thermal');
+                        if (!ct) return;
+                        const cx = ct.getContext('2d'); ct.width = ct.clientWidth; ct.height = ct.clientHeight;
+                        const W = ct.width, H = ct.height;
+                        cx.fillStyle = '#0d1117'; cx.fillRect(0, 0, W, H);
+                        const mx = Math.max(1, ...Object.values(hm));
+                        const kw = W / 11.5, kh = H / 4.2, pl = (W - 10 * kw) / 2;
+                        ROWS.forEach((row, r) => {
+                            const off = r * 0.4 * kw;
+                            row.forEach((key, c) => {
+                                const x = pl + off + c * kw, y = 4 + r * (kh + 3);
+                                const cnt = hm[key] || 0, int = cnt / mx;
+                                cx.fillStyle = cnt > 0 ? tc(int * 255) : '#21262d';
+                                cx.fillRect(x + 1, y + 1, kw - 2, kh - 2);
+                                cx.strokeStyle = cnt > 0 ? '#f0883e33' : '#30363d';
+                                cx.lineWidth = 0.5; cx.strokeRect(x + 1, y + 1, kw - 2, kh - 2);
+                                cx.fillStyle = int > 0.5 ? '#0d1117' : '#8b949e';
+                                cx.font = Math.max(6, kh * 0.32) + 'px monospace'; cx.textAlign = 'center';
+                                cx.fillText(key.toUpperCase(), x + kw / 2, y + kh * 0.6);
+                                cx.textAlign = 'start';
+                            });
+                        });
+
+                        // Contrails
+                        const cc = document.getElementById('lkb-cv-contrails');
+                        if (!cc) return;
+                        const cx2 = cc.getContext('2d'); cc.width = cc.clientWidth; cc.height = cc.clientHeight;
+                        const W2 = cc.width, H2 = cc.height;
+                        cx2.fillStyle = '#0d1117'; cx2.fillRect(0, 0, W2, H2);
+                        function kx(k) { const p = KP[k]; return p ? (p.x / 10) * (W2 - 16) + 8 : W2 / 2; }
+                        function ky(k) { const p = KP[k]; return p ? (p.y / 3.5) * (H2 - 16) + 8 : H2 / 2; }
+                        const ln = trans.length;
+                        for (let i = Math.max(0, ln - 120); i < ln; i++) {
+                            const t = trans[i], a = (ln - i) / 120, al = 0.05 + (1 - a) * 0.6;
+                            cx2.strokeStyle = `rgba(240,136,62,${al})`;
+                            cx2.lineWidth = 1 + (1 - a) * 2;
+                            cx2.beginPath(); cx2.moveTo(kx(t.from), ky(t.from)); cx2.lineTo(kx(t.to), ky(t.to)); cx2.stroke();
+                        }
+                        if (lastK && KP[lastK]) {
+                            cx2.fillStyle = '#f0883e'; cx2.beginPath();
+                            cx2.arc(kx(lastK), ky(lastK), 3, 0, Math.PI * 2); cx2.fill();
+                        }
+
+                        // Geometric
+                        const cg = document.getElementById('lkb-cv-geo');
+                        if (!cg) return;
+                        const cx3 = cg.getContext('2d'); cg.width = cg.clientWidth; cg.height = cg.clientHeight;
+                        const W3 = cg.width, H3 = cg.height;
+                        cx3.fillStyle = '#0d1117'; cx3.fillRect(0, 0, W3, H3);
+                        const cxc = W3 / 2, cyc = H3 / 2, rad = Math.min(W3, H3) * 0.38;
+                        const allK = ROWS.flat(), n = allK.length;
+                        allK.forEach((key, i) => {
+                            const ang = (i / n) * Math.PI * 2 - Math.PI / 2;
+                            const cnt = hm[key] || 0, int = cnt / mx;
+                            const r2 = rad * (0.6 + int * 0.4);
+                            const x = cxc + Math.cos(ang) * r2, y = cyc + Math.sin(ang) * r2;
+                            cx3.fillStyle = cnt > 0 ? tc(int * 255) : '#30363d';
+                            cx3.beginPath(); cx3.arc(x, y, 2 + int * 4, 0, Math.PI * 2); cx3.fill();
+                            cx3.strokeStyle = `rgba(210,168,255,${0.03 + int * 0.1})`;
+                            cx3.lineWidth = 0.3; cx3.beginPath(); cx3.moveTo(cxc, cyc); cx3.lineTo(x, y); cx3.stroke();
+                        });
+
+                        // Language (word freq)
+                        const cl = document.getElementById('lkb-cv-lang');
+                        if (!cl) return;
+                        const cx4 = cl.getContext('2d'); cl.width = cl.clientWidth; cl.height = cl.clientHeight;
+                        const W4 = cl.width, H4 = cl.height;
+                        cx4.fillStyle = '#0d1117'; cx4.fillRect(0, 0, W4, H4);
+                        const wds = Object.entries(wf).sort((a, b) => b[1] - a[1]).slice(0, 15);
+                        if (wds.length === 0) {
+                            cx4.fillStyle = '#484f58'; cx4.font = '8px monospace'; cx4.textAlign = 'center';
+                            cx4.fillText('Type words...', W4 / 2, H4 / 2); cx4.textAlign = 'start'; return;
+                        }
+                        const mf = Math.max(1, wds[0][1]);
+                        const cols = Math.ceil(Math.sqrt(wds.length));
+                        const cw2 = W4 / (cols + 1), ch2 = H4 / (Math.ceil(wds.length / cols) + 1);
+                        wds.forEach(([w, f], i) => {
+                            const col = i % cols, row = Math.floor(i / cols);
+                            const x = cw2 * (col + 0.5), y = ch2 * (row + 0.5);
+                            const sz = Math.max(6, 7 + (f / mf) * 6);
+                            cx4.fillStyle = f > 1 ? '#7ee787' : '#e6b422';
+                            cx4.font = sz + 'px monospace'; cx4.textAlign = 'center'; cx4.fillText(w, x, y);
+                            cx4.textAlign = 'start';
+                        });
+                    }
+
+                    function stats() {
+                        const el = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
+                        const elapsed = (Date.now() - startTime) / 1000;
+                        const wpm = elapsed > 0 ? (words / elapsed) * 60 : 0;
+                        el('lkb-wpm', wpm.toFixed(1));
+                        const avgD = totalK > 1 ? totalD / (totalK - 1) : 0;
+                        const eff = avgD > 0 ? Math.max(0, 100 - avgD * 30) : 100;
+                        el('lkb-eff', eff.toFixed(0) + '%');
+                        el('lkb-keys', totalK);
+                        el('lkb-words', words);
+                    }
+
+                    const inp = document.getElementById('lkb-input');
+                    if (!inp) return;
+                    let timer = null;
+                    inp.addEventListener('input', () => {
+                        if (inp.value.length > 0) pk(inp.value[inp.value.length - 1]);
+                        clearTimeout(timer);
+                        timer = setTimeout(() => { render(); stats(); }, 30);
+                    });
+                    inp.addEventListener('keydown', e => {
+                        e.stopPropagation();
+                        if (e.key === 'Enter') {
+                            if (buf.trim()) { words++; const w = buf.trim(); wf[w] = (wf[w] || 0) + 1; buf = ''; }
+                            render(); stats();
+                        }
+                    });
+
+                    document.getElementById('lkb-reset')?.addEventListener('click', () => {
+                        Object.keys(hm).forEach(k => delete hm[k]);
+                        trans.length = 0; totalK = 0; totalD = 0; lastK = null;
+                        words = 0; Object.keys(wf).forEach(k => delete wf[k]); buf = '';
+                        startTime = Date.now(); logLines.length = 0;
+                        if (outputEl) outputEl.innerHTML = '<div style="color:#484f58;">Reset — start typing...</div>';
+                        if (inp) inp.value = '';
+                        render(); stats();
+                    });
+
+                    document.getElementById('lkb-export')?.addEventListener('click', () => {
+                        const data = {
+                            timestamp: new Date().toISOString(),
+                            totalKeys: totalK, words, wpm: ((words / Math.max(1, (Date.now() - startTime) / 1000)) * 60).toFixed(1),
+                            heatmap: { ...hm }, wordFreq: { ...wf },
+                            recentTransitions: trans.slice(-50).map(t => `${t.from}→${t.to}`)
+                        };
+                        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                        const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+                        a.download = `kbatch-${Date.now()}.json`; a.click();
+                        addLog('<span style="color:#7ee787;">✅ Exported kbatch data</span>');
+                    });
+
+                    render();
+                })();
 
                 // ===== BLOCKS PANEL (mini Pybricks builder) =====
                 this._nbBlocks = [];
@@ -7829,7 +8208,7 @@ print(f"  Norm:  {qs.normalize().norm().numpy():.6f}")`);
                 const t0 = performance.now();
 
                 // Non-code cells execute locally
-                if (cell.type === 'markdown' || cell.type === 'mermaid' || cell.type === 'kbatch' || cell.type === 'hexcast') {
+                if (cell.type === 'markdown' || cell.type === 'mermaid' || cell.type === 'quantum' || cell.type === 'kbatch' || cell.type === 'hexcast') {
                     const result = this._localExecution(cell);
                     this.displayOutput(cellId, result);
                     this._lastExecMs = Math.round(performance.now() - t0);
@@ -7910,6 +8289,8 @@ print(f"  Norm:  {qs.normalize().norm().numpy():.6f}")`);
                 } else if (cell.type === 'freya') {
                     // Run FreyaUnits interactive converter cell
                     return { type: 'html', data: this._runFreyaCell(cell) };
+                } else if (cell.type === 'quantum') {
+                    return { type: 'html', data: this._runQuantumCell(cell) };
                 } else if (cell.type === 'kbatch') {
                     return { type: 'html', data: this._runKbatchCell(cell) };
                 } else if (cell.type === 'hexcast') {
@@ -7931,34 +8312,44 @@ print(f"  Norm:  {qs.normalize().norm().numpy():.6f}")`);
             /* ---------- Visualization Cell Engine ---------- */
             _runVisualizationCell(cell) {
                 const uid = `viz_${cell.id}_${Date.now()}`;
-                // Return a self-contained HTML block with canvases and JS that
-                // benchmarks the machine and traces CDN signal layers
                 return `
 <div id="${uid}" style="padding:12px;background:var(--cursor-bg);border-radius:var(--cursor-radius-md);font-family:var(--cursor-font-mono);font-size:0.75rem;">
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
-        <div style="background:var(--cursor-bg-secondary);border-radius:var(--cursor-radius-md);padding:10px;">
-            <div style="font-weight:700;margin-bottom:6px;color:var(--cursor-accent);font-size:0.8125rem;">⚡ Machine Benchmark</div>
-            <canvas id="${uid}_bench" width="360" height="180" style="width:100%;border-radius:4px;"></canvas>
-            <div id="${uid}_bench_info" style="margin-top:6px;color:var(--cursor-text-secondary);"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <span style="font-weight:700;color:var(--cursor-accent);font-size:0.8125rem;">⚡ Live System Benchmark</span>
+        <div style="display:flex;gap:4px;">
+            <button id="${uid}_rerun" style="padding:2px 8px;border:1px solid var(--cursor-border);border-radius:4px;background:rgba(88,166,255,.1);color:#58a6ff;font-family:inherit;font-size:0.5625rem;cursor:pointer;">↻ Re-run</button>
+            <button id="${uid}_pause" style="padding:2px 8px;border:1px solid var(--cursor-border);border-radius:4px;background:rgba(126,231,135,.1);color:#7ee787;font-family:inherit;font-size:0.5625rem;cursor:pointer;">⏸ Pause</button>
         </div>
-        <div style="background:var(--cursor-bg-secondary);border-radius:var(--cursor-radius-md);padding:10px;">
-            <div style="font-weight:700;margin-bottom:6px;color:#7ee787;font-size:0.8125rem;">📡 CDN Signal Trace</div>
-            <canvas id="${uid}_cdn" width="360" height="180" style="width:100%;border-radius:4px;"></canvas>
-            <div id="${uid}_cdn_info" style="margin-top:6px;color:var(--cursor-text-secondary);"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+        <div style="background:var(--cursor-bg-secondary);border-radius:var(--cursor-radius-md);padding:10px;position:relative;">
+            <div style="font-weight:700;margin-bottom:6px;color:var(--cursor-accent);font-size:0.8125rem;">⚡ Machine Benchmark</div>
+            <canvas id="${uid}_bench" width="360" height="180" style="width:100%;border-radius:4px;cursor:crosshair;"></canvas>
+            <div id="${uid}_bench_tip" style="position:absolute;display:none;padding:3px 8px;background:#161b22ee;border:1px solid var(--cursor-border);border-radius:4px;font-size:0.5rem;color:#fff;pointer-events:none;white-space:nowrap;z-index:5;"></div>
+            <div id="${uid}_bench_info" style="margin-top:6px;color:var(--cursor-text-secondary);font-size:0.5625rem;"></div>
+        </div>
+        <div style="background:var(--cursor-bg-secondary);border-radius:var(--cursor-radius-md);padding:10px;position:relative;">
+            <div style="font-weight:700;margin-bottom:6px;color:#7ee787;font-size:0.8125rem;">📡 CDN Signal Trace <span id="${uid}_live" style="font-size:0.5rem;color:#3fb950;">● LIVE</span></div>
+            <canvas id="${uid}_cdn" width="360" height="180" style="width:100%;border-radius:4px;cursor:crosshair;"></canvas>
+            <div id="${uid}_cdn_tip" style="position:absolute;display:none;padding:3px 8px;background:#161b22ee;border:1px solid var(--cursor-border);border-radius:4px;font-size:0.5rem;color:#fff;pointer-events:none;white-space:nowrap;z-index:5;"></div>
+            <div id="${uid}_cdn_info" style="margin-top:6px;color:var(--cursor-text-secondary);font-size:0.5625rem;"></div>
         </div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px;">
-        <div style="background:var(--cursor-bg-secondary);border-radius:var(--cursor-radius-md);padding:10px;">
+        <div style="background:var(--cursor-bg-secondary);border-radius:var(--cursor-radius-md);padding:10px;position:relative;">
             <div style="font-weight:700;margin-bottom:6px;color:#f0883e;font-size:0.8125rem;">🧮 Compute Throughput</div>
-            <canvas id="${uid}_compute" width="240" height="140" style="width:100%;border-radius:4px;"></canvas>
+            <canvas id="${uid}_compute" width="240" height="140" style="width:100%;border-radius:4px;cursor:crosshair;"></canvas>
+            <div id="${uid}_compute_tip" style="position:absolute;display:none;padding:3px 8px;background:#161b22ee;border:1px solid var(--cursor-border);border-radius:4px;font-size:0.5rem;color:#fff;pointer-events:none;white-space:nowrap;z-index:5;"></div>
         </div>
-        <div style="background:var(--cursor-bg-secondary);border-radius:var(--cursor-radius-md);padding:10px;">
+        <div style="background:var(--cursor-bg-secondary);border-radius:var(--cursor-radius-md);padding:10px;position:relative;">
             <div style="font-weight:700;margin-bottom:6px;color:#d2a8ff;font-size:0.8125rem;">🌐 Data Layer Stack</div>
-            <canvas id="${uid}_layers" width="240" height="140" style="width:100%;border-radius:4px;"></canvas>
+            <canvas id="${uid}_layers" width="240" height="140" style="width:100%;border-radius:4px;cursor:crosshair;"></canvas>
+            <div id="${uid}_layers_tip" style="position:absolute;display:none;padding:3px 8px;background:#161b22ee;border:1px solid var(--cursor-border);border-radius:4px;font-size:0.5rem;color:#fff;pointer-events:none;white-space:nowrap;z-index:5;"></div>
         </div>
-        <div style="background:var(--cursor-bg-secondary);border-radius:var(--cursor-radius-md);padding:10px;">
+        <div style="background:var(--cursor-bg-secondary);border-radius:var(--cursor-radius-md);padding:10px;position:relative;">
             <div style="font-weight:700;margin-bottom:6px;color:#79c0ff;font-size:0.8125rem;">📊 Prefix Speed</div>
-            <canvas id="${uid}_prefix" width="240" height="140" style="width:100%;border-radius:4px;"></canvas>
+            <canvas id="${uid}_prefix" width="240" height="140" style="width:100%;border-radius:4px;cursor:crosshair;"></canvas>
+            <div id="${uid}_prefix_tip" style="position:absolute;display:none;padding:3px 8px;background:#161b22ee;border:1px solid var(--cursor-border);border-radius:4px;font-size:0.5rem;color:#fff;pointer-events:none;white-space:nowrap;z-index:5;"></div>
         </div>
     </div>
     <div id="${uid}_summary" style="background:linear-gradient(135deg, rgba(88,166,255,0.1), rgba(126,231,135,0.1));border-radius:var(--cursor-radius-md);padding:12px;border:1px solid var(--cursor-border);"></div>
@@ -7966,236 +8357,300 @@ print(f"  Norm:  {qs.normalize().norm().numpy():.6f}")`);
 <` + `script>
 (function(){
     const id = '${uid}';
-    const colors = {accent:'#58a6ff',green:'#7ee787',orange:'#f0883e',purple:'#d2a8ff',cyan:'#79c0ff',red:'#f97583',bg:'#161b22',grid:'#21262d',text:'#8b949e'};
+    const C = {accent:'#58a6ff',green:'#7ee787',orange:'#f0883e',purple:'#d2a8ff',cyan:'#79c0ff',red:'#f97583',bg:'#161b22',grid:'#21262d',text:'#8b949e'};
+    let paused = false, frame = 0, rafId = null;
 
+    /* ── Shared draw helpers ── */
     function drawGrid(ctx,w,h){
-        ctx.fillStyle = colors.bg;
-        ctx.fillRect(0,0,w,h);
-        ctx.strokeStyle = colors.grid;
-        ctx.lineWidth = 0.5;
+        ctx.fillStyle=C.bg; ctx.fillRect(0,0,w,h);
+        ctx.strokeStyle=C.grid; ctx.lineWidth=0.5;
         for(let y=0;y<h;y+=20){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();}
         for(let x=0;x<w;x+=30){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke();}
     }
-
     function drawLine(ctx,pts,color,w,h,maxVal){
-        ctx.strokeStyle=color;ctx.lineWidth=2;ctx.beginPath();
+        ctx.strokeStyle=color; ctx.lineWidth=2; ctx.beginPath();
         pts.forEach((v,i)=>{const x=(i/(pts.length-1))*w;const y=h-((v/maxVal)*h*0.85)-10;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
         ctx.stroke();
-        // Glow
-        ctx.strokeStyle=color+'40';ctx.lineWidth=6;ctx.beginPath();
+        ctx.strokeStyle=color+'40'; ctx.lineWidth=5; ctx.beginPath();
         pts.forEach((v,i)=>{const x=(i/(pts.length-1))*w;const y=h-((v/maxVal)*h*0.85)-10;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
         ctx.stroke();
     }
+    function ptY(v,h,maxVal){ return h-((v/maxVal)*h*0.85)-10; }
 
-    function drawBars(ctx,labels,values,barColors,w,h){
-        drawGrid(ctx,w,h);
-        const max=Math.max(...values)*1.2;
-        const barW=w/(labels.length*2);
-        labels.forEach((l,i)=>{
-            const x=barW+(i*barW*2);
-            const bh=(values[i]/max)*(h-30);
-            ctx.fillStyle=barColors[i%barColors.length];
-            ctx.fillRect(x,h-bh-5,barW*0.8,bh);
-            ctx.fillStyle=barColors[i%barColors.length]+'40';
-            ctx.fillRect(x-2,h-bh-7,barW*0.8+4,bh+4);
-            ctx.fillStyle=colors.text;ctx.font='9px monospace';ctx.textAlign='center';
-            ctx.fillText(l,x+barW*0.4,h-bh-10);
-            ctx.fillText(values[i].toFixed(1),x+barW*0.4,h-bh+14);
+    /* ── Hover tooltip system ── */
+    function attachHover(canvasId, tipId, getData) {
+        const cv = document.getElementById(canvasId);
+        const tip = document.getElementById(tipId);
+        if (!cv || !tip) return;
+        cv.addEventListener('mousemove', e => {
+            const rect = cv.getBoundingClientRect();
+            const mx = (e.clientX - rect.left) / rect.width;
+            const my = (e.clientY - rect.top) / rect.height;
+            const info = getData(mx, my, cv.width, cv.height);
+            if (info) {
+                tip.style.display = 'block';
+                tip.style.left = (e.clientX - rect.left + cv.offsetLeft + 12) + 'px';
+                tip.style.top = (e.clientY - rect.top + cv.offsetTop - 8) + 'px';
+                tip.innerHTML = info;
+            }
+        });
+        cv.addEventListener('mouseleave', () => { tip.style.display = 'none'; });
+    }
+
+    /* ── Crosshair ── */
+    const mousePos = {};
+    function trackMouse(canvasId) {
+        const cv = document.getElementById(canvasId);
+        if (!cv) return;
+        mousePos[canvasId] = { x: -1, y: -1 };
+        cv.addEventListener('mousemove', e => {
+            const r = cv.getBoundingClientRect();
+            mousePos[canvasId] = { x: ((e.clientX - r.left) / r.width) * cv.width, y: ((e.clientY - r.top) / r.height) * cv.height };
+        });
+        cv.addEventListener('mouseleave', () => { mousePos[canvasId] = { x: -1, y: -1 }; });
+    }
+    function drawCrosshair(ctx, canvasId, w, h) {
+        const m = mousePos[canvasId];
+        if (!m || m.x < 0) return;
+        ctx.strokeStyle = 'rgba(255,255,255,0.15)'; ctx.lineWidth = 1; ctx.setLineDash([4,4]);
+        ctx.beginPath(); ctx.moveTo(m.x, 0); ctx.lineTo(m.x, h); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0, m.y); ctx.lineTo(w, m.y); ctx.stroke();
+        ctx.setLineDash([]);
+    }
+
+    /* ── Run benchmarks ── */
+    let benchMarks, domMs, canvasMs, jsonMs, regexMs;
+    const computeLabels = ['Math','DOM','Canvas','JSON','RegEx'];
+    const computeColors = [C.accent,C.green,C.orange,C.purple,C.cyan];
+    let computeValues = [];
+    const prefixLangs = ['py','js','rs','go','sh','html'];
+    let prefixSpeeds = [];
+
+    function runBenchmarks() {
+        benchMarks = [];
+        [100,500,1000,5000,10000,50000,100000].forEach(n=>{
+            const t0=performance.now(); let s=0;
+            for(let i=0;i<n;i++) s+=Math.sqrt(i)*Math.sin(i);
+            benchMarks.push({size:n,ms:performance.now()-t0,ops:n});
+        });
+        let t0=performance.now();
+        const frag=document.createDocumentFragment();
+        for(let i=0;i<1000;i++){const d=document.createElement('div');d.textContent='x';frag.appendChild(d);}
+        domMs=performance.now()-t0;
+        t0=performance.now();
+        const tc=document.createElement('canvas');tc.width=200;tc.height=200;const tx=tc.getContext('2d');
+        for(let i=0;i<2000;i++){tx.fillStyle='hsl('+i+',80%,50%)';tx.fillRect(Math.random()*200,Math.random()*200,5,5);}
+        canvasMs=performance.now()-t0;
+        t0=performance.now();
+        const big={};for(let i=0;i<5000;i++)big['k'+i]={v:Math.random(),n:'item'+i};
+        JSON.parse(JSON.stringify(big)); jsonMs=performance.now()-t0;
+        t0=performance.now();for(let i=0;i<5000;i++)/quantum_\\d+/.test('quantum_'+i);regexMs=performance.now()-t0;
+        const totalOps=benchMarks.reduce((a,b)=>a+b.ops,0);
+        const totalMs=benchMarks.reduce((a,b)=>a+b.ms,0);
+        computeValues=[totalOps/totalMs,1000/domMs,2000/canvasMs,5000/jsonMs,5000/regexMs];
+        const testLines=['import os','const x = 1','fn main()','func main()','#!/bin/bash','<div>'];
+        prefixSpeeds=testLines.map(line=>{const t0=performance.now();for(let j=0;j<10000;j++){/^\\s*(import|from|def|class|#|if|for|while|return|print)/.test(line);}return 10000/(performance.now()-t0);});
+        updateInfo();
+    }
+
+    function updateInfo() {
+        const totalOps=benchMarks.reduce((a,b)=>a+b.ops,0);
+        const totalMs=benchMarks.reduce((a,b)=>a+b.ms,0);
+        const info=document.getElementById(id+'_bench_info');
+        if(info) info.innerHTML='Math: <b style="color:'+C.accent+'">'+(totalOps/totalMs).toFixed(0)+' ops/ms</b> · DOM: <b style="color:'+C.green+'">'+(1000/domMs).toFixed(0)+' c/ms</b> · Canvas: <b style="color:'+C.orange+'">'+(2000/canvasMs).toFixed(0)+' r/ms</b> · JSON: <b style="color:'+C.purple+'">'+(5000/jsonMs).toFixed(1)+' o/ms</b>';
+        const cdnInfo=document.getElementById(id+'_cdn_info');
+        const perf=window.performance;
+        const nav=perf.getEntriesByType&&perf.getEntriesByType('navigation')[0];
+        if(nav&&cdnInfo) cdnInfo.innerHTML='DNS: <b style="color:'+C.cyan+'">'+(nav.domainLookupEnd-nav.domainLookupStart).toFixed(1)+'ms</b> · TLS: <b style="color:'+C.purple+'">'+(nav.connectEnd-(nav.secureConnectionStart||nav.connectStart)).toFixed(1)+'ms</b> · TTFB: <b style="color:'+C.green+'">'+(nav.responseStart-nav.requestStart).toFixed(1)+'ms</b> · Load: <b style="color:'+C.accent+'">'+(nav.loadEventEnd-nav.startTime).toFixed(0)+'ms</b>';
+        else if(cdnInfo) cdnInfo.innerHTML='CDN: <b style="color:'+C.cyan+'">simulated 6-layer model</b>';
+        // Summary
+        const summary=document.getElementById(id+'_summary');
+        if(summary){
+            const cores=navigator.hardwareConcurrency||'?';
+            const mem=navigator.deviceMemory||'?';
+            const conn=navigator.connection;
+            const netType=conn?conn.effectiveType:'unknown';
+            const downlink=conn?conn.downlink+'Mbps':'N/A';
+            summary.innerHTML='<div style="font-weight:700;font-size:0.875rem;margin-bottom:8px;color:var(--cursor-text);">📈 System Performance Summary</div><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;"><div style="text-align:center;"><div style="font-size:1.25rem;font-weight:700;color:'+C.accent+';">'+(totalOps/totalMs).toFixed(0)+'</div><div style="font-size:0.625rem;color:'+C.text+';">ops/ms (math)</div></div><div style="text-align:center;"><div style="font-size:1.25rem;font-weight:700;color:'+C.green+';">'+cores+'</div><div style="font-size:0.625rem;color:'+C.text+';">CPU cores</div></div><div style="text-align:center;"><div style="font-size:1.25rem;font-weight:700;color:'+C.orange+';">'+mem+'GB</div><div style="font-size:0.625rem;color:'+C.text+';">device memory</div></div><div style="text-align:center;"><div style="font-size:1.25rem;font-weight:700;color:'+C.purple+';">'+netType+'</div><div style="font-size:0.625rem;color:'+C.text+';">network ('+downlink+')</div></div></div><div style="margin-top:8px;font-size:0.6875rem;color:'+C.text+';text-align:center;">DOM: '+(1000/domMs).toFixed(0)+' creates/ms · Canvas: '+(2000/canvasMs).toFixed(0)+' rects/ms · JSON: '+(5000/jsonMs).toFixed(1)+' ser/ms · Quantum ready ⚛</div>';
+        }
+    }
+
+    /* ── Live CDN data (scrolling) ── */
+    const cdnLayers=['DNS','TLS','TCP','HTTP','Edge','Origin'];
+    const cdnColors=[C.cyan,C.purple,C.green,C.accent,C.orange,C.red];
+    const cdnData=cdnLayers.map((_,li)=>{
+        const pts=[];for(let i=0;i<60;i++){const base=(li+1)*3;pts.push(Math.max(0.5,base+Math.random()*8-4+Math.sin(i*0.3)*2));}return pts;
+    });
+    function pushCdnSample(){
+        cdnData.forEach((pts,li)=>{
+            const base=(li+1)*3;const spike=Math.random()>0.92?15:0;
+            pts.push(Math.max(0.5,base+Math.random()*8-4+spike+Math.sin(frame*0.05+li)*2));
+            if(pts.length>80)pts.shift();
         });
     }
 
-    // ── BENCHMARK: Math throughput ──
-    const benchMarks=[];
-    const testSizes=[100,500,1000,5000,10000,50000,100000];
-    testSizes.forEach(n=>{
-        const t0=performance.now();
-        let s=0;for(let i=0;i<n;i++)s+=Math.sqrt(i)*Math.sin(i);
-        benchMarks.push({size:n,ms:performance.now()-t0,ops:n});
+    /* ── Live stacked layers ── */
+    const layerNames=['L1-Cache','L2-Worker','L3-Bridge','L4-CDN','L5-Origin'];
+    const layerCol=[C.accent+'90',C.green+'90',C.orange+'90',C.purple+'90',C.red+'60'];
+    const stackData=layerNames.map((_,li)=>{
+        const pts=[];for(let i=0;i<60;i++)pts.push(5+Math.random()*15+li*4+Math.sin(i*0.2+li)*5);return pts;
     });
+    function pushStackSample(){
+        stackData.forEach((pts,li)=>{
+            pts.push(5+Math.random()*15+li*4+Math.sin(frame*0.04+li)*5);
+            if(pts.length>80)pts.shift();
+        });
+    }
 
-    // DOM ops benchmark
-    const domT0=performance.now();
-    const frag=document.createDocumentFragment();
-    for(let i=0;i<1000;i++){const d=document.createElement('div');d.textContent='x';frag.appendChild(d);}
-    const domMs=performance.now()-domT0;
-
-    // Canvas render benchmark
-    const canvasT0=performance.now();
-    const tmpC=document.createElement('canvas');tmpC.width=200;tmpC.height=200;
-    const tmpCtx=tmpC.getContext('2d');
-    for(let i=0;i<2000;i++){tmpCtx.fillStyle='hsl('+i+',80%,50%)';tmpCtx.fillRect(Math.random()*200,Math.random()*200,5,5);}
-    const canvasMs=performance.now()-canvasT0;
-
-    // JSON benchmark
-    const jsonT0=performance.now();
-    const big={};for(let i=0;i<5000;i++)big['k'+i]={v:Math.random(),n:'item'+i};
-    JSON.parse(JSON.stringify(big));
-    const jsonMs=performance.now()-jsonT0;
-
-    // Draw benchmark chart
-    setTimeout(()=>{
-        const c1=document.getElementById(id+'_bench');
-        if(!c1)return;
-        const ctx=c1.getContext('2d');
-        const w=c1.width,h=c1.height;
+    /* ── Draw functions ── */
+    function drawBench(){
+        const cv=document.getElementById(id+'_bench');if(!cv||!benchMarks)return;
+        const ctx=cv.getContext('2d'),w=cv.width,h=cv.height;
         drawGrid(ctx,w,h);
         const pts=benchMarks.map(b=>b.ops/(b.ms||0.01));
         const max=Math.max(...pts);
-        drawLine(ctx,pts,colors.accent,w,h,max);
-        // Labels
-        ctx.fillStyle=colors.text;ctx.font='10px monospace';
-        ctx.fillText('ops/ms',5,12);ctx.fillText('→ array size',w-60,h-3);
-        // Info
-        const info=document.getElementById(id+'_bench_info');
-        const totalOps=benchMarks.reduce((a,b)=>a+b.ops,0);
-        const totalMs=benchMarks.reduce((a,b)=>a+b.ms,0);
-        info.innerHTML='Math: <b style=\\"color:'+colors.accent+'\\">'+(totalOps/totalMs).toFixed(0)+' ops/ms</b> · DOM: <b style=\\"color:'+colors.green+'\\">'+(1000/domMs).toFixed(0)+' creates/ms</b> · Canvas: <b style=\\"color:'+colors.orange+'\\">'+(2000/canvasMs).toFixed(0)+' rects/ms</b> · JSON: <b style=\\"color:'+colors.purple+'\\">'+(5000/jsonMs).toFixed(1)+' obj/ms</b>';
-    },50);
+        drawLine(ctx,pts,C.accent,w,h,max);
+        // Animated dot on last point
+        const pulse=Math.sin(frame*0.1)*0.3+0.7;
+        const lx=w, ly=ptY(pts[pts.length-1],h,max);
+        ctx.fillStyle=C.accent; ctx.globalAlpha=pulse; ctx.beginPath(); ctx.arc(lx-2,ly,4,0,Math.PI*2); ctx.fill(); ctx.globalAlpha=1;
+        ctx.fillStyle=C.text;ctx.font='10px monospace';ctx.fillText('ops/ms',5,12);ctx.fillText('→ array size',w-60,h-3);
+        drawCrosshair(ctx,id+'_bench',w,h);
+    }
 
-    // ── CDN SIGNAL TRACE ──
-    setTimeout(()=>{
-        const c2=document.getElementById(id+'_cdn');
-        if(!c2)return;
-        const ctx=c2.getContext('2d');
-        const w=c2.width,h=c2.height;
+    function drawCdn(){
+        const cv=document.getElementById(id+'_cdn');if(!cv)return;
+        const ctx=cv.getContext('2d'),w=cv.width,h=cv.height;
         drawGrid(ctx,w,h);
+        const maxV=Math.max(...cdnData.flat())*1.1;
+        cdnData.forEach((pts,li)=>drawLine(ctx,pts,cdnColors[li],w,h,maxV));
+        cdnLayers.forEach((l,i)=>{ctx.fillStyle=cdnColors[i];ctx.font='bold 8px monospace';ctx.fillText('● '+l,5,14+i*12);});
+        // Live dot
+        const pulse=Math.sin(frame*0.15)*0.3+0.7;
+        const liveEl=document.getElementById(id+'_live');
+        if(liveEl) liveEl.style.opacity=pulse;
+        drawCrosshair(ctx,id+'_cdn',w,h);
+    }
 
-        // Simulate multi-layer CDN hops
-        const layers=['DNS','TLS','TCP','HTTP','Edge','Origin'];
-        const layerColors=[colors.cyan,colors.purple,colors.green,colors.accent,colors.orange,colors.red];
-        const layerData=layers.map((_,li)=>{
-            const pts=[];
-            for(let i=0;i<40;i++){
-                const base=(li+1)*3;
-                const jitter=Math.random()*8-4;
-                const spike=Math.random()>0.92?15:0;
-                pts.push(Math.max(0.5,base+jitter+spike+(Math.sin(i*0.3)*2)));
-            }
-            return pts;
-        });
-
-        const maxV=Math.max(...layerData.flat())*1.1;
-        layerData.forEach((pts,li)=>drawLine(ctx,pts,layerColors[li],w,h,maxV));
-
-        // Legend
-        layers.forEach((l,i)=>{
-            ctx.fillStyle=layerColors[i];ctx.font='bold 8px monospace';
-            ctx.fillText('● '+l, 5, 14+i*12);
-        });
-
-        // Simulate real network timing
-        const cdnInfo=document.getElementById(id+'_cdn_info');
-        const dnsT0=performance.now();
-        // We can actually measure navigation timing if available
-        const perf=window.performance;
-        const nav=perf.getEntriesByType&&perf.getEntriesByType('navigation')[0];
-        if(nav){
-            cdnInfo.innerHTML='DNS: <b style=\\"color:'+colors.cyan+'\\">'+(nav.domainLookupEnd-nav.domainLookupStart).toFixed(1)+'ms</b> · TLS: <b style=\\"color:'+colors.purple+'\\">'+(nav.connectEnd-nav.secureConnectionStart||0).toFixed(1)+'ms</b> · TTFB: <b style=\\"color:'+colors.green+'\\">'+(nav.responseStart-nav.requestStart).toFixed(1)+'ms</b> · Load: <b style=\\"color:'+colors.accent+'\\">'+(nav.loadEventEnd-nav.startTime).toFixed(0)+'ms</b>';
-        } else {
-            cdnInfo.innerHTML='CDN trace: <b style=\\"color:'+colors.cyan+'\\">simulated 6-layer hop model</b>';
-        }
-    },100);
-
-    // ── COMPUTE THROUGHPUT BAR CHART ──
-    setTimeout(()=>{
-        const c3=document.getElementById(id+'_compute');
-        if(!c3)return;
-        const ctx=c3.getContext('2d');
-        drawBars(ctx,
-            ['Math','DOM','Canvas','JSON','RegEx'],
-            [
-                benchMarks.reduce((a,b)=>a+b.ops,0)/benchMarks.reduce((a,b)=>a+b.ms,0),
-                1000/domMs,
-                2000/canvasMs,
-                5000/jsonMs,
-                (()=>{const t=performance.now();for(let i=0;i<5000;i++)/quantum_\\d+/.test('quantum_'+i);return 5000/(performance.now()-t);})()
-            ],
-            [colors.accent,colors.green,colors.orange,colors.purple,colors.cyan],
-            c3.width,c3.height
-        );
-    },150);
-
-    // ── DATA LAYER STACK (stacked area) ──
-    setTimeout(()=>{
-        const c4=document.getElementById(id+'_layers');
-        if(!c4)return;
-        const ctx=c4.getContext('2d');
-        const w=c4.width,h=c4.height;
+    function drawCompute(){
+        const cv=document.getElementById(id+'_compute');if(!cv||!computeValues.length)return;
+        const ctx=cv.getContext('2d'),w=cv.width,h=cv.height;
         drawGrid(ctx,w,h);
-
-        const layerNames=['L1-Cache','L2-Worker','L3-Bridge','L4-CDN','L5-Origin'];
-        const layerCol=[colors.accent+'90',colors.green+'90',colors.orange+'90',colors.purple+'90',colors.red+'60'];
-        const N=50;
-        const stacks=layerNames.map((_,li)=>{
-            const pts=[];
-            for(let i=0;i<N;i++)pts.push(5+Math.random()*15+li*4+Math.sin(i*0.2+li)*5);
-            return pts;
+        const max=Math.max(...computeValues)*1.2;
+        const barW=w/(computeLabels.length*2);
+        // Animated bars (grow in)
+        const grow=Math.min(1,(frame-initFrame)/30);
+        computeLabels.forEach((l,i)=>{
+            const x=barW+(i*barW*2);
+            const bh=(computeValues[i]/max)*(h-30)*grow;
+            ctx.fillStyle=computeColors[i];ctx.fillRect(x,h-bh-5,barW*0.8,bh);
+            ctx.fillStyle=computeColors[i]+'40';ctx.fillRect(x-2,h-bh-7,barW*0.8+4,bh+4);
+            ctx.fillStyle=C.text;ctx.font='9px monospace';ctx.textAlign='center';
+            ctx.fillText(l,x+barW*0.4,h-bh-10);
+            if(grow>0.5) ctx.fillText(computeValues[i].toFixed(1),x+barW*0.4,h-bh+14);
+            ctx.textAlign='start';
         });
+        drawCrosshair(ctx,id+'_compute',w,h);
+    }
 
-        // Draw stacked from bottom
-        for(let li=stacks.length-1;li>=0;li--){
+    function drawLayers(){
+        const cv=document.getElementById(id+'_layers');if(!cv)return;
+        const ctx=cv.getContext('2d'),w=cv.width,h=cv.height;
+        drawGrid(ctx,w,h);
+        const N=stackData[0].length;
+        for(let li=stackData.length-1;li>=0;li--){
             ctx.fillStyle=layerCol[li];ctx.beginPath();ctx.moveTo(0,h);
             for(let i=0;i<N;i++){
-                let sum=0;for(let j=0;j<=li;j++)sum+=stacks[j][i];
-                const x=(i/(N-1))*w;const y=h-(sum/120)*h*0.85;
-                ctx.lineTo(x,y);
+                let sum=0;for(let j=0;j<=li;j++)sum+=stackData[j][i];
+                ctx.lineTo((i/(N-1))*w, h-(sum/120)*h*0.85);
             }
             ctx.lineTo(w,h);ctx.closePath();ctx.fill();
         }
-        // Labels
-        layerNames.forEach((l,i)=>{
-            ctx.fillStyle=layerCol[i].replace('90','').replace('60','');ctx.font='bold 8px monospace';
-            ctx.fillText('■ '+l, w-80, 12+i*11);
+        layerNames.forEach((l,i)=>{ctx.fillStyle=layerCol[i].replace('90','').replace('60','');ctx.font='bold 8px monospace';ctx.fillText('■ '+l,w-80,12+i*11);});
+        drawCrosshair(ctx,id+'_layers',w,h);
+    }
+
+    function drawPrefix(){
+        const cv=document.getElementById(id+'_prefix');if(!cv||!prefixSpeeds.length)return;
+        const ctx=cv.getContext('2d'),w=cv.width,h=cv.height;
+        drawGrid(ctx,w,h);
+        const pColors=[C.accent,C.orange,C.red,C.cyan,C.green,C.purple];
+        const max=Math.max(...prefixSpeeds)*1.2;
+        const barW=w/(prefixLangs.length*2);
+        const grow=Math.min(1,(frame-initFrame)/30);
+        prefixLangs.forEach((l,i)=>{
+            const x=barW+(i*barW*2);
+            const bh=(prefixSpeeds[i]/max)*(h-30)*grow;
+            ctx.fillStyle=pColors[i];ctx.fillRect(x,h-bh-5,barW*0.8,bh);
+            ctx.fillStyle=pColors[i]+'40';ctx.fillRect(x-2,h-bh-7,barW*0.8+4,bh+4);
+            ctx.fillStyle=C.text;ctx.font='9px monospace';ctx.textAlign='center';
+            ctx.fillText(l,x+barW*0.4,h-bh-10);
+            if(grow>0.5) ctx.fillText(prefixSpeeds[i].toFixed(1),x+barW*0.4,h-bh+14);
+            ctx.textAlign='start';
         });
-    },200);
+        ctx.fillStyle=C.text;ctx.font='8px monospace';ctx.fillText('lines/ms',5,10);
+        drawCrosshair(ctx,id+'_prefix',w,h);
+    }
 
-    // ── PREFIX SPEED (bar chart: lines/ms per language) ──
-    setTimeout(()=>{
-        const c5=document.getElementById(id+'_prefix');
-        if(!c5)return;
-        const ctx=c5.getContext('2d');
-        // Benchmark prefix classification speed per language
-        const langs=['py','js','rs','go','sh','html'];
-        const testLines=['import os','const x = 1','fn main()','func main()','#!/bin/bash','<div>'];
-        const speeds=testLines.map((line,i)=>{
-            const t0=performance.now();
-            for(let j=0;j<10000;j++){
-                /^\\s*(import|from|def|class|#|if|for|while|return|print)/.test(line);
-            }
-            return 10000/(performance.now()-t0);
-        });
-        drawBars(ctx,langs,speeds,
-            [colors.accent,colors.orange,colors.red,colors.cyan,colors.green,colors.purple],
-            c5.width,c5.height
-        );
-        ctx.fillStyle=colors.text;ctx.font='8px monospace';ctx.fillText('lines/ms',5,10);
-    },250);
+    /* ── Main animation loop ── */
+    let initFrame = 0;
+    function tick(){
+        if(!document.getElementById(id)) return; // cleanup if cell removed
+        if(!paused){
+            frame++;
+            if(frame % 3 === 0){ pushCdnSample(); pushStackSample(); }
+            drawBench(); drawCdn(); drawCompute(); drawLayers(); drawPrefix();
+        }
+        rafId = requestAnimationFrame(tick);
+    }
 
-    // ── SUMMARY ──
-    setTimeout(()=>{
-        const summary=document.getElementById(id+'_summary');
-        if(!summary)return;
-        const totalMs=benchMarks.reduce((a,b)=>a+b.ms,0);
-        const totalOps=benchMarks.reduce((a,b)=>a+b.ops,0);
-        const cores=navigator.hardwareConcurrency||'?';
-        const mem=navigator.deviceMemory||'?';
-        const conn=navigator.connection;
-        const netType=conn?conn.effectiveType:'unknown';
-        const downlink=conn?conn.downlink+'Mbps':'N/A';
-        summary.innerHTML=\`
-            <div style="font-weight:700;font-size:0.875rem;margin-bottom:8px;color:var(--cursor-text);">📈 System Performance Summary</div>
-            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;">
-                <div style="text-align:center;"><div style="font-size:1.25rem;font-weight:700;color:\${colors.accent};">\${(totalOps/totalMs).toFixed(0)}</div><div style="font-size:0.625rem;color:\${colors.text};">ops/ms (math)</div></div>
-                <div style="text-align:center;"><div style="font-size:1.25rem;font-weight:700;color:\${colors.green};">\${cores}</div><div style="font-size:0.625rem;color:\${colors.text};">CPU cores</div></div>
-                <div style="text-align:center;"><div style="font-size:1.25rem;font-weight:700;color:\${colors.orange};">\${mem}GB</div><div style="font-size:0.625rem;color:\${colors.text};">device memory</div></div>
-                <div style="text-align:center;"><div style="font-size:1.25rem;font-weight:700;color:\${colors.purple};">\${netType}</div><div style="font-size:0.625rem;color:\${colors.text};">network (\${downlink})</div></div>
-            </div>
-            <div style="margin-top:8px;font-size:0.6875rem;color:\${colors.text};text-align:center;">
-                DOM: \${(1000/domMs).toFixed(0)} creates/ms · Canvas: \${(2000/canvasMs).toFixed(0)} rects/ms · JSON: \${(5000/jsonMs).toFixed(1)} ser/ms · Quantum ready ⚛
-            </div>
-        \`;
-    },300);
+    /* ── Init ── */
+    runBenchmarks();
+    // Track mouse on all canvases
+    [id+'_bench',id+'_cdn',id+'_compute',id+'_layers',id+'_prefix'].forEach(trackMouse);
 
+    // Hover tooltips
+    attachHover(id+'_bench',id+'_bench_tip',(mx)=>{
+        if(!benchMarks)return null;
+        const i=Math.round(mx*(benchMarks.length-1));
+        const b=benchMarks[i]; if(!b)return null;
+        return 'Size: <b>'+b.size+'</b> · Time: <b>'+b.ms.toFixed(2)+'ms</b> · <b style="color:'+C.accent+'">'+(b.ops/(b.ms||0.01)).toFixed(0)+' ops/ms</b>';
+    });
+    attachHover(id+'_cdn',id+'_cdn_tip',(mx)=>{
+        const N=cdnData[0].length;const i=Math.round(mx*(N-1));
+        return cdnLayers.map((l,li)=>'<span style="color:'+cdnColors[li]+'">'+l+': '+cdnData[li][Math.min(i,cdnData[li].length-1)].toFixed(1)+'ms</span>').join(' · ');
+    });
+    attachHover(id+'_compute',id+'_compute_tip',(mx)=>{
+        const i=Math.round(mx*(computeLabels.length-1));
+        if(!computeValues[i])return null;
+        return '<b style="color:'+computeColors[i]+'">'+computeLabels[i]+'</b>: '+computeValues[i].toFixed(1)+' ops/ms';
+    });
+    attachHover(id+'_layers',id+'_layers_tip',(mx)=>{
+        const N=stackData[0].length;const i=Math.round(mx*(N-1));
+        return layerNames.map((l,li)=>'<span style="color:'+layerCol[li].replace('90','').replace('60','')+'">'+l+': '+stackData[li][Math.min(i,stackData[li].length-1)].toFixed(1)+'</span>').join(' · ');
+    });
+    attachHover(id+'_prefix',id+'_prefix_tip',(mx)=>{
+        const i=Math.round(mx*(prefixLangs.length-1));
+        if(!prefixSpeeds[i])return null;
+        return '<b>'+prefixLangs[i]+'</b>: '+prefixSpeeds[i].toFixed(1)+' lines/ms';
+    });
+
+    // Re-run button
+    document.getElementById(id+'_rerun')?.addEventListener('click',()=>{
+        initFrame=frame; runBenchmarks();
+    });
+    // Pause button
+    document.getElementById(id+'_pause')?.addEventListener('click',function(){
+        paused=!paused;
+        this.textContent=paused?'▶ Resume':'⏸ Pause';
+        this.style.color=paused?'#f97583':'#7ee787';
+        this.style.background=paused?'rgba(249,117,131,.1)':'rgba(126,231,135,.1)';
+        const liveEl=document.getElementById(id+'_live');
+        if(liveEl){liveEl.textContent=paused?'⏸ PAUSED':'● LIVE';liveEl.style.color=paused?'#f97583':'#3fb950';}
+    });
+
+    initFrame = 0;
+    tick();
 })();
 </` + `script>`;
             }
@@ -8585,6 +9040,292 @@ print(f"  Norm:  {qs.normalize().norm().numpy():.6f}")`);
 
     // Initial convert
     convert();
+})();
+<` + `/script>`;
+            }
+
+            /* ══════════════════════════════════════════════════════
+               QUANTUM — VISUAL SLICE / CUBE / ORB CELL
+               ══════════════════════════════════════════════════════ */
+
+            _runQuantumCell(cell) {
+                const uid = `qviz_${cell.id}_${Date.now()}`;
+                return `
+<div id="${uid}" style="padding:0;background:#0a0e14;border-radius:var(--cursor-radius-md);overflow:hidden;font-family:ui-monospace,SFMono-Regular,'SF Mono',Menlo,monospace;">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 12px;background:#161b22;border-bottom:1px solid #21262d;">
+        <span style="font-weight:700;color:#8b5cf6;font-size:0.8125rem;">🌌 Quantum Visual — Slice / Cube / Orb</span>
+        <span id="${uid}_live" style="font-size:0.5rem;color:#3fb950;">● LIVE</span>
+    </div>
+    <div style="display:flex;gap:4px;padding:4px 12px;background:#161b22;border-bottom:1px solid #21262d;font-size:0.625rem;align-items:center;flex-wrap:wrap;">
+        <button id="${uid}_m_slice" class="qv-btn" style="padding:2px 8px;border:1px solid #8b5cf6;border-radius:4px;background:rgba(139,92,246,.2);color:#c4b5fd;font-family:inherit;font-size:0.625rem;cursor:pointer;">🧊 Slice</button>
+        <button id="${uid}_m_cube" class="qv-btn" style="padding:2px 8px;border:1px solid #30363d;border-radius:4px;background:#21262d;color:#c9d1d9;font-family:inherit;font-size:0.625rem;cursor:pointer;">🎲 Cube</button>
+        <button id="${uid}_m_orb" class="qv-btn" style="padding:2px 8px;border:1px solid #30363d;border-radius:4px;background:#21262d;color:#c9d1d9;font-family:inherit;font-size:0.625rem;cursor:pointer;">🔮 Orb</button>
+        <span style="flex:1;"></span>
+        <span style="color:#484f58;">X:<b style="color:#3fb950;" id="${uid}_px">0</b></span>
+        <span style="color:#484f58;">Y:<b style="color:#58a6ff;" id="${uid}_py">0</b></span>
+        <span style="color:#484f58;">Z:<b style="color:#d2a8ff;" id="${uid}_pz">0</b></span>
+        <span style="color:#484f58;">Prefix:<b style="color:#c4b5fd;" id="${uid}_ppfx">∞</b></span>
+    </div>
+    <div style="position:relative;">
+        <canvas id="${uid}_canvas" width="480" height="360" style="width:100%;display:block;cursor:crosshair;"></canvas>
+        <div id="${uid}_tip" style="position:absolute;display:none;padding:3px 8px;background:#161b22ee;border:1px solid #30363d;border-radius:4px;font-size:0.5rem;color:#fff;pointer-events:none;white-space:nowrap;z-index:5;"></div>
+    </div>
+    <div style="display:flex;gap:4px;padding:6px 12px;background:#161b22;border-top:1px solid #21262d;align-items:center;flex-wrap:wrap;">
+        <button id="${uid}_nav_xn" style="padding:1px 6px;border:1px solid #30363d;border-radius:3px;background:#21262d;color:#3fb950;font-family:inherit;font-size:0.5625rem;cursor:pointer;">-X</button>
+        <button id="${uid}_nav_xp" style="padding:1px 6px;border:1px solid #30363d;border-radius:3px;background:#21262d;color:#3fb950;font-family:inherit;font-size:0.5625rem;cursor:pointer;">+X</button>
+        <button id="${uid}_nav_yn" style="padding:1px 6px;border:1px solid #30363d;border-radius:3px;background:#21262d;color:#58a6ff;font-family:inherit;font-size:0.5625rem;cursor:pointer;">-Y</button>
+        <button id="${uid}_nav_yp" style="padding:1px 6px;border:1px solid #30363d;border-radius:3px;background:#21262d;color:#58a6ff;font-family:inherit;font-size:0.5625rem;cursor:pointer;">+Y</button>
+        <button id="${uid}_nav_zn" style="padding:1px 6px;border:1px solid #30363d;border-radius:3px;background:#21262d;color:#d2a8ff;font-family:inherit;font-size:0.5625rem;cursor:pointer;">-Z</button>
+        <button id="${uid}_nav_zp" style="padding:1px 6px;border:1px solid #30363d;border-radius:3px;background:#21262d;color:#d2a8ff;font-family:inherit;font-size:0.5625rem;cursor:pointer;">+Z</button>
+        <button id="${uid}_reset" style="padding:1px 6px;border:1px solid #30363d;border-radius:3px;background:#21262d;color:#8b949e;font-family:inherit;font-size:0.5625rem;cursor:pointer;">⊙ Reset</button>
+        <span style="flex:1;"></span>
+        <span style="font-size:0.5rem;color:#484f58;" id="${uid}_info">Frame 0 · 9×9 grid · Z-Layer 0</span>
+    </div>
+</div>
+<` + `script>
+(function(){
+    const id = '${uid}';
+    const cv = document.getElementById(id+'_canvas');
+    if (!cv) return;
+    const ctx = cv.getContext('2d');
+    const W = cv.width, H = cv.height;
+
+    let mode = 'slice', frame = 0, paused = false;
+    let pos = [0, 0, 0]; // x, y, z
+    let dragState = null, cubeRotX = -25, cubeRotY = 35;
+    let mouseX = -1, mouseY = -1;
+
+    const prefixes = ['+1','1','-1','+0','0','-0','+n','n','-n'];
+    const colors = ['#3fb950','#58a6ff','#bc8cff','#f0883e','#8b949e','#f85149','#d2a8ff','#79c0ff','#e3b341'];
+
+    function hexRgba(hex, a) {
+        return 'rgba('+parseInt(hex.slice(1,3),16)+','+parseInt(hex.slice(3,5),16)+','+parseInt(hex.slice(5,7),16)+','+a+')';
+    }
+
+    function updatePos() {
+        const el = (s,v) => { const e = document.getElementById(s); if(e) e.textContent = v; };
+        el(id+'_px', pos[0]); el(id+'_py', pos[1]); el(id+'_pz', pos[2]);
+        const pIdx = (Math.abs(pos[0]) + Math.abs(pos[1]) * 3 + Math.abs(pos[2])) % 9;
+        el(id+'_ppfx', prefixes[pIdx]);
+    }
+
+    /* ── SLICE ── */
+    function drawSlice() {
+        const t = frame, p = pos;
+        const layer = Math.abs(p[2]) % 6;
+        ctx.fillStyle = '#0a0e14'; ctx.fillRect(0, 0, W, H);
+        const grid = 9, cellW = W / grid, cellH = H / grid;
+        for (let r = 0; r < grid; r++) {
+            for (let c = 0; c < grid; c++) {
+                const x = c * cellW, y = r * cellH;
+                const heat = Math.sin(t * 0.02 + c * 0.8 + r * 0.6 + layer * 1.3) * 0.5 + 0.5;
+                const active = (c === Math.abs(p[0]) % grid && r === Math.abs(p[1]) % grid);
+                const baseColor = colors[c % colors.length];
+                const alpha = 0.15 + heat * 0.35 + (active ? 0.35 : 0);
+                ctx.fillStyle = active ? 'rgba(139,92,246,' + (0.5 + Math.sin(t * 0.08) * 0.2) + ')' : hexRgba(baseColor, alpha);
+                ctx.fillRect(x + 1, y + 1, cellW - 2, cellH - 2);
+                ctx.strokeStyle = active ? 'rgba(139,92,246,0.8)' : 'rgba(255,255,255,' + (0.05 + heat * 0.08) + ')';
+                ctx.lineWidth = active ? 2 : 0.5;
+                ctx.strokeRect(x + 1, y + 1, cellW - 2, cellH - 2);
+                if (active) {
+                    const grd = ctx.createRadialGradient(x+cellW/2, y+cellH/2, 0, x+cellW/2, y+cellH/2, cellW*0.6);
+                    grd.addColorStop(0, 'rgba(139,92,246,0.3)'); grd.addColorStop(1, 'rgba(139,92,246,0)');
+                    ctx.fillStyle = grd; ctx.fillRect(x, y, cellW, cellH);
+                }
+                if (heat > 0.6) {
+                    const dotX = x + cellW * (0.2 + Math.sin(t * 0.03 + c) * 0.3 + 0.3);
+                    const dotY = y + cellH * (0.2 + Math.cos(t * 0.025 + r) * 0.3 + 0.3);
+                    ctx.beginPath(); ctx.arc(dotX, dotY, 2 + heat * 2, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(255,255,255,' + heat * 0.6 + ')'; ctx.fill();
+                }
+            }
+        }
+        ctx.font = 'bold 11px monospace'; ctx.textAlign = 'center';
+        for (let c = 0; c < grid; c++) { ctx.fillStyle = colors[c]; ctx.fillText(prefixes[c], c * cellW + cellW / 2, 14); }
+        ctx.textAlign = 'start';
+        // Crosshair
+        const cx = (Math.abs(p[0]) % grid) * cellW + cellW / 2;
+        const cy = (Math.abs(p[1]) % grid) * cellH + cellH / 2;
+        ctx.setLineDash([4,4]); ctx.strokeStyle = 'rgba(139,92,246,' + (0.3 + Math.sin(t * 0.06) * 0.15) + ')'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(cx, 0); ctx.lineTo(cx, H); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0, cy); ctx.lineTo(W, cy); ctx.stroke();
+        ctx.setLineDash([]);
+        // Mouse hover highlight
+        if (mouseX >= 0 && mouseY >= 0) {
+            const hc = Math.floor(mouseX / cellW), hr = Math.floor(mouseY / cellH);
+            if (hc >= 0 && hc < grid && hr >= 0 && hr < grid) {
+                ctx.strokeStyle = 'rgba(255,255,255,0.4)'; ctx.lineWidth = 1.5;
+                ctx.strokeRect(hc * cellW + 1, hr * cellH + 1, cellW - 2, cellH - 2);
+                const tip = document.getElementById(id + '_tip');
+                if (tip) {
+                    tip.style.display = 'block';
+                    tip.style.left = (mouseX + 12) + 'px'; tip.style.top = (mouseY - 8) + 'px';
+                    tip.innerHTML = '<b style="color:' + colors[hc % 9] + '">' + prefixes[hc % 9] + '</b> [' + hc + ',' + hr + ',' + p[2] + ']';
+                }
+            }
+        }
+        ctx.fillStyle = 'rgba(255,255,255,0.4)'; ctx.font = '9px monospace';
+        ctx.fillText('Z-Layer ' + p[2] + '  |  Slice 9x9  |  Click to navigate', 6, H - 6);
+    }
+
+    /* ── ORB ── */
+    function drawOrb() {
+        const t = frame, p = pos;
+        ctx.fillStyle = '#0a0e14'; ctx.fillRect(0, 0, W, H);
+        const cx = W / 2, cy = H / 2, maxR = Math.min(W, H) * 0.42;
+        for (let ring = 3; ring >= 0; ring--) {
+            const r = maxR * (0.4 + ring * 0.2);
+            const pulse = Math.sin(t * 0.02 + ring * 1.5) * 0.1 + 0.9;
+            ctx.beginPath(); ctx.arc(cx, cy, r * pulse, 0, Math.PI * 2);
+            ctx.strokeStyle = 'rgba(139,92,246,' + (0.06 + ring * 0.04) + ')'; ctx.lineWidth = 1; ctx.stroke();
+            ctx.beginPath(); ctx.ellipse(cx, cy, r * pulse, r * pulse * 0.35, t * 0.003 + ring, 0, Math.PI * 2);
+            ctx.strokeStyle = 'rgba(88,166,255,' + (0.05 + ring * 0.03) + ')'; ctx.stroke();
+        }
+        for (let i = 0; i < 120; i++) {
+            const angle = (Math.PI * 2 / 120) * i + t * 0.008;
+            const phi = Math.sin(t * 0.01 + i * 0.5) * Math.PI * 0.8;
+            const rDist = maxR * (0.2 + Math.abs(Math.sin(i * 1.618 + t * 0.005)) * 0.75);
+            const px = cx + Math.cos(angle) * rDist * Math.cos(phi);
+            const py = cy + Math.sin(angle) * rDist * 0.6 + Math.sin(phi) * rDist * 0.3;
+            const pIdx = i % 9;
+            const sz = 1.5 + Math.sin(t * 0.015 + i) * 1;
+            const bright = 0.2 + Math.abs(Math.sin(t * 0.01 + i * 0.7)) * 0.6;
+            ctx.beginPath(); ctx.arc(px, py, sz, 0, Math.PI * 2);
+            ctx.fillStyle = hexRgba(colors[pIdx], bright); ctx.fill();
+        }
+        // Position indicator
+        const posAngle = (pos[0] * 0.5 + pos[1] * 0.3);
+        const posR = maxR * 0.5;
+        const posx = cx + Math.cos(posAngle) * posR;
+        const posy = cy + Math.sin(posAngle) * posR * 0.6;
+        const pp = Math.sin(t * 0.08) * 0.3 + 0.7;
+        ctx.beginPath(); ctx.arc(posx, posy, 6, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(139,92,246,' + pp + ')'; ctx.fill();
+        ctx.strokeStyle = 'rgba(139,92,246,0.9)'; ctx.lineWidth = 2; ctx.stroke();
+        ctx.fillStyle = '#fff'; ctx.font = 'bold 6px monospace'; ctx.textAlign = 'center';
+        ctx.fillText(prefixes[(Math.abs(pos[0]) + Math.abs(pos[1]) * 3) % 9], posx, posy + 2.5);
+        ctx.textAlign = 'start';
+        ctx.fillStyle = 'rgba(255,255,255,0.3)'; ctx.font = '9px monospace';
+        ctx.fillText('Quantum Orb  |  120 particles  |  Drag to navigate', 6, H - 6);
+    }
+
+    /* ── CUBE (flat 3D projection) ── */
+    function drawCube() {
+        const t = frame, p = pos;
+        ctx.fillStyle = '#0a0e14'; ctx.fillRect(0, 0, W, H);
+        const cxc = W / 2, cyc = H / 2;
+        const size = 3, gap = 42;
+        const cosX = Math.cos(cubeRotX * Math.PI / 180), sinX = Math.sin(cubeRotX * Math.PI / 180);
+        const cosY = Math.cos(cubeRotY * Math.PI / 180), sinY = Math.sin(cubeRotY * Math.PI / 180);
+        function proj(x, y, z) {
+            const ry = x * cosY + z * sinY;
+            const rz = -x * sinY + z * cosY;
+            const fy = y * cosX - rz * sinX;
+            const fz = y * sinX + rz * cosX;
+            const scale = 300 / (300 + fz);
+            return { sx: cxc + ry * scale, sy: cyc + fy * scale, z: fz, scale: scale };
+        }
+        // Collect cubelets and sort by z for painter's algorithm
+        const cells = [];
+        for (let z = 0; z < size; z++) for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
+            const tx = (x - 1) * gap, ty = (y - 1) * gap, tz = (z - 1) * gap;
+            const pr = proj(tx, ty, tz);
+            const active = (Math.abs(p[0]) % 3 === x && Math.abs(p[1]) % 3 === y && Math.abs(p[2]) % 3 === z);
+            const idx = (x + y * 3 + z) % 9;
+            cells.push({ pr, active, idx, x, y, z });
+        }
+        cells.sort((a, b) => b.pr.z - a.pr.z);
+        cells.forEach(c => {
+            const sz = gap * 0.7 * c.pr.scale;
+            const sx = c.pr.sx - sz / 2, sy = c.pr.sy - sz / 2;
+            ctx.fillStyle = c.active ? 'rgba(139,92,246,' + (0.5 + Math.sin(t * 0.08) * 0.2) + ')' : hexRgba(colors[c.idx], 0.35 + c.pr.scale * 0.15);
+            ctx.fillRect(sx, sy, sz, sz);
+            ctx.strokeStyle = c.active ? 'rgba(139,92,246,0.9)' : hexRgba(colors[c.idx], 0.2 + c.pr.scale * 0.1);
+            ctx.lineWidth = c.active ? 2 : 0.5;
+            ctx.strokeRect(sx, sy, sz, sz);
+            ctx.fillStyle = c.active ? '#fff' : 'rgba(255,255,255,' + (0.3 + c.pr.scale * 0.3) + ')';
+            ctx.font = 'bold ' + Math.max(7, sz * 0.28) + 'px monospace'; ctx.textAlign = 'center';
+            ctx.fillText(prefixes[c.idx], c.pr.sx, c.pr.sy + sz * 0.1);
+            ctx.textAlign = 'start';
+        });
+        cubeRotY += 0.3;
+        ctx.fillStyle = 'rgba(255,255,255,0.3)'; ctx.font = '9px monospace';
+        ctx.fillText('3D Cube  |  27 cubelets  |  Drag to rotate', 6, H - 6);
+    }
+
+    /* ── Animation loop ── */
+    function tick() {
+        if (!document.getElementById(id)) return;
+        if (!paused) {
+            frame++;
+            if (mode === 'slice') drawSlice();
+            else if (mode === 'orb') drawOrb();
+            else if (mode === 'cube') drawCube();
+            const info = document.getElementById(id + '_info');
+            if (info) info.textContent = 'Frame ' + frame + ' · ' + mode + ' · Z-Layer ' + pos[2];
+        }
+        requestAnimationFrame(tick);
+    }
+
+    /* ── Mode switching ── */
+    ['slice','cube','orb'].forEach(m => {
+        const btn = document.getElementById(id + '_m_' + m);
+        if (btn) btn.addEventListener('click', () => {
+            mode = m;
+            document.querySelectorAll('#' + id + ' .qv-btn').forEach(b => {
+                b.style.border = '1px solid #30363d'; b.style.background = '#21262d';
+            });
+            btn.style.border = '1px solid #8b5cf6'; btn.style.background = 'rgba(139,92,246,.2)';
+        });
+    });
+
+    /* ── Navigation buttons ── */
+    document.getElementById(id+'_nav_xp')?.addEventListener('click', () => { pos[0]++; updatePos(); });
+    document.getElementById(id+'_nav_xn')?.addEventListener('click', () => { pos[0]--; updatePos(); });
+    document.getElementById(id+'_nav_yp')?.addEventListener('click', () => { pos[1]++; updatePos(); });
+    document.getElementById(id+'_nav_yn')?.addEventListener('click', () => { pos[1]--; updatePos(); });
+    document.getElementById(id+'_nav_zp')?.addEventListener('click', () => { pos[2]++; updatePos(); });
+    document.getElementById(id+'_nav_zn')?.addEventListener('click', () => { pos[2]--; updatePos(); });
+    document.getElementById(id+'_reset')?.addEventListener('click', () => { pos = [0,0,0]; cubeRotX = -25; cubeRotY = 35; updatePos(); });
+
+    /* ── Canvas interaction: click to navigate, drag to rotate cube ── */
+    cv.addEventListener('click', e => {
+        if (mode === 'slice') {
+            const rect = cv.getBoundingClientRect();
+            const mx = ((e.clientX - rect.left) / rect.width) * W;
+            const my = ((e.clientY - rect.top) / rect.height) * H;
+            pos[0] = Math.floor(mx / (W / 9));
+            pos[1] = Math.floor(my / (H / 9));
+            updatePos();
+        }
+    });
+    cv.addEventListener('mousemove', e => {
+        const rect = cv.getBoundingClientRect();
+        mouseX = ((e.clientX - rect.left) / rect.width) * W;
+        mouseY = ((e.clientY - rect.top) / rect.height) * H;
+        if (mode === 'cube' && dragState) {
+            cubeRotY = dragState.ry + (e.clientX - dragState.x) * 0.5;
+            cubeRotX = dragState.rx + (e.clientY - dragState.y) * 0.5;
+        }
+    });
+    cv.addEventListener('mouseleave', () => {
+        mouseX = -1; mouseY = -1;
+        const tip = document.getElementById(id + '_tip'); if (tip) tip.style.display = 'none';
+    });
+    cv.addEventListener('mousedown', e => {
+        if (mode === 'cube') dragState = { x: e.clientX, y: e.clientY, rx: cubeRotX, ry: cubeRotY };
+    });
+    cv.addEventListener('mouseup', () => { dragState = null; });
+
+    /* ── Scroll for Z-layer ── */
+    cv.addEventListener('wheel', e => {
+        e.preventDefault();
+        pos[2] += e.deltaY > 0 ? -1 : 1;
+        updatePos();
+    }, { passive: false });
+
+    updatePos();
+    tick();
 })();
 <` + `/script>`;
             }
@@ -10207,6 +10948,7 @@ print(f"  Norm:  {qs.normalize().norm().numpy():.6f}")`);
                 if (cell.type === 'markdown') return 'markdown';
                 if (cell.type === 'mermaid') return 'mermaid';
                 if (cell.type === 'visualization') return 'python';
+                if (cell.type === 'quantum') return 'javascript';
                 const c = cell.content || '';
                 // Shebang detection
                 if (/^#!.*python/.test(c)) return 'python';
@@ -10984,7 +11726,7 @@ print(f"  Norm:  {qs.normalize().norm().numpy():.6f}")`);
                         const exportContent = header + prefixed;
                         const blob = new Blob([exportContent], { type: 'text/plain' });
                         const url = URL.createObjectURL(blob);
-                        const ext = cell.type === 'markdown' ? 'md' : cell.type === 'mermaid' ? 'mmd' : cell.type === 'visualization' ? 'html' : 'txt';
+                        const ext = cell.type === 'markdown' ? 'md' : cell.type === 'mermaid' ? 'mmd' : cell.type === 'visualization' || cell.type === 'quantum' ? 'html' : 'txt';
                         const a = document.createElement('a');
                         a.href = url; a.download = `${cellId}.${ext}`; a.click();
                         URL.revokeObjectURL(url);
@@ -11016,9 +11758,9 @@ print(f"  Norm:  {qs.normalize().norm().numpy():.6f}")`);
                 const existingOutput = document.getElementById(`${cellId}-output`);
                 let outputHtml = '';
 
-                if (cell.type === 'visualization') {
-                    // Re-run visualization at full overlay size
-                    const vizResult = this._runVisualizationCell(cell);
+                if (cell.type === 'visualization' || cell.type === 'quantum') {
+                    // Re-run visualization / quantum visual at full overlay size
+                    const vizResult = cell.type === 'quantum' ? this._runQuantumCell(cell) : this._runVisualizationCell(cell);
                     body.innerHTML = sourceHtml + `<div class="output-html">${vizResult}</div>`;
                     overlay.classList.add('open');
                     requestAnimationFrame(() => {
@@ -11961,6 +12703,11 @@ print(f"  Norm:  {qs.normalize().norm().numpy():.6f}")`);
                     notebook._navCubeRx = ncTouch.rx + (e.touches[0].clientY - ncTouch.y) * 0.7;
                     navCubeInnerEl.style.transition = 'none';
                     navCubeInnerEl.style.transform = `rotateX(${notebook._navCubeRx}deg) rotateY(${notebook._navCubeRy}deg)`;
+                    // Flat-face detection for touch drag
+                    const rx = ((notebook._navCubeRx % 360) + 360) % 360;
+                    const ry = ((notebook._navCubeRy % 360) + 360) % 360;
+                    const ns = (v) => [0,90,180,270,360].some(s => Math.abs(v-s) < 12);
+                    navCubeInnerEl.classList.toggle('ncf-flat', ns(rx) && ns(ry));
                     e.preventDefault();
                 }, { passive: false });
                 navCubeSceneEl.addEventListener('touchend', () => {
