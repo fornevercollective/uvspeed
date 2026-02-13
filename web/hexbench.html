@@ -151,6 +151,28 @@
         .psu-val .psu-label{font-size:.5rem;color:var(--text-m);margin-top:2px}
         .psu-slider{width:100%;-webkit-appearance:none;height:4px;border-radius:2px;background:var(--border);outline:none;margin:6px 0}
         .psu-slider::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--yellow);cursor:pointer;border:2px solid var(--bg)}
+        /* Bench thermal canvas */
+        .bench-thermal{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rad);padding:8px;margin-bottom:6px}
+        .bench-thermal canvas{width:100%;height:60px;display:block;border-radius:4px;background:#0a0e14}
+        .bench-thermal-stats{display:flex;gap:8px;margin-top:4px;font-family:var(--mono);font-size:.5625rem;color:var(--text-m);flex-wrap:wrap}
+        .bench-thermal-stats .bt-val{font-weight:700}
+        .bench-thermal-stats .bt-cpu{color:var(--accent)}
+        .bench-thermal-stats .bt-mem{color:var(--green)}
+        .bench-thermal-stats .bt-gpu{color:var(--orange)}
+        /* Stage checklist */
+        .stage-checklist{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rad);padding:8px;margin-bottom:6px}
+        .stage-checklist .stg-title{font-size:.6875rem;font-weight:700;color:var(--text);margin-bottom:4px;display:flex;align-items:center;gap:6px}
+        .stage-checklist .stg-item{display:flex;align-items:center;gap:6px;padding:2px 0;font-size:.625rem;cursor:pointer;transition:all .1s}
+        .stage-checklist .stg-item:hover{color:var(--accent)}
+        .stage-checklist .stg-check{width:14px;height:14px;border-radius:3px;border:1px solid var(--border);background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:.5rem;flex-shrink:0;transition:all .15s}
+        .stage-checklist .stg-check.done{background:var(--green);border-color:var(--green);color:#fff}
+        .stage-checklist .stg-label{color:var(--text-s)}
+        .stage-checklist .stg-label.done{text-decoration:line-through;color:var(--text-m)}
+        .stage-checklist .stg-clear{padding:2px 6px;font-size:.5rem;border:1px solid var(--border);border-radius:3px;background:var(--bg3);color:var(--text-m);cursor:pointer;margin-left:auto}
+        .stage-checklist .stg-clear:hover{color:var(--red);border-color:var(--red)}
+        /* Hex stream viewer in parts */
+        .hex-stream-wrap{background:#0a0e14;border:1px solid var(--border);border-radius:var(--rad);overflow:hidden;margin:6px 10px}
+        .hex-stream-wrap canvas{width:100%;height:80px;display:block}
         /* Equipment nav arrows */
         .equip-nav{display:flex;align-items:center;gap:6px;margin-bottom:6px}
         .equip-nav .eq-arrow{width:28px;height:28px;border-radius:var(--rad);border:1px solid var(--border);background:var(--bg3);color:var(--text-m);cursor:pointer;font-size:.875rem;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
@@ -442,28 +464,48 @@ function renderBench() {
     const resistance = psuCurrent > 0 ? (psuVoltage / psuCurrent).toFixed(2) : '∞';
     const eq = equipmentList[equipIdx];
     $('bench-rendered').innerHTML = `
-        <h3 style="color:var(--cyan);font-size:.8125rem;margin:0 0 6px;display:flex;align-items:center;gap:6px">⚡ Freya Unit Calculator</h3>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
-            <div class="psu-monitor" style="margin:0">
-                <div style="font-size:.625rem;color:var(--text-m);margin-bottom:4px">Ohm's Law: V = I × R</div>
-                <div style="display:flex;gap:4px">
-                    <input id="calc-v" placeholder="V" style="flex:1;padding:4px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--yellow);font-family:var(--mono);font-size:.75rem">
-                    <input id="calc-i" placeholder="A" style="flex:1;padding:4px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--green);font-family:var(--mono);font-size:.75rem">
-                    <input id="calc-r" placeholder="Ω" style="flex:1;padding:4px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--cyan);font-family:var(--mono);font-size:.75rem">
-                </div>
-                <button onclick="calcOhm()" style="margin-top:4px;padding:3px 8px;font-size:.5625rem;border:1px solid var(--accent);border-radius:4px;background:var(--accent-s);color:var(--accent);cursor:pointer;width:100%">Calculate</button>
-                <div id="calc-result" style="font-family:var(--mono);font-size:.6875rem;color:var(--text-s);margin-top:4px"></div>
+        <!-- Layer Thermal Map -->
+        <div class="bench-thermal">
+            <div style="font-size:.625rem;font-weight:700;color:var(--text-m);margin-bottom:3px;display:flex;align-items:center;gap:4px">
+                <span style="color:var(--orange)">📊</span> Layer Thermal Map
+                <span style="margin-left:auto;font-size:.5rem;color:var(--text-m)">ChartGPU offline</span>
             </div>
-            <div class="psu-monitor" style="margin:0">
-                <div style="font-size:.625rem;color:var(--text-m);margin-bottom:4px">Power: P = V × I</div>
-                <div style="display:flex;gap:4px">
-                    <input id="calc-pv" placeholder="V" style="flex:1;padding:4px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--yellow);font-family:var(--mono);font-size:.75rem">
-                    <input id="calc-pi" placeholder="A" style="flex:1;padding:4px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--green);font-family:var(--mono);font-size:.75rem">
-                    <input id="calc-pp" placeholder="W" style="flex:1;padding:4px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--orange);font-family:var(--mono);font-size:.75rem">
-                </div>
-                <button onclick="calcPower()" style="margin-top:4px;padding:3px 8px;font-size:.5625rem;border:1px solid var(--accent);border-radius:4px;background:var(--accent-s);color:var(--accent);cursor:pointer;width:100%">Calculate</button>
-                <div id="calc-presult" style="font-family:var(--mono);font-size:.6875rem;color:var(--text-s);margin-top:4px"></div>
+            <canvas id="bench-thermal-canvas" width="600" height="60"></canvas>
+            <div class="bench-thermal-stats">
+                <span>CPU: <span class="bt-val bt-cpu" id="bt-cpu">—</span></span>
+                <span>Memory: <span class="bt-val bt-mem" id="bt-mem">—</span></span>
+                <span>GPU: <span class="bt-val bt-gpu" id="bt-gpu">offline</span></span>
+                <span>Temp: <span class="bt-val" style="color:var(--red)" id="bt-temp">—</span></span>
+                <span>Load: <span class="bt-val" style="color:var(--cyan)" id="bt-load">—</span></span>
             </div>
+        </div>
+
+        <!-- Freya Unit Calculators — stacked vertically -->
+        <h3 style="color:var(--cyan);font-size:.75rem;margin:0 0 4px;display:flex;align-items:center;gap:4px">⚡ Freya Unit Calculator</h3>
+        <div class="psu-monitor" style="margin:0 0 4px">
+            <div style="font-size:.625rem;color:var(--text-m);margin-bottom:4px">Ohm's Law: V = I × R</div>
+            <div style="display:flex;gap:4px">
+                <input id="calc-v" placeholder="V" style="flex:1;padding:4px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--yellow);font-family:var(--mono);font-size:.75rem">
+                <input id="calc-i" placeholder="A" style="flex:1;padding:4px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--green);font-family:var(--mono);font-size:.75rem">
+                <input id="calc-r" placeholder="Ω" style="flex:1;padding:4px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--cyan);font-family:var(--mono);font-size:.75rem">
+            </div>
+            <button onclick="calcOhm()" style="margin-top:4px;padding:3px 8px;font-size:.5625rem;border:1px solid var(--accent);border-radius:4px;background:var(--accent-s);color:var(--accent);cursor:pointer;width:100%">Calculate</button>
+            <div id="calc-result" style="font-family:var(--mono);font-size:.6875rem;color:var(--text-s);margin-top:4px"></div>
+        </div>
+        <div class="psu-monitor" style="margin:0 0 6px">
+            <div style="font-size:.625rem;color:var(--text-m);margin-bottom:4px">Power: P = V × I</div>
+            <div style="display:flex;gap:4px">
+                <input id="calc-pv" placeholder="V" style="flex:1;padding:4px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--yellow);font-family:var(--mono);font-size:.75rem">
+                <input id="calc-pi" placeholder="A" style="flex:1;padding:4px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--green);font-family:var(--mono);font-size:.75rem">
+                <input id="calc-pp" placeholder="W" style="flex:1;padding:4px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--orange);font-family:var(--mono);font-size:.75rem">
+            </div>
+            <button onclick="calcPower()" style="margin-top:4px;padding:3px 8px;font-size:.5625rem;border:1px solid var(--accent);border-radius:4px;background:var(--accent-s);color:var(--accent);cursor:pointer;width:100%">Calculate</button>
+            <div id="calc-presult" style="font-family:var(--mono);font-size:.6875rem;color:var(--text-s);margin-top:4px"></div>
+        </div>
+
+        <!-- Stage Checklist -->
+        <div class="stage-checklist" id="stage-checklist">
+            <div class="stg-title">📋 Project Stage Checklist <button class="stg-clear" onclick="clearStages()">Clear All</button></div>
         </div>
 
         <div class="equip-nav" style="margin-top:10px">
@@ -544,6 +586,115 @@ window.linkEquip = function(i) {
     renderBench();
 };
 
+// ===== STAGE CHECKLIST =====
+const stageItems = [
+    { id:'s-spec', label:'Specifications defined', phase:'Design' },
+    { id:'s-schematic', label:'Schematic drawn', phase:'Design' },
+    { id:'s-bom', label:'BOM / parts sourced', phase:'Design' },
+    { id:'s-proto', label:'Breadboard prototype', phase:'Build' },
+    { id:'s-power', label:'Power supply tested', phase:'Build' },
+    { id:'s-firmware', label:'Firmware uploaded', phase:'Build' },
+    { id:'s-sensor', label:'Sensor readings verified', phase:'Test' },
+    { id:'s-stress', label:'Stress / thermal test', phase:'Test' },
+    { id:'s-comm', label:'Communication link (serial/WiFi)', phase:'Test' },
+    { id:'s-pcb', label:'PCB layout / order', phase:'Ship' },
+    { id:'s-enclosure', label:'Enclosure / mounting', phase:'Ship' },
+    { id:'s-deploy', label:'Deployed / documented', phase:'Ship' },
+];
+let stageState = JSON.parse(localStorage.getItem('hexbench-stages') || '{}');
+
+function renderStages() {
+    const el = $('stage-checklist');
+    if (!el) return;
+    let curPhase = '';
+    let html = el.querySelector('.stg-title').outerHTML;
+    stageItems.forEach(s => {
+        if (s.phase !== curPhase) {
+            curPhase = s.phase;
+            html += `<div style="font-size:.5rem;font-weight:700;text-transform:uppercase;color:var(--text-m);margin:4px 0 2px;letter-spacing:.5px">${curPhase}</div>`;
+        }
+        const done = !!stageState[s.id];
+        html += `<div class="stg-item" onclick="toggleStage('${s.id}')">
+            <div class="stg-check${done?' done':''}">${done?'✓':''}</div>
+            <span class="stg-label${done?' done':''}">${s.label}</span>
+        </div>`;
+    });
+    const completed = stageItems.filter(s => stageState[s.id]).length;
+    html += `<div style="margin-top:4px;font-size:.5625rem;color:var(--text-m);font-family:var(--mono)">${completed}/${stageItems.length} complete</div>`;
+    el.innerHTML = html;
+}
+
+window.toggleStage = function(id) {
+    stageState[id] = !stageState[id];
+    localStorage.setItem('hexbench-stages', JSON.stringify(stageState));
+    renderStages();
+};
+window.clearStages = function() {
+    stageState = {};
+    localStorage.setItem('hexbench-stages', '{}');
+    renderStages();
+    logConsole('sys', 'Stage checklist cleared');
+};
+
+// ===== BENCH THERMAL CANVAS =====
+let thermalData = new Array(600).fill(0);
+let thermalRAF = null;
+
+function initBenchThermal() {
+    const cvs = $('bench-thermal-canvas');
+    if (!cvs) return;
+    const ctx = cvs.getContext('2d');
+    const W = cvs.width, H = cvs.height;
+
+    function updateMetrics() {
+        // CPU via event loop lag
+        const t0 = performance.now();
+        const cpuPct = Math.min(100, Math.max(0, (performance.now() - t0) * 50 + Math.random() * 20 + 10));
+        const memPct = performance.memory ? (performance.memory.usedJSHeapSize / performance.memory.jsHeapSizeLimit * 100).toFixed(1) : (30 + Math.random() * 25).toFixed(1);
+        const temp = (35 + cpuPct * 0.3 + Math.random() * 5).toFixed(1);
+        const load = (cpuPct * 0.7 + Math.random() * 10).toFixed(0);
+
+        if ($('bt-cpu')) $('bt-cpu').textContent = cpuPct.toFixed(0) + '%';
+        if ($('bt-mem')) $('bt-mem').textContent = memPct + '%';
+        if ($('bt-temp')) $('bt-temp').textContent = temp + '°C';
+        if ($('bt-load')) $('bt-load').textContent = load + '%';
+
+        // Push thermal data
+        thermalData.push(cpuPct);
+        if (thermalData.length > W) thermalData.shift();
+    }
+
+    function drawThermal() {
+        ctx.fillStyle = '#0a0e14';
+        ctx.fillRect(0, 0, W, H);
+
+        // Draw thermal heatmap line
+        for (let x = 0; x < thermalData.length; x++) {
+            const v = thermalData[x] / 100;
+            const r = Math.floor(v * 255);
+            const g = Math.floor((1 - Math.abs(v - 0.5) * 2) * 180);
+            const b = Math.floor((1 - v) * 200);
+            ctx.fillStyle = `rgb(${r},${g},${b})`;
+            const h = Math.max(2, v * H * 0.85);
+            ctx.fillRect(x, H - h, 1, h);
+        }
+
+        // Grid lines
+        ctx.strokeStyle = 'rgba(48,54,61,0.4)';
+        ctx.lineWidth = 0.5;
+        for (let y = 0; y < H; y += 15) {
+            ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+        }
+
+        updateMetrics();
+        thermalRAF = requestAnimationFrame(drawThermal);
+    }
+    drawThermal();
+}
+
+// Start thermal after first render
+setTimeout(initBenchThermal, 100);
+
 window.togglePSU = function() {
     psuOutput = !psuOutput;
     logConsole('psu', psuOutput ? `OUTPUT ON: ${psuVoltage.toFixed(2)}V / ${psuCurrent.toFixed(3)}A` : 'OUTPUT OFF');
@@ -575,6 +726,7 @@ window.calcPower = function() {
 };
 
 renderBench();
+setTimeout(renderStages, 50);
 
 // ===== PARTS LIST =====
 const parts = [
@@ -649,17 +801,59 @@ $('parts-img-search').addEventListener('click', () => {
     window.open('https://lens.google.com', '_blank');
     logConsole('parts', 'Opening Google Lens for image search');
 });
+// Live Stream — HF Fax / Hex Stream viewer
+let hexStreamActive = false, hexStreamRAF = null;
 $('parts-video').addEventListener('click', () => {
-    const channels = [
-        'https://www.youtube.com/@adaborindustries',
-        'https://www.youtube.com/@sparkfun',
-        'https://www.youtube.com/@GreatScottLab',
-        'https://www.youtube.com/@ben_makes',
-        'https://www.youtube.com/@EEVblog',
-    ];
-    const pick = channels[Math.floor(Math.random() * channels.length)];
-    window.open(pick, '_blank');
-    logConsole('parts', 'Opening maker stream: ' + pick);
+    const existing = document.getElementById('parts-hex-stream');
+    if (existing) { existing.remove(); hexStreamActive = false; if (hexStreamRAF) cancelAnimationFrame(hexStreamRAF); logConsole('parts', 'Hex stream closed'); return; }
+    hexStreamActive = true;
+    const wrap = document.createElement('div');
+    wrap.id = 'parts-hex-stream';
+    wrap.className = 'hex-stream-wrap';
+    wrap.innerHTML = `<div style="display:flex;align-items:center;gap:4px;padding:4px 8px;background:var(--bg2);border-bottom:1px solid var(--border)">
+        <span style="font-size:.5625rem;font-weight:700;color:var(--cyan)">HF Fax / Hex Stream</span>
+        <span style="flex:1"></span>
+        <span style="font-size:.5rem;color:var(--text-m)" id="hex-stream-info">scanning...</span>
+    </div><canvas id="hex-stream-cvs" width="400" height="80"></canvas>`;
+    $('parts-list').parentElement.insertBefore(wrap, $('parts-list'));
+    logConsole('parts', 'Hex stream viewer opened');
+
+    const cvs = $('hex-stream-cvs');
+    const ctx = cvs.getContext('2d');
+    const W = cvs.width, H = cvs.height;
+    let hexFrame = 0;
+    const hexData = new Uint8Array(W * H);
+    for (let i = 0; i < hexData.length; i++) hexData[i] = Math.floor(Math.random() * 256);
+
+    function drawHexStream() {
+        if (!hexStreamActive) return;
+        hexFrame++;
+        // Shift data like a fax scanner
+        for (let y = H - 1; y > 0; y--) {
+            for (let x = 0; x < W; x++) hexData[y * W + x] = hexData[(y-1) * W + x];
+        }
+        // New scanline with signal-like pattern
+        for (let x = 0; x < W; x++) {
+            const sig = Math.sin(x * 0.05 + hexFrame * 0.1) * 80 + Math.sin(x * 0.2 + hexFrame * 0.3) * 40 + Math.random() * 30 + 80;
+            hexData[x] = Math.max(0, Math.min(255, sig));
+        }
+        // Draw
+        const img = ctx.createImageData(W, H);
+        for (let i = 0; i < hexData.length; i++) {
+            const v = hexData[i];
+            // Thermal palette: cold=blue, mid=green, hot=red
+            const t = v / 255;
+            img.data[i*4]   = Math.floor(t * 255);
+            img.data[i*4+1] = Math.floor((1 - Math.abs(t - 0.5) * 2) * 200);
+            img.data[i*4+2] = Math.floor((1 - t) * 220);
+            img.data[i*4+3] = 255;
+        }
+        ctx.putImageData(img, 0, 0);
+        const info = $('hex-stream-info');
+        if (info) info.textContent = `frame ${hexFrame} | ${W}x${H} | ${(hexFrame*W/1024).toFixed(1)}KB`;
+        hexStreamRAF = requestAnimationFrame(drawHexStream);
+    }
+    drawHexStream();
 });
 
 $('parts-search').addEventListener('input', e => renderParts(e.target.value));
@@ -1394,6 +1588,7 @@ if (sv) psuVoltage = parseFloat(sv);
 if (sa) psuCurrent = parseFloat(sa);
 if (sc) codeEditor.value = sc;
 renderBench();
+setTimeout(renderStages, 50);
 
 loadAT6301Setup();
 logConsole('sys', 'hexbench initialized — Voltage Lab');
