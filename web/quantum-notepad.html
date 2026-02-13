@@ -8,6 +8,9 @@
     <link rel="icon" type="image/png" sizes="32x32" href="../icons/favicon.png">
     <link rel="icon" type="image/x-icon" href="../icons/favicon.ico">
     <link rel="apple-touch-icon" sizes="192x192" href="../icons/icon-192.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&display=swap">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0d1117">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -864,31 +867,85 @@
         }
 
         /* --- Blocks Panel (mini Pybricks builder) --- */
+        /* ===== Blocks Builder — IBM Quantum-inspired flow ===== */
         .blocks-panel {
             padding: var(--cursor-space-sm);
             overflow-x: hidden;
             max-width: 100%;
             box-sizing: border-box;
         }
+
+        /* Pipeline flow indicator */
+        .nb-pipeline {
+            display: flex; align-items: center; gap: 3px; margin-bottom: 8px;
+            font-size: 0.5rem; font-weight: 600; color: var(--cursor-text-muted);
+            letter-spacing: 0.3px; text-transform: uppercase; opacity: 0.7;
+        }
+        .nb-pipeline-stage {
+            padding: 2px 6px; border-radius: 10px; font-size: 0.5rem;
+            border: 1px dashed; white-space: nowrap;
+        }
+        .nb-pipeline-stage.s-init   { border-color: rgba(88,166,255,0.4); color: #58a6ff; }
+        .nb-pipeline-stage.s-proc   { border-color: rgba(210,168,255,0.4); color: #d2a8ff; }
+        .nb-pipeline-stage.s-output { border-color: rgba(63,185,80,0.4);  color: #3fb950; }
+        .nb-pipeline-arrow { font-size: 0.625rem; opacity: 0.4; }
+
+        /* Category groups with dashed borders */
         .nb-palette {
-            display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px;
+            display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px;
             max-width: 100%; overflow: hidden;
         }
+        .nb-cat-group {
+            border: 1px dashed var(--cursor-border-muted);
+            border-radius: 8px; padding: 5px 6px 4px;
+            background: rgba(255,255,255,0.015);
+            overflow: hidden;
+        }
+        .nb-cat-label {
+            font-size: 0.5rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.5px; margin-bottom: 3px; padding-left: 2px;
+            display: flex; align-items: center; gap: 4px;
+        }
+        .nb-cat-label::before {
+            content: ''; display: inline-block; width: 6px; height: 6px;
+            border-radius: 50%;
+        }
+        .nb-cat-label.lbl-hub    { color: #58a6ff; }
+        .nb-cat-label.lbl-hub::before    { background: #58a6ff; }
+        .nb-cat-label.lbl-motion { color: #f0883e; }
+        .nb-cat-label.lbl-motion::before { background: #f0883e; }
+        .nb-cat-label.lbl-sensor { color: #3fb950; }
+        .nb-cat-label.lbl-sensor::before { background: #3fb950; }
+        .nb-cat-label.lbl-logic  { color: #d2a8ff; }
+        .nb-cat-label.lbl-logic::before  { background: #d2a8ff; }
+        .nb-cat-label.lbl-loop   { color: #ffe138; }
+        .nb-cat-label.lbl-loop::before   { background: #ffe138; }
+        .nb-cat-label.lbl-var    { color: #f97583; }
+        .nb-cat-label.lbl-var::before    { background: #f97583; }
+        .nb-cat-label.lbl-stream { color: #c084fc; }
+        .nb-cat-label.lbl-stream::before { background: #c084fc; }
+
+        .nb-cat-chips { display: flex; flex-wrap: wrap; gap: 3px; }
+
+        /* Pill-shaped chips (IBM Quantum style) */
         .nb-chip {
-            padding: 3px 7px; font-size: 0.5625rem; font-weight: 600;
-            border-radius: 4px; cursor: pointer; border: 1px solid transparent;
-            transition: all 0.12s ease; white-space: nowrap;
+            padding: 3px 10px; font-size: 0.5625rem; font-weight: 600;
+            border-radius: 12px; cursor: pointer; border: 1px solid transparent;
+            transition: all 0.15s ease; white-space: nowrap;
             flex-shrink: 0; max-width: calc(50% - 4px); box-sizing: border-box;
             overflow: hidden; text-overflow: ellipsis;
+            position: relative;
         }
-        .nb-chip:hover { filter: brightness(1.2); }
-        .nb-chip.cat-hub    { background: rgba(88,166,255,0.15); color: #58a6ff; border-color: rgba(88,166,255,0.3); }
-        .nb-chip.cat-motion { background: rgba(255,136,56,0.15); color: #f0883e; border-color: rgba(255,136,56,0.3); }
-        .nb-chip.cat-sensor { background: rgba(63,185,80,0.15); color: #3fb950; border-color: rgba(63,185,80,0.3); }
-        .nb-chip.cat-logic  { background: rgba(210,168,255,0.15); color: #d2a8ff; border-color: rgba(210,168,255,0.3); }
-        .nb-chip.cat-loop   { background: rgba(255,225,56,0.15); color: #ffe138; border-color: rgba(255,225,56,0.3); }
-        .nb-chip.cat-var    { background: rgba(218,54,51,0.15); color: #f97583; border-color: rgba(218,54,51,0.3); }
-        .nb-chip.cat-stream { background: rgba(192,132,252,0.15); color: #c084fc; border-color: rgba(192,132,252,0.3); }
+        .nb-chip:hover { filter: brightness(1.25); transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
+        .nb-chip:active { transform: scale(0.96) translateY(0); }
+        .nb-chip.cat-hub    { background: rgba(88,166,255,0.12); color: #58a6ff; border-color: rgba(88,166,255,0.25); }
+        .nb-chip.cat-motion { background: rgba(255,136,56,0.12); color: #f0883e; border-color: rgba(255,136,56,0.25); }
+        .nb-chip.cat-sensor { background: rgba(63,185,80,0.12); color: #3fb950; border-color: rgba(63,185,80,0.25); }
+        .nb-chip.cat-logic  { background: rgba(210,168,255,0.12); color: #d2a8ff; border-color: rgba(210,168,255,0.25); }
+        .nb-chip.cat-loop   { background: rgba(255,225,56,0.12); color: #ffe138; border-color: rgba(255,225,56,0.25); }
+        .nb-chip.cat-var    { background: rgba(218,54,51,0.12); color: #f97583; border-color: rgba(218,54,51,0.25); }
+        .nb-chip.cat-stream { background: rgba(192,132,252,0.12); color: #c084fc; border-color: rgba(192,132,252,0.25); }
 
         .nb-canvas {
             position: relative;
@@ -1254,8 +1311,14 @@
             color: var(--cursor-accent);
         }
 
-        /* Legacy flat grid (keep for underlying nav-btn clicks) */
+        /* Flat grid — shown in 2D Slice mode, hidden in 3D Cube mode */
         .quantum-nav-mini {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+            padding: 8px;
+        }
+        .quantum-nav-mini.ncv-hidden {
             display: none;
         }
 
@@ -1438,11 +1501,40 @@
             border-color: var(--cursor-accent);
         }
 
+        /* ===== Cell Overview Nav Bar ===== */
+        .cell-nav-bar {
+            display: flex; align-items: center; gap: 3px; margin-bottom: 6px;
+        }
+        .cell-nav-btn {
+            padding: 2px 7px; font-size: 0.6875rem; font-weight: 600;
+            border: 1px solid var(--cursor-border); border-radius: 4px;
+            background: var(--cursor-bg); color: var(--cursor-text-muted);
+            cursor: pointer; transition: all 0.12s ease; line-height: 1.3;
+        }
+        .cell-nav-btn:hover { background: var(--cursor-bg-hover); color: var(--cursor-text); }
+        .cell-nav-btn:active { transform: scale(0.94); }
+        .cell-nav-btn:disabled { opacity: 0.3; pointer-events: none; }
+        .cell-nav-jump {
+            flex: 1; padding: 2px 6px; font-size: 0.625rem;
+            border: 1px solid var(--cursor-border); border-radius: 4px;
+            background: var(--cursor-bg); color: var(--cursor-text);
+            font-family: var(--cursor-font-mono); outline: none;
+            min-width: 0;
+        }
+        .cell-nav-jump:focus { border-color: var(--cursor-accent); }
+        .cell-nav-jump::placeholder { color: var(--cursor-text-muted); opacity: 0.5; }
+        .cell-nav-counter {
+            font-size: 0.5625rem; color: var(--cursor-text-muted); white-space: nowrap;
+            font-family: var(--cursor-font-mono);
+        }
+
         /* ===== Cell Overview List ===== */
         .cell-list {
             list-style: none;
             padding: 0;
             margin: 0;
+            max-height: 260px;
+            overflow-y: auto;
         }
 
         .cell-list-item {
@@ -1474,6 +1566,14 @@
         .cell-list-item .cell-list-icon {
             flex-shrink: 0;
         }
+
+        .cell-list-item .cli-move {
+            opacity: 0; font-size: 0.5625rem; cursor: pointer;
+            padding: 0 2px; border-radius: 2px; transition: opacity 0.12s;
+            color: var(--cursor-text-muted); flex-shrink: 0;
+        }
+        .cell-list-item:hover .cli-move { opacity: 0.6; }
+        .cell-list-item .cli-move:hover { opacity: 1; color: var(--cursor-accent); }
 
         /* ===== Performance Stats ===== */
         .perf-row {
@@ -2572,10 +2672,244 @@
             .footer-quick-cmds { display: none; }
             .top-quick-cmds { display: none; }
         }
+
+        /* ===== Hex Stream Chat Widget (top-right) ===== */
+        .hxs-toggle {
+            position: fixed; top: 8px; right: 90px; z-index: 99998;
+            background: var(--cursor-bg-secondary); border: 1px solid var(--cursor-border);
+            border-radius: 6px; padding: 3px 10px; cursor: pointer;
+            font-size: 0.625rem; font-weight: 700; color: var(--cursor-text-muted);
+            font-family: var(--cursor-font-mono); display: flex; align-items: center; gap: 5px;
+            transition: all 0.15s; box-shadow: 0 1px 4px var(--cursor-shadow, rgba(0,0,0,0.2));
+            user-select: none; line-height: 1;
+        }
+        .hxs-toggle:hover { color: var(--cursor-text); border-color: var(--cursor-text-muted); }
+        .hxs-toggle .hxs-dot { width: 5px; height: 5px; border-radius: 50%; background: #484f58; flex-shrink: 0; }
+        .hxs-toggle .hxs-dot.live { background: #da3633; box-shadow: 0 0 6px rgba(218,54,51,0.5); animation: hxs-pulse 1.5s ease infinite; }
+        @keyframes hxs-pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+        .hxs-panel {
+            position: fixed; top: 36px; right: 12px; z-index: 99997;
+            width: 280px; max-height: 420px;
+            background: var(--cursor-bg-secondary); border: 1px solid var(--cursor-border);
+            border-radius: 8px; display: none; flex-direction: column;
+            box-shadow: 0 4px 20px var(--cursor-shadow, rgba(0,0,0,0.3));
+            overflow: hidden; font-size: 0.6875rem;
+        }
+        .hxs-panel.open { display: flex; }
+
+        .hxs-video-area {
+            position: relative; width: 100%; height: 0; background: #000;
+            overflow: hidden; transition: height 0.2s ease;
+        }
+        .hxs-video-area.active { height: 140px; }
+        .hxs-video-area video, .hxs-video-area canvas {
+            width: 100%; height: 100%; object-fit: cover; display: block;
+        }
+        .hxs-video-bar {
+            position: absolute; bottom: 0; left: 0; right: 0; display: flex; gap: 3px;
+            padding: 3px 4px; background: rgba(0,0,0,0.6);
+        }
+        .hxs-video-btn {
+            padding: 2px 6px; font-size: 0.5rem; font-weight: 600;
+            border: 1px solid rgba(255,255,255,0.15); border-radius: 3px;
+            background: rgba(255,255,255,0.08); color: #e6edf3;
+            cursor: pointer; transition: all 0.12s;
+        }
+        .hxs-video-btn:hover { background: rgba(255,255,255,0.15); }
+        .hxs-video-btn.active { background: rgba(218,54,51,0.3); border-color: #da3633; color: #f85149; }
+
+        .hxs-msgs {
+            flex: 1; overflow-y: auto; padding: 6px 8px;
+            max-height: 200px; min-height: 80px;
+        }
+        .hxs-msg {
+            margin-bottom: 4px; padding: 3px 6px; border-radius: 5px;
+            background: var(--cursor-bg-tertiary); font-size: 0.625rem;
+            line-height: 1.4; word-break: break-word;
+        }
+        .hxs-msg .hxs-msg-user {
+            font-weight: 700; color: var(--cursor-accent); margin-right: 4px;
+        }
+        .hxs-msg .hxs-msg-time {
+            font-size: 0.5rem; color: var(--cursor-text-muted); float: right;
+        }
+        .hxs-msg.system { color: var(--cursor-text-muted); font-style: italic; background: none; padding: 1px 6px; }
+
+        .hxs-input-bar {
+            display: flex; gap: 4px; padding: 5px 6px;
+            border-top: 1px solid var(--cursor-border-muted);
+            background: var(--cursor-bg);
+        }
+        .hxs-input {
+            flex: 1; padding: 4px 8px; font-size: 0.625rem;
+            border: 1px solid var(--cursor-border); border-radius: 4px;
+            background: var(--cursor-bg-tertiary); color: var(--cursor-text);
+            font-family: var(--cursor-font-mono); outline: none;
+        }
+        .hxs-input:focus { border-color: var(--cursor-accent); }
+        .hxs-send-btn {
+            padding: 4px 10px; font-size: 0.5625rem; font-weight: 700;
+            border: 1px solid var(--cursor-accent); border-radius: 4px;
+            background: var(--cursor-accent-subtle); color: var(--cursor-accent);
+            cursor: pointer; transition: all 0.12s; white-space: nowrap;
+        }
+        .hxs-send-btn:hover { background: var(--cursor-accent); color: #fff; }
+
+        /* ===== Chalk / Handwritten Mode ===== */
+        .chalk-toggle-btn {
+            position: fixed; bottom: 48px; right: 16px; z-index: 9999;
+            width: 32px; height: 32px; border-radius: 50%;
+            border: 1px solid var(--cursor-border);
+            background: var(--cursor-bg-secondary);
+            color: var(--cursor-text-muted);
+            font-size: 0.875rem; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        .chalk-toggle-btn:hover { color: var(--cursor-text); transform: scale(1.1); }
+        .chalk-toggle-btn.active { background: rgba(255,225,56,0.15); color: #ffe138;
+            border-color: rgba(255,225,56,0.4); }
+
+        /* When chalk mode is active on body */
+        body[data-chalk="on"] {
+            --chalk-font: 'Caveat', 'Marker Felt', 'Comic Sans MS', cursive;
+        }
+
+        body[data-chalk="on"] .sidebar-title,
+        body[data-chalk="on"] .sidebar-tab,
+        body[data-chalk="on"] .cell-type,
+        body[data-chalk="on"] .cell-nav-btn,
+        body[data-chalk="on"] .nb-cat-label,
+        body[data-chalk="on"] .nb-pipeline-stage,
+        body[data-chalk="on"] .nb-chip,
+        body[data-chalk="on"] .cell-list-item,
+        body[data-chalk="on"] .perf-row,
+        body[data-chalk="on"] .tag,
+        body[data-chalk="on"] .btn--xs,
+        body[data-chalk="on"] .status-badge,
+        body[data-chalk="on"] .notepad-title,
+        body[data-chalk="on"] .cell-nav-counter,
+        body[data-chalk="on"] .nb-block-head {
+            font-family: var(--chalk-font) !important;
+            letter-spacing: 0.3px;
+        }
+
+        body[data-chalk="on"] .sidebar-title {
+            font-size: 1rem; font-weight: 700;
+        }
+        body[data-chalk="on"] .sidebar-tab {
+            font-size: 0.875rem;
+        }
+        body[data-chalk="on"] .cell-list-item {
+            font-size: 0.875rem;
+        }
+        body[data-chalk="on"] .nb-chip {
+            font-size: 0.75rem;
+        }
+        body[data-chalk="on"] .nb-cat-label {
+            font-size: 0.6875rem;
+        }
+        body[data-chalk="on"] .nb-pipeline-stage {
+            font-size: 0.625rem;
+        }
+
+        /* Sketchy borders — slightly irregular radius */
+        body[data-chalk="on"] .quantum-cell {
+            border-radius: 6px 12px 8px 14px;
+            border-style: dashed;
+            border-width: 1.5px;
+        }
+        body[data-chalk="on"] .cell-header {
+            border-radius: 5px 11px 0 0;
+        }
+        body[data-chalk="on"] .sidebar-section {
+            border-bottom-style: dashed;
+        }
+        body[data-chalk="on"] .nb-cat-group {
+            border-radius: 10px 6px 12px 8px;
+            border-width: 1.5px;
+        }
+        body[data-chalk="on"] .nb-chip {
+            border-radius: 14px 10px 16px 12px;
+            border-style: dashed;
+        }
+        body[data-chalk="on"] .cell-nav-btn {
+            border-radius: 6px 4px 8px 5px;
+            border-style: dashed;
+        }
+
+        /* Chalkboard texture overlay on cells container */
+        body[data-chalk="on"] .cells-container::before {
+            content: '';
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 28px,
+                rgba(255,255,255,0.012) 28px,
+                rgba(255,255,255,0.012) 29px
+            );
+            pointer-events: none; z-index: 0;
+        }
+
+        /* Slight tilt on blocks builder canvas blocks */
+        body[data-chalk="on"] .nb-block {
+            border-radius: 6px 10px 8px 12px;
+            border: 1.5px dashed;
+        }
+        body[data-chalk="on"] .nb-block:nth-child(odd) { transform: rotate(-0.3deg); }
+        body[data-chalk="on"] .nb-block:nth-child(even) { transform: rotate(0.4deg); }
+
+        /* Softer shadows for organic feel */
+        body[data-chalk="on"] .quantum-cell {
+            box-shadow: 2px 3px 0 rgba(255,255,255,0.04), -1px -1px 0 rgba(255,255,255,0.02);
+        }
+
+        /* Wavy underlines on titles */
+        body[data-chalk="on"] .sidebar-title {
+            text-decoration: underline wavy;
+            text-decoration-color: rgba(255,225,56,0.3);
+            text-underline-offset: 3px;
+        }
+
+        /* Hand-drawn feel for performance rows */
+        body[data-chalk="on"] .perf-row {
+            font-family: var(--chalk-font);
+            font-size: 0.875rem;
+            border-bottom-style: dotted;
+        }
     </style>
 </head>
 <body>
     <div style="display:flex;height:2px;width:100%;flex-shrink:0"><span style="flex:1;background:#ff3838"></span><span style="flex:1;background:#ff8c38"></span><span style="flex:1;background:#ffe138"></span><span style="flex:1;background:#3fb950"></span><span style="flex:1;background:#38a5ff"></span><span style="flex:1;background:#bc8cff"></span></div>
+
+    <!-- ===== Hex Stream Chat Widget ===== -->
+    <button class="hxs-toggle" id="hxs-toggle" title="Hex Stream — chat & share screen">
+        <span class="hxs-dot" id="hxs-dot"></span>
+        HexStream
+    </button>
+    <div class="hxs-panel" id="hxs-panel">
+        <div class="hxs-video-area" id="hxs-video-area">
+            <video id="hxs-vid" autoplay playsinline muted style="display:none;"></video>
+            <canvas id="hxs-canvas" width="280" height="140" style="display:none;"></canvas>
+            <div id="hxs-vid-ph" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#484f58;font-size:0.5rem;font-family:var(--cursor-font-mono);">No stream active</div>
+            <div class="hxs-video-bar">
+                <button class="hxs-video-btn" id="hxs-cam-btn" title="Camera">📷</button>
+                <button class="hxs-video-btn" id="hxs-scr-btn" title="Share screen">🖵</button>
+                <button class="hxs-video-btn" id="hxs-stop-btn" title="Stop stream">⏹</button>
+            </div>
+        </div>
+        <div class="hxs-msgs" id="hxs-msgs">
+            <div class="hxs-msg system">HexStream ready — chat or share screen</div>
+        </div>
+        <div class="hxs-input-bar">
+            <input class="hxs-input" id="hxs-input" type="text" placeholder="Type a message…" autocomplete="off" maxlength="500">
+            <button class="hxs-send-btn" id="hxs-send-btn">Send</button>
+        </div>
+    </div>
+
     <div class="notepad-container">
         <!-- Header -->
         <div class="notepad-header">
@@ -2801,9 +3135,19 @@
                             <button class="ncv-tab active" id="ncv-tab-3d" data-ncv="3d">🎲 3D Cube</button>
                         </div>
 
-                        <!-- 2D Slice viewport (canvas — prefix grid) -->
-                        <div class="ncv-viewport ncv-hidden" id="ncv-2d-view">
-                            <canvas id="ncv-2d-canvas" width="240" height="160"></canvas>
+                        <!-- 2D Slice — original flat grid (shown when 2D tab active) -->
+                        <div id="ncv-2d-view" class="ncv-hidden" style="padding:0;">
+                            <div class="quantum-nav-mini" id="ncv-2d-grid">
+                                <button class="nav-btn" data-direction="+1" title="Lines up (+Y)">+1</button>
+                                <button class="nav-btn" data-direction="0" title="Neutral">0</button>
+                                <button class="nav-btn" data-direction="-1" title="Lines down (-Y)">-1</button>
+                                <button class="nav-btn" data-direction="+n" title="Complexity up (+Z)">+n</button>
+                                <button class="nav-btn active" data-direction="⚛" id="nav-center-btn" title="Reset to origin">∞</button>
+                                <button class="nav-btn" data-direction="-n" title="Complexity down (-Z)">-n</button>
+                                <button class="nav-btn" data-direction="+0" title="Dependencies right (+X)">+0</button>
+                                <button class="nav-btn" data-direction="-0" title="Dependencies left (-X)">-0</button>
+                                <button class="nav-btn" data-direction="+2" title="Jump +2 lines">+2</button>
+                            </div>
                         </div>
 
                         <!-- 3D Cube viewport (clipped so faces can't escape) -->
@@ -2865,18 +3209,7 @@
                         </div>
                     </div>
 
-                    <!-- Hidden flat grid (nav-btn clicks still wired) -->
-                    <div class="quantum-nav-mini">
-                        <button class="nav-btn" data-direction="+1" title="Lines up (+Y)">+1</button>
-                        <button class="nav-btn" data-direction="0" title="Neutral">0</button>
-                        <button class="nav-btn" data-direction="-1" title="Lines down (-Y)">-1</button>
-                        <button class="nav-btn" data-direction="+n" title="Complexity up (+Z)">+n</button>
-                        <button class="nav-btn active" data-direction="⚛" id="nav-center-btn" title="Reset to origin">∞</button>
-                        <button class="nav-btn" data-direction="-n" title="Complexity down (-Z)">-n</button>
-                        <button class="nav-btn" data-direction="+0" title="Dependencies right (+X)">+0</button>
-                        <button class="nav-btn" data-direction="-0" title="Dependencies left (-X)">-0</button>
-                        <button class="nav-btn" data-direction="+2" title="Jump +2 lines">+2</button>
-                    </div>
+                    <!-- (flat grid moved into ncv-2d-view above) -->
 
                     <!-- Layer Up/Down Navigator -->
                     <div class="layer-nav">
@@ -3208,21 +3541,60 @@
                     <div class="sidebar-title">Block Builder</div>
                     <div style="font-size:0.5625rem;color:var(--cursor-text-muted);margin-bottom:6px;">Pybricks-style visual code blocks — drag, connect, export</div>
 
+                    <!-- Pipeline flow indicator -->
+                    <div class="nb-pipeline">
+                        <span class="nb-pipeline-stage s-init">Initialize</span>
+                        <span class="nb-pipeline-arrow">→</span>
+                        <span class="nb-pipeline-stage s-proc">Process</span>
+                        <span class="nb-pipeline-arrow">→</span>
+                        <span class="nb-pipeline-stage s-output">Output</span>
+                    </div>
+
                     <div class="nb-palette" id="nb-palette">
-                        <span class="nb-chip cat-hub" data-nb="hub_init">Hub Init</span>
-                        <span class="nb-chip cat-hub" data-nb="hub_light">Light</span>
-                        <span class="nb-chip cat-hub" data-nb="hub_beep">Beep</span>
-                        <span class="nb-chip cat-motion" data-nb="motor_run">Motor</span>
-                        <span class="nb-chip cat-motion" data-nb="motor_stop">Stop</span>
-                        <span class="nb-chip cat-sensor" data-nb="color_read">Color</span>
-                        <span class="nb-chip cat-sensor" data-nb="dist_read">Dist</span>
-                        <span class="nb-chip cat-logic" data-nb="if_then">If</span>
-                        <span class="nb-chip cat-logic" data-nb="wait_ms">Wait</span>
-                        <span class="nb-chip cat-loop" data-nb="loop_forever">Loop</span>
-                        <span class="nb-chip cat-loop" data-nb="loop_n">Loop N</span>
-                        <span class="nb-chip cat-var" data-nb="set_var">Set</span>
-                        <span class="nb-chip cat-var" data-nb="print_val">Print</span>
-                        <span class="nb-chip cat-stream" data-nb="stream_in">Stream</span>
+                        <!-- Hub / Initialize -->
+                        <div class="nb-cat-group">
+                            <div class="nb-cat-label lbl-hub">Hub</div>
+                            <div class="nb-cat-chips">
+                                <span class="nb-chip cat-hub" data-nb="hub_init">Hub Init</span>
+                                <span class="nb-chip cat-hub" data-nb="hub_light">Light</span>
+                                <span class="nb-chip cat-hub" data-nb="hub_beep">Beep</span>
+                            </div>
+                        </div>
+                        <!-- Motion -->
+                        <div class="nb-cat-group">
+                            <div class="nb-cat-label lbl-motion">Motion</div>
+                            <div class="nb-cat-chips">
+                                <span class="nb-chip cat-motion" data-nb="motor_run">Motor</span>
+                                <span class="nb-chip cat-motion" data-nb="motor_stop">Stop</span>
+                            </div>
+                        </div>
+                        <!-- Sensors -->
+                        <div class="nb-cat-group">
+                            <div class="nb-cat-label lbl-sensor">Sensors</div>
+                            <div class="nb-cat-chips">
+                                <span class="nb-chip cat-sensor" data-nb="color_read">Color</span>
+                                <span class="nb-chip cat-sensor" data-nb="dist_read">Dist</span>
+                            </div>
+                        </div>
+                        <!-- Logic + Flow -->
+                        <div class="nb-cat-group">
+                            <div class="nb-cat-label lbl-logic">Logic</div>
+                            <div class="nb-cat-chips">
+                                <span class="nb-chip cat-logic" data-nb="if_then">If</span>
+                                <span class="nb-chip cat-logic" data-nb="wait_ms">Wait</span>
+                                <span class="nb-chip cat-loop" data-nb="loop_forever">Loop</span>
+                                <span class="nb-chip cat-loop" data-nb="loop_n">Loop N</span>
+                            </div>
+                        </div>
+                        <!-- Variables & Output -->
+                        <div class="nb-cat-group">
+                            <div class="nb-cat-label lbl-var">Data</div>
+                            <div class="nb-cat-chips">
+                                <span class="nb-chip cat-var" data-nb="set_var">Set</span>
+                                <span class="nb-chip cat-var" data-nb="print_val">Print</span>
+                                <span class="nb-chip cat-stream" data-nb="stream_in">Stream</span>
+                            </div>
+                        </div>
                     </div>
 
                     <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;max-width:100%;">
@@ -3243,6 +3615,14 @@
                 <!-- ===== ALWAYS-VISIBLE SECTIONS ===== -->
                 <div class="sidebar-section">
                     <div class="sidebar-title">Cell Overview</div>
+                    <div class="cell-nav-bar">
+                        <button class="cell-nav-btn" id="cnav-first" title="Jump to first cell">⇤</button>
+                        <button class="cell-nav-btn" id="cnav-up" title="Previous cell (↑)">▲</button>
+                        <button class="cell-nav-btn" id="cnav-down" title="Next cell (↓)">▼</button>
+                        <button class="cell-nav-btn" id="cnav-last" title="Jump to last cell">⇥</button>
+                        <input class="cell-nav-jump" id="cnav-jump" type="number" min="1" placeholder="#" title="Jump to cell number">
+                        <span class="cell-nav-counter" id="cnav-counter">0/0</span>
+                    </div>
                     <ul class="cell-list" id="cell-list">
                         <!-- Dynamic cell list -->
                     </ul>
@@ -3408,6 +3788,11 @@
             <button class="qheat-mode-btn" data-qheat-mode="bubble" title="Bubble — circles sized by weight">Bubble</button>
             <button class="qheat-mode-btn" data-qheat-mode="bar" title="Bar chart">Bars</button>
             <button class="qheat-mode-btn" data-qheat-mode="sunburst" title="Sunburst — radial hierarchy">Sunburst</button>
+            <span style="width:1px;height:16px;background:var(--cursor-border);margin:0 4px;flex-shrink:0;"></span>
+            <button class="qheat-mode-btn" data-qheat-mode="slice" title="2D Slice — flat prefix grid heatmap">Slice</button>
+            <button class="qheat-mode-btn" data-qheat-mode="orb" title="Orb — 3D probability sphere">Orb</button>
+            <button class="qheat-mode-btn" data-qheat-mode="lattice" title="Lattice — quantum lattice network">Lattice</button>
+            <button class="qheat-mode-btn" data-qheat-mode="cube3d" title="3D Cube — rotating prefix cube">3D Cube</button>
             <div class="qheat-legend" id="qheat-legend">
                 <!-- filled by JS -->
             </div>
@@ -6989,6 +7374,18 @@
                     this.runAllCells();
                 });
 
+                // Cell nav bar buttons
+                document.getElementById('cnav-first')?.addEventListener('click', () => this.jumpToCell(1));
+                document.getElementById('cnav-up')?.addEventListener('click', () => this.navigateCell(-1));
+                document.getElementById('cnav-down')?.addEventListener('click', () => this.navigateCell(1));
+                document.getElementById('cnav-last')?.addEventListener('click', () => this.jumpToCell(this.cells.length));
+                document.getElementById('cnav-jump')?.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') { this.jumpToCell(parseInt(e.target.value) || 1); e.target.value = ''; }
+                });
+                document.getElementById('cnav-jump')?.addEventListener('change', (e) => {
+                    this.jumpToCell(parseInt(e.target.value) || 1); e.target.value = '';
+                });
+
                 document.getElementById('undo-btn').addEventListener('click', () => this.undo());
                 document.getElementById('redo-btn').addEventListener('click', () => this.redo());
 
@@ -7008,10 +7405,12 @@
                 });
 
                 // ===== NAV CUBE 3D ROTATION =====
+                try {
                 this._navCubeRx = -20;
                 this._navCubeRy = 30;
                 const navCubeInner = document.getElementById('nav-cube-inner');
                 const navCubeScene = document.getElementById('nav-cube-scene');
+                console.log('🎲 Nav cube init:', !!navCubeInner, !!navCubeScene);
 
                 const updateNavCube = () => {
                     if (!navCubeInner) return;
@@ -7079,21 +7478,19 @@
                     });
                 });
 
-                // ===== NAV CUBE: 2D / 3D TAB SWITCHING + 2D SLICE RENDERER =====
+                // ===== NAV CUBE: 2D / 3D TAB SWITCHING =====
                 {
                     const ncv2dView = document.getElementById('ncv-2d-view');
                     const ncv3dView = document.getElementById('ncv-3d-view');
                     const ncv3dCtrl = document.getElementById('ncv-3d-controls');
-                    const ncv2dCv   = document.getElementById('ncv-2d-canvas');
-                    const ncv2dCtx  = ncv2dCv ? ncv2dCv.getContext('2d') : null;
-                    let ncvMode = '3d';
+                    console.log('🎲 Nav cube tabs init:', !!ncv2dView, !!ncv3dView, !!ncv3dCtrl);
 
                     document.querySelectorAll('.ncv-tab').forEach(tab => {
                         tab.addEventListener('click', () => {
                             document.querySelectorAll('.ncv-tab').forEach(t => t.classList.remove('active'));
                             tab.classList.add('active');
-                            ncvMode = tab.dataset.ncv;
-                            if (ncvMode === '2d') {
+                            const mode = tab.dataset.ncv;
+                            if (mode === '2d') {
                                 ncv2dView.classList.remove('ncv-hidden');
                                 ncv3dView.classList.add('ncv-hidden');
                                 ncv3dCtrl.style.display = 'none';
@@ -7105,70 +7502,19 @@
                         });
                     });
 
-                    // 2D Slice — flat prefix grid (click to navigate, scroll for Z)
-                    const _pfxC = ['#3fb950','#58a6ff','#bc8cff','#f0883e','#8b949e','#f85149','#d2a8ff','#79c0ff','#e3b341'];
-                    const _pfxN = ['+1','1','-1','+0','0','-0','+n','n','-n'];
-                    const _hr = (h, a) => 'rgba(' + parseInt(h.slice(1,3),16) + ',' + parseInt(h.slice(3,5),16) + ',' + parseInt(h.slice(5,7),16) + ',' + a + ')';
-
-                    if (ncv2dCv) {
-                        ncv2dCv.addEventListener('click', e => {
-                            const r = ncv2dCv.getBoundingClientRect();
-                            const mx = ((e.clientX - r.left) / r.width) * ncv2dCv.width;
-                            const my = ((e.clientY - r.top) / r.height) * ncv2dCv.height;
-                            const grid = 9;
-                            const cx = Math.floor(mx / (ncv2dCv.width / grid));
-                            const cy = Math.floor(my / (ncv2dCv.height / grid));
-                            this.quantumPosition[0] = cx;
-                            this.quantumPosition[1] = cy;
-                            this.updateQuantumPosition('slice click [' + cx + ',' + cy + ']');
+                    // Wire up 2D grid nav buttons (same action as the hidden legacy grid)
+                    document.querySelectorAll('#ncv-2d-grid .nav-btn').forEach(btn => {
+                        btn.addEventListener('click', () => {
+                            this.navigateQuantumSpace(btn.dataset.direction, btn);
+                            // Sync active state across both grids
+                            document.querySelectorAll('#ncv-2d-grid .nav-btn').forEach(b => b.classList.remove('active'));
+                            btn.classList.add('active');
                         });
-                        ncv2dCv.addEventListener('wheel', e => {
-                            e.preventDefault();
-                            this.quantumPosition[2] += e.deltaY > 0 ? -1 : 1;
-                            this.updateQuantumPosition('slice scroll Z=' + this.quantumPosition[2]);
-                        }, { passive: false });
-                    }
+                    });
 
-                    let _ncvFrame = 0;
-                    const _self = this;
-                    function drawNcv2dSlice() {
-                        if (!ncv2dCtx || ncvMode !== '2d') { requestAnimationFrame(drawNcv2dSlice); return; }
-                        const W = ncv2dCv.width, H = ncv2dCv.height, t = _ncvFrame++;
-                        const p = _self.quantumPosition || [0,0,0];
-                        const layer = Math.abs(p[2]) % 6;
-                        ncv2dCtx.fillStyle = '#0a0e14'; ncv2dCtx.fillRect(0, 0, W, H);
-                        const grid = 9, cellW = W / grid, cellH = H / grid;
-                        for (let r = 0; r < grid; r++) for (let c = 0; c < grid; c++) {
-                            const x = c * cellW, y = r * cellH;
-                            const heat = Math.sin(t * 0.02 + c * 0.8 + r * 0.6 + layer * 1.3) * 0.5 + 0.5;
-                            const active = (c === Math.abs(p[0]) % grid && r === Math.abs(p[1]) % grid);
-                            ncv2dCtx.fillStyle = active ? 'rgba(139,92,246,' + (0.5 + Math.sin(t * 0.08) * 0.2) + ')' : _hr(_pfxC[c], 0.15 + heat * 0.35);
-                            ncv2dCtx.fillRect(x + 0.5, y + 0.5, cellW - 1, cellH - 1);
-                            ncv2dCtx.strokeStyle = active ? 'rgba(139,92,246,0.8)' : 'rgba(255,255,255,' + (0.04 + heat * 0.06) + ')';
-                            ncv2dCtx.lineWidth = active ? 1.5 : 0.3;
-                            ncv2dCtx.strokeRect(x + 0.5, y + 0.5, cellW - 1, cellH - 1);
-                            if (active) {
-                                const grd = ncv2dCtx.createRadialGradient(x+cellW/2,y+cellH/2,0,x+cellW/2,y+cellH/2,cellW*0.6);
-                                grd.addColorStop(0,'rgba(139,92,246,0.25)'); grd.addColorStop(1,'rgba(139,92,246,0)');
-                                ncv2dCtx.fillStyle = grd; ncv2dCtx.fillRect(x,y,cellW,cellH);
-                            }
-                        }
-                        ncv2dCtx.font = 'bold 9px monospace'; ncv2dCtx.textAlign = 'center';
-                        for (let c = 0; c < grid; c++) { ncv2dCtx.fillStyle = _pfxC[c]; ncv2dCtx.fillText(_pfxN[c], c * cellW + cellW / 2, 10); }
-                        ncv2dCtx.textAlign = 'start';
-                        // Crosshair at position
-                        const cx = (Math.abs(p[0]) % grid) * cellW + cellW / 2;
-                        const cy = (Math.abs(p[1]) % grid) * cellH + cellH / 2;
-                        ncv2dCtx.setLineDash([3,3]); ncv2dCtx.strokeStyle = 'rgba(139,92,246,' + (0.3 + Math.sin(t * 0.06) * 0.15) + ')'; ncv2dCtx.lineWidth = 0.8;
-                        ncv2dCtx.beginPath(); ncv2dCtx.moveTo(cx,0); ncv2dCtx.lineTo(cx,H); ncv2dCtx.stroke();
-                        ncv2dCtx.beginPath(); ncv2dCtx.moveTo(0,cy); ncv2dCtx.lineTo(W,cy); ncv2dCtx.stroke();
-                        ncv2dCtx.setLineDash([]);
-                        ncv2dCtx.fillStyle = 'rgba(255,255,255,0.35)'; ncv2dCtx.font = '7px monospace';
-                        ncv2dCtx.fillText('Z=' + p[2] + ' [' + p[0] + ',' + p[1] + ']  click·scroll', 4, H - 4);
-                        requestAnimationFrame(drawNcv2dSlice);
-                    }
-                    requestAnimationFrame(drawNcv2dSlice);
+                    // Layer nav + position display are shared (outside both views)
                 }
+                } catch(navCubeErr) { console.warn('Nav cube init error:', navCubeErr); }
 
                 // Layer up/down — versions the nav grid like Electron app
                 document.getElementById('layer-up').addEventListener('click', () => {
@@ -7551,7 +7897,7 @@
                     const activeChip = document.querySelector('.lang-chip.active');
                     if (activeChip && this.currentCellId) {
                         const cell = this.cells.find(c => c.id === this.currentCellId);
-                        if (cell) { cell.language = activeChip.dataset.lang; this.renderCells(); }
+                        if (cell) { cell.language = activeChip.dataset.lang; this.renderAllCells(); }
                     }
                 });
 
@@ -8856,8 +9202,9 @@ print(f"  Norm:  {qs.normalize().norm().numpy():.6f}")`);
                 document.getElementById('layer-value').textContent = z;
 
                 // Center button: ∞ at layer 0, ✱ at other layers (compute mode)
-                const centerBtn = document.getElementById('nav-center-btn');
-                if (centerBtn) {
+                const centerBtns = [document.getElementById('nav-center-btn')];
+                centerBtns.forEach(centerBtn => {
+                    if (!centerBtn) return;
                     if (z === 0 && x === 0 && y === 0) {
                         centerBtn.textContent = '∞';
                         centerBtn.title = 'Origin — infinite state';
@@ -8865,7 +9212,7 @@ print(f"  Norm:  {qs.normalize().norm().numpy():.6f}")`);
                         centerBtn.textContent = '✱';
                         centerBtn.title = `Compute at [${x}, ${y}, ${z}] — click to reset`;
                     }
-                }
+                });
 
                 // Version the nav grid labels based on current layer (like Electron app)
                 const baseSymbols = [
@@ -12138,19 +12485,58 @@ print(f"  Norm:  {qs.normalize().norm().numpy():.6f}")`);
             updateCellList() {
                 const typeEmoji = { code: '⚡', markdown: '📝', visualization: '📊', quantum: '🌌', mermaid: '🧜', freya: '🔬', kbatch: '⌨', hexcast: '📡' };
                 const cellList = document.getElementById('cell-list');
+                const total = this.cells.length;
+                const curIdx = this.currentCellId ? this.cells.findIndex(c => c.id === this.currentCellId) : -1;
                 cellList.innerHTML = this.cells.map((cell, i) => {
                     const emoji = typeEmoji[cell.type] || '⚡';
                     const exec = cell.executionCount ? `[${cell.executionCount}]` : '';
                     const preview = cell.content
-                        ? cell.content.split('\n')[0].slice(0, 28)
+                        ? cell.content.split('\n')[0].slice(0, 24)
                         : '(empty)';
                     const isActive = cell.id === this.currentCellId ? ' active' : '';
-                    return `<li class="cell-list-item${isActive}" onclick="document.getElementById('${cell.id}').scrollIntoView({behavior:'smooth',block:'center'})">
+                    return `<li class="cell-list-item${isActive}" data-cell-idx="${i}" onclick="notebook.focusAndScrollToCell('${cell.id}')">
                         <span class="cell-list-icon">${emoji}</span>
                         <span style="flex:1;overflow:hidden;text-overflow:ellipsis">${preview}</span>
                         <span style="opacity:0.5;flex-shrink:0">${exec}</span>
+                        <span class="cli-move" onclick="event.stopPropagation();notebook.moveCellUp(${i})" title="Move up">▴</span>
+                        <span class="cli-move" onclick="event.stopPropagation();notebook.moveCellDown(${i})" title="Move down">▾</span>
                     </li>`;
                 }).join('');
+                // Update counter
+                const counter = document.getElementById('cnav-counter');
+                if (counter) counter.textContent = curIdx >= 0 ? `${curIdx + 1}/${total}` : `—/${total}`;
+            }
+
+            /* ---------- Cell Navigation ---------- */
+            focusAndScrollToCell(cellId) {
+                this.focusCell(cellId);
+                const el = document.getElementById(cellId);
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                this.updateCellList();
+            }
+
+            navigateCell(delta) {
+                if (!this.cells.length) return;
+                let idx = this.currentCellId ? this.cells.findIndex(c => c.id === this.currentCellId) : -1;
+                idx = Math.max(0, Math.min(this.cells.length - 1, idx + delta));
+                this.focusAndScrollToCell(this.cells[idx].id);
+            }
+
+            jumpToCell(num) {
+                const idx = Math.max(0, Math.min(this.cells.length - 1, num - 1));
+                if (this.cells[idx]) this.focusAndScrollToCell(this.cells[idx].id);
+            }
+
+            moveCellUp(idx) {
+                if (idx <= 0 || idx >= this.cells.length) return;
+                [this.cells[idx - 1], this.cells[idx]] = [this.cells[idx], this.cells[idx - 1]];
+                this.renderAllCells(); this.updateCellList();
+            }
+
+            moveCellDown(idx) {
+                if (idx < 0 || idx >= this.cells.length - 1) return;
+                [this.cells[idx], this.cells[idx + 1]] = [this.cells[idx + 1], this.cells[idx]];
+                this.renderAllCells(); this.updateCellList();
             }
 
             /* ---------- Stats ---------- */
@@ -12609,6 +12995,201 @@ print(f"  Norm:  {qs.normalize().norm().numpy():.6f}")`);
                     ctx.font = '10px monospace'; ctx.fillStyle = '#58a6ff';
                     const cov = qheatData.filter(d => d.cat !== 'default').reduce((s,d)=>s+d.lines,0);
                     ctx.fillText(`${Math.round(cov/total*100)}% covered`, cx, cy + 10);
+
+                } else if (qheatMode === 'slice') {
+                    // 2D Slice — 9×9 grid heatmap colored by prefix density
+                    const grid = 9, cellW = (bw - 20) / grid, cellH = (bh - 40) / grid;
+                    const cats = ['shebang','comment','import','class','function','error','condition','variable','return'];
+                    const total = qheatData.reduce((s,d)=>s+d.lines,0) || 1;
+                    const catLines = {};
+                    qheatData.forEach(d => { catLines[d.cat] = (catLines[d.cat] || 0) + d.lines; });
+
+                    ctx.font = 'bold 9px monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+                    for (let r = 0; r < grid; r++) for (let c = 0; c < grid; c++) {
+                        const x = 10 + c * cellW, y = 24 + r * cellH;
+                        const cat = cats[c] || 'default';
+                        const heat = (catLines[cat] || 0) / total;
+                        const rowHeat = Math.sin(r * 0.7 + c * 0.5) * 0.3 + 0.5;
+                        const alpha = 0.1 + heat * 0.7 + rowHeat * 0.15;
+                        ctx.fillStyle = PREFIX_COLORS[cat] || '#30363d';
+                        ctx.globalAlpha = Math.min(0.95, alpha);
+                        ctx.beginPath(); ctx.roundRect(x + 1, y + 1, cellW - 2, cellH - 2, 3); ctx.fill();
+                        ctx.globalAlpha = 1;
+                        ctx.strokeStyle = 'rgba(255,255,255,0.06)'; ctx.lineWidth = 0.5;
+                        ctx.strokeRect(x + 1, y + 1, cellW - 2, cellH - 2);
+                        if (r === 0) { ctx.fillStyle = '#fff'; ctx.fillText(PREFIX_SYMS[cat] || '', x + cellW/2, y + cellH/2 - 4); }
+                        qheatRects.push({ x: x+1, y: y+1, w: cellW-2, h: cellH-2, data: { cat, lines: catLines[cat]||0, sym: PREFIX_SYMS[cat]||'', color: PREFIX_COLORS[cat]||'#30363d', pct: (catLines[cat]||0)/total*100, label: cat, cellId:'' }, shape:'rect' });
+                    }
+                    // Column headers
+                    ctx.fillStyle = '#8b949e'; ctx.font = 'bold 10px monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+                    cats.forEach((cat, c) => { ctx.fillStyle = PREFIX_COLORS[cat]; ctx.fillText(PREFIX_SYMS[cat]||'', 10 + c*cellW + cellW/2, 6); });
+
+                } else if (qheatMode === 'orb') {
+                    // Orb — concentric probability rings + floating symbols
+                    const cx = bw / 2, cy = bh / 2;
+                    const maxR = Math.min(bw, bh) * 0.44;
+                    const cats = Object.entries(PREFIX_COLORS).filter(([k]) => k !== 'default' && k !== 'decorator');
+                    const total = qheatData.reduce((s,d)=>s+d.lines,0) || 1;
+                    const catLines = {};
+                    qheatData.forEach(d => { catLines[d.cat] = (catLines[d.cat] || 0) + d.lines; });
+
+                    // Concentric glow rings
+                    for (let i = 5; i >= 1; i--) {
+                        const r = maxR * (i / 5);
+                        const grd = ctx.createRadialGradient(cx, cy, r * 0.2, cx, cy, r);
+                        grd.addColorStop(0, 'rgba(139,92,246,' + (0.04 * i) + ')');
+                        grd.addColorStop(1, 'rgba(139,92,246,0)');
+                        ctx.fillStyle = grd; ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.fill();
+                    }
+                    // Core orb
+                    const coreGrd = ctx.createRadialGradient(cx, cy - maxR*0.1, maxR*0.05, cx, cy, maxR*0.3);
+                    coreGrd.addColorStop(0, 'rgba(139,92,246,0.5)'); coreGrd.addColorStop(1, 'rgba(139,92,246,0.05)');
+                    ctx.fillStyle = coreGrd; ctx.beginPath(); ctx.arc(cx, cy, maxR*0.3, 0, Math.PI*2); ctx.fill();
+
+                    // Place prefix symbols as orbiting nodes
+                    cats.forEach(([cat, color], i) => {
+                        const weight = (catLines[cat] || 0) / total;
+                        const angle = (i / cats.length) * Math.PI * 2 - Math.PI / 2;
+                        const dist = maxR * (0.4 + weight * 1.2);
+                        const nx = cx + Math.cos(angle) * Math.min(dist, maxR * 0.9);
+                        const ny = cy + Math.sin(angle) * Math.min(dist, maxR * 0.9);
+                        const nodeR = 8 + weight * 40;
+                        ctx.fillStyle = color; ctx.globalAlpha = 0.6 + weight * 0.4;
+                        ctx.beginPath(); ctx.arc(nx, ny, nodeR, 0, Math.PI*2); ctx.fill();
+                        ctx.globalAlpha = 1;
+                        // Connector line to center
+                        ctx.strokeStyle = color; ctx.globalAlpha = 0.15; ctx.lineWidth = 1;
+                        ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(nx, ny); ctx.stroke();
+                        ctx.globalAlpha = 1;
+                        // Label
+                        ctx.fillStyle = '#fff'; ctx.font = `bold ${Math.max(9, nodeR * 0.6)}px monospace`;
+                        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                        ctx.fillText(PREFIX_SYMS[cat] || cat, nx, ny);
+                        qheatRects.push({ bx: nx, by: ny, br: nodeR, data: { cat, lines: catLines[cat]||0, sym: PREFIX_SYMS[cat]||'', color, pct: weight*100, label: cat, cellId:'' }, shape:'circle' });
+                    });
+                    ctx.fillStyle = '#c9d1d9'; ctx.font = 'bold 12px system-ui'; ctx.textAlign = 'center';
+                    ctx.fillText(`${total} lines`, cx, cy + 2);
+
+                } else if (qheatMode === 'lattice') {
+                    // Lattice — interconnected nodes in a force-directed-style layout
+                    const cats = Object.entries(PREFIX_COLORS).filter(([k]) => k !== 'default' && k !== 'decorator');
+                    const total = qheatData.reduce((s,d)=>s+d.lines,0) || 1;
+                    const catLines = {};
+                    qheatData.forEach(d => { catLines[d.cat] = (catLines[d.cat] || 0) + d.lines; });
+
+                    // Place nodes in a grid-like lattice
+                    const cols = Math.ceil(Math.sqrt(cats.length));
+                    const rows = Math.ceil(cats.length / cols);
+                    const spacingX = (bw - 80) / Math.max(1, cols - 1);
+                    const spacingY = (bh - 80) / Math.max(1, rows - 1);
+                    const nodes = [];
+
+                    cats.forEach(([cat, color], i) => {
+                        const col = i % cols, row = Math.floor(i / cols);
+                        const nx = 40 + col * spacingX + (Math.sin(i * 2.1) * spacingX * 0.12);
+                        const ny = 40 + row * spacingY + (Math.cos(i * 1.7) * spacingY * 0.12);
+                        const weight = (catLines[cat] || 0) / total;
+                        const nodeR = 12 + weight * 50;
+                        nodes.push({ nx, ny, nodeR, cat, color, weight });
+                    });
+
+                    // Draw connections between adjacent nodes
+                    ctx.strokeStyle = 'rgba(255,255,255,0.06)'; ctx.lineWidth = 1;
+                    for (let i = 0; i < nodes.length; i++) for (let j = i + 1; j < nodes.length; j++) {
+                        const dx = nodes[j].nx - nodes[i].nx, dy = nodes[j].ny - nodes[i].ny;
+                        const dist = Math.sqrt(dx*dx + dy*dy);
+                        if (dist < Math.max(spacingX, spacingY) * 1.5) {
+                            ctx.globalAlpha = 0.3 * (1 - dist / (spacingX * 1.5));
+                            ctx.strokeStyle = nodes[i].color;
+                            ctx.beginPath(); ctx.moveTo(nodes[i].nx, nodes[i].ny); ctx.lineTo(nodes[j].nx, nodes[j].ny); ctx.stroke();
+                        }
+                    }
+                    ctx.globalAlpha = 1;
+
+                    // Draw nodes
+                    nodes.forEach(n => {
+                        // Glow
+                        const grd = ctx.createRadialGradient(n.nx, n.ny, 0, n.nx, n.ny, n.nodeR * 1.5);
+                        grd.addColorStop(0, n.color + '40'); grd.addColorStop(1, n.color + '00');
+                        ctx.fillStyle = grd; ctx.beginPath(); ctx.arc(n.nx, n.ny, n.nodeR * 1.5, 0, Math.PI*2); ctx.fill();
+                        // Core
+                        ctx.fillStyle = n.color; ctx.globalAlpha = 0.75;
+                        ctx.beginPath(); ctx.arc(n.nx, n.ny, n.nodeR, 0, Math.PI*2); ctx.fill();
+                        ctx.globalAlpha = 1;
+                        // Label
+                        ctx.fillStyle = '#fff'; ctx.font = `bold ${Math.max(9, n.nodeR * 0.5)}px monospace`;
+                        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                        ctx.fillText(PREFIX_SYMS[n.cat] || n.cat, n.nx, n.ny - 3);
+                        ctx.font = `${Math.max(7, n.nodeR * 0.35)}px monospace`;
+                        ctx.fillStyle = 'rgba(255,255,255,0.6)';
+                        ctx.fillText(`${catLines[n.cat]||0}L`, n.nx, n.ny + 9);
+                        qheatRects.push({ bx: n.nx, by: n.ny, br: n.nodeR, data: { cat: n.cat, lines: catLines[n.cat]||0, sym: PREFIX_SYMS[n.cat]||'', color: n.color, pct: n.weight*100, label: n.cat, cellId:'' }, shape:'circle' });
+                    });
+
+                } else if (qheatMode === 'cube3d') {
+                    // 3D Cube — isometric projection of a prefix cube
+                    const cx = bw / 2, cy = bh / 2;
+                    const size = Math.min(bw, bh) * 0.28;
+                    const total = qheatData.reduce((s,d)=>s+d.lines,0) || 1;
+                    const catLines = {};
+                    qheatData.forEach(d => { catLines[d.cat] = (catLines[d.cat] || 0) + d.lines; });
+                    const cats = ['shebang','comment','import','class','function','error','condition','variable','return'];
+
+                    // Isometric projection helpers
+                    const iso = (x, y, z) => ({
+                        px: cx + (x - z) * size * 0.866,
+                        py: cy + (x + z) * size * 0.5 - y * size
+                    });
+
+                    // Draw 3×3×3 cube cells
+                    for (let z = 0; z < 3; z++) for (let y = 2; y >= 0; y--) for (let x = 0; x < 3; x++) {
+                        const idx = z * 3 + x;
+                        const cat = cats[idx % cats.length];
+                        const weight = (catLines[cat] || 0) / total;
+                        const s = 0.9;
+                        const corners = [
+                            iso(x*s, y*s, z*s), iso((x+1)*s, y*s, z*s),
+                            iso((x+1)*s, y*s, (z+1)*s), iso(x*s, y*s, (z+1)*s),
+                            iso(x*s, (y+1)*s, z*s), iso((x+1)*s, (y+1)*s, z*s),
+                            iso((x+1)*s, (y+1)*s, (z+1)*s), iso(x*s, (y+1)*s, (z+1)*s),
+                        ];
+
+                        const alpha = 0.2 + weight * 0.7;
+                        const color = PREFIX_COLORS[cat] || '#30363d';
+
+                        // Top face
+                        ctx.fillStyle = color; ctx.globalAlpha = alpha;
+                        ctx.beginPath();
+                        ctx.moveTo(corners[4].px, corners[4].py); ctx.lineTo(corners[5].px, corners[5].py);
+                        ctx.lineTo(corners[6].px, corners[6].py); ctx.lineTo(corners[7].px, corners[7].py);
+                        ctx.closePath(); ctx.fill();
+                        ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.lineWidth = 0.5; ctx.stroke();
+
+                        // Right face
+                        ctx.globalAlpha = alpha * 0.7;
+                        ctx.beginPath();
+                        ctx.moveTo(corners[1].px, corners[1].py); ctx.lineTo(corners[5].px, corners[5].py);
+                        ctx.lineTo(corners[6].px, corners[6].py); ctx.lineTo(corners[2].px, corners[2].py);
+                        ctx.closePath(); ctx.fill(); ctx.stroke();
+
+                        // Left face
+                        ctx.globalAlpha = alpha * 0.5;
+                        ctx.beginPath();
+                        ctx.moveTo(corners[2].px, corners[2].py); ctx.lineTo(corners[6].px, corners[6].py);
+                        ctx.lineTo(corners[7].px, corners[7].py); ctx.lineTo(corners[3].px, corners[3].py);
+                        ctx.closePath(); ctx.fill(); ctx.stroke();
+                        ctx.globalAlpha = 1;
+
+                        // Label on top face for visible cells
+                        if (y === 2) {
+                            const mid = iso((x+0.5)*s, (y+1)*s, (z+0.5)*s);
+                            ctx.fillStyle = '#fff'; ctx.font = 'bold 9px monospace';
+                            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                            ctx.fillText(PREFIX_SYMS[cat]||'', mid.px, mid.py);
+                        }
+                    }
+                    ctx.fillStyle = '#8b949e'; ctx.font = '11px system-ui'; ctx.textAlign = 'center';
+                    ctx.fillText(`${total} lines · 9 prefix dimensions`, cx, bh - 16);
                 }
             }
 
@@ -13023,6 +13604,224 @@ print(f"  Norm:  {qs.normalize().norm().numpy():.6f}")`);
                 };
 
                 console.log('⚛ Quantum Prefix Live Sync active — broadcasting to all UV-Speed apps');
+            })();
+
+            // ===== HEX STREAM CHAT WIDGET =====
+            (function initHexStream() {
+                try {
+                const toggle = document.getElementById('hxs-toggle');
+                const panel  = document.getElementById('hxs-panel');
+                const dot    = document.getElementById('hxs-dot');
+                const msgs   = document.getElementById('hxs-msgs');
+                const input  = document.getElementById('hxs-input');
+                const sendBtn= document.getElementById('hxs-send-btn');
+                const vidEl  = document.getElementById('hxs-vid');
+                const canvas = document.getElementById('hxs-canvas');
+                const vidPh  = document.getElementById('hxs-vid-ph');
+                const vidArea= document.getElementById('hxs-video-area');
+                const camBtn = document.getElementById('hxs-cam-btn');
+                const scrBtn = document.getElementById('hxs-scr-btn');
+                const stopBtn= document.getElementById('hxs-stop-btn');
+
+                let stream = null;
+                let animId = null;
+                let hexFrameId = 0;
+                const bc = new BroadcastChannel('hexstream-chat');
+                const bcVid = new BroadcastChannel('hexcast-stream');
+                const username = 'User-' + Math.random().toString(36).slice(2,6).toUpperCase();
+
+                // --- toggle panel ---
+                toggle.addEventListener('click', () => {
+                    panel.classList.toggle('open');
+                    if(panel.classList.contains('open')) input.focus();
+                });
+
+                // --- close on Escape ---
+                document.addEventListener('keydown', e => {
+                    if(e.key === 'Escape' && panel.classList.contains('open')) panel.classList.remove('open');
+                });
+
+                // --- add message to feed ---
+                function addMsg(user, text, isSystem) {
+                    const d = document.createElement('div');
+                    d.className = 'hxs-msg' + (isSystem ? ' system' : '');
+                    const now = new Date();
+                    const ts = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+                    if(isSystem) { d.textContent = text; }
+                    else {
+                        d.innerHTML = '<span class="hxs-msg-time">' + ts + '</span><span class="hxs-msg-user">' + user + '</span>' + escHtml(text);
+                    }
+                    msgs.appendChild(d);
+                    msgs.scrollTop = msgs.scrollHeight;
+                    // keep last 100 messages
+                    while(msgs.children.length > 100) msgs.removeChild(msgs.firstChild);
+                }
+                function escHtml(s) { const d = document.createElement('span'); d.textContent = s; return d.innerHTML; }
+
+                // --- send message ---
+                function sendMessage() {
+                    const txt = input.value.trim();
+                    if(!txt) return;
+                    addMsg(username, txt, false);
+                    bc.postMessage({ type:'chat', user: username, text: txt, ts: Date.now() });
+                    input.value = '';
+                    input.focus();
+                }
+                sendBtn.addEventListener('click', sendMessage);
+                input.addEventListener('keydown', e => { if(e.key === 'Enter') sendMessage(); });
+
+                // --- receive messages ---
+                bc.onmessage = ev => {
+                    const d = ev.data;
+                    if(d.type === 'chat') addMsg(d.user, d.text, false);
+                    else if(d.type === 'join') addMsg(null, d.user + ' joined HexStream', true);
+                    else if(d.type === 'leave') addMsg(null, d.user + ' left', true);
+                    else if(d.type === 'stream-start') {
+                        addMsg(null, d.user + ' started sharing ' + (d.source||''), true);
+                        dot.classList.add('live');
+                    }
+                    else if(d.type === 'stream-stop') {
+                        addMsg(null, d.user + ' stopped sharing', true);
+                    }
+                };
+
+                // --- receive video frames from hexcast-stream ---
+                const ctxRx = canvas.getContext('2d');
+                bcVid.onmessage = ev => {
+                    try {
+                        const d = ev.data;
+                        if(d && d.imageData) {
+                            // Received raw ImageData from another tab
+                            vidEl.style.display = 'none';
+                            canvas.style.display = 'block';
+                            vidPh.style.display = 'none';
+                            vidArea.classList.add('active');
+                            const img = new Image();
+                            if(typeof d.imageData === 'string') {
+                                img.onload = () => { ctxRx.drawImage(img, 0, 0, 280, 140); };
+                                img.src = d.imageData;
+                            }
+                        } else if(d && d.frame) {
+                            vidEl.style.display = 'none';
+                            canvas.style.display = 'block';
+                            vidPh.style.display = 'none';
+                            vidArea.classList.add('active');
+                            const img = new Image();
+                            img.onload = () => { ctxRx.drawImage(img, 0, 0, 280, 140); };
+                            img.src = d.frame;
+                        }
+                    } catch(e) {}
+                };
+
+                // --- camera ---
+                async function startCam() {
+                    stopStream();
+                    try {
+                        stream = await navigator.mediaDevices.getUserMedia({ video: { width: {ideal:280}, height: {ideal:140} }, audio: false });
+                        vidEl.srcObject = stream;
+                        vidEl.style.display = 'block';
+                        canvas.style.display = 'none';
+                        vidPh.style.display = 'none';
+                        vidArea.classList.add('active');
+                        camBtn.classList.add('active');
+                        dot.classList.add('live');
+                        bc.postMessage({ type:'stream-start', user: username, source: 'camera' });
+                        addMsg(null, 'Camera streaming — visible to other tabs', true);
+                        startBroadcast();
+                    } catch(e) {
+                        addMsg(null, 'Camera error: ' + e.message, true);
+                    }
+                }
+
+                // --- screen share ---
+                async function startScreen() {
+                    stopStream();
+                    try {
+                        stream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+                        vidEl.srcObject = stream;
+                        vidEl.style.display = 'block';
+                        canvas.style.display = 'none';
+                        vidPh.style.display = 'none';
+                        vidArea.classList.add('active');
+                        scrBtn.classList.add('active');
+                        dot.classList.add('live');
+                        stream.getVideoTracks()[0].onended = () => stopStream();
+                        bc.postMessage({ type:'stream-start', user: username, source: 'screen' });
+                        addMsg(null, 'Screen sharing — visible to other tabs', true);
+                        startBroadcast();
+                    } catch(e) {
+                        if(e.name !== 'AbortError') addMsg(null, 'Screen share error: ' + e.message, true);
+                    }
+                }
+
+                // --- broadcast video frames to hexcast-stream ---
+                function startBroadcast() {
+                    if(animId) cancelAnimationFrame(animId);
+                    const cvBroadcast = document.createElement('canvas');
+                    cvBroadcast.width = 160; cvBroadcast.height = 90;
+                    const ctxB = cvBroadcast.getContext('2d');
+                    function sendFrame() {
+                        try {
+                            if(stream && vidEl.readyState >= 2) {
+                                ctxB.drawImage(vidEl, 0, 0, 160, 90);
+                                const dataUrl = cvBroadcast.toDataURL('image/jpeg', 0.5);
+                                bcVid.postMessage({ frame: dataUrl, id: hexFrameId++, user: username });
+                            }
+                        } catch(e) {}
+                        animId = requestAnimationFrame(sendFrame);
+                    }
+                    sendFrame();
+                }
+
+                // --- stop ---
+                function stopStream() {
+                    if(stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+                    if(animId) { cancelAnimationFrame(animId); animId = null; }
+                    vidEl.srcObject = null;
+                    vidEl.style.display = 'none';
+                    canvas.style.display = 'none';
+                    vidPh.style.display = 'flex';
+                    vidArea.classList.remove('active');
+                    camBtn.classList.remove('active');
+                    scrBtn.classList.remove('active');
+                    dot.classList.remove('live');
+                    bc.postMessage({ type:'stream-stop', user: username });
+                }
+
+                camBtn.addEventListener('click', startCam);
+                scrBtn.addEventListener('click', startScreen);
+                stopBtn.addEventListener('click', () => { stopStream(); addMsg(null, 'Stream stopped', true); });
+
+                // announce presence
+                bc.postMessage({ type:'join', user: username });
+                window.addEventListener('beforeunload', () => { stopStream(); bc.postMessage({ type:'leave', user: username }); });
+
+                // expose API
+                window.hexStream = { sendMessage: (txt) => { addMsg(username, txt, false); bc.postMessage({ type:'chat', user: username, text: txt, ts: Date.now() }); }, username };
+                } catch(e) { console.warn('HexStream init error:', e); }
+            })();
+
+            // ===== CHALK / HANDWRITTEN MODE TOGGLE =====
+            (function initChalkMode() {
+                const btn = document.createElement('button');
+                btn.className = 'chalk-toggle-btn';
+                btn.title = 'Toggle handwritten / chalkboard style';
+                btn.textContent = '✏️';
+                document.body.appendChild(btn);
+
+                // Restore from localStorage
+                const saved = localStorage.getItem('uvspeed-chalk-mode');
+                if (saved === 'on') {
+                    document.body.setAttribute('data-chalk', 'on');
+                    btn.classList.add('active');
+                }
+
+                btn.addEventListener('click', () => {
+                    const isOn = document.body.getAttribute('data-chalk') === 'on';
+                    document.body.setAttribute('data-chalk', isOn ? 'off' : 'on');
+                    btn.classList.toggle('active', !isOn);
+                    localStorage.setItem('uvspeed-chalk-mode', isOn ? 'off' : 'on');
+                });
             })();
         })();
     </script>

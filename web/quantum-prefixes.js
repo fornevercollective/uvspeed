@@ -730,11 +730,17 @@
             ].join('\n');
         }
 
-        // Update toggle button appearance
-        if (_themeToggleEl) {
-            _themeToggleEl.textContent = theme === 'dark' ? '☀' : '☾';
-            _themeToggleEl.title = 'Switch to ' + (theme === 'dark' ? 'light' : 'dark') + ' mode';
-        }
+        // Update toggle button appearance — highlight active side
+        try {
+            var sunEl = document.getElementById('qp-theme-sun');
+            var moonEl = document.getElementById('qp-theme-moon');
+            if (sunEl && moonEl) {
+                sunEl.style.background = theme === 'light' ? 'var(--qp-accent-subtle, rgba(88,166,255,0.15))' : 'none';
+                sunEl.style.color = theme === 'light' ? 'var(--qp-accent, #58a6ff)' : 'var(--qp-text-muted, #8b949e)';
+                moonEl.style.background = theme === 'dark' ? 'var(--qp-accent-subtle, rgba(88,166,255,0.15))' : 'none';
+                moonEl.style.color = theme === 'dark' ? 'var(--qp-accent, #58a6ff)' : 'var(--qp-text-muted, #8b949e)';
+            }
+        } catch(e) {}
 
         // Persist
         try { localStorage.setItem('qp-theme', theme); } catch(e) {}
@@ -750,6 +756,7 @@
     }
 
     function toggleTheme() {
+        try { localStorage.setItem('qp-theme-override', 'yes'); } catch(e) {}
         _applyTheme(_currentTheme === 'dark' ? 'light' : 'dark');
     }
 
@@ -763,42 +770,89 @@
 
     function _initTheme() {
         if (typeof document === 'undefined') return;
+        try {
+            // Determine if user has manually overridden, or if we auto-detect
+            var userOverride = null;
+            try { userOverride = localStorage.getItem('qp-theme-override'); } catch(e) {}
+            var saved = null;
+            try { saved = localStorage.getItem('qp-theme'); } catch(e) {}
 
-        // Load persisted preference or system preference
-        var saved = null;
-        try { saved = localStorage.getItem('qp-theme'); } catch(e) {}
-        var initial = saved || (root.matchMedia && root.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+            var systemPref = 'dark';
+            try {
+                if (root.matchMedia && root.matchMedia('(prefers-color-scheme: light)').matches) systemPref = 'light';
+            } catch(e) {}
 
-        // Create floating toggle button
-        _themeToggleEl = document.createElement('button');
-        _themeToggleEl.id = 'qp-theme-toggle';
-        var s = _themeToggleEl.style;
-        s.position = 'fixed'; s.bottom = '16px'; s.right = '16px'; s.zIndex = '99999';
-        s.width = '36px'; s.height = '36px'; s.borderRadius = '50%';
-        s.border = '1px solid'; s.borderColor = 'var(--qp-border, #30363d)';
-        s.background = 'var(--qp-bg-secondary, #161b22)'; s.color = 'var(--qp-text, #e6edf3)';
-        s.fontSize = '18px'; s.cursor = 'pointer'; s.display = 'flex';
-        s.alignItems = 'center'; s.justifyContent = 'center';
-        s.boxShadow = '0 2px 8px var(--qp-shadow, rgba(0,0,0,0.3))';
-        s.transition = 'all 0.2s'; s.padding = '0'; s.lineHeight = '1';
-        s.fontFamily = 'system-ui, sans-serif';
-        _themeToggleEl.addEventListener('mouseenter', function() { _themeToggleEl.style.transform = 'scale(1.1)'; });
-        _themeToggleEl.addEventListener('mouseleave', function() { _themeToggleEl.style.transform = ''; });
-        _themeToggleEl.addEventListener('click', toggleTheme);
+            // If user has a manual override, use it; otherwise follow system
+            var initial = (userOverride === 'yes' && saved) ? saved : systemPref;
 
-        document.body.appendChild(_themeToggleEl);
+            // Create side-by-side ☀ ☾ toggle — top-right, no circle
+            _themeToggleEl = document.createElement('div');
+            _themeToggleEl.id = 'qp-theme-toggle';
+            var s = _themeToggleEl.style;
+            s.position = 'fixed'; s.top = '8px'; s.right = '12px'; s.zIndex = '99999';
+            s.display = 'flex'; s.alignItems = 'center'; s.gap = '0';
+            s.borderRadius = '6px'; s.overflow = 'hidden';
+            s.border = '1px solid var(--qp-border, #30363d)';
+            s.background = 'var(--qp-bg-secondary, #161b22)';
+            s.boxShadow = '0 1px 4px var(--qp-shadow, rgba(0,0,0,0.2))';
+            s.fontFamily = 'system-ui, sans-serif'; s.lineHeight = '1';
+            s.userSelect = 'none'; s.webkitUserSelect = 'none';
 
-        _ensureThemeChannel();
-        _applyTheme(initial);
+            // Sun button (light)
+            var sunBtn = document.createElement('button');
+            sunBtn.id = 'qp-theme-sun';
+            sunBtn.textContent = '☀';
+            sunBtn.title = 'Light mode';
+            _styleThemeBtn(sunBtn);
 
-        // Listen for system preference changes
-        if (root.matchMedia) {
-            root.matchMedia('(prefers-color-scheme: light)').addEventListener('change', function(e) {
-                if (!localStorage.getItem('qp-theme')) {
-                    _applyTheme(e.matches ? 'light' : 'dark');
-                }
+            // Moon button (dark)
+            var moonBtn = document.createElement('button');
+            moonBtn.id = 'qp-theme-moon';
+            moonBtn.textContent = '☾';
+            moonBtn.title = 'Dark mode';
+            _styleThemeBtn(moonBtn);
+
+            sunBtn.addEventListener('click', function() {
+                try { localStorage.setItem('qp-theme-override', 'yes'); } catch(e) {}
+                _applyTheme('light');
             });
+            moonBtn.addEventListener('click', function() {
+                try { localStorage.setItem('qp-theme-override', 'yes'); } catch(e) {}
+                _applyTheme('dark');
+            });
+
+            _themeToggleEl.appendChild(sunBtn);
+            _themeToggleEl.appendChild(moonBtn);
+            document.body.appendChild(_themeToggleEl);
+
+            _ensureThemeChannel();
+            _applyTheme(initial);
+
+            // Auto-detect system preference changes — apply unless user has overridden
+            if (root.matchMedia) {
+                try {
+                    root.matchMedia('(prefers-color-scheme: light)').addEventListener('change', function(e) {
+                        try {
+                            var override = localStorage.getItem('qp-theme-override');
+                            if (override !== 'yes') {
+                                _applyTheme(e.matches ? 'light' : 'dark');
+                            }
+                        } catch(ex) {}
+                    });
+                } catch(e) {}
+            }
+        } catch(err) {
+            // Failsafe — never crash the page over theme init
+            if (typeof console !== 'undefined') console.warn('QP theme init error:', err);
         }
+    }
+
+    function _styleThemeBtn(btn) {
+        var s = btn.style;
+        s.background = 'none'; s.border = 'none'; s.padding = '4px 10px';
+        s.fontSize = '14px'; s.cursor = 'pointer'; s.color = 'var(--qp-text-muted, #8b949e)';
+        s.transition = 'all 0.15s ease'; s.lineHeight = '1'; s.borderRadius = '0';
+        s.outline = 'none'; s.display = 'flex'; s.alignItems = 'center'; s.justifyContent = 'center';
     }
 
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
