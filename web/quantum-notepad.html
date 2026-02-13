@@ -5983,7 +5983,11 @@
                     const raw = localStorage.getItem('uvspeed-quantum-notepad');
                     if (!raw) return false;
                     const data = JSON.parse(raw);
+                    // Only restore if cells exist AND have actual content
                     if (data.cells && data.cells.length > 0) {
+                        // Check if cells have meaningful content (not all empty)
+                        const hasContent = data.cells.some(c => c.content && c.content.trim().length > 10);
+                        if (!hasContent) return false; // stale/empty — load defaults instead
                         this.cells = data.cells;
                         this.quantumPosition = data.quantumPosition || [0, 0, 0];
                         this.executionCount = data.executionCount || 0;

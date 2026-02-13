@@ -291,13 +291,20 @@ function updateObjects(){
     });
 }
 
-// Draw test pattern source
+// Draw source (camera, screen, or test pattern)
 let frame=0;
 function drawSource(){
     const ctx=ctxs.source; if(!ctx)return;
     const w=ctx._w, h=ctx._h;
     ctx.clearRect(0,0,w,h);
-    // Grid
+
+    // If camera/screen active, draw video frame
+    if ((activeSource === 'camera' || activeSource === 'screen') && videoEl && videoEl.readyState >= 2) {
+        ctx.drawImage(videoEl, 0, 0, w, h);
+        return;
+    }
+
+    // Test pattern fallback
     ctx.fillStyle='#0a0a1a'; ctx.fillRect(0,0,w,h);
     ctx.strokeStyle='#ffffff08'; ctx.lineWidth=.5;
     for(let x=0;x<w;x+=30){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke()}
@@ -419,7 +426,55 @@ function tick(){
 }
 setTimeout(tick,200);
 
-// Control button active states
+// ── Live source management ──
+let activeSource = 'test';
+let cameraStream = null;
+const videoEl = $('video-el');
+
+function stopStream() {
+    if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
+    if (videoEl) videoEl.srcObject = null;
+}
+
+async function startCamera() {
+    stopStream();
+    try {
+        cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false });
+        videoEl.srcObject = cameraStream;
+        videoEl.style.display = 'block';
+        await videoEl.play();
+        activeSource = 'camera';
+        $('ov-source').textContent = 'camera | ' + (cameraStream.getVideoTracks()[0]?.getSettings()?.width || 720) + 'p | live';
+    } catch (e) {
+        console.warn('Camera error:', e);
+        $('ov-source').textContent = 'camera denied — using test feed';
+        activeSource = 'test';
+    }
+}
+
+async function startScreen() {
+    stopStream();
+    try {
+        cameraStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+        videoEl.srcObject = cameraStream;
+        videoEl.style.display = 'block';
+        await videoEl.play();
+        activeSource = 'screen';
+        $('ov-source').textContent = 'screen share | live';
+    } catch (e) {
+        console.warn('Screen share error:', e);
+        activeSource = 'test';
+    }
+}
+
+function startTest() {
+    stopStream();
+    videoEl.style.display = 'none';
+    activeSource = 'test';
+    $('ov-source').textContent = 'test feed | 720p | 30fps';
+}
+
+// Control button active states + source switching
 document.querySelectorAll('.ctrl-btn[id^="btn-"]').forEach(btn=>{
     if(['btn-sidebar','btn-broadcast','btn-record','btn-snapshot'].includes(btn.id))return;
     btn.addEventListener('click',()=>{
@@ -427,16 +482,27 @@ document.querySelectorAll('.ctrl-btn[id^="btn-"]').forEach(btn=>{
             ['btn-camera','btn-screen','btn-test']:null;
         if(group){group.forEach(id=>{document.getElementById(id).classList.remove('active')});btn.classList.add('active')}
         else{btn.classList.toggle('active')}
+        // Source switching
+        if (btn.id === 'btn-camera') startCamera();
+        else if (btn.id === 'btn-screen') startScreen();
+        else if (btn.id === 'btn-test') startTest();
     });
+});
+
+// Model selection handler
+$('sel-model')?.addEventListener('change', e => {
+    const m = e.target.value;
+    $('ov-detect').textContent = m + ' | ' + objects.length + ' objects';
+    console.log('Model switched to:', m);
 });
 
 // API
 window.questcast={
-    get state(){return{source:'test',fps:30,model:'detectron2+babytrack',detections:objects.length,tracks:objects.length,frame}},
+    get state(){return{source:activeSource,fps:30,model:$('sel-model')?.value||'detectron2',detections:objects.length,tracks:objects.length,frame}},
     get objects(){return objects.map(o=>({...o}))},
-    startCamera(){$('btn-camera').click()},
-    startScreen(){$('btn-screen').click()},
-    startTest(){$('btn-test').click()},
+    startCamera,
+    startScreen,
+    startTest,
     snapshot(){const c=$('cv-detect');const a=document.createElement('a');a.href=c.toDataURL('image/png');a.download='questcast-'+Date.now()+'.png';a.click()},
     exportJSON(){return JSON.stringify({state:this.state,objects:this.objects})}
 };

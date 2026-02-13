@@ -78,9 +78,13 @@
         .canvas-toolbar{display:flex;align-items:center;gap:4px;padding:6px 10px;border-bottom:1px solid var(--border);background:var(--bg2);flex-shrink:0;flex-wrap:wrap}
         .canvas-area{flex:1;position:relative;overflow:hidden;background:var(--bg)}
         .canvas-grid{position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(circle,var(--border) .5px,transparent .5px);background-size:24px 24px;opacity:.4}
-        .canvas-scroll{position:absolute;inset:0;overflow:auto;cursor:grab}
+        .canvas-scroll{position:absolute;inset:0;overflow:hidden;cursor:grab}
         .canvas-scroll:active{cursor:grabbing}
-        .canvas-inner{min-width:2400px;min-height:1600px;position:relative;padding:40px}
+        .canvas-inner{min-width:2400px;min-height:1600px;position:relative;padding:40px;transform-origin:0 0}
+        .zoom-controls{position:absolute;bottom:12px;right:12px;display:flex;gap:4px;z-index:20}
+        .zoom-controls button{background:var(--bg2);border:1px solid var(--border);color:var(--text);width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center}
+        .zoom-controls button:hover{background:var(--accent);color:#fff}
+        .zoom-label{background:var(--bg2);border:1px solid var(--border);color:var(--muted);padding:2px 8px;border-radius:6px;font-size:11px;display:flex;align-items:center}
 
         /* Nodes */
         .node{position:absolute;background:var(--bg2);border:2px solid var(--border);border-radius:10px;min-width:160px;box-shadow:0 4px 16px rgba(0,0,0,.3);cursor:move;user-select:none;transition:box-shadow .15s,border-color .15s;z-index:1}
@@ -218,11 +222,18 @@
                 <span class="pal-chip" id="preset-clear" style="color:var(--red);border-color:var(--red)">Clear</span>
             </div>
             <div class="canvas-area">
-                <div class="canvas-grid"></div>
+                <div class="canvas-grid" id="canvas-grid"></div>
                 <div class="canvas-scroll" id="canvas-scroll">
                     <div class="canvas-inner" id="canvas-inner">
                         <svg class="connections-svg" id="connections-svg"></svg>
                     </div>
+                </div>
+                <div class="zoom-controls">
+                    <button id="zoom-in" title="Zoom in">+</button>
+                    <span class="zoom-label" id="zoom-label">100%</span>
+                    <button id="zoom-out" title="Zoom out">−</button>
+                    <button id="zoom-fit" title="Fit all">⊙</button>
+                    <button id="zoom-reset" title="Reset">1:1</button>
                 </div>
             </div>
         </div>
@@ -614,14 +625,114 @@ function drawConnections() {
         const fe = document.getElementById('node-' + c.from);
         const te = document.getElementById('node-' + c.to);
         if (!fe || !te) return;
-        const fr = fe.getBoundingClientRect(), tr = te.getBoundingClientRect(), ir = inner.getBoundingClientRect();
-        const x1 = fr.right - ir.left, y1 = fr.top + fr.height / 2 - ir.top;
-        const x2 = tr.left - ir.left, y2 = tr.top + tr.height / 2 - ir.top;
+        const fn = nodesData.find(n => n.id === c.from), tn = nodesData.find(n => n.id === c.to);
+        if (!fn || !tn) return;
+        const x1 = fn.x + fe.offsetWidth, y1 = fn.y + fe.offsetHeight / 2;
+        const x2 = tn.x, y2 = tn.y + te.offsetHeight / 2;
         const dx = Math.abs(x2 - x1) * .5;
         svg += `<path class="conn-path active" d="M${x1},${y1} C${x1+dx},${y1} ${x2-dx},${y2} ${x2},${y2}"/>`;
     });
     svgEl.innerHTML = svg;
 }
+
+// ── Zoom / Pan ──
+let canvasZoom = 1, panX = 0, panY = 0, isPanning = false, panStartX, panStartY;
+const scrollEl = $('canvas-scroll'), gridEl = $('canvas-grid');
+
+function applyTransform() {
+    inner.style.transform = `translate(${panX}px,${panY}px) scale(${canvasZoom})`;
+    if (gridEl) gridEl.style.backgroundSize = `${24*canvasZoom}px ${24*canvasZoom}px`;
+    const lbl = $('zoom-label');
+    if (lbl) lbl.textContent = Math.round(canvasZoom * 100) + '%';
+    drawConnections();
+}
+
+function setZoom(z, cx, cy) {
+    const oldZ = canvasZoom;
+    canvasZoom = Math.min(3, Math.max(0.2, z));
+    // Adjust pan to zoom toward cursor
+    if (cx !== undefined) {
+        panX = cx - (cx - panX) * (canvasZoom / oldZ);
+        panY = cy - (cy - panY) * (canvasZoom / oldZ);
+    }
+    applyTransform();
+}
+
+// Mouse wheel zoom
+scrollEl.addEventListener('wheel', e => {
+    e.preventDefault();
+    const rect = scrollEl.getBoundingClientRect();
+    const cx = e.clientX - rect.left, cy = e.clientY - rect.top;
+    const delta = e.deltaY > 0 ? 0.9 : 1.1;
+    setZoom(canvasZoom * delta, cx, cy);
+}, { passive: false });
+
+// Pan with middle-click or empty space click
+scrollEl.addEventListener('mousedown', e => {
+    if (e.target.closest('.node') || e.target.closest('.zoom-controls')) return;
+    isPanning = true;
+    panStartX = e.clientX - panX;
+    panStartY = e.clientY - panY;
+    scrollEl.style.cursor = 'grabbing';
+});
+document.addEventListener('mousemove', e => {
+    if (!isPanning) return;
+    panX = e.clientX - panStartX;
+    panY = e.clientY - panStartY;
+    applyTransform();
+});
+document.addEventListener('mouseup', () => { if (isPanning) { isPanning = false; scrollEl.style.cursor = 'grab'; } });
+
+// Touch pan (two-finger)
+let lastTouchDist = 0;
+scrollEl.addEventListener('touchstart', e => {
+    if (e.target.closest('.node')) return;
+    if (e.touches.length === 1) {
+        isPanning = true;
+        panStartX = e.touches[0].clientX - panX;
+        panStartY = e.touches[0].clientY - panY;
+    }
+    if (e.touches.length === 2) {
+        lastTouchDist = Math.hypot(e.touches[1].clientX - e.touches[0].clientX, e.touches[1].clientY - e.touches[0].clientY);
+    }
+}, { passive: true });
+scrollEl.addEventListener('touchmove', e => {
+    if (e.target.closest('.node')) return;
+    if (e.touches.length === 1 && isPanning) {
+        panX = e.touches[0].clientX - panStartX;
+        panY = e.touches[0].clientY - panStartY;
+        applyTransform();
+        e.preventDefault();
+    }
+    if (e.touches.length === 2) {
+        const d = Math.hypot(e.touches[1].clientX - e.touches[0].clientX, e.touches[1].clientY - e.touches[0].clientY);
+        if (lastTouchDist) {
+            const rect = scrollEl.getBoundingClientRect();
+            const cx = (e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left;
+            const cy = (e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top;
+            setZoom(canvasZoom * (d / lastTouchDist), cx, cy);
+        }
+        lastTouchDist = d;
+        e.preventDefault();
+    }
+}, { passive: false });
+scrollEl.addEventListener('touchend', () => { isPanning = false; lastTouchDist = 0; }, { passive: true });
+
+// Zoom buttons
+$('zoom-in')?.addEventListener('click', () => setZoom(canvasZoom * 1.2));
+$('zoom-out')?.addEventListener('click', () => setZoom(canvasZoom / 1.2));
+$('zoom-reset')?.addEventListener('click', () => { canvasZoom = 1; panX = 0; panY = 0; applyTransform(); });
+$('zoom-fit')?.addEventListener('click', () => {
+    if (!nodesData.length) return;
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    nodesData.forEach(n => { minX = Math.min(minX, n.x); minY = Math.min(minY, n.y); maxX = Math.max(maxX, n.x + 200); maxY = Math.max(maxY, n.y + 120); });
+    const rect = scrollEl.getBoundingClientRect();
+    const zx = rect.width / (maxX - minX + 80), zy = rect.height / (maxY - minY + 80);
+    canvasZoom = Math.min(2, Math.max(0.2, Math.min(zx, zy)));
+    panX = (rect.width - (maxX - minX) * canvasZoom) / 2 - minX * canvasZoom;
+    panY = (rect.height - (maxY - minY) * canvasZoom) / 2 - minY * canvasZoom;
+    applyTransform();
+});
 
 function updateStats() {
     const nc = nodesData.length, cc = connections.length;

@@ -523,9 +523,98 @@ $('btn-pattern-2').addEventListener('click',()=>$('code-editor').value=patterns.
 $('btn-pattern-3').addEventListener('click',()=>$('code-editor').value=patterns.spatial);
 $('btn-pattern-4').addEventListener('click',()=>$('code-editor').value=patterns.binaural);
 
+// ── Real AudioContext + tone generation ──
+let audioCtx = null, isPlaying = false, masterGain = null;
+let oscNodes = [];
+
+function initAudio() {
+    if (audioCtx) return audioCtx;
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 48000 });
+    masterGain = audioCtx.createGain();
+    masterGain.gain.value = 0.15;
+    masterGain.connect(audioCtx.destination);
+    if ($('eng-state')) $('eng-state').textContent = 'running';
+    if ($('eng-sr')) $('eng-sr').textContent = audioCtx.sampleRate;
+    return audioCtx;
+}
+
+function playAudio() {
+    const ctx = initAudio();
+    if (ctx.state === 'suspended') ctx.resume();
+    if (isPlaying) return;
+    isPlaying = true;
+
+    // Create a rich ambient chord: C3, E3, G3, B3
+    const freqs = [130.81, 164.81, 196.00, 246.94];
+    freqs.forEach((f, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        const pan = ctx.createStereoPanner();
+        osc.type = i % 2 === 0 ? 'sine' : 'triangle';
+        osc.frequency.value = f;
+        gain.gain.value = 0.08;
+        // Spatial pan: spread across stereo field
+        pan.pan.value = -0.6 + i * 0.4;
+        osc.connect(gain);
+        gain.connect(pan);
+        pan.connect(masterGain);
+        osc.start();
+        // Slow LFO modulation on frequency
+        const lfo = ctx.createOscillator();
+        const lfoGain = ctx.createGain();
+        lfo.frequency.value = 0.2 + i * 0.1;
+        lfoGain.gain.value = f * 0.003;
+        lfo.connect(lfoGain);
+        lfoGain.connect(osc.frequency);
+        lfo.start();
+        oscNodes.push(osc, lfo);
+    });
+
+    $('btn-play').classList.add('active');
+    $('btn-stop').classList.remove('active');
+    if ($('eng-state')) $('eng-state').textContent = 'playing';
+}
+
+function stopAudio() {
+    oscNodes.forEach(n => { try { n.stop(); } catch(e){} });
+    oscNodes = [];
+    isPlaying = false;
+    $('btn-play').classList.remove('active');
+    $('btn-stop').classList.add('active');
+    if ($('eng-state')) $('eng-state').textContent = 'stopped';
+}
+
+$('btn-play').addEventListener('click', playAudio);
+$('btn-stop').addEventListener('click', stopAudio);
+
+// Connect real audio data to visualizations when playing
+const origSimAudio = simAudio;
+const realAnalyser = { node: null };
+function simAudioEnhanced() {
+    if (isPlaying && audioCtx && !realAnalyser.node) {
+        try {
+            realAnalyser.node = audioCtx.createAnalyser();
+            realAnalyser.node.fftSize = 512;
+            masterGain.connect(realAnalyser.node);
+        } catch(e){}
+    }
+    if (isPlaying && realAnalyser.node) {
+        const buf = new Float32Array(realAnalyser.node.fftSize);
+        realAnalyser.node.getFloatTimeDomainData(buf);
+        for (let i = 0; i < waveData.length && i < buf.length; i++) waveData[i] = buf[i];
+        const fBuf = new Uint8Array(realAnalyser.node.frequencyBinCount);
+        realAnalyser.node.getByteFrequencyData(fBuf);
+        for (let i = 0; i < fftData.length && i < fBuf.length; i++) fftData[i] = fBuf[i] / 255;
+    } else {
+        origSimAudio();
+    }
+}
+// Patch into tick loop
+simAudio = simAudioEnhanced;
+
 // Control button toggles
 document.querySelectorAll('.ctrl-btn').forEach(btn=>{
-    if(!btn.id||btn.id.startsWith('btn-pattern')||btn.id==='btn-eval'||btn.id==='btn-hush'||btn.id==='btn-export')return;
+    if(!btn.id||btn.id.startsWith('btn-pattern')||btn.id==='btn-eval'||btn.id==='btn-hush'||btn.id==='btn-export'||btn.id==='btn-play'||btn.id==='btn-stop')return;
     btn.addEventListener('click',()=>{
         const srcGroup=['btn-mic','btn-file','btn-osc','btn-strudel'];
         const modeGroup=['btn-atmos','btn-binaural','btn-surround'];
@@ -537,9 +626,11 @@ document.querySelectorAll('.ctrl-btn').forEach(btn=>{
 
 // API
 window.jawta={
-    get state(){return{sampleRate:48000,channels:12,mode:'atmos-7.1.4',latency:5.3,eq:eqValues.slice()}},
+    get state(){return{sampleRate:audioCtx?.sampleRate||48000,channels:12,mode:'atmos-7.1.4',latency:5.3,eq:eqValues.slice(),playing:isPlaying}},
     get waveform(){return Array.from(waveData)},
     get spectrum(){return Array.from(fftData)},
+    play: playAudio,
+    stop: stopAudio,
     setEQ(band,val){if(band>=0&&band<8){eqValues[band]=val;$('eq-'+band).value=val;$('eq-val-'+band).textContent=val.toFixed(1)+' dB'}},
     loadPattern(name){if(patterns[name])$('code-editor').value=patterns[name]},
     exportJSON(){return JSON.stringify(this.state)}
