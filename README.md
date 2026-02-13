@@ -12,7 +12,7 @@
 [![License](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
 [![Live Demo](https://img.shields.io/badge/Live-GitHub_Pages-00c853)](https://fornevercollective.github.io/uvspeed/web/quantum-notepad.html)
 
-**[Prefix/QuantumGutter](web/quantum-prefixes.js)** · **[notePad](https://fornevercollective.github.io/uvspeed/web/quantum-notepad.html)** · **[hexTerm](https://fornevercollective.github.io/uvspeed/web/terminal.html)** · **[hexCast](https://fornevercollective.github.io/uvspeed/web/hexcast.html)** · **[FREYAunits](https://fornevercollective.github.io/uvspeed/web/quantum-notepad.html)** · **[brotherNumsy](https://fornevercollective.github.io/uvspeed/web/brothernumsy.html)** · **[kBatch](https://fornevercollective.github.io/uvspeed/web/kbatch.html)** · **[HexBench](https://fornevercollective.github.io/uvspeed/web/hexbench.html)** · **[ArchFlow](https://fornevercollective.github.io/uvspeed/web/archflow.html)** · **[gpu/cpu](https://fornevercollective.github.io/uvspeed/web/blackwell.html)** · **[Dashboard](https://fornevercollective.github.io/uvspeed/web/github-dashboard.html)** · **[Sponsor](https://fornevercollective.github.io/uvspeed/web/sponsor.html)**
+**[Prefix/QuantumGutter](https://fornevercollective.github.io/uvspeed/web/quantum-gutter.html)** · **[notePad](https://fornevercollective.github.io/uvspeed/web/quantum-notepad.html)** · **[hexTerm](https://fornevercollective.github.io/uvspeed/web/terminal.html)** · **[hexCast](https://fornevercollective.github.io/uvspeed/web/hexcast.html)** · **[FREYAunits](https://fornevercollective.github.io/uvspeed/web/quantum-notepad.html)** · **[brotherNumsy](https://fornevercollective.github.io/uvspeed/web/brothernumsy.html)** · **[kBatch](https://fornevercollective.github.io/uvspeed/web/kbatch.html)** · **[HexBench](https://fornevercollective.github.io/uvspeed/web/hexbench.html)** · **[ArchFlow](https://fornevercollective.github.io/uvspeed/web/archflow.html)** · **[gpu/cpu](https://fornevercollective.github.io/uvspeed/web/blackwell.html)** · **[Dashboard](https://fornevercollective.github.io/uvspeed/web/github-dashboard.html)** · **[Sponsor](https://fornevercollective.github.io/uvspeed/web/sponsor.html)**
 
 ---
 
@@ -132,6 +132,7 @@ Plus a `{dev}` launch mode that opens the terminal with the dev console active.
 
 | Tool | What it does |
 |------|-------------|
+| **[quantum-gutter](web/quantum-gutter.html)** | Prefix system showcase — live editor, benchmarks, visual slice/orb/hex stream, 20-language coverage |
 | **[quantum-notepad](web/quantum-notepad.html)** | Code notepad with prefix gutter, 20-language support, mermaid diagrams, convert timeline |
 | **[terminal (hexterm)](web/terminal.html)** | Full terminal emulator — virtual FS, hexcast, kbatch, device presets, sync, gutter |
 | **[feed](web/feed.html)** | Lightweight video/audio feed window with speech-to-text transcript |
@@ -156,7 +157,7 @@ Plus a `{dev}` launch mode that opens the terminal with the dev console active.
 | Module | Description |
 |--------|-------------|
 | **[quantum-prefixes.js](web/quantum-prefixes.js)** | Shared prefix API — `classifyLine()`, `prefixContent()`, cross-app `BroadcastChannel` sync, IoT WebSocket bridge |
-| **[sw.js](web/sw.js)** | Service worker — offline-first cache for all 18 apps + shared assets |
+| **[sw.js](web/sw.js)** | Service worker — offline-first cache for all 19 apps + shared assets |
 
 ### CLI Tools
 
@@ -251,7 +252,7 @@ Supported in 20+ languages: Python, JavaScript, TypeScript, Rust, Go, Swift, Kot
 
 ```
 uvspeed/
-├── web/                    # 18 standalone HTML apps (PWA-ready)
+├── web/                    # 19 standalone HTML apps (PWA-ready)
 │   ├── quantum-notepad.html # Main notepad with prefix gutter
 │   ├── terminal.html       # Full terminal emulator (hexterm)
 │   ├── hexbench.html       # Voltage lab — PSU, Arduino, nodes, Pybricks

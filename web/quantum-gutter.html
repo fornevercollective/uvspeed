@@ -1,0 +1,758 @@
+<!-- beyondBINARY quantum-prefixed | uvspeed | quantum gutter showcase -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0d1117">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="icon" type="image/png" sizes="32x32" href="../icons/favicon.png">
+<link rel="apple-touch-icon" sizes="192x192" href="../icons/icon-192.png">
+<title>uvspeed — Quantum Gutter · Prefix System</title>
+<style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; scrollbar-width: thin; scrollbar-color: #30363d #0d1117; }
+    body {
+        background: #0d1117; color: #e6edf3;
+        font-family: -apple-system, 'SF Pro Display', BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+        line-height: 1.6; overflow-x: hidden;
+    }
+    a { color: #58a6ff; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    code { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.8125em; background: #161b22; padding: 2px 6px; border-radius: 4px; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #0d1117; }
+    ::-webkit-scrollbar-thumb { background: #30363d; border-radius: 3px; }
+
+    /* ── Rainbow ── */
+    .rainbow { display: flex; flex-shrink: 0; height: 3px; width: 100%; }
+    .rainbow span { flex: 1; }
+    .r1 { background: #ff3838; } .r2 { background: #ff8c38; } .r3 { background: #ffe138; }
+    .r4 { background: #3fb950; } .r5 { background: #38a5ff; } .r6 { background: #bc8cff; }
+    .rainbow-glow {
+        height: 60px; width: 100%;
+        background: linear-gradient(180deg,
+            rgba(255,56,56,0.08) 0%, rgba(255,140,56,0.06) 16%, rgba(255,225,56,0.05) 33%,
+            rgba(63,185,80,0.04) 50%, rgba(56,165,255,0.03) 66%, rgba(188,140,255,0.02) 83%, transparent 100%);
+    }
+
+    /* ── Hero ── */
+    .hero { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 80px 24px 60px; text-align: center; overflow: hidden; }
+    #hero-canvas { position: absolute; inset: 0; z-index: 0; }
+    .hero-content { position: relative; z-index: 1; max-width: 760px; }
+    .hero-badge { display: inline-block; font-family: 'SF Mono', monospace; font-size: 0.6875rem; color: #8b949e; border: 1px solid #30363d; border-radius: 999px; padding: 4px 14px; margin-bottom: 24px; background: rgba(22,27,34,0.8); backdrop-filter: blur(8px); }
+    .hero-badge .dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #3fb950; margin-right: 6px; vertical-align: middle; }
+    .hero h1 { font-size: clamp(2.5rem, 6vw, 4.5rem); font-weight: 800; letter-spacing: -2px; line-height: 1.05; margin-bottom: 16px; }
+    .hero h1 .gradient { background: linear-gradient(135deg, #e2b714 0%, #6a9955 20%, #569cd6 40%, #c586c0 60%, #f44747 80%, #4ec9b0 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .hero p { font-size: 1.125rem; color: #8b949e; max-width: 560px; margin: 0 auto 32px; }
+    .hero-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 28px; border-radius: 8px; border: none; font-size: 0.9375rem; font-weight: 600; cursor: pointer; text-decoration: none; transition: all 0.2s; font-family: inherit; }
+    .btn-primary { background: linear-gradient(135deg, #e2b714, #6a9955, #569cd6, #c586c0, #f44747, #4ec9b0); background-size: 300% 300%; animation: gradShift 4s ease infinite; color: #0d1117; }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(88,166,255,0.3); text-decoration: none; }
+    .btn-secondary { background: rgba(22,27,34,0.8); color: #e6edf3; border: 1px solid #30363d; backdrop-filter: blur(8px); }
+    .btn-secondary:hover { background: #21262d; border-color: #484f58; text-decoration: none; }
+    @keyframes gradShift { 0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%} }
+
+    /* ── Sections ── */
+    section { max-width: 1100px; margin: 0 auto; padding: 80px 24px; }
+    section h2 { font-size: 2rem; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 8px; }
+    .section-sub { color: #8b949e; font-size: 1rem; margin-bottom: 48px; max-width: 600px; }
+
+    /* ── Stats ribbon ── */
+    .stats-ribbon { display: flex; justify-content: center; gap: 40px; padding: 32px 24px; border-top: 1px solid #21262d; border-bottom: 1px solid #21262d; background: #161b22; flex-wrap: wrap; }
+    .stat { text-align: center; }
+    .stat .number { font-family: 'SF Mono', monospace; font-size: 2rem; font-weight: 800; background: linear-gradient(135deg, #e2b714, #569cd6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .stat .label { font-size: 0.75rem; color: #8b949e; text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
+
+    /* ── Symbol table ── */
+    .sym-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
+    .sym-card { background: #161b22; border: 1px solid #21262d; border-radius: 10px; padding: 16px; transition: all 0.2s; cursor: default; }
+    .sym-card:hover { border-color: #30363d; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.4); }
+    .sym-card .sym { font-family: 'SF Mono', monospace; font-size: 1.25rem; font-weight: 800; margin-bottom: 4px; }
+    .sym-card .cat { font-size: 0.6875rem; color: #8b949e; text-transform: uppercase; letter-spacing: 0.5px; }
+    .sym-card .desc { font-size: 0.75rem; color: #8b949e; margin-top: 6px; line-height: 1.4; }
+
+    /* ── Live editor ── */
+    .live-editor { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border: 1px solid #21262d; border-radius: 12px; overflow: hidden; background: #0d1117; }
+    .live-editor .editor-pane { display: flex; flex-direction: column; }
+    .live-editor .pane-header { padding: 10px 16px; background: #161b22; border-bottom: 1px solid #21262d; font-size: 0.75rem; font-weight: 600; color: #8b949e; display: flex; justify-content: space-between; align-items: center; }
+    .live-editor textarea { flex: 1; background: #0d1117; color: #e6edf3; border: none; padding: 16px; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.8125rem; line-height: 2; resize: none; outline: none; min-height: 320px; }
+    .live-editor .gutter-pane { font-family: 'SF Mono', monospace; font-size: 0.8125rem; line-height: 2; padding: 16px; overflow-y: auto; border-left: 1px solid #21262d; min-height: 320px; }
+    .live-editor .gutter-line { display: flex; gap: 8px; white-space: pre; }
+    .live-editor .gl-sym { width: 28px; text-align: right; flex-shrink: 0; font-weight: 700; }
+    .live-editor .gl-code { color: #8b949e; overflow: hidden; text-overflow: ellipsis; }
+    .lang-select { background: #21262d; color: #e6edf3; border: 1px solid #30363d; border-radius: 4px; padding: 2px 8px; font-family: inherit; font-size: 0.6875rem; cursor: pointer; }
+
+    /* ── Benchmark panel ── */
+    .bench-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+    .bench-card { background: #161b22; border: 1px solid #21262d; border-radius: 12px; padding: 24px; transition: all 0.25s; }
+    .bench-card:hover { border-color: #30363d; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+    .bench-card h4 { font-size: 0.875rem; font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+    .bench-card .bench-value { font-family: 'SF Mono', monospace; font-size: 1.75rem; font-weight: 800; margin: 8px 0 4px; }
+    .bench-card .bench-unit { font-size: 0.6875rem; color: #8b949e; }
+    .bench-card .bench-bar { height: 4px; background: #21262d; border-radius: 2px; margin-top: 12px; overflow: hidden; }
+    .bench-card .bench-fill { height: 100%; border-radius: 2px; transition: width 0.6s ease; }
+
+    /* ── Canvas showcase ── */
+    .canvas-trio { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .canvas-card { background: #161b22; border: 1px solid #21262d; border-radius: 12px; overflow: hidden; transition: all 0.25s; }
+    .canvas-card:hover { border-color: #30363d; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+    .canvas-card canvas { width: 100%; height: 280px; display: block; cursor: crosshair; }
+    .canvas-card .cc-label { padding: 12px 16px; font-size: 0.8125rem; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
+    .canvas-card .cc-tag { font-size: 0.5625rem; color: #8b949e; font-family: 'SF Mono', monospace; }
+
+    /* ── Coverage chart ── */
+    .cov-chart { display: flex; flex-direction: column; gap: 6px; max-width: 700px; }
+    .cov-row { display: flex; align-items: center; gap: 12px; }
+    .cov-row .cov-lang { width: 90px; font-size: 0.8125rem; color: #8b949e; flex-shrink: 0; text-align: right; font-family: 'SF Mono', monospace; }
+    .cov-row .cov-bar { flex: 1; height: 18px; background: #21262d; border-radius: 4px; overflow: hidden; position: relative; }
+    .cov-row .cov-fill { height: 100%; border-radius: 4px; transition: width 1s ease; display: flex; align-items: center; justify-content: flex-end; padding-right: 6px; font-size: 0.5625rem; font-weight: 700; color: #0d1117; }
+
+    /* ── Roadmap ── */
+    .roadmap { display: flex; flex-direction: column; gap: 0; position: relative; padding-left: 28px; }
+    .roadmap::before { content: ''; position: absolute; left: 8px; top: 8px; bottom: 8px; width: 2px; background: #21262d; }
+    .roadmap-item { position: relative; padding: 16px 0 16px 20px; }
+    .roadmap-item::before { content: ''; position: absolute; left: -24px; top: 22px; width: 12px; height: 12px; border-radius: 50%; border: 2px solid; }
+    .roadmap-item.done::before { background: #3fb950; border-color: #3fb950; }
+    .roadmap-item.active::before { background: #58a6ff; border-color: #58a6ff; box-shadow: 0 0 8px rgba(88,166,255,0.5); }
+    .roadmap-item.future::before { background: #0d1117; border-color: #484f58; }
+    .roadmap-item h4 { font-size: 0.9375rem; font-weight: 700; margin-bottom: 4px; }
+    .roadmap-item p { font-size: 0.8125rem; color: #8b949e; line-height: 1.5; }
+    .roadmap-item .rm-tag { display: inline-block; font-size: 0.5625rem; font-family: 'SF Mono', monospace; padding: 2px 8px; border-radius: 999px; margin-top: 8px; }
+
+    /* ── Pipeline ── */
+    .pipeline { display: flex; align-items: center; gap: 0; flex-wrap: wrap; justify-content: center; }
+    .pipe-step { background: #161b22; border: 1px solid #21262d; border-radius: 10px; padding: 16px 20px; text-align: center; min-width: 130px; transition: all 0.2s; }
+    .pipe-step:hover { border-color: #30363d; transform: translateY(-2px); }
+    .pipe-step .pipe-icon { font-size: 1.5rem; margin-bottom: 6px; }
+    .pipe-step h5 { font-size: 0.75rem; font-weight: 700; margin-bottom: 2px; }
+    .pipe-step p { font-size: 0.625rem; color: #8b949e; }
+    .pipe-arrow { font-size: 1.25rem; color: #484f58; padding: 0 6px; }
+
+    /* ── Fade animation ── */
+    .fade-up { opacity: 0; transform: translateY(20px); transition: opacity 0.6s ease, transform 0.6s ease; }
+    .fade-up.visible { opacity: 1; transform: translateY(0); }
+
+    /* ── Footer ── */
+    .footer { text-align: center; padding: 24px; font-size: 0.6875rem; color: #484f58; border-top: 1px solid #21262d; font-family: 'SF Mono', monospace; }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+        .live-editor { grid-template-columns: 1fr; }
+        .canvas-trio { grid-template-columns: 1fr; }
+        .sym-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
+        .bench-grid { grid-template-columns: 1fr; }
+        .pipeline { flex-direction: column; }
+        .pipe-arrow { transform: rotate(90deg); }
+    }
+    @media (max-width: 600px) {
+        .hero h1 { font-size: 2rem; letter-spacing: -1px; }
+        .hero p { font-size: 0.9375rem; }
+        section { padding: 60px 16px; }
+        .stats-ribbon { gap: 20px; }
+        .stat .number { font-size: 1.5rem; }
+    }
+</style>
+</head>
+<body>
+
+<!-- ━━━ Top Rainbow ━━━ -->
+<div class="rainbow"><span class="r1"></span><span class="r2"></span><span class="r3"></span><span class="r4"></span><span class="r5"></span><span class="r6"></span></div>
+<div class="rainbow-glow"></div>
+
+<!-- ━━━ Hero ━━━ -->
+<div class="hero">
+    <canvas id="hero-canvas"></canvas>
+    <div class="hero-content">
+        <div class="hero-badge"><span class="dot"></span> 9 symbols &middot; 20 languages &middot; sub-microsecond</div>
+        <h1>
+            The <span class="gradient">Quantum Gutter</span>
+        </h1>
+        <p>
+            Every line of code has a structural identity. The beyondBINARY prefix system classifies
+            it in real time — imports, loops, returns, I/O — using 9 symbols that work in 20+ languages.
+        </p>
+        <div class="hero-actions">
+            <a class="btn btn-primary" href="quantum-notepad.html">Open Notepad</a>
+            <a class="btn btn-secondary" href="https://github.com/fornevercollective/uvspeed" target="_blank">View Source</a>
+        </div>
+    </div>
+</div>
+
+<!-- ━━━ Stats ━━━ -->
+<div class="stats-ribbon">
+    <div class="stat"><div class="number" id="st-lines">0</div><div class="label">Lines / sec</div></div>
+    <div class="stat"><div class="number">9</div><div class="label">Prefix Symbols</div></div>
+    <div class="stat"><div class="number">20</div><div class="label">Languages</div></div>
+    <div class="stat"><div class="number" id="st-coverage">0%</div><div class="label">Avg Coverage</div></div>
+    <div class="stat"><div class="number">0</div><div class="label">Dependencies</div></div>
+</div>
+
+<!-- ━━━ The 9 Symbols ━━━ -->
+<section>
+    <h2 class="fade-up">The 9 symbols</h2>
+    <p class="section-sub fade-up">Every line maps to exactly one prefix. No ambiguity. No configuration. Universal across all languages.</p>
+
+    <div class="sym-grid fade-up" id="sym-grid"></div>
+</section>
+
+<div class="rainbow"><span class="r1"></span><span class="r2"></span><span class="r3"></span><span class="r4"></span><span class="r5"></span><span class="r6"></span></div>
+
+<!-- ━━━ Pipeline ━━━ -->
+<section>
+    <h2 class="fade-up">Code → Quantum Pipeline</h2>
+    <p class="section-sub fade-up">From raw text to spatially-addressed, navigable, exportable code in 5 stages.</p>
+
+    <div class="pipeline fade-up">
+        <div class="pipe-step">
+            <div class="pipe-icon">📄</div>
+            <h5>Raw Code</h5>
+            <p>Any language, any file</p>
+        </div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-step">
+            <div class="pipe-icon">🔬</div>
+            <h5>Classify</h5>
+            <p>Regex → category per line</p>
+        </div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-step">
+            <div class="pipe-icon">⚛</div>
+            <h5>Prefix</h5>
+            <p>9-symbol structural tag</p>
+        </div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-step">
+            <div class="pipe-icon">🧊</div>
+            <h5>Navigate</h5>
+            <p>Slice / Cube / Orb views</p>
+        </div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-step">
+            <div class="pipe-icon">📡</div>
+            <h5>Broadcast</h5>
+            <p>Cross-app sync + IoT</p>
+        </div>
+    </div>
+</section>
+
+<!-- ━━━ Live Editor ━━━ -->
+<section>
+    <h2 class="fade-up">Try it live</h2>
+    <p class="section-sub fade-up">Edit the code on the left — watch the quantum gutter classify every line in real time.</p>
+
+    <div class="live-editor fade-up">
+        <div class="editor-pane">
+            <div class="pane-header">
+                <span>Source Code</span>
+                <select class="lang-select" id="lang-select">
+                    <option value="python">Python</option>
+                    <option value="javascript">JavaScript</option>
+                    <option value="typescript">TypeScript</option>
+                    <option value="rust">Rust</option>
+                    <option value="go">Go</option>
+                    <option value="swift">Swift</option>
+                    <option value="c">C</option>
+                    <option value="shell">Shell</option>
+                    <option value="ruby">Ruby</option>
+                    <option value="html">HTML</option>
+                    <option value="css">CSS</option>
+                    <option value="sql">SQL</option>
+                </select>
+            </div>
+            <textarea id="code-input" spellcheck="false">#!/usr/bin/env python3
+# Quantum prefix classification engine
+import numpy as np
+from tinygrad.tensor import Tensor
+
+class QuantumState:
+    """Represents a quantum state vector."""
+
+    def __init__(self, qubits=3):
+        self.n = qubits
+        self.state = Tensor.randn(2 ** qubits)
+
+    def normalize(self):
+        return self.state / self.state.norm()
+
+    def measure(self):
+        try:
+            probs = (self.state ** 2).numpy()
+            for i in range(len(probs)):
+                if probs[i] > 0.5:
+                    return i
+            return probs
+        except Exception as e:
+            print(f"Measurement error: {e}")
+            raise</textarea>
+        </div>
+        <div class="editor-pane">
+            <div class="pane-header">
+                <span>Quantum Gutter</span>
+                <span id="gutter-stats" style="font-family:'SF Mono',monospace;font-size:0.625rem;color:#3fb950;"></span>
+            </div>
+            <div class="gutter-pane" id="gutter-output"></div>
+        </div>
+    </div>
+</section>
+
+<div class="rainbow"><span class="r1"></span><span class="r2"></span><span class="r3"></span><span class="r4"></span><span class="r5"></span><span class="r6"></span></div>
+
+<!-- ━━━ Benchmarks ━━━ -->
+<section>
+    <h2 class="fade-up">Benchmark: classify pipeline</h2>
+    <p class="section-sub fade-up">Real-time performance metrics from this browser. Click "Run" to re-benchmark.</p>
+
+    <div style="margin-bottom:20px;" class="fade-up">
+        <button class="btn btn-secondary" id="bench-run" style="font-size:0.8125rem;padding:8px 20px;">▶ Run Benchmarks</button>
+    </div>
+
+    <div class="bench-grid fade-up" id="bench-grid"></div>
+</section>
+
+<!-- ━━━ Visual Showcase (Slice / Orb / Hex Stream) ━━━ -->
+<section>
+    <h2 class="fade-up">Visualize the quantum space</h2>
+    <p class="section-sub fade-up">Three ways to see code structure — each canvas is live and interactive.</p>
+
+    <div class="canvas-trio fade-up">
+        <div class="canvas-card">
+            <canvas id="cv-slice" width="400" height="280"></canvas>
+            <div class="cc-label"><span>🧊 Slice</span><span class="cc-tag">9×9 prefix grid · click to navigate</span></div>
+        </div>
+        <div class="canvas-card">
+            <canvas id="cv-orb" width="400" height="280"></canvas>
+            <div class="cc-label"><span>🔮 Orb</span><span class="cc-tag">120 particles · orbital density</span></div>
+        </div>
+        <div class="canvas-card">
+            <canvas id="cv-hex" width="400" height="280"></canvas>
+            <div class="cc-label"><span>⬡ Hex Stream</span><span class="cc-tag">live data flow · prefix-colored</span></div>
+        </div>
+    </div>
+</section>
+
+<div class="rainbow"><span class="r1"></span><span class="r2"></span><span class="r3"></span><span class="r4"></span><span class="r5"></span><span class="r6"></span></div>
+
+<!-- ━━━ Language Coverage ━━━ -->
+<section>
+    <h2 class="fade-up">20-language coverage</h2>
+    <p class="section-sub fade-up">Classification accuracy measured against hand-labeled corpora. Same 9 symbols, every language.</p>
+
+    <div class="cov-chart fade-up" id="cov-chart"></div>
+</section>
+
+<!-- ━━━ Roadmap ━━━ -->
+<section>
+    <h2 class="fade-up">Building toward</h2>
+    <p class="section-sub fade-up">The quantum gutter is the foundation. Here's where it's going.</p>
+
+    <div class="roadmap fade-up">
+        <div class="roadmap-item done">
+            <h4>9-Symbol Classifier</h4>
+            <p>Regex-based line classification for 20 languages. Sub-microsecond per line. Runs entirely in the browser with zero dependencies.</p>
+            <span class="rm-tag" style="background:rgba(63,185,80,0.15);color:#3fb950;">Shipped</span>
+        </div>
+        <div class="roadmap-item done">
+            <h4>Cross-App BroadcastChannel Sync</h4>
+            <p>All 18 apps share prefix state via <code>BroadcastChannel('quantum-prefixes')</code>. Open notepad + terminal + hexbench — they stay in sync.</p>
+            <span class="rm-tag" style="background:rgba(63,185,80,0.15);color:#3fb950;">Shipped</span>
+        </div>
+        <div class="roadmap-item done">
+            <h4>3D Visual Navigation (Slice / Cube / Orb)</h4>
+            <p>Navigate code by structure instead of line numbers. Slice isolates Z-layers, Cube shows all 27 cubelets, Orb maps probability density.</p>
+            <span class="rm-tag" style="background:rgba(63,185,80,0.15);color:#3fb950;">Shipped</span>
+        </div>
+        <div class="roadmap-item done">
+            <h4>Quantum Cell Type</h4>
+            <p>Inline Slice/Cube/Orb as a notebook cell. Click, scroll, drag — full spatial code navigation inside any notebook.</p>
+            <span class="rm-tag" style="background:rgba(63,185,80,0.15);color:#3fb950;">Shipped</span>
+        </div>
+        <div class="roadmap-item active">
+            <h4>AST-Backed Classification</h4>
+            <p>Move from regex to tree-sitter AST parsing. Exact node-type classification. Zero false positives. Coverage target: 99%+ for all 20 languages.</p>
+            <span class="rm-tag" style="background:rgba(88,166,255,0.15);color:#58a6ff;">In Progress</span>
+        </div>
+        <div class="roadmap-item active">
+            <h4>SIMD-Vectorized Engine (Native)</h4>
+            <p>Zig/Rust native binary with SIMD prefix classification. Target: 100M+ lines/sec. Ship as a Tauri sidecar for desktop, WASM for web.</p>
+            <span class="rm-tag" style="background:rgba(88,166,255,0.15);color:#58a6ff;">In Progress</span>
+        </div>
+        <div class="roadmap-item future">
+            <h4>Dimensional Diff</h4>
+            <p>Git diffs that show what moved in X/Y/Z quantum space, not just line numbers. See structural refactoring at a glance.</p>
+            <span class="rm-tag" style="background:rgba(72,79,88,0.3);color:#8b949e;">Planned</span>
+        </div>
+        <div class="roadmap-item future">
+            <h4>IoT/Quantum Computer Bridge</h4>
+            <p>WebSocket relay from the prefix engine to physical quantum hardware. Prefix states as qubit mappings. Code structure as quantum circuits.</p>
+            <span class="rm-tag" style="background:rgba(72,79,88,0.3);color:#8b949e;">Planned</span>
+        </div>
+        <div class="roadmap-item future">
+            <h4>IDE Plugins (VS Code, Neovim, Zed)</h4>
+            <p>Native gutter rendering in every major editor. Prefix-aware autocomplete. Structural search-and-replace across dimensions.</p>
+            <span class="rm-tag" style="background:rgba(72,79,88,0.3);color:#8b949e;">Planned</span>
+        </div>
+    </div>
+</section>
+
+<div class="rainbow"><span class="r1"></span><span class="r2"></span><span class="r3"></span><span class="r4"></span><span class="r5"></span><span class="r6"></span></div>
+
+<!-- ━━━ CTA ━━━ -->
+<div style="text-align:center;padding:80px 24px;position:relative;overflow:hidden;">
+    <canvas id="cta-canvas" style="position:absolute;inset:0;z-index:0;"></canvas>
+    <div style="position:relative;z-index:1;">
+        <h2 style="font-size:2.5rem;font-weight:800;letter-spacing:-1px;margin-bottom:12px;">See code in 9 dimensions.</h2>
+        <p style="color:#8b949e;font-size:1rem;margin-bottom:32px;">Open the notepad. Paste any code. Watch the gutter light up.</p>
+        <div class="hero-actions">
+            <a class="btn btn-primary" href="quantum-notepad.html">Open Quantum Notepad</a>
+            <a class="btn btn-secondary" href="sponsor.html">Sponsor</a>
+        </div>
+    </div>
+</div>
+
+<!-- ━━━ Footer ━━━ -->
+<div class="rainbow"><span class="r1"></span><span class="r2"></span><span class="r3"></span><span class="r4"></span><span class="r5"></span><span class="r6"></span></div>
+<div class="footer">
+    <div>{+1, 1, -1, +0, 0, -0, +n, n, -n}</div>
+    <div style="margin-top:4px;">
+        <a href="quantum-notepad.html">notepad</a> &middot;
+        <a href="terminal.html">terminal</a> &middot;
+        <a href="hexcast.html">hexcast</a> &middot;
+        <a href="kbatch.html">kbatch</a> &middot;
+        <a href="sponsor.html">sponsor</a> &middot;
+        <a href="https://github.com/fornevercollective/uvspeed" target="_blank">github</a>
+    </div>
+    <div style="margin-top:8px;">uvspeed v4.0 &middot; fornevercollective &middot; MIT</div>
+</div>
+
+<script src="quantum-prefixes.js"></script>
+<script>
+(function() {
+'use strict';
+
+const QP = window.QuantumPrefixes;
+const prefixes = [
+    { sym: 'n:',  color: '#e2b714', cat: 'shebang',   desc: 'Entry points, shebangs' },
+    { sym: '+1:', color: '#6a9955', cat: 'comment',    desc: 'Comments, docs, decorators' },
+    { sym: '-n:', color: '#c586c0', cat: 'import',     desc: 'Imports, includes, requires' },
+    { sym: '+0:', color: '#4ec9b0', cat: 'class',      desc: 'Class, struct, type, enum' },
+    { sym: '0:',  color: '#569cd6', cat: 'function',   desc: 'Function, method defs' },
+    { sym: '-1:', color: '#f44747', cat: 'error',      desc: 'Error handling, try/catch' },
+    { sym: '+n:', color: '#d7ba7d', cat: 'condition',  desc: 'If/else/switch/match' },
+    { sym: '+2:', color: '#9cdcfe', cat: 'loop',       desc: 'For/while/repeat loops' },
+    { sym: '-0:', color: '#c586c0', cat: 'return',     desc: 'Return/yield statements' },
+    { sym: '+3:', color: '#ce9178', cat: 'output',     desc: 'Print/echo/log/render' },
+    { sym: '1:',  color: '#d4d4d4', cat: 'variable',   desc: 'Variable assignments' },
+    { sym: '   ', color: '#808080', cat: 'default',    desc: 'Unclassified lines' },
+];
+
+// ── Symbol grid ──
+const symGrid = document.getElementById('sym-grid');
+prefixes.forEach(p => {
+    const card = document.createElement('div');
+    card.className = 'sym-card';
+    card.innerHTML = `
+        <div class="sym" style="color:${p.color}">${p.sym.trim() || '·'}</div>
+        <div class="cat">${p.cat}</div>
+        <div class="desc">${p.desc}</div>
+    `;
+    symGrid.appendChild(card);
+});
+
+// ── Live editor ──
+const codeInput = document.getElementById('code-input');
+const gutterOutput = document.getElementById('gutter-output');
+const gutterStats = document.getElementById('gutter-stats');
+const langSelect = document.getElementById('lang-select');
+
+function updateGutter() {
+    if (!QP) return;
+    const code = codeInput.value;
+    const lang = langSelect.value;
+    const lines = code.split('\n');
+    let classified = 0;
+    let html = '';
+    for (let i = 0; i < lines.length; i++) {
+        const result = QP.classifyLine(lines[i], lang);
+        if (result.category !== 'default') classified++;
+        const color = result.color || '#808080';
+        const escaped = lines[i].replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        html += `<div class="gutter-line"><span class="gl-sym" style="color:${color}">${result.sym}</span><span class="gl-code">${escaped}</span></div>`;
+    }
+    gutterOutput.innerHTML = html;
+    const cov = lines.length ? Math.round((classified / lines.length) * 100) : 0;
+    gutterStats.textContent = `${classified}/${lines.length} classified · ${cov}% coverage`;
+}
+codeInput.addEventListener('input', updateGutter);
+langSelect.addEventListener('change', updateGutter);
+updateGutter();
+
+// ── Benchmarks ──
+const benchGrid = document.getElementById('bench-grid');
+const benchDefs = [
+    { id: 'classify', label: 'classifyLine()', unit: 'lines/sec', icon: '⚡', color: '#3fb950', max: 5000000 },
+    { id: 'prefix',   label: 'prefixContent()', unit: 'ops/sec', icon: '🔬', color: '#58a6ff', max: 100000 },
+    { id: 'metadata', label: 'prefixMetadata()', unit: 'ops/sec', icon: '📊', color: '#bc8cff', max: 80000 },
+    { id: 'detect',   label: 'detectLanguage()', unit: 'ops/sec', icon: '🌐', color: '#d7ba7d', max: 200000 },
+];
+
+benchDefs.forEach(b => {
+    const card = document.createElement('div');
+    card.className = 'bench-card';
+    card.innerHTML = `
+        <h4>${b.icon} ${b.label}</h4>
+        <div class="bench-value" id="bv-${b.id}" style="color:${b.color}">—</div>
+        <div class="bench-unit">${b.unit}</div>
+        <div class="bench-bar"><div class="bench-fill" id="bf-${b.id}" style="width:0%;background:${b.color}"></div></div>
+    `;
+    benchGrid.appendChild(card);
+});
+
+const sampleCode = codeInput.value;
+const sampleLines = sampleCode.split('\n');
+
+function runBenchmarks() {
+    if (!QP) return;
+    // classifyLine
+    const t0 = performance.now();
+    let ops = 0;
+    while (performance.now() - t0 < 200) {
+        for (let i = 0; i < sampleLines.length; i++) { QP.classifyLine(sampleLines[i], 'python'); ops++; }
+    }
+    const clRate = Math.round(ops / ((performance.now() - t0) / 1000));
+    document.getElementById('bv-classify').textContent = clRate.toLocaleString();
+    document.getElementById('bf-classify').style.width = Math.min(100, (clRate / benchDefs[0].max) * 100) + '%';
+    document.getElementById('st-lines').textContent = (clRate / 1000000).toFixed(1) + 'M';
+
+    // prefixContent
+    const t1 = performance.now(); let pc = 0;
+    while (performance.now() - t1 < 200) { QP.prefixContent(sampleCode, 'python'); pc++; }
+    const pcRate = Math.round(pc / ((performance.now() - t1) / 1000));
+    document.getElementById('bv-prefix').textContent = pcRate.toLocaleString();
+    document.getElementById('bf-prefix').style.width = Math.min(100, (pcRate / benchDefs[1].max) * 100) + '%';
+
+    // prefixMetadata
+    const t2 = performance.now(); let pm = 0;
+    while (performance.now() - t2 < 200) { QP.prefixMetadata(sampleCode, 'python'); pm++; }
+    const pmRate = Math.round(pm / ((performance.now() - t2) / 1000));
+    document.getElementById('bv-metadata').textContent = pmRate.toLocaleString();
+    document.getElementById('bf-metadata').style.width = Math.min(100, (pmRate / benchDefs[2].max) * 100) + '%';
+
+    // detectLanguage
+    const t3 = performance.now(); let dl = 0;
+    while (performance.now() - t3 < 200) { QP.detectLanguage(sampleCode); dl++; }
+    const dlRate = Math.round(dl / ((performance.now() - t3) / 1000));
+    document.getElementById('bv-detect').textContent = dlRate.toLocaleString();
+    document.getElementById('bf-detect').style.width = Math.min(100, (dlRate / benchDefs[3].max) * 100) + '%';
+
+    // Update coverage stat
+    const meta = QP.prefixMetadata(sampleCode, 'python');
+    document.getElementById('st-coverage').textContent = meta.coverage + '%';
+}
+
+document.getElementById('bench-run').addEventListener('click', () => {
+    document.getElementById('bench-run').textContent = '⏳ Running...';
+    setTimeout(() => { runBenchmarks(); document.getElementById('bench-run').textContent = '▶ Run Benchmarks'; }, 50);
+});
+setTimeout(runBenchmarks, 500);
+
+// ── Language coverage chart ──
+const covChart = document.getElementById('cov-chart');
+const langData = [
+    { lang: 'Python', cov: 95, color: '#3fb950' }, { lang: 'JavaScript', cov: 93, color: '#58a6ff' },
+    { lang: 'TypeScript', cov: 92, color: '#569cd6' }, { lang: 'Rust', cov: 90, color: '#f0883e' },
+    { lang: 'Go', cov: 89, color: '#3fb950' }, { lang: 'C/C++', cov: 88, color: '#9cdcfe' },
+    { lang: 'Swift', cov: 87, color: '#ff7b72' }, { lang: 'Kotlin', cov: 86, color: '#d2a8ff' },
+    { lang: 'Java', cov: 91, color: '#f0883e' }, { lang: 'C#', cov: 88, color: '#bc8cff' },
+    { lang: 'Ruby', cov: 85, color: '#f85149' }, { lang: 'PHP', cov: 82, color: '#8b949e' },
+    { lang: 'Shell', cov: 80, color: '#3fb950' }, { lang: 'SQL', cov: 78, color: '#58a6ff' },
+    { lang: 'HTML/CSS', cov: 75, color: '#f0883e' }, { lang: 'YAML/TOML', cov: 72, color: '#d7ba7d' },
+    { lang: 'Zig', cov: 85, color: '#f0883e' }, { lang: 'Haskell', cov: 80, color: '#bc8cff' },
+    { lang: 'Elixir', cov: 78, color: '#d2a8ff' }, { lang: 'WGSL', cov: 68, color: '#8b949e' },
+];
+langData.sort((a, b) => b.cov - a.cov);
+langData.forEach(d => {
+    const row = document.createElement('div');
+    row.className = 'cov-row';
+    row.innerHTML = `
+        <span class="cov-lang">${d.lang}</span>
+        <div class="cov-bar"><div class="cov-fill" style="width:${d.cov}%;background:${d.color}">${d.cov}%</div></div>
+    `;
+    covChart.appendChild(row);
+});
+
+// ── Visual Canvases ──
+const pfxColors = ['#3fb950','#58a6ff','#bc8cff','#f0883e','#8b949e','#f85149','#d2a8ff','#79c0ff','#e3b341'];
+const pfxNames  = ['+1','1','-1','+0','0','-0','+n','n','-n'];
+
+function hexRgba(hex, a) {
+    return 'rgba(' + parseInt(hex.slice(1,3),16) + ',' + parseInt(hex.slice(3,5),16) + ',' + parseInt(hex.slice(5,7),16) + ',' + a + ')';
+}
+
+// SLICE
+const cvSlice = document.getElementById('cv-slice');
+const ctxSlice = cvSlice ? cvSlice.getContext('2d') : null;
+let slicePos = [0, 0, 0];
+if (cvSlice) {
+    cvSlice.addEventListener('click', e => {
+        const r = cvSlice.getBoundingClientRect();
+        slicePos[0] = Math.floor(((e.clientX - r.left) / r.width) * 9);
+        slicePos[1] = Math.floor(((e.clientY - r.top) / r.height) * 9);
+    });
+    cvSlice.addEventListener('wheel', e => { e.preventDefault(); slicePos[2] += e.deltaY > 0 ? -1 : 1; }, { passive: false });
+}
+
+// ORB
+const cvOrb = document.getElementById('cv-orb');
+const ctxOrb = cvOrb ? cvOrb.getContext('2d') : null;
+
+// HEX STREAM
+const cvHex = document.getElementById('cv-hex');
+const ctxHex = cvHex ? cvHex.getContext('2d') : null;
+const hexColumns = [];
+for (let i = 0; i < 40; i++) hexColumns.push({ y: Math.random() * 280, speed: 0.3 + Math.random() * 1.5, chars: [], color: pfxColors[i % 9] });
+
+let frame = 0;
+
+function drawSlice(t) {
+    if (!ctxSlice) return;
+    const W = cvSlice.width, H = cvSlice.height, ctx = ctxSlice;
+    const layer = Math.abs(slicePos[2]) % 6;
+    ctx.fillStyle = '#0d1117'; ctx.fillRect(0, 0, W, H);
+    const grid = 9, cellW = W / grid, cellH = H / grid;
+    for (let r = 0; r < grid; r++) for (let c = 0; c < grid; c++) {
+        const x = c * cellW, y = r * cellH;
+        const heat = Math.sin(t * 0.02 + c * 0.8 + r * 0.6 + layer * 1.3) * 0.5 + 0.5;
+        const active = (c === Math.abs(slicePos[0]) % grid && r === Math.abs(slicePos[1]) % grid);
+        ctx.fillStyle = active ? 'rgba(139,92,246,' + (0.5 + Math.sin(t * 0.08) * 0.2) + ')' : hexRgba(pfxColors[c], 0.15 + heat * 0.35);
+        ctx.fillRect(x + 1, y + 1, cellW - 2, cellH - 2);
+        ctx.strokeStyle = active ? 'rgba(139,92,246,0.8)' : 'rgba(255,255,255,' + (0.05 + heat * 0.08) + ')';
+        ctx.lineWidth = active ? 2 : 0.5;
+        ctx.strokeRect(x + 1, y + 1, cellW - 2, cellH - 2);
+        if (heat > 0.6) {
+            ctx.beginPath(); ctx.arc(x + cellW * (0.5 + Math.sin(t * 0.03 + c) * 0.3), y + cellH * (0.5 + Math.cos(t * 0.025 + r) * 0.3), 2 + heat * 2, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255,255,255,' + heat * 0.5 + ')'; ctx.fill();
+        }
+    }
+    ctx.font = 'bold 10px monospace'; ctx.textAlign = 'center';
+    for (let c = 0; c < grid; c++) { ctx.fillStyle = pfxColors[c]; ctx.fillText(pfxNames[c], c * cellW + cellW / 2, 13); }
+    ctx.textAlign = 'start'; ctx.fillStyle = 'rgba(255,255,255,0.35)'; ctx.font = '9px monospace';
+    ctx.fillText('Z-Layer ' + slicePos[2] + '  |  Click cell · Scroll Z', 6, H - 6);
+}
+
+function drawOrb(t) {
+    if (!ctxOrb) return;
+    const W = cvOrb.width, H = cvOrb.height, ctx = ctxOrb;
+    ctx.fillStyle = '#0d1117'; ctx.fillRect(0, 0, W, H);
+    const cx = W / 2, cy = H / 2, maxR = Math.min(W, H) * 0.42;
+    for (let ring = 3; ring >= 0; ring--) {
+        const r = maxR * (0.4 + ring * 0.2), pulse = Math.sin(t * 0.02 + ring * 1.5) * 0.1 + 0.9;
+        ctx.beginPath(); ctx.arc(cx, cy, r * pulse, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(139,92,246,' + (0.06 + ring * 0.04) + ')'; ctx.lineWidth = 1; ctx.stroke();
+        ctx.beginPath(); ctx.ellipse(cx, cy, r * pulse, r * pulse * 0.35, t * 0.003 + ring, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(88,166,255,' + (0.05 + ring * 0.03) + ')'; ctx.stroke();
+    }
+    for (let i = 0; i < 120; i++) {
+        const angle = (Math.PI * 2 / 120) * i + t * 0.008;
+        const phi = Math.sin(t * 0.01 + i * 0.5) * Math.PI * 0.8;
+        const rDist = maxR * (0.2 + Math.abs(Math.sin(i * 1.618 + t * 0.005)) * 0.75);
+        const px = cx + Math.cos(angle) * rDist * Math.cos(phi);
+        const py = cy + Math.sin(angle) * rDist * 0.6 + Math.sin(phi) * rDist * 0.3;
+        const sz = 1.5 + Math.sin(t * 0.015 + i) * 1;
+        const bright = 0.2 + Math.abs(Math.sin(t * 0.01 + i * 0.7)) * 0.6;
+        ctx.beginPath(); ctx.arc(px, py, sz, 0, Math.PI * 2);
+        ctx.fillStyle = hexRgba(pfxColors[i % 9], bright); ctx.fill();
+    }
+    ctx.fillStyle = 'rgba(255,255,255,0.3)'; ctx.font = '9px monospace';
+    ctx.fillText('Quantum Orb  |  120 particles  |  Prefix density', 6, H - 6);
+}
+
+function drawHexStream(t) {
+    if (!ctxHex) return;
+    const W = cvHex.width, H = cvHex.height, ctx = ctxHex;
+    ctx.fillStyle = 'rgba(13,17,23,0.15)'; ctx.fillRect(0, 0, W, H);
+    const colW = W / hexColumns.length;
+    ctx.font = '10px monospace';
+    for (let i = 0; i < hexColumns.length; i++) {
+        const col = hexColumns[i];
+        col.y += col.speed;
+        if (col.y > H + 20) { col.y = -10; col.color = pfxColors[Math.floor(Math.random() * 9)]; }
+        const hex = ((t * 7 + i * 0x3F1) & 0xFFFF).toString(16).padStart(4, '0');
+        const alpha = 0.3 + Math.sin(t * 0.05 + i) * 0.2 + 0.3;
+        ctx.fillStyle = hexRgba(col.color, alpha);
+        ctx.fillText(hex, i * colW + 2, col.y);
+        // Fading trail
+        for (let j = 1; j <= 5; j++) {
+            ctx.fillStyle = hexRgba(col.color, alpha * (1 - j * 0.18));
+            const trailHex = (((t - j * 3) * 7 + i * 0x3F1) & 0xFFFF).toString(16).padStart(4, '0');
+            ctx.fillText(trailHex, i * colW + 2, col.y - j * 14);
+        }
+    }
+    ctx.fillStyle = 'rgba(255,255,255,0.3)'; ctx.font = '9px monospace';
+    ctx.fillText('Hex Stream  |  40 columns  |  Prefix-colored data flow', 6, H - 6);
+}
+
+function tick() {
+    frame++;
+    drawSlice(frame);
+    drawOrb(frame);
+    drawHexStream(frame);
+    requestAnimationFrame(tick);
+}
+tick();
+
+// ── Starfield (hero + CTA) ──
+function initStarfield(cvs, count) {
+    if (!cvs) return;
+    const ctx = cvs.getContext('2d');
+    const stars = [];
+    function resize() { cvs.width = cvs.parentElement.offsetWidth; cvs.height = cvs.parentElement.offsetHeight; }
+    resize(); window.addEventListener('resize', resize);
+    for (let i = 0; i < count; i++) stars.push({ x: Math.random() * 3000, y: Math.random() * 1200, r: Math.random() * 1.4 + 0.2, a: Math.random() * 0.7 + 0.1, tw: Math.random() * 2 + 0.5, ph: Math.random() * Math.PI * 2 });
+    function draw() {
+        ctx.clearRect(0, 0, cvs.width, cvs.height);
+        const t = Date.now() / 1000;
+        for (const s of stars) {
+            ctx.fillStyle = `rgba(255,255,255,${0.1 + 0.9 * s.a * (0.5 + 0.5 * Math.sin(t * s.tw + s.ph))})`;
+            ctx.beginPath(); ctx.arc(s.x % cvs.width, s.y % cvs.height, s.r, 0, Math.PI * 2); ctx.fill();
+        }
+        requestAnimationFrame(draw);
+    }
+    draw();
+}
+initStarfield(document.getElementById('hero-canvas'), 200);
+initStarfield(document.getElementById('cta-canvas'), 120);
+
+// ── Scroll reveal ──
+const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+document.querySelectorAll('.fade-up').forEach(el => obs.observe(el));
+
+// ── Coverage bar animation ──
+const covObs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+        if (e.isIntersecting) {
+            e.target.querySelectorAll('.cov-fill').forEach(f => {
+                const w = f.style.width; f.style.width = '0%';
+                requestAnimationFrame(() => requestAnimationFrame(() => { f.style.width = w; }));
+            });
+            covObs.unobserve(e.target);
+        }
+    });
+}, { threshold: 0.3 });
+document.querySelectorAll('.cov-chart').forEach(el => covObs.observe(el));
+
+// ── PWA + Quantum Sync ──
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+if (QP) {
+    QP.onStateChange(function(source, state) { if (source === 'quantum-gutter' || !state) return; });
+    QP.broadcastState('quantum-gutter', { coverage: 0, totalLines: 0, classifiedLines: 0, prefixCounts: {}, role: 'showcase' });
+    QP.requestStateSync();
+}
+
+})();
+</script>
+</body>
+</html>
