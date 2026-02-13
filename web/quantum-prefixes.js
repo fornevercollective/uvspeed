@@ -714,6 +714,13 @@
                 'pre { background: var(--qp-code-bg) !important; }',
                 '.hero, .cta { background: var(--qp-bg-secondary) !important; }',
                 'canvas { border-color: var(--qp-border) !important; }',
+                // Quantum nav cube — light mode needs opaque-ish backgrounds for 3D faces
+                '.nav-cube-face { background: rgba(240,242,245,0.92) !important; border-color: var(--qp-border) !important; }',
+                '.nav-cube-face span { background: rgba(220,225,230,0.8) !important; color: var(--qp-text-muted) !important; }',
+                '.nav-cube-face span:hover { color: var(--qp-text) !important; }',
+                '.nav-cube-face span.ncf-active { color: #fff !important; }',
+                '.nav-cube-arrow { background: var(--qp-bg-tertiary) !important; color: var(--qp-text-muted) !important; border-color: var(--qp-border) !important; }',
+                '.ncv-controls { border-top-color: var(--qp-border) !important; }',
             ].join('\n') : [
                 ':root {',
                 '  --cursor-bg: var(--qp-bg); --cursor-bg-secondary: var(--qp-bg-secondary);',

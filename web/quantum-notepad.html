@@ -1174,7 +1174,7 @@
 
         /* ===== Quantum Nav Cube ===== */
         .nav-cube-container {
-            margin-bottom: var(--cursor-space-md);
+            margin-bottom: 0;
             background: var(--cursor-bg);
             border-radius: var(--cursor-radius-md);
             position: relative;
@@ -1193,7 +1193,7 @@
             transition: all 0.15s;
         }
         .ncv-tab:hover { color: var(--cursor-text-secondary); }
-        .ncv-tab.active { color: var(--cursor-accent); border-bottom-color: var(--cursor-accent); background: rgba(88,166,255,0.04); }
+        .ncv-tab.active { color: var(--cursor-accent); border-bottom-color: var(--cursor-accent); background: var(--cursor-accent-subtle, rgba(88,166,255,0.04)); }
 
         /* Viewport: clips 3D faces so they can't escape */
         .ncv-viewport {
@@ -1240,7 +1240,7 @@
             grid-template-columns: repeat(3, 1fr);
             gap: 3px;
             padding: 3px;
-            background: rgba(13, 17, 23, 0.55);
+            background: var(--cursor-bg-secondary, rgba(13, 17, 23, 0.55));
             border: 1px solid var(--cursor-border-muted);
             border-radius: 4px;
         }
@@ -1262,7 +1262,7 @@
             font-weight: 800;
             letter-spacing: 0.02em;
             color: var(--cursor-text-muted);
-            background: rgba(48, 54, 61, 0.7);
+            background: var(--cursor-bg-tertiary, rgba(48, 54, 61, 0.7));
             cursor: pointer;
             transition: background 0.2s ease, box-shadow 0.15s ease, transform 0.1s ease, color 0.2s ease;
         }
@@ -2312,36 +2312,37 @@
         /* ===== Layer Navigator ===== */
         .layer-nav {
             display: flex;
-            align-items: center;
-            gap: var(--cursor-space-xs);
-            margin-top: var(--cursor-space-sm);
-            background: var(--cursor-bg);
-            border: 1px solid var(--cursor-border);
-            border-radius: var(--cursor-radius-md);
-            padding: 4px 8px;
+            align-items: stretch;
+            gap: 4px;
+            margin-bottom: var(--cursor-space-sm);
+            background: none;
+            border: none;
+            padding: 0;
         }
 
         .layer-nav .layer-btn {
-            width: 28px;
-            height: 28px;
+            width: 24px;
             border: 1px solid var(--cursor-border);
             border-radius: var(--cursor-radius-sm);
             background: var(--cursor-bg-tertiary);
             color: var(--cursor-text-secondary);
-            font-size: 0.8125rem;
+            font-size: 0.75rem;
             font-weight: 600;
             cursor: pointer;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
             transition: all 0.15s ease;
             flex-shrink: 0;
+            line-height: 1.2;
+            padding: 4px 0;
         }
 
         .layer-nav .layer-btn:hover {
             background: var(--cursor-bg-hover);
-            color: var(--cursor-text);
-            border-color: var(--cursor-text-muted);
+            color: var(--cursor-accent);
+            border-color: var(--cursor-accent);
         }
 
         .layer-nav .layer-btn:active { transform: scale(0.92); }
@@ -3127,95 +3128,98 @@
                 <div class="sidebar-section">
                     <div class="sidebar-title">Quantum Navigation</div>
 
-                    <!-- Quantum Nav — 2D slice / 3D cube -->
-                    <div class="nav-cube-container" id="nav-cube-container">
-                        <!-- Tab bar: 2D flat slice vs 3D Rubik's cube -->
-                        <div class="ncv-tabs">
-                            <button class="ncv-tab" id="ncv-tab-2d" data-ncv="2d">⬡ 2D Slice</button>
-                            <button class="ncv-tab active" id="ncv-tab-3d" data-ncv="3d">🎲 3D Cube</button>
-                        </div>
+                    <!-- Quantum Nav — layer buttons on sides, 2D/3D in center -->
+                    <div class="layer-nav">
+                        <!-- LEFT: Layer Down (◀ -Z) -->
+                        <button class="layer-btn" id="layer-down" title="Layer down (-Z complexity)">◀<br><span style="font-size:0.45rem;writing-mode:horizontal-tb;letter-spacing:0;">-Z</span></button>
 
-                        <!-- 2D Slice — original flat grid (shown when 2D tab active) -->
-                        <div id="ncv-2d-view" class="ncv-hidden" style="padding:0;">
-                            <div class="quantum-nav-mini" id="ncv-2d-grid">
-                                <button class="nav-btn" data-direction="+1" title="Lines up (+Y)">+1</button>
-                                <button class="nav-btn" data-direction="0" title="Neutral">0</button>
-                                <button class="nav-btn" data-direction="-1" title="Lines down (-Y)">-1</button>
-                                <button class="nav-btn" data-direction="+n" title="Complexity up (+Z)">+n</button>
-                                <button class="nav-btn active" data-direction="⚛" id="nav-center-btn" title="Reset to origin">∞</button>
-                                <button class="nav-btn" data-direction="-n" title="Complexity down (-Z)">-n</button>
-                                <button class="nav-btn" data-direction="+0" title="Dependencies right (+X)">+0</button>
-                                <button class="nav-btn" data-direction="-0" title="Dependencies left (-X)">-0</button>
-                                <button class="nav-btn" data-direction="+2" title="Jump +2 lines">+2</button>
+                        <!-- CENTER: Nav Cube Area -->
+                        <div class="nav-cube-container" id="nav-cube-container" style="flex:1;min-width:0;">
+                            <!-- Tab bar: 2D flat slice vs 3D Rubik's cube -->
+                            <div class="ncv-tabs">
+                                <button class="ncv-tab" id="ncv-tab-2d" data-ncv="2d">⬡ 2D Slice</button>
+                                <button class="ncv-tab active" id="ncv-tab-3d" data-ncv="3d">🎲 3D Cube</button>
                             </div>
-                        </div>
 
-                        <!-- 3D Cube viewport (clipped so faces can't escape) -->
-                        <div class="ncv-viewport" id="ncv-3d-view">
-                            <div class="nav-cube-scene" id="nav-cube-scene">
-                                <div class="nav-cube-inner" id="nav-cube-inner">
-                                    <!-- Front face — primary 9-symbol pad -->
-                                    <div class="nav-cube-face ncf-front">
-                                        <span data-nav="+1" style="--ncf-color:#ff383866;--ncf-glow:#ff383888">+1</span>
-                                        <span data-nav="0"  style="--ncf-color:#58a6ff66;--ncf-glow:#58a6ff88">0</span>
-                                        <span data-nav="-1" style="--ncf-color:#ff8c3866;--ncf-glow:#ff8c3888">-1</span>
-                                        <span data-nav="+0" style="--ncf-color:#ffe13866;--ncf-glow:#ffe13888">+0</span>
-                                        <span data-nav="⚛"  style="--ncf-color:#8b5cf666;--ncf-glow:#8b5cf688" class="ncf-active">∞</span>
-                                        <span data-nav="-0" style="--ncf-color:#484f5866;--ncf-glow:#484f5888">-0</span>
-                                        <span data-nav="+n" style="--ncf-color:#bc8cff66;--ncf-glow:#bc8cff88">+n</span>
-                                        <span data-nav="-n" style="--ncf-color:#3fb95066;--ncf-glow:#3fb95088">-n</span>
-                                        <span data-nav="+2" style="--ncf-color:#da363366;--ncf-glow:#da363388">+2</span>
-                                    </div>
-                                    <!-- Back -->
-                                    <div class="nav-cube-face ncf-back">
-                                        <span style="--ncf-color:#3fb95066;--ncf-glow:#3fb95088">n</span><span style="--ncf-color:#da363366;--ncf-glow:#da363388">-n</span><span style="--ncf-color:#bc8cff66;--ncf-glow:#bc8cff88">+n</span>
-                                        <span style="--ncf-color:#484f5866;--ncf-glow:#484f5888">-0</span><span style="--ncf-color:#8b949e66;--ncf-glow:#8b949e88">0</span><span style="--ncf-color:#ffe13866;--ncf-glow:#ffe13888">+0</span>
-                                        <span style="--ncf-color:#ff8c3866;--ncf-glow:#ff8c3888">-1</span><span style="--ncf-color:#58a6ff66;--ncf-glow:#58a6ff88">1</span><span style="--ncf-color:#ff383866;--ncf-glow:#ff383888">+1</span>
-                                    </div>
-                                    <!-- Right -->
-                                    <div class="nav-cube-face ncf-right">
-                                        <span style="--ncf-color:#ff8c3866;--ncf-glow:#ff8c3888">-1</span><span style="--ncf-color:#ffe13866;--ncf-glow:#ffe13888">+0</span><span style="--ncf-color:#3fb95066;--ncf-glow:#3fb95088">n</span>
-                                        <span style="--ncf-color:#ff383866;--ncf-glow:#ff383888">+1</span><span style="--ncf-color:#8b949e66;--ncf-glow:#8b949e88">0</span><span style="--ncf-color:#da363366;--ncf-glow:#da363388">-n</span>
-                                        <span style="--ncf-color:#58a6ff66;--ncf-glow:#58a6ff88">1</span><span style="--ncf-color:#484f5866;--ncf-glow:#484f5888">-0</span><span style="--ncf-color:#bc8cff66;--ncf-glow:#bc8cff88">+n</span>
-                                    </div>
-                                    <!-- Left -->
-                                    <div class="nav-cube-face ncf-left">
-                                        <span style="--ncf-color:#bc8cff66;--ncf-glow:#bc8cff88">+n</span><span style="--ncf-color:#484f5866;--ncf-glow:#484f5888">-0</span><span style="--ncf-color:#58a6ff66;--ncf-glow:#58a6ff88">1</span>
-                                        <span style="--ncf-color:#da363366;--ncf-glow:#da363388">-n</span><span style="--ncf-color:#8b949e66;--ncf-glow:#8b949e88">0</span><span style="--ncf-color:#ff383866;--ncf-glow:#ff383888">+1</span>
-                                        <span style="--ncf-color:#3fb95066;--ncf-glow:#3fb95088">n</span><span style="--ncf-color:#ffe13866;--ncf-glow:#ffe13888">+0</span><span style="--ncf-color:#ff8c3866;--ncf-glow:#ff8c3888">-1</span>
-                                    </div>
-                                    <!-- Top -->
-                                    <div class="nav-cube-face ncf-top">
-                                        <span style="--ncf-color:#bc8cff66;--ncf-glow:#bc8cff88">+n</span><span style="--ncf-color:#bc8cff66;--ncf-glow:#bc8cff88">+n</span><span style="--ncf-color:#bc8cff66;--ncf-glow:#bc8cff88">+n</span>
-                                        <span style="--ncf-color:#ff383866;--ncf-glow:#ff383888">+1</span><span style="--ncf-color:#ff383866;--ncf-glow:#ff383888">+1</span><span style="--ncf-color:#ff383866;--ncf-glow:#ff383888">+1</span>
-                                        <span style="--ncf-color:#ffe13866;--ncf-glow:#ffe13888">+0</span><span style="--ncf-color:#ffe13866;--ncf-glow:#ffe13888">+0</span><span style="--ncf-color:#ffe13866;--ncf-glow:#ffe13888">+0</span>
-                                    </div>
-                                    <!-- Bottom -->
-                                    <div class="nav-cube-face ncf-bottom">
-                                        <span style="--ncf-color:#da363366;--ncf-glow:#da363388">-n</span><span style="--ncf-color:#da363366;--ncf-glow:#da363388">-n</span><span style="--ncf-color:#da363366;--ncf-glow:#da363388">-n</span>
-                                        <span style="--ncf-color:#ff8c3866;--ncf-glow:#ff8c3888">-1</span><span style="--ncf-color:#ff8c3866;--ncf-glow:#ff8c3888">-1</span><span style="--ncf-color:#ff8c3866;--ncf-glow:#ff8c3888">-1</span>
-                                        <span style="--ncf-color:#484f5866;--ncf-glow:#484f5888">-0</span><span style="--ncf-color:#484f5866;--ncf-glow:#484f5888">-0</span><span style="--ncf-color:#484f5866;--ncf-glow:#484f5888">-0</span>
+                            <!-- 2D Slice — original flat grid (shown when 2D tab active) -->
+                            <div id="ncv-2d-view" class="ncv-hidden" style="padding:0;">
+                                <div class="quantum-nav-mini" id="ncv-2d-grid">
+                                    <button class="nav-btn" data-direction="+1" title="Lines up (+Y)">+1</button>
+                                    <button class="nav-btn" data-direction="0" title="Neutral">0</button>
+                                    <button class="nav-btn" data-direction="-1" title="Lines down (-Y)">-1</button>
+                                    <button class="nav-btn" data-direction="+n" title="Complexity up (+Z)">+n</button>
+                                    <button class="nav-btn active" data-direction="⚛" id="nav-center-btn" title="Reset to origin">∞</button>
+                                    <button class="nav-btn" data-direction="-n" title="Complexity down (-Z)">-n</button>
+                                    <button class="nav-btn" data-direction="+0" title="Dependencies right (+X)">+0</button>
+                                    <button class="nav-btn" data-direction="-0" title="Dependencies left (-X)">-0</button>
+                                    <button class="nav-btn" data-direction="+2" title="Jump +2 lines">+2</button>
+                                </div>
+                            </div>
+
+                            <!-- 3D Cube viewport (clipped so faces can't escape) -->
+                            <div class="ncv-viewport" id="ncv-3d-view">
+                                <div class="nav-cube-scene" id="nav-cube-scene">
+                                    <div class="nav-cube-inner" id="nav-cube-inner">
+                                        <!-- Front face — primary 9-symbol pad -->
+                                        <div class="nav-cube-face ncf-front">
+                                            <span data-nav="+1" style="--ncf-color:#ff383866;--ncf-glow:#ff383888">+1</span>
+                                            <span data-nav="0"  style="--ncf-color:#58a6ff66;--ncf-glow:#58a6ff88">0</span>
+                                            <span data-nav="-1" style="--ncf-color:#ff8c3866;--ncf-glow:#ff8c3888">-1</span>
+                                            <span data-nav="+0" style="--ncf-color:#ffe13866;--ncf-glow:#ffe13888">+0</span>
+                                            <span data-nav="⚛"  style="--ncf-color:#8b5cf666;--ncf-glow:#8b5cf688" class="ncf-active">∞</span>
+                                            <span data-nav="-0" style="--ncf-color:#484f5866;--ncf-glow:#484f5888">-0</span>
+                                            <span data-nav="+n" style="--ncf-color:#bc8cff66;--ncf-glow:#bc8cff88">+n</span>
+                                            <span data-nav="-n" style="--ncf-color:#3fb95066;--ncf-glow:#3fb95088">-n</span>
+                                            <span data-nav="+2" style="--ncf-color:#da363366;--ncf-glow:#da363388">+2</span>
+                                        </div>
+                                        <!-- Back -->
+                                        <div class="nav-cube-face ncf-back">
+                                            <span style="--ncf-color:#3fb95066;--ncf-glow:#3fb95088">n</span><span style="--ncf-color:#da363366;--ncf-glow:#da363388">-n</span><span style="--ncf-color:#bc8cff66;--ncf-glow:#bc8cff88">+n</span>
+                                            <span style="--ncf-color:#484f5866;--ncf-glow:#484f5888">-0</span><span style="--ncf-color:#8b949e66;--ncf-glow:#8b949e88">0</span><span style="--ncf-color:#ffe13866;--ncf-glow:#ffe13888">+0</span>
+                                            <span style="--ncf-color:#ff8c3866;--ncf-glow:#ff8c3888">-1</span><span style="--ncf-color:#58a6ff66;--ncf-glow:#58a6ff88">1</span><span style="--ncf-color:#ff383866;--ncf-glow:#ff383888">+1</span>
+                                        </div>
+                                        <!-- Right -->
+                                        <div class="nav-cube-face ncf-right">
+                                            <span style="--ncf-color:#ff8c3866;--ncf-glow:#ff8c3888">-1</span><span style="--ncf-color:#ffe13866;--ncf-glow:#ffe13888">+0</span><span style="--ncf-color:#3fb95066;--ncf-glow:#3fb95088">n</span>
+                                            <span style="--ncf-color:#ff383866;--ncf-glow:#ff383888">+1</span><span style="--ncf-color:#8b949e66;--ncf-glow:#8b949e88">0</span><span style="--ncf-color:#da363366;--ncf-glow:#da363388">-n</span>
+                                            <span style="--ncf-color:#58a6ff66;--ncf-glow:#58a6ff88">1</span><span style="--ncf-color:#484f5866;--ncf-glow:#484f5888">-0</span><span style="--ncf-color:#bc8cff66;--ncf-glow:#bc8cff88">+n</span>
+                                        </div>
+                                        <!-- Left -->
+                                        <div class="nav-cube-face ncf-left">
+                                            <span style="--ncf-color:#bc8cff66;--ncf-glow:#bc8cff88">+n</span><span style="--ncf-color:#484f5866;--ncf-glow:#484f5888">-0</span><span style="--ncf-color:#58a6ff66;--ncf-glow:#58a6ff88">1</span>
+                                            <span style="--ncf-color:#da363366;--ncf-glow:#da363388">-n</span><span style="--ncf-color:#8b949e66;--ncf-glow:#8b949e88">0</span><span style="--ncf-color:#ff383866;--ncf-glow:#ff383888">+1</span>
+                                            <span style="--ncf-color:#3fb95066;--ncf-glow:#3fb95088">n</span><span style="--ncf-color:#ffe13866;--ncf-glow:#ffe13888">+0</span><span style="--ncf-color:#ff8c3866;--ncf-glow:#ff8c3888">-1</span>
+                                        </div>
+                                        <!-- Top -->
+                                        <div class="nav-cube-face ncf-top">
+                                            <span style="--ncf-color:#bc8cff66;--ncf-glow:#bc8cff88">+n</span><span style="--ncf-color:#bc8cff66;--ncf-glow:#bc8cff88">+n</span><span style="--ncf-color:#bc8cff66;--ncf-glow:#bc8cff88">+n</span>
+                                            <span style="--ncf-color:#ff383866;--ncf-glow:#ff383888">+1</span><span style="--ncf-color:#ff383866;--ncf-glow:#ff383888">+1</span><span style="--ncf-color:#ff383866;--ncf-glow:#ff383888">+1</span>
+                                            <span style="--ncf-color:#ffe13866;--ncf-glow:#ffe13888">+0</span><span style="--ncf-color:#ffe13866;--ncf-glow:#ffe13888">+0</span><span style="--ncf-color:#ffe13866;--ncf-glow:#ffe13888">+0</span>
+                                        </div>
+                                        <!-- Bottom -->
+                                        <div class="nav-cube-face ncf-bottom">
+                                            <span style="--ncf-color:#da363366;--ncf-glow:#da363388">-n</span><span style="--ncf-color:#da363366;--ncf-glow:#da363388">-n</span><span style="--ncf-color:#da363366;--ncf-glow:#da363388">-n</span>
+                                            <span style="--ncf-color:#ff8c3866;--ncf-glow:#ff8c3888">-1</span><span style="--ncf-color:#ff8c3866;--ncf-glow:#ff8c3888">-1</span><span style="--ncf-color:#ff8c3866;--ncf-glow:#ff8c3888">-1</span>
+                                            <span style="--ncf-color:#484f5866;--ncf-glow:#484f5888">-0</span><span style="--ncf-color:#484f5866;--ncf-glow:#484f5888">-0</span><span style="--ncf-color:#484f5866;--ncf-glow:#484f5888">-0</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
+
+                            <!-- Controls — always below the viewport, never obscured -->
+                            <div class="ncv-controls" id="ncv-3d-controls">
+                                <button class="nav-cube-arrow" id="nca-up" title="Rotate up">▲</button>
+                                <button class="nav-cube-arrow" id="nca-left" title="Rotate left">◀</button>
+                                <button class="nav-cube-arrow" id="nca-right" title="Rotate right">▶</button>
+                                <button class="nav-cube-arrow" id="nca-down" title="Rotate down">▼</button>
+                            </div>
+
+                            <!-- Layer indicator (below controls) -->
+                            <div class="layer-label" style="padding:4px 8px;">Layer <strong id="layer-value">0</strong> <span style="opacity:0.5">Z</span></div>
                         </div>
 
-                        <!-- Controls — always below the viewport, never obscured -->
-                        <div class="ncv-controls" id="ncv-3d-controls">
-                            <button class="nav-cube-arrow" id="nca-up" title="Rotate up">▲</button>
-                            <button class="nav-cube-arrow" id="nca-left" title="Rotate left">◀</button>
-                            <button class="nav-cube-arrow" id="nca-right" title="Rotate right">▶</button>
-                            <button class="nav-cube-arrow" id="nca-down" title="Rotate down">▼</button>
-                        </div>
-                    </div>
-
-                    <!-- (flat grid moved into ncv-2d-view above) -->
-
-                    <!-- Layer Up/Down Navigator -->
-                    <div class="layer-nav">
-                        <button class="layer-btn" id="layer-down" title="Layer down (-Z complexity)">▼</button>
-                        <div class="layer-label">Layer <strong id="layer-value">0</strong> <span style="opacity:0.5">Z</span></div>
-                        <button class="layer-btn" id="layer-up" title="Layer up (+Z complexity)">▲</button>
+                        <!-- RIGHT: Layer Up (▶ +Z) -->
+                        <button class="layer-btn" id="layer-up" title="Layer up (+Z complexity)">▶<br><span style="font-size:0.45rem;writing-mode:horizontal-tb;letter-spacing:0;">+Z</span></button>
                     </div>
 
                     <div class="position-display" id="position-display">[0, 0, 0]</div>
@@ -9225,6 +9229,7 @@ print(f"  Norm:  {qs.normalize().norm().numpy():.6f}")`);
                     { dir: '-0', base: '-0' },
                     { dir: '+2', base: '+2' },
                 ];
+                // Update 2D slice grid labels
                 document.querySelectorAll('.nav-btn').forEach(btn => {
                     const dir = btn.dataset.direction;
                     if (dir === '⚛') return; // center handled above
@@ -9234,6 +9239,19 @@ print(f"  Norm:  {qs.normalize().norm().numpy():.6f}")`);
                         btn.textContent = sym.base;
                     } else {
                         btn.textContent = `${sym.base}:${z}`;
+                    }
+                });
+
+                // Update 3D cube face labels (same versioning)
+                document.querySelectorAll('.nav-cube-face span[data-nav]').forEach(cell => {
+                    const dir = cell.dataset.nav;
+                    if (dir === '⚛') return; // center handled above
+                    const sym = baseSymbols.find(s => s.dir === dir);
+                    if (!sym) return;
+                    if (z === 0) {
+                        cell.textContent = sym.base;
+                    } else {
+                        cell.textContent = `${sym.base}:${z}`;
                     }
                 });
 
@@ -12677,6 +12695,8 @@ print(f"  Norm:  {qs.normalize().norm().numpy():.6f}")`);
             let qheatData = []; // {label, cat, sym, color, lines, cellId, cellIdx, pct}
             let qheatRects = []; // rendered rectangles for hit-testing
             let dpr = window.devicePixelRatio || 1;
+            let qheatAnimId = null;  // animation frame ID
+            let qheatT0 = 0;        // animation start time
 
             const PREFIX_COLORS = {
                 shebang:   '#3fb950', comment:  '#58a6ff', import:   '#d2a8ff',
@@ -12836,8 +12856,31 @@ print(f"  Norm:  {qs.normalize().norm().numpy():.6f}")`);
                 return rects;
             }
 
-            // Render
-            function render() {
+            // --- Animation loop wrapper ---
+            function startAnimLoop() {
+                if (qheatAnimId) cancelAnimationFrame(qheatAnimId);
+                qheatT0 = performance.now();
+                function tick(ts) {
+                    if (!overlay.classList.contains('open')) { qheatAnimId = null; return; }
+                    render((ts - qheatT0) / 1000);
+                    qheatAnimId = requestAnimationFrame(tick);
+                }
+                qheatAnimId = requestAnimationFrame(tick);
+            }
+            function stopAnimLoop() {
+                if (qheatAnimId) { cancelAnimationFrame(qheatAnimId); qheatAnimId = null; }
+            }
+
+            // Theme-aware text colors
+            function thFg() { return getComputedStyle(document.documentElement).getPropertyValue('--qp-text').trim() || '#e6edf3'; }
+            function thFgMuted() { return getComputedStyle(document.documentElement).getPropertyValue('--qp-text-muted').trim() || '#8b949e'; }
+            function thBgSep() { const t = document.documentElement.getAttribute('data-theme'); return t === 'light' ? 'rgba(0,0,0,0.12)' : 'rgba(255,255,255,0.06)'; }
+            function thLabelBg() { const t = document.documentElement.getAttribute('data-theme'); return t === 'light' ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0.7)'; }
+            function thLabelBgSoft() { const t = document.documentElement.getAttribute('data-theme'); return t === 'light' ? 'rgba(0,0,0,0.45)' : 'rgba(0,0,0,0.5)'; }
+
+            // Render (t = elapsed seconds since overlay opened, for animations)
+            function render(t) {
+                if (t === undefined) t = 0;
                 const body = document.getElementById('qheat-body');
                 const bw = body.clientWidth, bh = body.clientHeight;
                 dpr = window.devicePixelRatio || 1;
@@ -12849,7 +12892,7 @@ print(f"  Norm:  {qs.normalize().norm().numpy():.6f}")`);
                 qheatRects = [];
 
                 if (qheatData.length === 0) {
-                    ctx.fillStyle = '#8b949e'; ctx.font = '14px system-ui';
+                    ctx.fillStyle = thFgMuted(); ctx.font = '14px system-ui';
                     ctx.textAlign = 'center'; ctx.fillText('No code cells — add cells to see the heatmap', bw/2, bh/2);
                     return;
                 }
@@ -12857,83 +12900,92 @@ print(f"  Norm:  {qs.normalize().norm().numpy():.6f}")`);
                 const pad = 2;
 
                 if (qheatMode === 'treemap') {
+                    // Gentle breathing pulse on each rect
                     const rects = layoutTreemap(qheatData, pad, pad, bw - pad*2, bh - pad*2);
-                    rects.forEach(r => {
+                    rects.forEach((r, i) => {
                         const gap = 1.5;
+                        const pulse = 0.82 + 0.08 * Math.sin(t * 1.2 + i * 0.5);
                         ctx.fillStyle = r.color;
-                        ctx.globalAlpha = 0.85;
+                        ctx.globalAlpha = pulse;
                         ctx.beginPath();
                         ctx.roundRect(r.rx + gap, r.ry + gap, Math.max(0, r.rw - gap*2), Math.max(0, r.rh - gap*2), 3);
                         ctx.fill();
                         ctx.globalAlpha = 1;
 
-                        // Label inside if big enough
                         if (r.rw > 40 && r.rh > 20) {
-                            ctx.fillStyle = 'rgba(0,0,0,0.7)';
+                            ctx.fillStyle = thLabelBg();
                             ctx.font = `bold ${Math.min(12, Math.max(8, r.rh * 0.25))}px system-ui`;
                             ctx.textAlign = 'left'; ctx.textBaseline = 'top';
-                            const txt = `${r.sym} ${r.cat}`;
-                            ctx.fillText(txt, r.rx + gap + 4, r.ry + gap + 3, r.rw - gap*2 - 8);
+                            ctx.fillText(`${r.sym} ${r.cat}`, r.rx + gap + 4, r.ry + gap + 3, r.rw - gap*2 - 8);
                         }
                         if (r.rw > 50 && r.rh > 34) {
-                            ctx.fillStyle = 'rgba(0,0,0,0.5)';
+                            ctx.fillStyle = thLabelBgSoft();
                             ctx.font = `${Math.min(10, Math.max(7, r.rh * 0.18))}px monospace`;
                             ctx.fillText(`${r.lines}L · ${r.pct.toFixed(1)}%`, r.rx + gap + 4, r.ry + gap + 16, r.rw - gap*2 - 8);
                         }
                         if (r.rw > 70 && r.rh > 48) {
-                            ctx.fillStyle = 'rgba(0,0,0,0.4)';
+                            ctx.fillStyle = thLabelBgSoft();
                             ctx.font = `${Math.min(9, Math.max(6, r.rh * 0.14))}px system-ui`;
                             const cellLabel = r.label.length > 35 ? r.label.substring(0, 35) + '...' : r.label;
                             ctx.fillText(cellLabel, r.rx + gap + 4, r.ry + gap + 28, r.rw - gap*2 - 8);
                         }
-
                         qheatRects.push({ x: r.rx, y: r.ry, w: r.rw, h: r.rh, data: r, shape: 'rect' });
                     });
 
                 } else if (qheatMode === 'bubble') {
+                    // Bubbles gently float and breathe
                     const bubbles = layoutBubble(qheatData, bw, bh);
-                    bubbles.forEach(b => {
-                        ctx.globalAlpha = 0.8;
+                    bubbles.forEach((b, i) => {
+                        const drift = Math.sin(t * 0.6 + i * 1.3) * 4;
+                        const driftY = Math.cos(t * 0.5 + i * 0.9) * 3;
+                        const breathe = 1 + 0.04 * Math.sin(t * 1.5 + i * 0.7);
+                        const bx = b.bx + drift, by = b.by + driftY, br = b.br * breathe;
+                        ctx.globalAlpha = 0.75 + 0.1 * Math.sin(t * 1.2 + i);
                         ctx.fillStyle = b.color;
-                        ctx.beginPath(); ctx.arc(b.bx, b.by, b.br, 0, Math.PI * 2); ctx.fill();
+                        ctx.beginPath(); ctx.arc(bx, by, br, 0, Math.PI * 2); ctx.fill();
                         ctx.globalAlpha = 1;
-                        ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.lineWidth = 1;
-                        ctx.beginPath(); ctx.arc(b.bx, b.by, b.br, 0, Math.PI * 2); ctx.stroke();
+                        ctx.strokeStyle = thBgSep(); ctx.lineWidth = 1;
+                        ctx.beginPath(); ctx.arc(bx, by, br, 0, Math.PI * 2); ctx.stroke();
 
-                        if (b.br > 15) {
-                            ctx.fillStyle = 'rgba(0,0,0,0.7)';
-                            ctx.font = `bold ${Math.min(11, b.br * 0.4)}px system-ui`;
+                        if (br > 15) {
+                            ctx.fillStyle = thLabelBg();
+                            ctx.font = `bold ${Math.min(11, br * 0.4)}px system-ui`;
                             ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-                            ctx.fillText(b.sym, b.bx, b.by - 4);
-                            ctx.font = `${Math.min(9, b.br * 0.3)}px monospace`;
-                            ctx.fillStyle = 'rgba(0,0,0,0.5)';
-                            ctx.fillText(`${b.lines}L`, b.bx, b.by + 8);
+                            ctx.fillText(b.sym, bx, by - 4);
+                            ctx.font = `${Math.min(9, br * 0.3)}px monospace`;
+                            ctx.fillStyle = thLabelBgSoft();
+                            ctx.fillText(`${b.lines}L`, bx, by + 8);
                         }
-                        qheatRects.push({ bx: b.bx, by: b.by, br: b.br, data: b, shape: 'circle' });
+                        qheatRects.push({ bx, by, br, data: b, shape: 'circle' });
                     });
 
                 } else if (qheatMode === 'bar') {
-                    // Group by category
+                    // Animated bar growth + shimmer
                     const groups = {};
                     qheatData.forEach(d => { groups[d.cat] = (groups[d.cat] || 0) + d.lines; });
                     const entries = Object.entries(groups).sort((a, b) => b[1] - a[1]);
                     const maxVal = entries.length > 0 ? entries[0][1] : 1;
                     const barH = Math.min(40, (bh - 40) / entries.length - 4);
                     const barMaxW = bw - 140;
+                    const growT = Math.min(1, t * 1.5); // bars grow in over ~0.7s
 
                     entries.forEach(([cat, count], i) => {
                         const y = 20 + i * (barH + 4);
-                        const w = (count / maxVal) * barMaxW;
+                        const targetW = (count / maxVal) * barMaxW;
+                        const easeT = Math.min(1, growT + i * -0.06); // stagger
+                        const ease = easeT < 0 ? 0 : easeT * easeT * (3 - 2 * easeT); // smoothstep
+                        const w = targetW * ease;
+                        const shimmer = 0.8 + 0.1 * Math.sin(t * 2 + i * 0.8);
                         ctx.fillStyle = PREFIX_COLORS[cat] || '#30363d';
-                        ctx.globalAlpha = 0.85;
-                        ctx.beginPath(); ctx.roundRect(120, y, w, barH, 3); ctx.fill();
+                        ctx.globalAlpha = shimmer;
+                        ctx.beginPath(); ctx.roundRect(120, y, Math.max(0, w), barH, 3); ctx.fill();
                         ctx.globalAlpha = 1;
 
-                        ctx.fillStyle = '#8b949e'; ctx.font = '11px monospace';
+                        ctx.fillStyle = thFgMuted(); ctx.font = '11px monospace';
                         ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
                         ctx.fillText(`${PREFIX_SYMS[cat] || ''} ${cat}`, 112, y + barH/2);
 
-                        ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.font = 'bold 10px monospace';
+                        ctx.fillStyle = thLabelBg(); ctx.font = 'bold 10px monospace';
                         ctx.textAlign = 'left';
                         if (w > 40) ctx.fillText(`${count}L`, 126, y + barH/2);
 
@@ -12941,6 +12993,7 @@ print(f"  Norm:  {qs.normalize().norm().numpy():.6f}")`);
                     });
 
                 } else if (qheatMode === 'sunburst') {
+                    // Slow rotation + glow pulse
                     const groups = {};
                     qheatData.forEach(d => {
                         if (!groups[d.cat]) groups[d.cat] = { lines: 0, items: [] };
@@ -12951,30 +13004,31 @@ print(f"  Norm:  {qs.normalize().norm().numpy():.6f}")`);
                     const cx = bw / 2, cy = bh / 2;
                     const outerR = Math.min(bw, bh) * 0.42;
                     const innerR = outerR * 0.35;
+                    const spin = t * 0.15; // slow spin
 
-                    let angle = -Math.PI / 2;
+                    let angle = -Math.PI / 2 + spin;
                     for (const [cat, group] of Object.entries(groups).sort((a, b) => b[1].lines - a[1].lines)) {
                         const sweep = (group.lines / total) * Math.PI * 2;
-                        // Outer ring
+                        const pulse = 0.75 + 0.1 * Math.sin(t * 1.8 + angle * 2);
                         ctx.fillStyle = PREFIX_COLORS[cat] || '#30363d';
-                        ctx.globalAlpha = 0.8;
+                        ctx.globalAlpha = pulse;
                         ctx.beginPath();
                         ctx.arc(cx, cy, outerR, angle, angle + sweep);
                         ctx.arc(cx, cy, innerR, angle + sweep, angle, true);
                         ctx.closePath(); ctx.fill();
                         ctx.globalAlpha = 1;
-                        ctx.strokeStyle = 'rgba(13,17,23,0.8)'; ctx.lineWidth = 1.5;
+                        const sepCol = document.documentElement.getAttribute('data-theme') === 'light' ? 'rgba(255,255,255,0.8)' : 'rgba(13,17,23,0.8)';
+                        ctx.strokeStyle = sepCol; ctx.lineWidth = 1.5;
                         ctx.beginPath();
                         ctx.arc(cx, cy, outerR, angle, angle + sweep);
                         ctx.arc(cx, cy, innerR, angle + sweep, angle, true);
                         ctx.closePath(); ctx.stroke();
 
-                        // Label
                         if (sweep > 0.15) {
                             const mid = angle + sweep / 2;
                             const lx = cx + Math.cos(mid) * (innerR + (outerR - innerR) * 0.5);
                             const ly = cy + Math.sin(mid) * (innerR + (outerR - innerR) * 0.5);
-                            ctx.fillStyle = 'rgba(0,0,0,0.7)';
+                            ctx.fillStyle = thLabelBg();
                             ctx.font = 'bold 10px system-ui';
                             ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
                             ctx.fillText(`${PREFIX_SYMS[cat]} ${group.lines}L`, lx, ly);
@@ -12988,8 +13042,14 @@ print(f"  Norm:  {qs.normalize().norm().numpy():.6f}")`);
                         angle += sweep;
                     }
 
-                    // Center label
-                    ctx.fillStyle = '#8b949e'; ctx.font = 'bold 13px system-ui';
+                    // Core glow pulse
+                    const coreGlow = 0.12 + 0.06 * Math.sin(t * 2.5);
+                    const coreGrd = ctx.createRadialGradient(cx, cy, 0, cx, cy, innerR);
+                    coreGrd.addColorStop(0, `rgba(139,92,246,${coreGlow + 0.15})`);
+                    coreGrd.addColorStop(1, `rgba(139,92,246,${coreGlow * 0.3})`);
+                    ctx.fillStyle = coreGrd; ctx.beginPath(); ctx.arc(cx, cy, innerR, 0, Math.PI*2); ctx.fill();
+
+                    ctx.fillStyle = thFgMuted(); ctx.font = 'bold 13px system-ui';
                     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
                     ctx.fillText(`${total} lines`, cx, cy - 6);
                     ctx.font = '10px monospace'; ctx.fillStyle = '#58a6ff';
@@ -12997,7 +13057,7 @@ print(f"  Norm:  {qs.normalize().norm().numpy():.6f}")`);
                     ctx.fillText(`${Math.round(cov/total*100)}% covered`, cx, cy + 10);
 
                 } else if (qheatMode === 'slice') {
-                    // 2D Slice — 9×9 grid heatmap colored by prefix density
+                    // 2D Slice — animated heat waves ripple through the grid
                     const grid = 9, cellW = (bw - 20) / grid, cellH = (bh - 40) / grid;
                     const cats = ['shebang','comment','import','class','function','error','condition','variable','return'];
                     const total = qheatData.reduce((s,d)=>s+d.lines,0) || 1;
@@ -13009,23 +13069,25 @@ print(f"  Norm:  {qs.normalize().norm().numpy():.6f}")`);
                         const x = 10 + c * cellW, y = 24 + r * cellH;
                         const cat = cats[c] || 'default';
                         const heat = (catLines[cat] || 0) / total;
-                        const rowHeat = Math.sin(r * 0.7 + c * 0.5) * 0.3 + 0.5;
-                        const alpha = 0.1 + heat * 0.7 + rowHeat * 0.15;
+                        // Animated ripple wave
+                        const wave = Math.sin(t * 1.8 - r * 0.4 + c * 0.3) * 0.12;
+                        const pulse = Math.sin(t * 2.2 + (r + c) * 0.6) * 0.06;
+                        const alpha = Math.min(0.95, 0.15 + heat * 0.65 + wave + pulse);
                         ctx.fillStyle = PREFIX_COLORS[cat] || '#30363d';
-                        ctx.globalAlpha = Math.min(0.95, alpha);
+                        ctx.globalAlpha = Math.max(0.05, alpha);
                         ctx.beginPath(); ctx.roundRect(x + 1, y + 1, cellW - 2, cellH - 2, 3); ctx.fill();
                         ctx.globalAlpha = 1;
-                        ctx.strokeStyle = 'rgba(255,255,255,0.06)'; ctx.lineWidth = 0.5;
+                        ctx.strokeStyle = thBgSep(); ctx.lineWidth = 0.5;
                         ctx.strokeRect(x + 1, y + 1, cellW - 2, cellH - 2);
                         if (r === 0) { ctx.fillStyle = '#fff'; ctx.fillText(PREFIX_SYMS[cat] || '', x + cellW/2, y + cellH/2 - 4); }
                         qheatRects.push({ x: x+1, y: y+1, w: cellW-2, h: cellH-2, data: { cat, lines: catLines[cat]||0, sym: PREFIX_SYMS[cat]||'', color: PREFIX_COLORS[cat]||'#30363d', pct: (catLines[cat]||0)/total*100, label: cat, cellId:'' }, shape:'rect' });
                     }
                     // Column headers
-                    ctx.fillStyle = '#8b949e'; ctx.font = 'bold 10px monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+                    ctx.font = 'bold 10px monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
                     cats.forEach((cat, c) => { ctx.fillStyle = PREFIX_COLORS[cat]; ctx.fillText(PREFIX_SYMS[cat]||'', 10 + c*cellW + cellW/2, 6); });
 
                 } else if (qheatMode === 'orb') {
-                    // Orb — concentric probability rings + floating symbols
+                    // Orb — orbiting nodes revolve around core, concentric rings pulse
                     const cx = bw / 2, cy = bh / 2;
                     const maxR = Math.min(bw, bh) * 0.44;
                     const cats = Object.entries(PREFIX_COLORS).filter(([k]) => k !== 'default' && k !== 'decorator');
@@ -13033,51 +13095,61 @@ print(f"  Norm:  {qs.normalize().norm().numpy():.6f}")`);
                     const catLines = {};
                     qheatData.forEach(d => { catLines[d.cat] = (catLines[d.cat] || 0) + d.lines; });
 
-                    // Concentric glow rings
+                    // Pulsing concentric glow rings
                     for (let i = 5; i >= 1; i--) {
-                        const r = maxR * (i / 5);
+                        const r = maxR * (i / 5) * (1 + 0.02 * Math.sin(t * 1.5 + i * 0.8));
                         const grd = ctx.createRadialGradient(cx, cy, r * 0.2, cx, cy, r);
-                        grd.addColorStop(0, 'rgba(139,92,246,' + (0.04 * i) + ')');
+                        const ringAlpha = 0.04 * i + 0.015 * Math.sin(t * 2 + i);
+                        grd.addColorStop(0, `rgba(139,92,246,${ringAlpha})`);
                         grd.addColorStop(1, 'rgba(139,92,246,0)');
                         ctx.fillStyle = grd; ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.fill();
                     }
-                    // Core orb
-                    const coreGrd = ctx.createRadialGradient(cx, cy - maxR*0.1, maxR*0.05, cx, cy, maxR*0.3);
-                    coreGrd.addColorStop(0, 'rgba(139,92,246,0.5)'); coreGrd.addColorStop(1, 'rgba(139,92,246,0.05)');
-                    ctx.fillStyle = coreGrd; ctx.beginPath(); ctx.arc(cx, cy, maxR*0.3, 0, Math.PI*2); ctx.fill();
+                    // Core orb — breathing
+                    const coreR = maxR * 0.3 * (1 + 0.05 * Math.sin(t * 2));
+                    const coreGrd = ctx.createRadialGradient(cx, cy - maxR*0.05, maxR*0.03, cx, cy, coreR);
+                    coreGrd.addColorStop(0, `rgba(139,92,246,${0.45 + 0.1 * Math.sin(t * 2.5)})`);
+                    coreGrd.addColorStop(1, 'rgba(139,92,246,0.03)');
+                    ctx.fillStyle = coreGrd; ctx.beginPath(); ctx.arc(cx, cy, coreR, 0, Math.PI*2); ctx.fill();
 
-                    // Place prefix symbols as orbiting nodes
+                    // Orbiting prefix nodes
                     cats.forEach(([cat, color], i) => {
                         const weight = (catLines[cat] || 0) / total;
-                        const angle = (i / cats.length) * Math.PI * 2 - Math.PI / 2;
-                        const dist = maxR * (0.4 + weight * 1.2);
-                        const nx = cx + Math.cos(angle) * Math.min(dist, maxR * 0.9);
-                        const ny = cy + Math.sin(angle) * Math.min(dist, maxR * 0.9);
-                        const nodeR = 8 + weight * 40;
+                        const baseAngle = (i / cats.length) * Math.PI * 2 - Math.PI / 2;
+                        const orbitAngle = baseAngle + t * (0.25 + weight * 0.15); // orbit speed varies by weight
+                        const dist = Math.min(maxR * 0.9, maxR * (0.4 + weight * 1.1));
+                        const wobble = Math.sin(t * 1.5 + i * 2) * 8;
+                        const nx = cx + Math.cos(orbitAngle) * (dist + wobble);
+                        const ny = cy + Math.sin(orbitAngle) * (dist + wobble);
+                        const nodeR = (8 + weight * 40) * (1 + 0.06 * Math.sin(t * 2.5 + i));
+
+                        // Glow halo
+                        const grd = ctx.createRadialGradient(nx, ny, 0, nx, ny, nodeR * 1.8);
+                        grd.addColorStop(0, color + '30'); grd.addColorStop(1, color + '00');
+                        ctx.fillStyle = grd; ctx.beginPath(); ctx.arc(nx, ny, nodeR * 1.8, 0, Math.PI*2); ctx.fill();
+
                         ctx.fillStyle = color; ctx.globalAlpha = 0.6 + weight * 0.4;
                         ctx.beginPath(); ctx.arc(nx, ny, nodeR, 0, Math.PI*2); ctx.fill();
                         ctx.globalAlpha = 1;
-                        // Connector line to center
-                        ctx.strokeStyle = color; ctx.globalAlpha = 0.15; ctx.lineWidth = 1;
+                        // Connector
+                        ctx.strokeStyle = color; ctx.globalAlpha = 0.1 + 0.05 * Math.sin(t + i); ctx.lineWidth = 1;
                         ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(nx, ny); ctx.stroke();
                         ctx.globalAlpha = 1;
                         // Label
-                        ctx.fillStyle = '#fff'; ctx.font = `bold ${Math.max(9, nodeR * 0.6)}px monospace`;
+                        ctx.fillStyle = '#fff'; ctx.font = `bold ${Math.max(9, nodeR * 0.55)}px monospace`;
                         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
                         ctx.fillText(PREFIX_SYMS[cat] || cat, nx, ny);
                         qheatRects.push({ bx: nx, by: ny, br: nodeR, data: { cat, lines: catLines[cat]||0, sym: PREFIX_SYMS[cat]||'', color, pct: weight*100, label: cat, cellId:'' }, shape:'circle' });
                     });
-                    ctx.fillStyle = '#c9d1d9'; ctx.font = 'bold 12px system-ui'; ctx.textAlign = 'center';
+                    ctx.fillStyle = thFg(); ctx.font = 'bold 12px system-ui'; ctx.textAlign = 'center';
                     ctx.fillText(`${total} lines`, cx, cy + 2);
 
                 } else if (qheatMode === 'lattice') {
-                    // Lattice — interconnected nodes in a force-directed-style layout
+                    // Lattice — nodes drift and connections pulse with energy flow
                     const cats = Object.entries(PREFIX_COLORS).filter(([k]) => k !== 'default' && k !== 'decorator');
                     const total = qheatData.reduce((s,d)=>s+d.lines,0) || 1;
                     const catLines = {};
                     qheatData.forEach(d => { catLines[d.cat] = (catLines[d.cat] || 0) + d.lines; });
 
-                    // Place nodes in a grid-like lattice
                     const cols = Math.ceil(Math.sqrt(cats.length));
                     const rows = Math.ceil(cats.length / cols);
                     const spacingX = (bw - 80) / Math.max(1, cols - 1);
@@ -13086,37 +13158,43 @@ print(f"  Norm:  {qs.normalize().norm().numpy():.6f}")`);
 
                     cats.forEach(([cat, color], i) => {
                         const col = i % cols, row = Math.floor(i / cols);
-                        const nx = 40 + col * spacingX + (Math.sin(i * 2.1) * spacingX * 0.12);
-                        const ny = 40 + row * spacingY + (Math.cos(i * 1.7) * spacingY * 0.12);
+                        // Base position + gentle drift
+                        const driftX = Math.sin(t * 0.7 + i * 1.9) * 12;
+                        const driftY = Math.cos(t * 0.5 + i * 2.3) * 10;
+                        const nx = 40 + col * spacingX + driftX;
+                        const ny = 40 + row * spacingY + driftY;
                         const weight = (catLines[cat] || 0) / total;
-                        const nodeR = 12 + weight * 50;
-                        nodes.push({ nx, ny, nodeR, cat, color, weight });
+                        const nodeR = (12 + weight * 50) * (1 + 0.05 * Math.sin(t * 2 + i * 1.1));
+                        nodes.push({ nx, ny, nodeR, cat, color, weight, idx: i });
                     });
 
-                    // Draw connections between adjacent nodes
-                    ctx.strokeStyle = 'rgba(255,255,255,0.06)'; ctx.lineWidth = 1;
+                    // Animated connections — energy pulse travels along lines
                     for (let i = 0; i < nodes.length; i++) for (let j = i + 1; j < nodes.length; j++) {
                         const dx = nodes[j].nx - nodes[i].nx, dy = nodes[j].ny - nodes[i].ny;
                         const dist = Math.sqrt(dx*dx + dy*dy);
-                        if (dist < Math.max(spacingX, spacingY) * 1.5) {
-                            ctx.globalAlpha = 0.3 * (1 - dist / (spacingX * 1.5));
-                            ctx.strokeStyle = nodes[i].color;
+                        if (dist < Math.max(spacingX, spacingY) * 1.6) {
+                            const alpha = 0.2 * (1 - dist / (spacingX * 1.6));
+                            const energyPulse = 0.5 + 0.5 * Math.sin(t * 3 + i + j * 0.5);
+                            ctx.globalAlpha = alpha + energyPulse * 0.15;
+                            ctx.strokeStyle = nodes[i].color; ctx.lineWidth = 1 + energyPulse;
                             ctx.beginPath(); ctx.moveTo(nodes[i].nx, nodes[i].ny); ctx.lineTo(nodes[j].nx, nodes[j].ny); ctx.stroke();
+                            // Energy dot traveling along the line
+                            const dotT = (t * 0.8 + i * 0.3 + j * 0.2) % 1;
+                            const dotX = nodes[i].nx + dx * dotT, dotY = nodes[i].ny + dy * dotT;
+                            ctx.fillStyle = nodes[i].color; ctx.globalAlpha = 0.5 + energyPulse * 0.3;
+                            ctx.beginPath(); ctx.arc(dotX, dotY, 2, 0, Math.PI*2); ctx.fill();
                         }
                     }
                     ctx.globalAlpha = 1;
 
-                    // Draw nodes
+                    // Draw nodes with glow
                     nodes.forEach(n => {
-                        // Glow
-                        const grd = ctx.createRadialGradient(n.nx, n.ny, 0, n.nx, n.ny, n.nodeR * 1.5);
+                        const grd = ctx.createRadialGradient(n.nx, n.ny, 0, n.nx, n.ny, n.nodeR * 1.6);
                         grd.addColorStop(0, n.color + '40'); grd.addColorStop(1, n.color + '00');
-                        ctx.fillStyle = grd; ctx.beginPath(); ctx.arc(n.nx, n.ny, n.nodeR * 1.5, 0, Math.PI*2); ctx.fill();
-                        // Core
+                        ctx.fillStyle = grd; ctx.beginPath(); ctx.arc(n.nx, n.ny, n.nodeR * 1.6, 0, Math.PI*2); ctx.fill();
                         ctx.fillStyle = n.color; ctx.globalAlpha = 0.75;
                         ctx.beginPath(); ctx.arc(n.nx, n.ny, n.nodeR, 0, Math.PI*2); ctx.fill();
                         ctx.globalAlpha = 1;
-                        // Label
                         ctx.fillStyle = '#fff'; ctx.font = `bold ${Math.max(9, n.nodeR * 0.5)}px monospace`;
                         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
                         ctx.fillText(PREFIX_SYMS[n.cat] || n.cat, n.nx, n.ny - 3);
@@ -13127,7 +13205,7 @@ print(f"  Norm:  {qs.normalize().norm().numpy():.6f}")`);
                     });
 
                 } else if (qheatMode === 'cube3d') {
-                    // 3D Cube — isometric projection of a prefix cube
+                    // 3D Cube — continuous rotation around Y axis
                     const cx = bw / 2, cy = bh / 2;
                     const size = Math.min(bw, bh) * 0.28;
                     const total = qheatData.reduce((s,d)=>s+d.lines,0) || 1;
@@ -13135,60 +13213,62 @@ print(f"  Norm:  {qs.normalize().norm().numpy():.6f}")`);
                     qheatData.forEach(d => { catLines[d.cat] = (catLines[d.cat] || 0) + d.lines; });
                     const cats = ['shebang','comment','import','class','function','error','condition','variable','return'];
 
-                    // Isometric projection helpers
-                    const iso = (x, y, z) => ({
-                        px: cx + (x - z) * size * 0.866,
-                        py: cy + (x + z) * size * 0.5 - y * size
-                    });
+                    // Rotating isometric projection with time-based Y rotation
+                    const rotY = t * 0.4; // slow rotation
+                    const rotX = -0.5 + Math.sin(t * 0.15) * 0.12; // gentle nod
+                    const cosY = Math.cos(rotY), sinY = Math.sin(rotY);
+                    const cosX = Math.cos(rotX), sinX = Math.sin(rotX);
 
-                    // Draw 3×3×3 cube cells
-                    for (let z = 0; z < 3; z++) for (let y = 2; y >= 0; y--) for (let x = 0; x < 3; x++) {
+                    const project = (x, y, z) => {
+                        // Center at origin
+                        x -= 1.5; y -= 1.5; z -= 1.5;
+                        // Rotate Y
+                        const x1 = x * cosY - z * sinY, z1 = x * sinY + z * cosY;
+                        // Rotate X
+                        const y1 = y * cosX - z1 * sinX, z2 = y * sinX + z1 * cosX;
+                        // Perspective projection
+                        const scale = 6 / (6 + z2);
+                        return { px: cx + x1 * size * scale, py: cy - y1 * size * scale, depth: z2, scale };
+                    };
+
+                    // Collect all cells with depth for sorting
+                    const cells = [];
+                    for (let z = 0; z < 3; z++) for (let y = 0; y < 3; y++) for (let x = 0; x < 3; x++) {
                         const idx = z * 3 + x;
                         const cat = cats[idx % cats.length];
                         const weight = (catLines[cat] || 0) / total;
-                        const s = 0.9;
-                        const corners = [
-                            iso(x*s, y*s, z*s), iso((x+1)*s, y*s, z*s),
-                            iso((x+1)*s, y*s, (z+1)*s), iso(x*s, y*s, (z+1)*s),
-                            iso(x*s, (y+1)*s, z*s), iso((x+1)*s, (y+1)*s, z*s),
-                            iso((x+1)*s, (y+1)*s, (z+1)*s), iso(x*s, (y+1)*s, (z+1)*s),
-                        ];
-
-                        const alpha = 0.2 + weight * 0.7;
-                        const color = PREFIX_COLORS[cat] || '#30363d';
-
-                        // Top face
-                        ctx.fillStyle = color; ctx.globalAlpha = alpha;
-                        ctx.beginPath();
-                        ctx.moveTo(corners[4].px, corners[4].py); ctx.lineTo(corners[5].px, corners[5].py);
-                        ctx.lineTo(corners[6].px, corners[6].py); ctx.lineTo(corners[7].px, corners[7].py);
-                        ctx.closePath(); ctx.fill();
-                        ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.lineWidth = 0.5; ctx.stroke();
-
-                        // Right face
-                        ctx.globalAlpha = alpha * 0.7;
-                        ctx.beginPath();
-                        ctx.moveTo(corners[1].px, corners[1].py); ctx.lineTo(corners[5].px, corners[5].py);
-                        ctx.lineTo(corners[6].px, corners[6].py); ctx.lineTo(corners[2].px, corners[2].py);
-                        ctx.closePath(); ctx.fill(); ctx.stroke();
-
-                        // Left face
-                        ctx.globalAlpha = alpha * 0.5;
-                        ctx.beginPath();
-                        ctx.moveTo(corners[2].px, corners[2].py); ctx.lineTo(corners[6].px, corners[6].py);
-                        ctx.lineTo(corners[7].px, corners[7].py); ctx.lineTo(corners[3].px, corners[3].py);
-                        ctx.closePath(); ctx.fill(); ctx.stroke();
-                        ctx.globalAlpha = 1;
-
-                        // Label on top face for visible cells
-                        if (y === 2) {
-                            const mid = iso((x+0.5)*s, (y+1)*s, (z+0.5)*s);
-                            ctx.fillStyle = '#fff'; ctx.font = 'bold 9px monospace';
-                            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-                            ctx.fillText(PREFIX_SYMS[cat]||'', mid.px, mid.py);
-                        }
+                        const center = project(x + 0.5, y + 0.5, z + 0.5);
+                        cells.push({ x, y, z, cat, weight, center, color: PREFIX_COLORS[cat] || '#30363d' });
                     }
-                    ctx.fillStyle = '#8b949e'; ctx.font = '11px system-ui'; ctx.textAlign = 'center';
+                    // Sort back-to-front
+                    cells.sort((a, b) => a.center.depth - b.center.depth);
+
+                    cells.forEach(cell => {
+                        const s = 0.42;
+                        const px = cell.center.px, py = cell.center.py;
+                        const cellSize = size * cell.center.scale * s;
+                        const pulse = 0.35 + cell.weight * 0.55 + 0.08 * Math.sin(t * 2 + cell.x + cell.y + cell.z);
+
+                        // Glow
+                        const grd = ctx.createRadialGradient(px, py, 0, px, py, cellSize * 1.2);
+                        grd.addColorStop(0, cell.color + '50'); grd.addColorStop(1, cell.color + '00');
+                        ctx.fillStyle = grd; ctx.beginPath(); ctx.arc(px, py, cellSize * 1.2, 0, Math.PI*2); ctx.fill();
+
+                        // Cell
+                        ctx.fillStyle = cell.color; ctx.globalAlpha = pulse;
+                        ctx.beginPath(); ctx.arc(px, py, cellSize, 0, Math.PI*2); ctx.fill();
+                        ctx.globalAlpha = 1;
+                        ctx.strokeStyle = thBgSep(); ctx.lineWidth = 0.5;
+                        ctx.beginPath(); ctx.arc(px, py, cellSize, 0, Math.PI*2); ctx.stroke();
+
+                        // Label on larger cells
+                        if (cellSize > 10) {
+                            ctx.fillStyle = '#fff'; ctx.font = `bold ${Math.max(7, cellSize * 0.55)}px monospace`;
+                            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                            ctx.fillText(PREFIX_SYMS[cell.cat]||'', px, py);
+                        }
+                    });
+                    ctx.fillStyle = thFgMuted(); ctx.font = '11px system-ui'; ctx.textAlign = 'center';
                     ctx.fillText(`${total} lines · 9 prefix dimensions`, cx, bh - 16);
                 }
             }
@@ -13259,30 +13339,27 @@ print(f"  Norm:  {qs.normalize().norm().numpy():.6f}")`);
                     document.querySelectorAll('.qheat-mode-btn').forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
                     qheatMode = btn.dataset.qheatMode;
-                    render();
+                    qheatT0 = performance.now(); // reset animation clock on mode change
                 });
             });
 
-            // Open / close
+            // Open / close — start/stop animation loop
             openBtn.addEventListener('click', () => {
                 gatherData();
                 overlay.classList.add('open');
-                requestAnimationFrame(() => render());
+                startAnimLoop();
             });
             closeBtn.addEventListener('click', () => {
+                stopAnimLoop();
                 overlay.classList.remove('open');
                 tooltip.classList.remove('visible');
             });
             document.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape' && overlay.classList.contains('open')) {
+                    stopAnimLoop();
                     overlay.classList.remove('open');
                     tooltip.classList.remove('visible');
                 }
-            });
-
-            // Resize
-            window.addEventListener('resize', () => {
-                if (overlay.classList.contains('open')) render();
             });
         })();
 
