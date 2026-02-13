@@ -151,6 +151,47 @@
         .psu-val .psu-label{font-size:.5rem;color:var(--text-m);margin-top:2px}
         .psu-slider{width:100%;-webkit-appearance:none;height:4px;border-radius:2px;background:var(--border);outline:none;margin:6px 0}
         .psu-slider::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--yellow);cursor:pointer;border:2px solid var(--bg)}
+        /* Equipment nav arrows */
+        .equip-nav{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+        .equip-nav .eq-arrow{width:28px;height:28px;border-radius:var(--rad);border:1px solid var(--border);background:var(--bg3);color:var(--text-m);cursor:pointer;font-size:.875rem;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+        .equip-nav .eq-arrow:hover{color:var(--accent);border-color:var(--accent)}
+        .equip-nav .eq-label{font-size:.6875rem;font-weight:700;flex:1;text-align:center}
+        .equip-nav .eq-dots{display:flex;gap:3px;align-items:center}
+        .equip-nav .eq-dot{width:6px;height:6px;border-radius:50%;background:var(--border);transition:all .15s}
+        .equip-nav .eq-dot.active{background:var(--yellow);box-shadow:0 0 4px rgba(255,225,56,.4)}
+        /* Live readout bar */
+        .live-readout{background:var(--bg);border:1px solid var(--border);border-radius:var(--rad);padding:6px 10px;margin-top:6px;font-family:var(--mono);font-size:.625rem;color:var(--text-m);display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+        .live-readout .lr-val{color:var(--green)}
+        .live-readout .lr-label{color:var(--text-m);opacity:.7}
+        .live-readout .lr-status{display:inline-flex;align-items:center;gap:3px}
+        .live-readout .lr-dot{width:5px;height:5px;border-radius:50%;background:var(--red)}
+        .live-readout .lr-dot.connected{background:var(--green);animation:pulse-dot 2s ease infinite}
+        @keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:.4}}
+        /* Parts toolbar */
+        .parts-toolbar{display:flex;align-items:center;gap:4px;padding:6px 10px;border-bottom:1px solid var(--border);background:var(--bg2);flex-wrap:wrap}
+        .parts-toolbar button{padding:3px 8px;font-size:.5625rem;font-weight:600;border:1px solid var(--border);border-radius:var(--rad);background:var(--bg3);color:var(--text-m);cursor:pointer;transition:all .15s}
+        .parts-toolbar button:hover{color:var(--accent);border-color:var(--accent)}
+        .parts-filters{display:flex;gap:3px;padding:4px 10px;border-bottom:1px solid var(--border);background:var(--bg);flex-wrap:wrap}
+        .parts-filters .pf-chip{padding:2px 6px;font-size:.5rem;font-weight:600;border:1px solid var(--border);border-radius:3px;background:var(--bg3);color:var(--text-m);cursor:pointer;transition:all .12s}
+        .parts-filters .pf-chip:hover,.parts-filters .pf-chip.active{color:var(--accent);border-color:var(--accent);background:var(--accent-s)}
+        .part-card{display:flex;gap:8px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--rad);padding:8px;margin-bottom:6px;cursor:pointer;transition:all .15s}
+        .part-card:hover{border-color:var(--accent);background:var(--bg3)}
+        .part-img{width:48px;height:48px;border-radius:4px;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;overflow:hidden}
+        .part-img img{width:100%;height:100%;object-fit:cover}
+        .part-info{flex:1;min-width:0}
+        /* Code sync panel */
+        .code-sync-panel{border-top:1px solid var(--border);background:var(--bg);overflow-y:auto;max-height:160px;display:none}
+        .code-sync-panel.active{display:block}
+        .code-progress{height:3px;background:var(--border);border-radius:2px;overflow:hidden;margin:0 10px}
+        .code-progress-bar{height:100%;background:linear-gradient(90deg,var(--green),var(--cyan));width:0%;transition:width .3s}
+        .code-stats{display:flex;gap:8px;padding:4px 10px;font-family:var(--mono);font-size:.5625rem;color:var(--text-m);flex-wrap:wrap}
+        .code-stats span{display:flex;align-items:center;gap:3px}
+        /* Template tabs */
+        .tmpl-tabs{display:flex;gap:2px;padding:4px 10px;border-top:1px solid var(--border);background:var(--bg2);overflow-x:auto;flex-shrink:0}
+        .tmpl-tabs::-webkit-scrollbar{height:3px}
+        .tmpl-tab{padding:3px 8px;font-size:.5rem;font-weight:600;border:1px solid var(--border);border-radius:3px 3px 0 0;background:var(--bg3);color:var(--text-m);cursor:pointer;transition:all .12s;white-space:nowrap;flex-shrink:0}
+        .tmpl-tab:hover{color:var(--text)}
+        .tmpl-tab.active{color:var(--green);border-color:var(--green);background:rgba(63,185,80,.08);border-bottom-color:var(--bg)}
 
         /* Bottom: Console */
         .console-panel{height:140px;min-height:80px;border-top:1px solid var(--border);background:var(--bg2);display:flex;flex-direction:column;flex-shrink:0}
@@ -218,9 +259,17 @@
             </div>
 
             <!-- Parts List -->
-            <div class="supplier-panel" id="view-parts">
-                <input class="supplier-search" id="parts-search" placeholder="Search parts...">
-                <div id="parts-list"></div>
+            <div class="supplier-panel" id="view-parts" style="padding:0">
+                <div class="parts-toolbar">
+                    <button id="parts-copy" title="Copy selected part info">Copy</button>
+                    <button id="parts-paste" title="Paste part URL/info">Paste</button>
+                    <button id="parts-img-search" title="Search by image">Image Search</button>
+                    <button id="parts-video" title="Live video from makers">Live Stream</button>
+                    <span style="flex:1"></span>
+                    <input class="supplier-search" id="parts-search" placeholder="Search parts..." style="margin:0;flex:1;min-width:120px;font-size:.625rem;padding:4px 8px">
+                </div>
+                <div class="parts-filters" id="parts-filters"></div>
+                <div id="parts-list" style="padding:8px;overflow-y:auto;flex:1"></div>
             </div>
 
             <!-- Code Editor -->
@@ -228,12 +277,19 @@
                 <div class="code-toolbar">
                     <span style="font-size:.625rem;font-weight:700;color:var(--green)">Arduino / C++</span>
                     <span style="flex:1"></span>
+                    <button id="code-run" style="color:var(--green);border-color:var(--green)">Run</button>
+                    <button id="code-test" style="color:var(--cyan);border-color:var(--cyan)">Test</button>
                     <button id="code-verify">Verify</button>
                     <button id="code-upload">Upload</button>
                     <button id="code-stream">Stream to hexterm</button>
-                    <button id="code-template">Templates</button>
                 </div>
                 <textarea class="code-editor" id="code-editor" spellcheck="false"></textarea>
+                <div class="tmpl-tabs" id="tmpl-tabs"></div>
+                <div class="code-sync-panel" id="code-sync">
+                    <div class="code-progress"><div class="code-progress-bar" id="code-progress-bar"></div></div>
+                    <div class="code-stats" id="code-stats"></div>
+                    <div id="code-readout" style="padding:4px 10px;font-family:var(--mono);font-size:.625rem;color:var(--text-s);max-height:80px;overflow-y:auto"></div>
+                </div>
                 <div class="code-output" id="code-output"></div>
             </div>
 
@@ -343,7 +399,7 @@ document.querySelectorAll('.doc-tab[data-view]').forEach(t => {
     t.addEventListener('click', () => switchView(t.dataset.view));
 });
 
-// ===== BENCH VIEW (PSU Monitor + Freya Calculator) =====
+// ===== BENCH VIEW (Freya Calculator + PSU Monitor + Equipment Toggle) =====
 const AT6301 = {
     name: 'Abestop AT6301',
     maxV: 60, maxA: 10, maxW: 300,
@@ -354,14 +410,76 @@ const AT6301 = {
     url: 'https://abestop.com/products/abestop-at6301'
 };
 
+const equipmentList = [
+    { id:'psu', name:'AT6301 Power Supply', icon:'⚡', color:'var(--yellow)', status:'active' },
+    { id:'scope', name:'Oscilloscope', icon:'📈', color:'var(--accent)', status:'idle' },
+    { id:'meter', name:'Digital Multimeter', icon:'📊', color:'var(--green)', status:'idle' },
+    { id:'microscope', name:'USB Microscope', icon:'🔬', color:'var(--purple)', status:'idle' },
+    { id:'logic', name:'Logic Analyzer', icon:'📟', color:'var(--cyan)', status:'idle' },
+    { id:'siggen', name:'Signal Generator', icon:'〰', color:'var(--orange)', status:'idle' },
+];
+let equipIdx = 0;
 let psuVoltage = 5.00, psuCurrent = 1.000, psuOutput = false;
+let usbConnected = false;
+
+// Simulated live readout
+let liveInterval = null;
+function startLiveReadout() {
+    if (liveInterval) return;
+    usbConnected = true;
+    liveInterval = setInterval(() => {
+        if (!usbConnected) return;
+        const noise = () => (Math.random() - 0.5) * 0.005;
+        const liveV = psuOutput ? psuVoltage + noise() : 0;
+        const liveA = psuOutput ? psuCurrent + noise() * 10 : 0;
+        const lr = $('live-readout-data');
+        if (lr) lr.innerHTML = `<span class="lr-label">V:</span><span class="lr-val">${liveV.toFixed(4)}</span> <span class="lr-label">A:</span><span class="lr-val">${(liveA*1000).toFixed(2)}mA</span> <span class="lr-label">W:</span><span class="lr-val">${(liveV*liveA).toFixed(4)}</span> <span class="lr-label">T:</span><span class="lr-val">${(28 + Math.random()*3).toFixed(1)}°C</span>`;
+    }, 500);
+}
 
 function renderBench() {
     const power = (psuVoltage * psuCurrent).toFixed(2);
     const resistance = psuCurrent > 0 ? (psuVoltage / psuCurrent).toFixed(2) : '∞';
+    const eq = equipmentList[equipIdx];
     $('bench-rendered').innerHTML = `
+        <h3 style="color:var(--cyan);font-size:.8125rem;margin:0 0 6px;display:flex;align-items:center;gap:6px">⚡ Freya Unit Calculator</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+            <div class="psu-monitor" style="margin:0">
+                <div style="font-size:.625rem;color:var(--text-m);margin-bottom:4px">Ohm's Law: V = I × R</div>
+                <div style="display:flex;gap:4px">
+                    <input id="calc-v" placeholder="V" style="flex:1;padding:4px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--yellow);font-family:var(--mono);font-size:.75rem">
+                    <input id="calc-i" placeholder="A" style="flex:1;padding:4px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--green);font-family:var(--mono);font-size:.75rem">
+                    <input id="calc-r" placeholder="Ω" style="flex:1;padding:4px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--cyan);font-family:var(--mono);font-size:.75rem">
+                </div>
+                <button onclick="calcOhm()" style="margin-top:4px;padding:3px 8px;font-size:.5625rem;border:1px solid var(--accent);border-radius:4px;background:var(--accent-s);color:var(--accent);cursor:pointer;width:100%">Calculate</button>
+                <div id="calc-result" style="font-family:var(--mono);font-size:.6875rem;color:var(--text-s);margin-top:4px"></div>
+            </div>
+            <div class="psu-monitor" style="margin:0">
+                <div style="font-size:.625rem;color:var(--text-m);margin-bottom:4px">Power: P = V × I</div>
+                <div style="display:flex;gap:4px">
+                    <input id="calc-pv" placeholder="V" style="flex:1;padding:4px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--yellow);font-family:var(--mono);font-size:.75rem">
+                    <input id="calc-pi" placeholder="A" style="flex:1;padding:4px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--green);font-family:var(--mono);font-size:.75rem">
+                    <input id="calc-pp" placeholder="W" style="flex:1;padding:4px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--orange);font-family:var(--mono);font-size:.75rem">
+                </div>
+                <button onclick="calcPower()" style="margin-top:4px;padding:3px 8px;font-size:.5625rem;border:1px solid var(--accent);border-radius:4px;background:var(--accent-s);color:var(--accent);cursor:pointer;width:100%">Calculate</button>
+                <div id="calc-presult" style="font-family:var(--mono);font-size:.6875rem;color:var(--text-s);margin-top:4px"></div>
+            </div>
+        </div>
+
+        <div class="equip-nav" style="margin-top:10px">
+            <button class="eq-arrow" onclick="cycleEquip(-1)">◀</button>
+            <div style="flex:1;text-align:center">
+                <div class="eq-label" style="color:${eq.color}">${eq.icon} ${eq.name}</div>
+                <div class="eq-dots" style="justify-content:center;margin-top:3px">
+                    ${equipmentList.map((e,i) => `<span class="eq-dot${i===equipIdx?' active':''}" title="${e.name}" onclick="setEquip(${i})" style="cursor:pointer;${i===equipIdx?'background:'+e.color:''}"></span>`).join('')}
+                </div>
+            </div>
+            <button class="eq-arrow" onclick="cycleEquip(1)">▶</button>
+        </div>
+
         <div class="psu-monitor">
-            <div class="psu-title">⚡ ${AT6301.name} — DC Power Supply <span style="font-size:.5rem;color:var(--text-m);font-weight:400">${AT6301.maxV}V/${AT6301.maxA}A/${AT6301.maxW}W</span></div>
+            <div class="psu-title">${eq.icon} ${eq.id === 'psu' ? AT6301.name + ' — DC Power Supply' : eq.name} <span style="font-size:.5rem;color:var(--text-m);font-weight:400">${eq.id === 'psu' ? AT6301.maxV+'V/'+AT6301.maxA+'A/'+AT6301.maxW+'W' : eq.status}</span></div>
+            ${eq.id === 'psu' ? `
             <div class="psu-row">
                 <div class="psu-val"><div class="psu-num" style="color:var(--yellow)">${psuVoltage.toFixed(2)}</div><div class="psu-unit">V</div><div class="psu-label">Voltage</div></div>
                 <div class="psu-val"><div class="psu-num" style="color:var(--green)">${psuCurrent.toFixed(3)}</div><div class="psu-unit">A</div><div class="psu-label">Current</div></div>
@@ -386,51 +504,45 @@ function renderBench() {
                 <button onclick="setPSUPreset(24,5)" style="padding:4px 8px;border-radius:4px;font-size:.5625rem;border:1px solid var(--border);background:var(--bg3);color:var(--text-m);cursor:pointer">24V/5A</button>
                 <button onclick="setPSUPreset(48,3)" style="padding:4px 8px;border-radius:4px;font-size:.5625rem;border:1px solid var(--border);background:var(--bg3);color:var(--text-m);cursor:pointer">48V/3A</button>
                 <a href="${AT6301.url}" target="_blank" style="padding:4px 8px;border-radius:4px;font-size:.5625rem;border:1px solid var(--yellow);background:rgba(255,225,56,.08);color:var(--yellow);text-decoration:none;cursor:pointer">Product Page ↗</a>
-            </div>
+            </div>` : `
+            <div style="text-align:center;padding:20px;color:var(--text-m);font-size:.75rem">
+                <div style="font-size:2rem;margin-bottom:8px">${eq.icon}</div>
+                <div style="font-weight:600;color:var(--text)">${eq.name}</div>
+                <div style="margin-top:4px;font-size:.625rem">Status: <span style="color:${eq.status==='active'?'var(--green)':'var(--text-m)'}">${eq.status}</span></div>
+                <button onclick="linkEquip(${equipIdx})" style="margin-top:8px;padding:4px 16px;border-radius:4px;font-size:.625rem;font-weight:600;border:1px solid var(--accent);background:var(--accent-s);color:var(--accent);cursor:pointer">${eq.status==='active'?'Unlink':'Link Device'}</button>
+            </div>`}
         </div>
-        <h3 style="color:var(--cyan);font-size:.8125rem;margin:12px 0 6px">⚡ Freya Unit Calculator</h3>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
-            <div class="psu-monitor" style="margin:0">
-                <div style="font-size:.625rem;color:var(--text-m);margin-bottom:4px">Ohm's Law: V = I × R</div>
-                <div style="display:flex;gap:4px">
-                    <input id="calc-v" placeholder="V" style="flex:1;padding:4px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--yellow);font-family:var(--mono);font-size:.75rem">
-                    <input id="calc-i" placeholder="A" style="flex:1;padding:4px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--green);font-family:var(--mono);font-size:.75rem">
-                    <input id="calc-r" placeholder="Ω" style="flex:1;padding:4px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--cyan);font-family:var(--mono);font-size:.75rem">
-                </div>
-                <button onclick="calcOhm()" style="margin-top:4px;padding:3px 8px;font-size:.5625rem;border:1px solid var(--accent);border-radius:4px;background:var(--accent-s);color:var(--accent);cursor:pointer;width:100%">Calculate</button>
-                <div id="calc-result" style="font-family:var(--mono);font-size:.6875rem;color:var(--text-s);margin-top:4px"></div>
-            </div>
-            <div class="psu-monitor" style="margin:0">
-                <div style="font-size:.625rem;color:var(--text-m);margin-bottom:4px">Power: P = V × I</div>
-                <div style="display:flex;gap:4px">
-                    <input id="calc-pv" placeholder="V" style="flex:1;padding:4px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--yellow);font-family:var(--mono);font-size:.75rem">
-                    <input id="calc-pi" placeholder="A" style="flex:1;padding:4px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--green);font-family:var(--mono);font-size:.75rem">
-                    <input id="calc-pp" placeholder="W" style="flex:1;padding:4px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--orange);font-family:var(--mono);font-size:.75rem">
-                </div>
-                <button onclick="calcPower()" style="margin-top:4px;padding:3px 8px;font-size:.5625rem;border:1px solid var(--accent);border-radius:4px;background:var(--accent-s);color:var(--accent);cursor:pointer;width:100%">Calculate</button>
-                <div id="calc-presult" style="font-family:var(--mono);font-size:.6875rem;color:var(--text-s);margin-top:4px"></div>
-            </div>
-        </div>
-        <h3 style="color:var(--text-m);font-size:.75rem;margin:12px 0 6px">Device Specs</h3>
-        <div style="font-size:.6875rem;color:var(--text-s);line-height:1.8;font-family:var(--mono)">
+
+        <h3 style="color:var(--text-m);font-size:.75rem;margin:8px 0 4px">Device Specs</h3>
+        <div style="font-size:.6875rem;color:var(--text-s);line-height:1.7;font-family:var(--mono)">
             <div>Model: <span style="color:var(--yellow)">${AT6301.name}</span></div>
             <div>Output: <span style="color:var(--text)">0~${AT6301.maxV}V / 0~${AT6301.maxA}A</span></div>
-            <div>Power: <span style="color:var(--orange)">${AT6301.maxW}W</span> (constant power design)</div>
+            <div>Power: <span style="color:var(--orange)">${AT6301.maxW}W</span> (constant power)</div>
             <div>Resolution: <span style="color:var(--cyan)">${AT6301.resolution.v}V / ${AT6301.resolution.a}A</span></div>
-            <div>USB: <span style="color:var(--text)">${AT6301.usb}</span></div>
-            <div>Memory: <span style="color:var(--text)">${AT6301.memories} groups (M1-M4)</span></div>
-            <div>Interface: <span style="color:var(--accent)">USB (SCPI protocol)</span></div>
-            <div>Waveform: <span style="color:var(--text)">10 editable points per waveform</span></div>
+            <div>Interface: <span style="color:var(--accent)">USB (SCPI)</span> | USB: ${AT6301.usb}</div>
+            <div>Memory: ${AT6301.memories} groups | Waveform: 10 pts/wave</div>
             <div>Features: ${AT6301.features.map(f => `<span style="display:inline-block;padding:1px 5px;background:var(--bg3);border-radius:3px;margin:1px;font-size:.5625rem">${f}</span>`).join('')}</div>
         </div>
+        <div class="live-readout" style="margin-top:6px">
+            <span class="lr-status"><span class="lr-dot${usbConnected?' connected':''}"></span> ${usbConnected?'USB Connected':'Disconnected'}</span>
+            <span id="live-readout-data">${usbConnected?'Reading...':'<button onclick="startLiveReadout();renderBench()" style="padding:2px 8px;border:1px solid var(--accent);border-radius:3px;background:var(--accent-s);color:var(--accent);font-size:.5625rem;cursor:pointer">Connect USB</button>'}</span>
+        </div>
     `;
-    // Bind slider events
+    // Bind PSU slider events
     const vs = $('psu-v-slider'), vi = $('psu-v-input'), as = $('psu-a-slider'), ai = $('psu-a-input');
     if (vs) { vs.oninput = () => { psuVoltage = parseFloat(vs.value); renderBench(); }; }
     if (vi) { vi.onchange = () => { psuVoltage = Math.min(AT6301.maxV, Math.max(0, parseFloat(vi.value)||0)); renderBench(); }; }
     if (as) { as.oninput = () => { psuCurrent = parseFloat(as.value); renderBench(); }; }
     if (ai) { ai.onchange = () => { psuCurrent = Math.min(AT6301.maxA, Math.max(0, parseFloat(ai.value)||0)); renderBench(); }; }
 }
+
+window.cycleEquip = function(dir) { equipIdx = (equipIdx + dir + equipmentList.length) % equipmentList.length; renderBench(); };
+window.setEquip = function(i) { equipIdx = i; renderBench(); };
+window.linkEquip = function(i) {
+    equipmentList[i].status = equipmentList[i].status === 'active' ? 'idle' : 'active';
+    logConsole('equip', `${equipmentList[i].name}: ${equipmentList[i].status}`);
+    renderBench();
+};
 
 window.togglePSU = function() {
     psuOutput = !psuOutput;
@@ -484,18 +596,74 @@ const parts = [
     { name:'Breadboard 830-point', cat:'Proto', desc:'Full-size solderless breadboard, 830 tie points', url:'https://www.adafruit.com/product/239', price:'$5.95' },
 ];
 
+// Part category icons for image placeholders
+const catIcons = { PSU:'⚡', MCU:'🔌', SBC:'🍓', Sensor:'🌡', ADC:'📊', Meter:'📏', Switch:'🔀', Interface:'🔗', Cable:'〰', Proto:'🧩' };
+let partsFilterCat = '';
+
+function renderPartsFilters() {
+    const cats = [...new Set(parts.map(p => p.cat))];
+    $('parts-filters').innerHTML = `<span class="pf-chip${!partsFilterCat?' active':''}" onclick="partsFilterCat='';renderPartsFilters();renderParts()">All</span>` +
+        cats.map(c => `<span class="pf-chip${partsFilterCat===c?' active':''}" onclick="partsFilterCat='${c}';renderPartsFilters();renderParts()">${catIcons[c]||'📦'} ${c}</span>`).join('');
+}
+
 function renderParts(filter) {
-    const f = (filter || '').toLowerCase();
-    const list = parts.filter(p => !f || p.name.toLowerCase().includes(f) || p.cat.toLowerCase().includes(f) || p.desc.toLowerCase().includes(f));
+    const f = (filter || $('parts-search')?.value || '').toLowerCase();
+    const list = parts.filter(p => {
+        if (partsFilterCat && p.cat !== partsFilterCat) return false;
+        return !f || p.name.toLowerCase().includes(f) || p.cat.toLowerCase().includes(f) || p.desc.toLowerCase().includes(f);
+    });
     $('parts-list').innerHTML = list.map(p => `
-        <div class="supplier-card" onclick="window.open('${p.url}','_blank')">
-            <div class="s-name"><span style="background:var(--bg3);padding:1px 6px;border-radius:3px;font-size:.5rem;color:var(--accent)">${p.cat}</span> ${p.name} <span style="color:var(--green);font-size:.625rem;margin-left:auto">${p.price}</span></div>
-            <div class="s-desc">${p.desc}</div>
-            <div class="s-url">${p.url}</div>
+        <div class="part-card" onclick="window.open('${p.url}','_blank')">
+            <div class="part-img"><span title="${p.cat}">${catIcons[p.cat]||'📦'}</span></div>
+            <div class="part-info">
+                <div style="display:flex;align-items:center;gap:4px">
+                    <span style="background:var(--bg3);padding:1px 6px;border-radius:3px;font-size:.5rem;color:var(--accent)">${p.cat}</span>
+                    <span style="font-weight:700;font-size:.75rem">${p.name}</span>
+                    <span style="color:var(--green);font-size:.625rem;margin-left:auto">${p.price}</span>
+                </div>
+                <div style="font-size:.625rem;color:var(--text-m);margin-top:2px">${p.desc}</div>
+                <div style="font-size:.5rem;color:var(--accent);font-family:var(--mono);margin-top:1px">${p.url}</div>
+            </div>
         </div>`).join('') || '<div style="color:var(--text-m);text-align:center;padding:20px">No parts matching filter</div>';
 }
 
+// Parts toolbar actions
+$('parts-copy').addEventListener('click', () => {
+    const sel = parts.map(p => `${p.name} | ${p.cat} | ${p.price} | ${p.url}`).join('\n');
+    navigator.clipboard.writeText(sel).then(() => logConsole('parts', 'Copied all parts to clipboard'));
+});
+$('parts-paste').addEventListener('click', async () => {
+    try {
+        const text = await navigator.clipboard.readText();
+        if (text.startsWith('http')) {
+            logConsole('parts', 'Pasted URL: ' + text);
+            window.open(text, '_blank');
+        } else {
+            $('parts-search').value = text;
+            renderParts(text);
+            logConsole('parts', 'Pasted search: ' + text);
+        }
+    } catch (e) { logConsole('error', 'Clipboard access denied'); }
+});
+$('parts-img-search').addEventListener('click', () => {
+    window.open('https://lens.google.com', '_blank');
+    logConsole('parts', 'Opening Google Lens for image search');
+});
+$('parts-video').addEventListener('click', () => {
+    const channels = [
+        'https://www.youtube.com/@adaborindustries',
+        'https://www.youtube.com/@sparkfun',
+        'https://www.youtube.com/@GreatScottLab',
+        'https://www.youtube.com/@ben_makes',
+        'https://www.youtube.com/@EEVblog',
+    ];
+    const pick = channels[Math.floor(Math.random() * channels.length)];
+    window.open(pick, '_blank');
+    logConsole('parts', 'Opening maker stream: ' + pick);
+});
+
 $('parts-search').addEventListener('input', e => renderParts(e.target.value));
+renderPartsFilters();
 renderParts();
 
 // ===== SUPPLIERS =====
@@ -719,21 +887,103 @@ $('code-stream').addEventListener('click', () => {
     }
 });
 
-$('code-template').addEventListener('click', () => {
+// Template tabs (inline, not popup)
+let activeTemplate = 'PSU Monitor';
+function renderTemplateTabs() {
     const names = Object.keys(codeTemplates);
-    const choice = prompt('Templates:\\n' + names.map((n, i) => `${i + 1}. ${n}`).join('\\n') + '\\n\\nEnter number:');
-    const idx = parseInt(choice) - 1;
-    if (idx >= 0 && idx < names.length) {
-        codeEditor.value = codeTemplates[names[idx]];
-        codeLog('info', `Loaded template: ${names[idx]}`);
-    }
+    $('tmpl-tabs').innerHTML = names.map(n =>
+        `<span class="tmpl-tab${n===activeTemplate?' active':''}" data-tmpl="${n}">${n}</span>`
+    ).join('');
+    $('tmpl-tabs').querySelectorAll('.tmpl-tab').forEach(t => {
+        t.addEventListener('click', () => {
+            activeTemplate = t.dataset.tmpl;
+            codeEditor.value = codeTemplates[activeTemplate];
+            codeLog('info', `Loaded template: ${activeTemplate}`);
+            renderTemplateTabs();
+            updateCodeStats();
+        });
+    });
+}
+renderTemplateTabs();
+
+// Run button — simulate execution with progress
+$('code-run').addEventListener('click', () => {
+    codeLog('info', 'Running sketch simulation...');
+    const syncPanel = $('code-sync');
+    syncPanel.classList.add('active');
+    const bar = $('code-progress-bar');
+    bar.style.width = '0%';
+    let pct = 0;
+    const sim = setInterval(() => {
+        pct += Math.random() * 15 + 5;
+        if (pct >= 100) { pct = 100; clearInterval(sim); codeLog('success', 'Simulation complete'); }
+        bar.style.width = pct + '%';
+        $('code-stats').innerHTML = `<span>Progress: <span style="color:var(--green)">${Math.round(pct)}%</span></span><span>Cycles: <span style="color:var(--cyan)">${Math.round(pct*12)}</span></span><span>Memory: <span style="color:var(--orange)">${(codeEditor.value.length*0.8).toFixed(0)}B</span></span>`;
+    }, 200);
+    // Simulated readout
+    $('code-readout').innerHTML = '';
+    let readCount = 0;
+    const readSim = setInterval(() => {
+        if (readCount++ > 8) { clearInterval(readSim); return; }
+        const v = (psuVoltage + (Math.random()-.5)*.01).toFixed(4);
+        const i = (psuCurrent*1000 + (Math.random()-.5)*.1).toFixed(2);
+        $('code-readout').innerHTML += `<div style="color:var(--green)">{"v":${v},"i":${i},"p":${(v*i/1000).toFixed(4)},"t":${Date.now()}}</div>`;
+        $('code-readout').scrollTop = $('code-readout').scrollHeight;
+    }, 400);
 });
+
+// Test button — run checks
+$('code-test').addEventListener('click', () => {
+    codeLog('info', 'Running tests...');
+    const syncPanel = $('code-sync');
+    syncPanel.classList.add('active');
+    const code = codeEditor.value;
+    const tests = [
+        { name: 'setup() exists', pass: code.includes('void setup()') },
+        { name: 'loop() exists', pass: code.includes('void loop()') },
+        { name: 'Serial initialized', pass: code.includes('Serial.begin') },
+        { name: 'No infinite blocking', pass: !code.match(/while\s*\(\s*1\s*\)\s*;/) },
+        { name: 'Brace balance', pass: (() => { let b=0; for(const c of code){if(c==='{')b++;if(c==='}')b--;} return b===0; })() },
+        { name: 'No delay > 5s', pass: !code.match(/delay\s*\(\s*[5-9]\d{3,}/) },
+    ];
+    const bar = $('code-progress-bar');
+    bar.style.width = '100%';
+    const passed = tests.filter(t => t.pass).length;
+    tests.forEach(t => codeLog(t.pass ? 'success' : 'error', `${t.pass ? 'PASS' : 'FAIL'}: ${t.name}`));
+    codeLog('info', `${passed}/${tests.length} tests passed`);
+    $('code-stats').innerHTML = `<span>Tests: <span style="color:${passed===tests.length?'var(--green)':'var(--orange)'}">${passed}/${tests.length}</span></span><span>Lines: <span style="color:var(--cyan)">${code.split('\n').length}</span></span><span>Size: <span style="color:var(--text-m)">${code.length}B</span></span>`;
+});
+
+// hexterm sync — listen for incoming data
+let hextermSynced = false;
+try {
+    const syncBC = new BroadcastChannel('hexterm');
+    syncBC.addEventListener('message', e => {
+        if (e.data?.type === 'bench-data' || e.data?.type === 'serial-data') {
+            hextermSynced = true;
+            const syncPanel = $('code-sync');
+            syncPanel.classList.add('active');
+            const d = e.data;
+            $('code-readout').innerHTML += `<div style="color:var(--green)">${JSON.stringify(d)}</div>`;
+            $('code-readout').scrollTop = $('code-readout').scrollHeight;
+            $('code-stats').innerHTML = `<span class="lr-status"><span class="lr-dot connected"></span> hexterm synced</span><span>Last: <span style="color:var(--cyan)">${new Date().toLocaleTimeString()}</span></span>`;
+        }
+    });
+} catch (e) {}
 
 function codeLog(level, msg) {
     const colors = { info: 'var(--accent)', error: 'var(--red)', success: 'var(--green)', warn: 'var(--orange)' };
     codeOutput.innerHTML += `<div style="color:${colors[level] || 'var(--text-m)'}"><span style="color:var(--text-m);font-size:.5625rem">${new Date().toLocaleTimeString('en-US',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'})}</span> ${msg}</div>`;
     codeOutput.scrollTop = codeOutput.scrollHeight;
 }
+
+function updateCodeStats() {
+    const code = codeEditor.value;
+    const lines = code.split('\n').length;
+    const libs = [...code.matchAll(/#include\s*[<"](.+?)[>"]/g)].map(m => m[1]);
+    $('doc-status-text').textContent = `${lines} lines | ${code.length}B${libs.length ? ' | libs: '+libs.join(', ') : ''}`;
+}
+codeEditor.addEventListener('input', updateCodeStats);
 
 // ===== PANEL RESIZE =====
 const panelResize = $('panel-resize');
