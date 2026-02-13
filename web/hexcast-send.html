@@ -41,8 +41,10 @@
     .ctrl-btn.active { background: #1f6feb; border-color: #388bfd; color: #fff; }
     .ctrl-btn.swap { background: #1f6feb22; border-color: #1f6feb; color: #58a6ff; }
     .ctrl-btn.swap:active { background: #1f6feb; color: #fff; }
-    .lens-btn { font-size: .625rem; padding: 4px 8px; text-transform: capitalize; }
+    .lens-btn { font-size: .625rem; padding: 3px 7px; text-transform: capitalize; flex-shrink: 0; }
     .lens-btn.active { background: #238636; border-color: #2ea043; color: #fff; }
+    #lens-strip { overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; scrollbar-width: none; padding: 3px 12px; gap: 4px; }
+    #lens-strip::-webkit-scrollbar { display: none; }
 
     /* ── Video area ── */
     .video-area { flex: 1; position: relative; min-height: 0; background: #000; overflow: hidden; }
@@ -102,6 +104,9 @@
     @supports (padding: env(safe-area-inset-bottom)) {
         .chat-bar { padding-bottom: calc(6px + env(safe-area-inset-bottom)); }
     }
+    @supports (padding: env(safe-area-inset-top)) {
+        .rainbow:first-of-type { padding-top: env(safe-area-inset-top); background: #161b22; }
+    }
 
     /* ── Pull-to-refresh ── */
     .ptr { position: fixed; top: 0; left: 0; right: 0; z-index: 100; display: flex; align-items: center; justify-content: center; height: 0; overflow: hidden; background: linear-gradient(180deg, #161b22 0%, #0d1117 100%); transition: height .2s ease; pointer-events: none; }
@@ -144,7 +149,7 @@
 </div>
 
 <!-- ━━━ Lens strip (auto-populated) ━━━ -->
-<div class="ctrl-strip" id="lens-strip" style="display:none;border-top:1px solid #21262d;padding-top:4px;padding-bottom:4px"></div>
+<div class="ctrl-strip" id="lens-strip" style="display:none"></div>
 
 <!-- ━━━ Video feed ━━━ -->
 <div class="video-area" id="video-area">
@@ -284,15 +289,10 @@ async function switchLens(idx) {
         const track = stream.getVideoTracks()[0];
         const s = track.getSettings();
         const caps = track.getCapabilities ? track.getCapabilities() : {};
-        document.getElementById('s-cam').textContent = `${lensMap[idx].short} ${s.width||'?'}×${s.height||'?'}`;
+        const zoomStr = (caps.zoom && s.zoom) ? ` ${s.zoom.toFixed(1)}×` : '';
+        document.getElementById('s-cam').textContent = `${lensMap[idx].short}${zoomStr} ${s.width||'?'}×${s.height||'?'}`;
         badge.textContent = lensMap[idx].short;
         badge.className = 'badge';
-
-        // Check zoom capability
-        if (caps.zoom) {
-            document.getElementById('s-lat').parentElement.insertAdjacentHTML('beforebegin',
-                `<span>Zoom <span class="val">${s.zoom?.toFixed(1)||'1.0'}×</span></span><span class="sep">·</span>`);
-        }
     } catch (e) {
         badge.textContent = 'lens error: ' + e.message;
         console.warn('switchLens:', e);
