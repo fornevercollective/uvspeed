@@ -216,7 +216,11 @@ def run_serve(args):
     else:
         cap = cv2.VideoCapture(args.camera)
         if not cap.isOpened():
-            print(f"\033[31mError: cannot open camera {args.camera}. Try: hexcast --serve --test\033[0m")
+            print(f"\033[31mError: cannot open camera {args.camera}.\033[0m")
+            print(f"\033[90m  No camera found. Use test pattern instead:\033[0m")
+            print(f"\033[90m    hexcast --serve --test\033[0m")
+            print(f"\033[90m  Or receive from a phone:\033[0m")
+            print(f"\033[90m    hexcast --receive\033[0m")
             sys.exit(1)
         cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
@@ -299,8 +303,17 @@ def run_serve(args):
         print(f"\033[90m  mDNS: {'registered' if mdns_info else 'unavailable'}\033[0m")
         print(f"\033[90m  Ctrl+C to stop\033[0m\n")
 
-        async with websockets.server.serve(handler, "0.0.0.0", port):
-            await broadcast_loop()
+        try:
+            async with websockets.server.serve(handler, "0.0.0.0", port):
+                await broadcast_loop()
+        except OSError as e:
+            if e.errno == 48 or "address already in use" in str(e).lower():
+                print(f"\033[31m  Error: port {port} already in use.\033[0m")
+                print(f"\033[90m  Another hexcast instance may be running (--receive or --serve).\033[0m")
+                print(f"\033[90m  Try a different port: hexcast --serve --port {port + 1}\033[0m")
+                print(f"\033[90m  Or kill the existing process: lsof -ti:{port} | xargs kill\033[0m")
+            else:
+                raise
 
     try:
         asyncio.run(main_serve())
@@ -1359,9 +1372,18 @@ def main():
 
         cap = open_camera(cam_idx)
         if not cap:
-            print(f"\033[31mError: cannot open camera {cam_idx}. Try: hexcast --cameras\033[0m")
+            print(f"\033[31mError: cannot open camera {cam_idx}.\033[0m")
             if available_cameras:
                 print(f"\033[90m  Available: {', '.join(str(c['index']) for c in available_cameras)}\033[0m")
+            else:
+                print(f"\033[90m  No cameras detected on this device.\033[0m")
+            print()
+            print(f"\033[36m  Try one of these instead:\033[0m")
+            print(f"\033[90m    hexcast --test           # synthetic test pattern\033[0m")
+            print(f"\033[90m    hexcast --screen         # capture your screen\033[0m")
+            print(f"\033[90m    hexcast --receive        # receive a phone camera stream\033[0m")
+            print(f"\033[90m    hexcast --serve --test   # broadcast test pattern over WiFi\033[0m")
+            print(f"\033[90m    hexcast --cameras        # list all detected cameras\033[0m")
             sys.exit(1)
         source_name = f"camera:{cam_idx} ({cam_facing})"
 
