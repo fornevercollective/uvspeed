@@ -2,97 +2,176 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>hexcast send — stream camera to terminal</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0d1117">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="icon" type="image/png" sizes="32x32" href="../icons/favicon.png">
+<link rel="apple-touch-icon" sizes="192x192" href="../icons/icon-192.png">
+<link rel="manifest" href="hexcast-manifest.json">
+<title>hexcast — stream camera</title>
 <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: #0d1117; color: #e6edf3; font-family: -apple-system, 'SF Pro', system-ui, sans-serif; min-height: 100dvh; display: flex; flex-direction: column; }
-    .header { padding: 12px 16px; background: #161b22; border-bottom: 1px solid #30363d; display: flex; align-items: center; gap: 10px; }
-    .header h1 { font-size: 1rem; font-weight: 600; flex: 1; }
-    .header .tag { font-size: .625rem; background: #238636; color: #fff; padding: 2px 6px; border-radius: 8px; }
-    .main { flex: 1; display: flex; flex-direction: column; padding: 16px; gap: 12px; }
-    .connect-bar { display: flex; gap: 8px; }
-    .connect-bar input { flex: 1; background: #161b22; border: 1px solid #30363d; border-radius: 6px; padding: 10px 12px; color: #e6edf3; font-size: .875rem; font-family: 'SF Mono', monospace; }
-    .connect-bar input:focus { outline: none; border-color: #58a6ff; }
-    .btn { background: #238636; border: none; color: #fff; padding: 10px 18px; border-radius: 6px; font-size: .875rem; font-weight: 600; cursor: pointer; }
-    .btn:active { transform: scale(0.97); }
-    .btn--stop { background: #da3633; }
-    .btn--swap { background: #1f6feb; }
-    .btn--sm { padding: 6px 12px; font-size: .75rem; }
-    .video-wrap { position: relative; flex: 1; min-height: 200px; background: #161b22; border-radius: 8px; overflow: hidden; border: 1px solid #30363d; }
-    .video-wrap video { width: 100%; height: 100%; object-fit: cover; }
-    .video-wrap canvas { display: none; }
-    .overlay-badge { position: absolute; top: 8px; left: 8px; background: rgba(0,0,0,.7); color: #e6edf3; font-size: .625rem; padding: 3px 8px; border-radius: 4px; font-family: 'SF Mono', monospace; backdrop-filter: blur(4px); }
-    .overlay-badge.live { color: #3fb950; }
-    .overlay-badge.live::before { content: ''; display: inline-block; width: 6px; height: 6px; background: #3fb950; border-radius: 50%; margin-right: 4px; animation: pulse 1s infinite; }
-    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .4; } }
-    .stats { display: flex; gap: 16px; padding: 8px 12px; background: #161b22; border-radius: 6px; border: 1px solid #30363d; font-size: .75rem; font-family: 'SF Mono', monospace; color: #8b949e; flex-wrap: wrap; }
-    .stats .val { color: #58a6ff; }
-    .controls { display: flex; gap: 8px; flex-wrap: wrap; }
-    .facing-label { font-size: .75rem; color: #8b949e; padding: 8px 0 4px; }
-    .instructions { background: #161b22; border: 1px solid #30363d; border-radius: 6px; padding: 12px; font-size: .75rem; color: #8b949e; line-height: 1.6; }
-    .instructions code { background: #21262d; padding: 1px 5px; border-radius: 3px; color: #79c0ff; }
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { touch-action: manipulation; }
+    body { background: #0d1117; color: #e6edf3; font-family: -apple-system, 'SF Pro', system-ui, sans-serif; min-height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
+
+    /* ── Rainbow bar ── */
+    .rainbow { display: flex; height: 3px; width: 100%; flex-shrink: 0; }
+    .rainbow span { flex: 1; }
+
+    /* ── Top bar ── */
+    .topbar { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: #161b22; border-bottom: 1px solid #21262d; flex-shrink: 0; }
+    .topbar-logo { width: 20px; height: 20px; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 12px; background: linear-gradient(135deg, #58a6ff 0%, #bc8cff 100%); color: #fff; font-weight: 700; }
+    .topbar-title { font-size: .8125rem; font-weight: 600; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .topbar-title .sub { color: #8b949e; font-weight: 400; }
+
+    /* ── Status pill ── */
+    .status-pill { font-size: .5625rem; font-weight: 600; padding: 3px 8px; border-radius: 10px; text-transform: uppercase; letter-spacing: .3px; white-space: nowrap; }
+    .status-pill.off { background: #30363d; color: #8b949e; }
+    .status-pill.connecting { background: #e3b341; color: #0d1117; }
+    .status-pill.live { background: #238636; color: #fff; animation: pulse-bg 2s infinite; }
+    .status-pill.error { background: #da3633; color: #fff; }
+    @keyframes pulse-bg { 0%,100% { opacity: 1; } 50% { opacity: .75; } }
+
+    /* ── Control strip (swap + quality + filter) ── */
+    .ctrl-strip { display: flex; gap: 6px; padding: 6px 12px; background: #0d1117; flex-shrink: 0; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .ctrl-btn { background: #21262d; border: 1px solid #30363d; color: #c9d1d9; padding: 5px 10px; border-radius: 6px; font-size: .6875rem; font-weight: 600; cursor: pointer; white-space: nowrap; display: flex; align-items: center; gap: 4px; }
+    .ctrl-btn:active { transform: scale(.96); }
+    .ctrl-btn.active { background: #1f6feb; border-color: #388bfd; color: #fff; }
+    .ctrl-btn.swap { background: #1f6feb22; border-color: #1f6feb; color: #58a6ff; }
+    .ctrl-btn.swap:active { background: #1f6feb; color: #fff; }
+
+    /* ── Video area ── */
+    .video-area { flex: 1; position: relative; min-height: 0; background: #000; overflow: hidden; }
+    .video-area video { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .video-area canvas#filter-canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; pointer-events: none; display: none; }
+    .video-area canvas#hidden-canvas { display: none; }
+
+    /* ── Overlay badges ── */
+    .badge-tl { position: absolute; top: 8px; left: 8px; }
+    .badge-tr { position: absolute; top: 8px; right: 8px; }
+    .badge { background: rgba(0,0,0,.65); color: #c9d1d9; font-size: .5625rem; padding: 3px 8px; border-radius: 4px; font-family: 'SF Mono', ui-monospace, monospace; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+    .badge.live { color: #3fb950; }
+    .badge.live::before { content: ''; display: inline-block; width: 5px; height: 5px; background: #3fb950; border-radius: 50%; margin-right: 4px; animation: blink 1.2s infinite; }
+    @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
+
+    /* ── Filter label (center tap indicator) ── */
+    .filter-label { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,.7); color: #fff; font-size: .75rem; font-weight: 600; padding: 4px 14px; border-radius: 12px; pointer-events: none; opacity: 0; transition: opacity .25s; }
+    .filter-label.show { opacity: 1; }
+
+    /* ── Stats strip ── */
+    .stats-strip { display: flex; gap: 12px; padding: 6px 12px; background: #161b22; border-top: 1px solid #21262d; font-size: .625rem; font-family: 'SF Mono', ui-monospace, monospace; color: #8b949e; flex-shrink: 0; flex-wrap: wrap; align-items: center; }
+    .stats-strip .val { color: #58a6ff; }
+    .stats-strip .sep { color: #30363d; }
+
+    /* ── Connect bar ── */
+    .connect-bar { display: flex; gap: 6px; padding: 8px 12px; background: #0d1117; border-top: 1px solid #21262d; flex-shrink: 0; }
+    .connect-bar input { flex: 1; background: #161b22; border: 1px solid #30363d; border-radius: 6px; padding: 8px 10px; color: #e6edf3; font-size: .8125rem; font-family: 'SF Mono', ui-monospace, monospace; }
+    .connect-bar input:focus { outline: none; border-color: #58a6ff; box-shadow: 0 0 0 2px #1f6feb33; }
+    .send-btn { background: #238636; border: none; color: #fff; padding: 8px 16px; border-radius: 6px; font-size: .8125rem; font-weight: 700; cursor: pointer; min-width: 56px; }
+    .send-btn:active { transform: scale(.97); }
+    .send-btn.stop { background: #da3633; }
+
+    /* ── Chat input ── */
+    .chat-bar { display: flex; gap: 6px; padding: 6px 12px; background: #161b22; border-top: 1px solid #21262d; flex-shrink: 0; }
+    .chat-bar input { flex: 1; background: #0d1117; border: 1px solid #30363d; border-radius: 6px; padding: 7px 10px; color: #e6edf3; font-size: .75rem; }
+    .chat-bar input:focus { outline: none; border-color: #bc8cff; }
+    .chat-bar input::placeholder { color: #484f58; }
+    .chat-send { background: #30363d; border: 1px solid #484f58; color: #c9d1d9; padding: 7px 12px; border-radius: 6px; font-size: .6875rem; font-weight: 600; cursor: pointer; }
+    .chat-send:active { background: #484f58; }
+
+    /* ── Bottom rainbow ── */
+    .rainbow-bottom { display: flex; height: 2px; width: 100%; flex-shrink: 0; }
+    .rainbow-bottom span { flex: 1; }
+
+    /* ── Safe-area padding ── */
+    @supports (padding: env(safe-area-inset-bottom)) {
+        .chat-bar { padding-bottom: calc(6px + env(safe-area-inset-bottom)); }
+    }
 </style>
 </head>
 <body>
-<div style="display:flex;height:2px;width:100%;flex-shrink:0"><span style="flex:1;background:#ff3838"></span><span style="flex:1;background:#ff8c38"></span><span style="flex:1;background:#ffe138"></span><span style="flex:1;background:#3fb950"></span><span style="flex:1;background:#38a5ff"></span><span style="flex:1;background:#bc8cff"></span></div>
-    <div class="header">
-        <h1>📡 hexcast send</h1>
-        <span class="tag" id="status-tag">disconnected</span>
-    </div>
-    <div class="main">
-        <div class="connect-bar">
-            <input type="text" id="host-input" placeholder="Mac IP:port (e.g. 192.168.1.42:9876)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
-            <button class="btn" id="connect-btn" onclick="toggleStream()">Send</button>
-        </div>
 
-        <div class="video-wrap">
-            <video id="video" playsinline autoplay muted></video>
-            <canvas id="canvas"></canvas>
-            <div class="overlay-badge" id="badge">camera off</div>
-        </div>
+<!-- ━━━ Top rainbow ━━━ -->
+<div class="rainbow"><span style="background:#ff3838"></span><span style="background:#ff8c38"></span><span style="background:#ffe138"></span><span style="background:#3fb950"></span><span style="background:#38a5ff"></span><span style="background:#bc8cff"></span></div>
 
-        <div class="controls">
-            <button class="btn btn--swap btn--sm" onclick="swapCamera()">↺ Swap Camera</button>
-            <button class="btn btn--sm" onclick="cycleQuality()" id="quality-btn">Quality: med</button>
-        </div>
+<!-- ━━━ Top bar ━━━ -->
+<div class="topbar">
+    <div class="topbar-logo">⬡</div>
+    <div class="topbar-title">hexcast <span class="sub">send</span></div>
+    <span class="status-pill off" id="status-pill">disconnected</span>
+</div>
 
-        <div class="stats">
-            <span>Frames: <span class="val" id="s-frames">0</span></span>
-            <span>FPS: <span class="val" id="s-fps">0</span></span>
-            <span>Size: <span class="val" id="s-size">0 KB</span></span>
-            <span>Latency: <span class="val" id="s-lat">—</span></span>
-            <span>Camera: <span class="val" id="s-cam">—</span></span>
-        </div>
+<!-- ━━━ Control strip ━━━ -->
+<div class="ctrl-strip">
+    <button class="ctrl-btn swap" id="btn-swap" onclick="swapCamera()">↺ Swap</button>
+    <button class="ctrl-btn" id="btn-quality" onclick="cycleQuality()">◉ med</button>
+    <button class="ctrl-btn" id="btn-filter" onclick="cycleFilter()">◐ none</button>
+    <button class="ctrl-btn" id="btn-torch" onclick="toggleTorch()">🔦 Torch</button>
+    <button class="ctrl-btn" id="btn-snapshot" onclick="takeSnapshot()">📸</button>
+</div>
 
-        <div class="instructions">
-            <strong>How to use:</strong><br>
-            1. On your Mac terminal, run: <code>hexcast --receive</code><br>
-            2. Enter the IP shown (e.g. <code>192.168.1.42:9876</code>) above<br>
-            3. Tap <strong>Send</strong> — your camera streams to the terminal<br>
-            4. Tap <strong>↺ Swap Camera</strong> to switch front/back
-        </div>
-    </div>
+<!-- ━━━ Video feed ━━━ -->
+<div class="video-area" id="video-area">
+    <video id="video" playsinline autoplay muted></video>
+    <canvas id="filter-canvas"></canvas>
+    <canvas id="hidden-canvas"></canvas>
+    <div class="badge-tl"><span class="badge" id="badge">camera off</span></div>
+    <div class="badge-tr"><span class="badge" id="badge-filter"></span></div>
+    <div class="filter-label" id="filter-label">Normal</div>
+</div>
+
+<!-- ━━━ Stats strip ━━━ -->
+<div class="stats-strip">
+    <span>FPS <span class="val" id="s-fps">0</span></span>
+    <span class="sep">·</span>
+    <span>Frames <span class="val" id="s-frames">0</span></span>
+    <span class="sep">·</span>
+    <span><span class="val" id="s-size">0 KB</span>/f</span>
+    <span class="sep">·</span>
+    <span>Cam <span class="val" id="s-cam">—</span></span>
+    <span style="flex:1"></span>
+    <span>Lat <span class="val" id="s-lat">—</span></span>
+</div>
+
+<!-- ━━━ Connect bar ━━━ -->
+<div class="connect-bar">
+    <input type="text" id="host-input" placeholder="IP:port  (e.g. 192.168.1.42:9876)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" inputmode="url">
+    <button class="send-btn" id="connect-btn" onclick="toggleStream()">Send</button>
+</div>
+
+<!-- ━━━ Chat bar ━━━ -->
+<div class="chat-bar">
+    <input type="text" id="chat-input" placeholder="message to terminal…" autocomplete="off" autocorrect="off">
+    <button class="chat-send" onclick="sendChat()">Send</button>
+</div>
+
+<!-- ━━━ Bottom rainbow ━━━ -->
+<div class="rainbow-bottom"><span style="background:#ff3838"></span><span style="background:#ff8c38"></span><span style="background:#ffe138"></span><span style="background:#3fb950"></span><span style="background:#38a5ff"></span><span style="background:#bc8cff"></span></div>
 
 <script>
 'use strict';
 
 const video = document.getElementById('video');
-const canvas = document.getElementById('canvas');
-const ctx = canvas.getContext('2d');
+const filterCanvas = document.getElementById('filter-canvas');
+const hiddenCanvas = document.getElementById('hidden-canvas');
+const fCtx = filterCanvas.getContext('2d');
+const hCtx = hiddenCanvas.getContext('2d');
 const hostInput = document.getElementById('host-input');
 const badge = document.getElementById('badge');
-const statusTag = document.getElementById('status-tag');
+const badgeFilter = document.getElementById('badge-filter');
+const statusPill = document.getElementById('status-pill');
 const connectBtn = document.getElementById('connect-btn');
+const filterLabel = document.getElementById('filter-label');
+const chatInput = document.getElementById('chat-input');
 
-let ws = null;
-let stream = null;
-let animId = null;
-let frameCount = 0;
-let lastFpsTime = 0;
-let lastFpsCount = 0;
-let facingMode = 'user'; // 'user' = front, 'environment' = back
-let quality = 0.5; // JPEG quality
+let ws = null, stream = null, animId = null;
+let frameCount = 0, lastFpsTime = 0, lastFpsCount = 0;
+let facingMode = 'environment'; // default: back camera for streaming
+let torchOn = false;
+
+// ── Quality presets ──
 const qualities = [
     { label: 'low', q: 0.3, w: 240, h: 180 },
     { label: 'med', q: 0.5, w: 480, h: 360 },
@@ -100,16 +179,27 @@ const qualities = [
     { label: 'max', q: 0.85, w: 1280, h: 720 },
 ];
 let qualityIdx = 1;
+let quality = qualities[qualityIdx].q;
 
-// Auto-fill from URL hash: hexcast-send.html#192.168.1.42:9876
-if (location.hash) {
-    hostInput.value = location.hash.slice(1);
-}
+// ── Filter presets ──
+const filters = [
+    { name: 'none', label: 'Normal', fn: null },
+    { name: 'thermal', label: 'Thermal', fn: applyThermal },
+    { name: 'gray', label: 'Grayscale', fn: applyGray },
+    { name: 'fax', label: 'Fax B/W', fn: applyFax },
+    { name: 'signal', label: 'Signal', fn: applySignal },
+    { name: 'edge', label: 'Edge Detect', fn: applyEdge },
+    { name: 'invert', label: 'Invert', fn: applyInvert },
+    { name: 'cyber', label: 'Cyberpunk', fn: applyCyber },
+];
+let filterIdx = 0;
 
+// Auto-fill from URL hash
+if (location.hash) hostInput.value = location.hash.slice(1);
+
+// ── Camera ──
 async function startCamera() {
-    if (stream) {
-        stream.getTracks().forEach(t => t.stop());
-    }
+    if (stream) stream.getTracks().forEach(t => t.stop());
     const q = qualities[qualityIdx];
     try {
         stream = await navigator.mediaDevices.getUserMedia({
@@ -119,34 +209,173 @@ async function startCamera() {
         video.srcObject = stream;
         await video.play();
         const track = stream.getVideoTracks()[0];
-        const settings = track.getSettings();
-        document.getElementById('s-cam').textContent =
-            `${facingMode === 'user' ? 'front' : 'back'} ${settings.width}×${settings.height}`;
+        const s = track.getSettings();
+        document.getElementById('s-cam').textContent = `${facingMode === 'user' ? 'front' : 'back'} ${s.width||'?'}×${s.height||'?'}`;
         badge.textContent = facingMode === 'user' ? 'front' : 'back';
-        badge.className = 'overlay-badge';
+        badge.className = 'badge';
+        updateFilterCanvas();
     } catch (e) {
-        badge.textContent = 'camera error: ' + e.message;
+        badge.textContent = 'camera: ' + e.message;
     }
 }
 
 function swapCamera() {
     facingMode = facingMode === 'user' ? 'environment' : 'user';
+    torchOn = false;
+    document.getElementById('btn-torch').classList.remove('active');
     startCamera();
 }
 
 function cycleQuality() {
     qualityIdx = (qualityIdx + 1) % qualities.length;
     quality = qualities[qualityIdx].q;
-    document.getElementById('quality-btn').textContent = `Quality: ${qualities[qualityIdx].label}`;
-    if (stream) startCamera(); // re-open at new resolution
+    document.getElementById('btn-quality').textContent = '◉ ' + qualities[qualityIdx].label;
+    if (stream) startCamera();
+}
+
+function cycleFilter() {
+    filterIdx = (filterIdx + 1) % filters.length;
+    const f = filters[filterIdx];
+    document.getElementById('btn-filter').textContent = '◐ ' + f.name;
+    badgeFilter.textContent = f.name === 'none' ? '' : f.name;
+    // Show label briefly
+    filterLabel.textContent = f.label;
+    filterLabel.classList.add('show');
+    setTimeout(() => filterLabel.classList.remove('show'), 1200);
+    updateFilterCanvas();
+}
+
+function updateFilterCanvas() {
+    const f = filters[filterIdx];
+    filterCanvas.style.display = f.fn ? 'block' : 'none';
+}
+
+function toggleTorch() {
+    if (!stream) return;
+    const track = stream.getVideoTracks()[0];
+    if (!track) return;
+    torchOn = !torchOn;
+    try { track.applyConstraints({ advanced: [{ torch: torchOn }] }); } catch(e) {}
+    document.getElementById('btn-torch').classList.toggle('active', torchOn);
+}
+
+function takeSnapshot() {
+    const q = qualities[qualityIdx];
+    hiddenCanvas.width = q.w; hiddenCanvas.height = q.h;
+    hCtx.drawImage(video, 0, 0, q.w, q.h);
+    if (filters[filterIdx].fn) filters[filterIdx].fn(hCtx, q.w, q.h);
+    const a = document.createElement('a');
+    a.href = hiddenCanvas.toDataURL('image/png');
+    a.download = 'hexcast-' + Date.now() + '.png';
+    a.click();
+}
+
+// ── Tap on video to cycle filter ──
+document.getElementById('video-area').addEventListener('click', e => {
+    if (e.target.closest('button') || e.target.closest('input')) return;
+    cycleFilter();
+});
+
+// ── Filter functions ──
+function applyThermal(ctx, w, h) {
+    const img = ctx.getImageData(0, 0, w, h), d = img.data;
+    for (let i = 0; i < d.length; i += 4) {
+        const lum = (d[i] * 0.299 + d[i+1] * 0.587 + d[i+2] * 0.114) / 255;
+        if (lum < 0.25) { d[i] = 0; d[i+1] = Math.round(lum*4*255); d[i+2] = 255; }
+        else if (lum < 0.5) { d[i] = 0; d[i+1] = 255; d[i+2] = Math.round((1-(lum-0.25)*4)*255); }
+        else if (lum < 0.75) { d[i] = Math.round((lum-0.5)*4*255); d[i+1] = 255; d[i+2] = 0; }
+        else { d[i] = 255; d[i+1] = Math.round((1-(lum-0.75)*4)*255); d[i+2] = 0; }
+    }
+    ctx.putImageData(img, 0, 0);
+}
+
+function applyGray(ctx, w, h) {
+    const img = ctx.getImageData(0, 0, w, h), d = img.data;
+    for (let i = 0; i < d.length; i += 4) {
+        const g = d[i] * 0.299 + d[i+1] * 0.587 + d[i+2] * 0.114;
+        d[i] = d[i+1] = d[i+2] = g;
+    }
+    ctx.putImageData(img, 0, 0);
+}
+
+function applyFax(ctx, w, h) {
+    const img = ctx.getImageData(0, 0, w, h), d = img.data;
+    for (let i = 0; i < d.length; i += 4) {
+        const g = d[i] * 0.299 + d[i+1] * 0.587 + d[i+2] * 0.114;
+        const v = g > 128 ? 255 : 0;
+        d[i] = d[i+1] = d[i+2] = v;
+    }
+    ctx.putImageData(img, 0, 0);
+}
+
+function applySignal(ctx, w, h) {
+    const img = ctx.getImageData(0, 0, w, h), d = img.data;
+    for (let i = 0; i < d.length; i += 4) {
+        const g = d[i] * 0.299 + d[i+1] * 0.587 + d[i+2] * 0.114;
+        d[i] = 0; d[i+1] = Math.round(g * 0.95); d[i+2] = Math.round(g * 0.2);
+    }
+    ctx.putImageData(img, 0, 0);
+}
+
+function applyEdge(ctx, w, h) {
+    const src = ctx.getImageData(0, 0, w, h), s = src.data;
+    const out = ctx.createImageData(w, h), o = out.data;
+    for (let y = 1; y < h - 1; y++) {
+        for (let x = 1; x < w - 1; x++) {
+            const idx = (y * w + x) * 4;
+            const tl = s[((y-1)*w+x-1)*4], t = s[((y-1)*w+x)*4], tr = s[((y-1)*w+x+1)*4];
+            const bl = s[((y+1)*w+x-1)*4], b = s[((y+1)*w+x)*4], br = s[((y+1)*w+x+1)*4];
+            const l = s[(y*w+x-1)*4], r = s[(y*w+x+1)*4];
+            const gx = -tl + tr - 2*l + 2*r - bl + br;
+            const gy = -tl - 2*t - tr + bl + 2*b + br;
+            const mag = Math.min(255, Math.sqrt(gx*gx + gy*gy));
+            o[idx] = mag * 0.4; o[idx+1] = mag * 0.8; o[idx+2] = mag; o[idx+3] = 255;
+        }
+    }
+    ctx.putImageData(out, 0, 0);
+}
+
+function applyInvert(ctx, w, h) {
+    const img = ctx.getImageData(0, 0, w, h), d = img.data;
+    for (let i = 0; i < d.length; i += 4) { d[i] = 255 - d[i]; d[i+1] = 255 - d[i+1]; d[i+2] = 255 - d[i+2]; }
+    ctx.putImageData(img, 0, 0);
+}
+
+function applyCyber(ctx, w, h) {
+    const img = ctx.getImageData(0, 0, w, h), d = img.data;
+    for (let i = 0; i < d.length; i += 4) {
+        const g = d[i] * 0.299 + d[i+1] * 0.587 + d[i+2] * 0.114;
+        const n = g / 255;
+        // Cyan → magenta → yellow ramp
+        d[i] = Math.round(n < 0.5 ? n*2*80 : 80 + (n-0.5)*2*175);
+        d[i+1] = Math.round(n < 0.33 ? 200*n*3 : n < 0.66 ? 200 - (n-0.33)*3*150 : 50 + (n-0.66)*3*205);
+        d[i+2] = Math.round(n < 0.5 ? 255 - n*2*155 : 100 - (n-0.5)*2*100);
+    }
+    ctx.putImageData(img, 0, 0);
+}
+
+// ── Render filter overlay in real-time ──
+let filterAnimId = null;
+function filterLoop() {
+    const f = filters[filterIdx];
+    if (f.fn && video.readyState >= 2) {
+        const vw = video.videoWidth || 480, vh = video.videoHeight || 360;
+        if (filterCanvas.width !== vw) { filterCanvas.width = vw; filterCanvas.height = vh; }
+        fCtx.drawImage(video, 0, 0, vw, vh);
+        f.fn(fCtx, vw, vh);
+    }
+    filterAnimId = requestAnimationFrame(filterLoop);
+}
+filterLoop();
+
+// ── Stream / WebSocket ──
+function setStatus(state, text) {
+    statusPill.className = 'status-pill ' + state;
+    statusPill.textContent = text || state;
 }
 
 function toggleStream() {
-    if (ws) {
-        stopStream();
-    } else {
-        startStream();
-    }
+    if (ws) stopStream(); else startStream();
 }
 
 function startStream() {
@@ -155,92 +384,139 @@ function startStream() {
     if (!host.includes(':')) host += ':9876';
     if (!host.startsWith('ws://')) host = 'ws://' + host;
 
-    statusTag.textContent = 'connecting...';
-    statusTag.style.background = '#e3b341';
-
+    setStatus('connecting', 'connecting…');
     ws = new WebSocket(host);
     ws.onopen = () => {
-        statusTag.textContent = 'streaming';
-        statusTag.style.background = '#238636';
-        badge.className = 'overlay-badge live';
+        setStatus('live', 'streaming');
+        badge.className = 'badge live';
         badge.textContent = `${facingMode === 'user' ? 'front' : 'back'} → ${hostInput.value}`;
         connectBtn.textContent = 'Stop';
-        connectBtn.className = 'btn btn--stop';
+        connectBtn.className = 'send-btn stop';
         frameCount = 0;
         lastFpsTime = performance.now();
         lastFpsCount = 0;
         sendLoop();
     };
     ws.onclose = () => stopStream();
-    ws.onerror = () => {
-        statusTag.textContent = 'error';
-        statusTag.style.background = '#da3633';
-        stopStream();
+    ws.onerror = () => { setStatus('error', 'error'); stopStream(); };
+    ws.onmessage = (evt) => {
+        // Handle incoming messages from terminal (chat, commands)
+        try {
+            const msg = JSON.parse(evt.data);
+            if (msg.type === 'chat') showIncomingChat(msg.text, msg.from || 'terminal');
+            if (msg.type === 'cmd') handleRemoteCmd(msg.cmd);
+        } catch(e) {}
     };
 }
 
 function stopStream() {
-    if (animId) cancelAnimationFrame(animId);
-    animId = null;
+    if (animId) { clearTimeout(animId); animId = null; }
     if (ws) { try { ws.close(); } catch(e) {} }
     ws = null;
-    statusTag.textContent = 'disconnected';
-    statusTag.style.background = '#484f58';
-    badge.className = 'overlay-badge';
+    setStatus('off', 'disconnected');
+    badge.className = 'badge';
     badge.textContent = facingMode === 'user' ? 'front' : 'back';
     connectBtn.textContent = 'Send';
-    connectBtn.className = 'btn';
+    connectBtn.className = 'send-btn';
 }
 
 function sendLoop() {
     if (!ws || ws.readyState !== WebSocket.OPEN) return;
-
     const q = qualities[qualityIdx];
-    canvas.width = q.w;
-    canvas.height = q.h;
-    ctx.drawImage(video, 0, 0, q.w, q.h);
+    hiddenCanvas.width = q.w; hiddenCanvas.height = q.h;
+    hCtx.drawImage(video, 0, 0, q.w, q.h);
 
-    // Encode as JPEG base64
-    const dataUrl = canvas.toDataURL('image/jpeg', quality);
+    // Apply filter to outgoing frame
+    if (filters[filterIdx].fn) filters[filterIdx].fn(hCtx, q.w, q.h);
+
+    const dataUrl = hiddenCanvas.toDataURL('image/jpeg', quality);
     const b64 = dataUrl.split(',')[1];
-    const sz = Math.round(b64.length * 0.75); // approximate byte size
+    const sz = Math.round(b64.length * 0.75);
 
     const packet = JSON.stringify({
         type: 'frame',
-        v: '3.6.0',
+        v: '4.0.0',
         src: `phone:${facingMode === 'user' ? 'front' : 'back'}`,
-        w: q.w,
-        h: q.h,
-        sz: sz,
-        t: Date.now() / 1000,
+        filter: filters[filterIdx].name,
+        w: q.w, h: q.h, sz, t: Date.now() / 1000,
     }) + '\n' + b64;
 
-    try {
-        ws.send(packet);
-    } catch (e) {
-        stopStream();
-        return;
-    }
+    try { ws.send(packet); } catch(e) { stopStream(); return; }
 
     frameCount++;
     document.getElementById('s-frames').textContent = frameCount;
     document.getElementById('s-size').textContent = (sz / 1024).toFixed(1) + ' KB';
 
-    // FPS calc
     const now = performance.now();
     if (now - lastFpsTime > 1000) {
         const fps = Math.round((frameCount - lastFpsCount) / ((now - lastFpsTime) / 1000));
         document.getElementById('s-fps').textContent = fps;
+        document.getElementById('s-lat').textContent = Math.round(1000 / Math.max(1, fps)) + ' ms';
         lastFpsCount = frameCount;
         lastFpsTime = now;
     }
 
-    // Target ~15 fps
     animId = setTimeout(() => requestAnimationFrame(sendLoop), 50);
+}
+
+// ── Chat ──
+function sendChat() {
+    const text = chatInput.value.trim();
+    if (!text) return;
+    if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'chat', text, from: 'phone', t: Date.now() }));
+    }
+    // Also broadcast for hexterm integration
+    try {
+        const bc = new BroadcastChannel('hexterm');
+        bc.postMessage({ type: 'chat', text, from: 'hexcast-send' });
+        bc.close();
+    } catch(e) {}
+    chatInput.value = '';
+}
+
+chatInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); sendChat(); }
+});
+
+function showIncomingChat(text, from) {
+    // Brief visual indication in badge
+    const old = badge.textContent;
+    badge.textContent = `💬 ${from}: ${text}`;
+    setTimeout(() => { badge.textContent = old; }, 3000);
+}
+
+function handleRemoteCmd(cmd) {
+    if (cmd === 'swap') swapCamera();
+    else if (cmd === 'snapshot') takeSnapshot();
+    else if (cmd === 'filter') cycleFilter();
+    else if (cmd === 'torch') toggleTorch();
+    else if (cmd.startsWith('quality:')) {
+        const idx = qualities.findIndex(q => q.label === cmd.split(':')[1]);
+        if (idx >= 0) { qualityIdx = idx; quality = qualities[qualityIdx].q; document.getElementById('btn-quality').textContent = '◉ ' + qualities[qualityIdx].label; if (stream) startCamera(); }
+    }
+}
+
+// ── BroadcastChannel for hexterm pairing ──
+try {
+    const bc = new BroadcastChannel('hexterm');
+    bc.onmessage = e => {
+        const d = e.data;
+        if (d.type === 'cmd' && d.target === 'hexcast-send') handleRemoteCmd(d.cmd);
+        if (d.type === 'chat' && d.from !== 'hexcast-send') showIncomingChat(d.text, d.from || 'terminal');
+    };
+} catch(e) {}
+
+// ── PWA Service Worker ──
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
 }
 
 // Start camera on load
 startCamera();
+
+console.log('⚛ hexcast send v4.0 — camera → terminal streaming');
+console.log('{+1, 1, -1, +0, 0, -0, +n, n, -n}');
 </script>
 </body>
 </html>
