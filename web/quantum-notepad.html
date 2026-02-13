@@ -1115,37 +1115,41 @@
         }
         .tools-dropdown-item:hover { background: var(--cursor-bg-hover); color: var(--cursor-text); }
 
-        /* ===== Quantum Nav 3D Cube ===== */
+        /* ===== Quantum Nav Cube ===== */
         .nav-cube-container {
             margin-bottom: var(--cursor-space-md);
-            padding: var(--cursor-space-xs);
             background: var(--cursor-bg);
             border-radius: var(--cursor-radius-md);
             position: relative;
+            overflow: hidden;
         }
 
-        /* Outer wrapper: arrows sit around the cube */
-        .nav-cube-orbit {
-            display: grid;
-            grid-template-areas:
-                ".  up  ."
-                "lt cube rt"
-                ".  dn  .";
-            grid-template-columns: 28px 1fr 28px;
-            grid-template-rows: 28px 1fr 28px;
-            place-items: center;
-            width: 180px;
-            height: 180px;
-            margin: 4px auto;
-            gap: 2px;
+        /* 2D / 3D tab switcher */
+        .ncv-tabs {
+            display: flex; border-bottom: 1px solid var(--cursor-border-muted);
         }
-        .nav-cube-orbit .nca-up    { grid-area: up; }
-        .nav-cube-orbit .nca-down  { grid-area: dn; }
-        .nav-cube-orbit .nca-left  { grid-area: lt; }
-        .nav-cube-orbit .nca-right { grid-area: rt; }
+        .ncv-tab {
+            flex: 1; padding: 5px 0; text-align: center;
+            font-size: 0.625rem; font-weight: 700; font-family: var(--cursor-font-mono);
+            color: var(--cursor-text-muted); cursor: pointer;
+            background: transparent; border: none; border-bottom: 2px solid transparent;
+            transition: all 0.15s;
+        }
+        .ncv-tab:hover { color: var(--cursor-text-secondary); }
+        .ncv-tab.active { color: var(--cursor-accent); border-bottom-color: var(--cursor-accent); background: rgba(88,166,255,0.04); }
+
+        /* Viewport: clips 3D faces so they can't escape */
+        .ncv-viewport {
+            width: 100%; height: 160px;
+            display: flex; align-items: center; justify-content: center;
+            overflow: hidden; position: relative;
+        }
+        .ncv-viewport.ncv-hidden { display: none; }
+
+        /* 2D slice canvas */
+        #ncv-2d-canvas { width: 100%; height: 100%; display: block; cursor: crosshair; }
 
         .nav-cube-scene {
-            grid-area: cube;
             position: relative;
             perspective: 400px;
             width: 118px;
@@ -1154,6 +1158,13 @@
             user-select: none;
         }
         .nav-cube-scene:active { cursor: grabbing; }
+
+        /* Arrow controls — separate row below the viewport */
+        .ncv-controls {
+            display: flex; align-items: center; justify-content: center;
+            gap: 6px; padding: 6px 8px;
+            border-top: 1px solid var(--cursor-border-muted);
+        }
 
         .nav-cube-inner {
             width: 100%;
@@ -2782,11 +2793,21 @@
                 <div class="sidebar-section">
                     <div class="sidebar-title">Quantum Navigation</div>
 
-                    <!-- 3D Rubik Cube Nav — arrows orbit outside the cube -->
+                    <!-- Quantum Nav — 2D slice / 3D cube -->
                     <div class="nav-cube-container" id="nav-cube-container">
-                        <div class="nav-cube-orbit">
-                            <button class="nav-cube-arrow nca-up" id="nca-up" title="Rotate up">▲</button>
-                            <button class="nav-cube-arrow nca-left" id="nca-left" title="Rotate left">◀</button>
+                        <!-- Tab bar: 2D flat slice vs 3D Rubik's cube -->
+                        <div class="ncv-tabs">
+                            <button class="ncv-tab" id="ncv-tab-2d" data-ncv="2d">⬡ 2D Slice</button>
+                            <button class="ncv-tab active" id="ncv-tab-3d" data-ncv="3d">🎲 3D Cube</button>
+                        </div>
+
+                        <!-- 2D Slice viewport (canvas — prefix grid) -->
+                        <div class="ncv-viewport ncv-hidden" id="ncv-2d-view">
+                            <canvas id="ncv-2d-canvas" width="240" height="160"></canvas>
+                        </div>
+
+                        <!-- 3D Cube viewport (clipped so faces can't escape) -->
+                        <div class="ncv-viewport" id="ncv-3d-view">
                             <div class="nav-cube-scene" id="nav-cube-scene">
                                 <div class="nav-cube-inner" id="nav-cube-inner">
                                     <!-- Front face — primary 9-symbol pad -->
@@ -2833,8 +2854,14 @@
                                     </div>
                                 </div>
                             </div>
-                            <button class="nav-cube-arrow nca-right" id="nca-right" title="Rotate right">▶</button>
-                            <button class="nav-cube-arrow nca-down" id="nca-down" title="Rotate down">▼</button>
+                        </div>
+
+                        <!-- Controls — always below the viewport, never obscured -->
+                        <div class="ncv-controls" id="ncv-3d-controls">
+                            <button class="nav-cube-arrow" id="nca-up" title="Rotate up">▲</button>
+                            <button class="nav-cube-arrow" id="nca-left" title="Rotate left">◀</button>
+                            <button class="nav-cube-arrow" id="nca-right" title="Rotate right">▶</button>
+                            <button class="nav-cube-arrow" id="nca-down" title="Rotate down">▼</button>
                         </div>
                     </div>
 
@@ -7051,6 +7078,97 @@
                         cell.classList.add('ncf-active');
                     });
                 });
+
+                // ===== NAV CUBE: 2D / 3D TAB SWITCHING + 2D SLICE RENDERER =====
+                {
+                    const ncv2dView = document.getElementById('ncv-2d-view');
+                    const ncv3dView = document.getElementById('ncv-3d-view');
+                    const ncv3dCtrl = document.getElementById('ncv-3d-controls');
+                    const ncv2dCv   = document.getElementById('ncv-2d-canvas');
+                    const ncv2dCtx  = ncv2dCv ? ncv2dCv.getContext('2d') : null;
+                    let ncvMode = '3d';
+
+                    document.querySelectorAll('.ncv-tab').forEach(tab => {
+                        tab.addEventListener('click', () => {
+                            document.querySelectorAll('.ncv-tab').forEach(t => t.classList.remove('active'));
+                            tab.classList.add('active');
+                            ncvMode = tab.dataset.ncv;
+                            if (ncvMode === '2d') {
+                                ncv2dView.classList.remove('ncv-hidden');
+                                ncv3dView.classList.add('ncv-hidden');
+                                ncv3dCtrl.style.display = 'none';
+                            } else {
+                                ncv3dView.classList.remove('ncv-hidden');
+                                ncv2dView.classList.add('ncv-hidden');
+                                ncv3dCtrl.style.display = '';
+                            }
+                        });
+                    });
+
+                    // 2D Slice — flat prefix grid (click to navigate, scroll for Z)
+                    const _pfxC = ['#3fb950','#58a6ff','#bc8cff','#f0883e','#8b949e','#f85149','#d2a8ff','#79c0ff','#e3b341'];
+                    const _pfxN = ['+1','1','-1','+0','0','-0','+n','n','-n'];
+                    const _hr = (h, a) => 'rgba(' + parseInt(h.slice(1,3),16) + ',' + parseInt(h.slice(3,5),16) + ',' + parseInt(h.slice(5,7),16) + ',' + a + ')';
+
+                    if (ncv2dCv) {
+                        ncv2dCv.addEventListener('click', e => {
+                            const r = ncv2dCv.getBoundingClientRect();
+                            const mx = ((e.clientX - r.left) / r.width) * ncv2dCv.width;
+                            const my = ((e.clientY - r.top) / r.height) * ncv2dCv.height;
+                            const grid = 9;
+                            const cx = Math.floor(mx / (ncv2dCv.width / grid));
+                            const cy = Math.floor(my / (ncv2dCv.height / grid));
+                            this.quantumPosition[0] = cx;
+                            this.quantumPosition[1] = cy;
+                            this.updateQuantumPosition('slice click [' + cx + ',' + cy + ']');
+                        });
+                        ncv2dCv.addEventListener('wheel', e => {
+                            e.preventDefault();
+                            this.quantumPosition[2] += e.deltaY > 0 ? -1 : 1;
+                            this.updateQuantumPosition('slice scroll Z=' + this.quantumPosition[2]);
+                        }, { passive: false });
+                    }
+
+                    let _ncvFrame = 0;
+                    const _self = this;
+                    function drawNcv2dSlice() {
+                        if (!ncv2dCtx || ncvMode !== '2d') { requestAnimationFrame(drawNcv2dSlice); return; }
+                        const W = ncv2dCv.width, H = ncv2dCv.height, t = _ncvFrame++;
+                        const p = _self.quantumPosition || [0,0,0];
+                        const layer = Math.abs(p[2]) % 6;
+                        ncv2dCtx.fillStyle = '#0a0e14'; ncv2dCtx.fillRect(0, 0, W, H);
+                        const grid = 9, cellW = W / grid, cellH = H / grid;
+                        for (let r = 0; r < grid; r++) for (let c = 0; c < grid; c++) {
+                            const x = c * cellW, y = r * cellH;
+                            const heat = Math.sin(t * 0.02 + c * 0.8 + r * 0.6 + layer * 1.3) * 0.5 + 0.5;
+                            const active = (c === Math.abs(p[0]) % grid && r === Math.abs(p[1]) % grid);
+                            ncv2dCtx.fillStyle = active ? 'rgba(139,92,246,' + (0.5 + Math.sin(t * 0.08) * 0.2) + ')' : _hr(_pfxC[c], 0.15 + heat * 0.35);
+                            ncv2dCtx.fillRect(x + 0.5, y + 0.5, cellW - 1, cellH - 1);
+                            ncv2dCtx.strokeStyle = active ? 'rgba(139,92,246,0.8)' : 'rgba(255,255,255,' + (0.04 + heat * 0.06) + ')';
+                            ncv2dCtx.lineWidth = active ? 1.5 : 0.3;
+                            ncv2dCtx.strokeRect(x + 0.5, y + 0.5, cellW - 1, cellH - 1);
+                            if (active) {
+                                const grd = ncv2dCtx.createRadialGradient(x+cellW/2,y+cellH/2,0,x+cellW/2,y+cellH/2,cellW*0.6);
+                                grd.addColorStop(0,'rgba(139,92,246,0.25)'); grd.addColorStop(1,'rgba(139,92,246,0)');
+                                ncv2dCtx.fillStyle = grd; ncv2dCtx.fillRect(x,y,cellW,cellH);
+                            }
+                        }
+                        ncv2dCtx.font = 'bold 9px monospace'; ncv2dCtx.textAlign = 'center';
+                        for (let c = 0; c < grid; c++) { ncv2dCtx.fillStyle = _pfxC[c]; ncv2dCtx.fillText(_pfxN[c], c * cellW + cellW / 2, 10); }
+                        ncv2dCtx.textAlign = 'start';
+                        // Crosshair at position
+                        const cx = (Math.abs(p[0]) % grid) * cellW + cellW / 2;
+                        const cy = (Math.abs(p[1]) % grid) * cellH + cellH / 2;
+                        ncv2dCtx.setLineDash([3,3]); ncv2dCtx.strokeStyle = 'rgba(139,92,246,' + (0.3 + Math.sin(t * 0.06) * 0.15) + ')'; ncv2dCtx.lineWidth = 0.8;
+                        ncv2dCtx.beginPath(); ncv2dCtx.moveTo(cx,0); ncv2dCtx.lineTo(cx,H); ncv2dCtx.stroke();
+                        ncv2dCtx.beginPath(); ncv2dCtx.moveTo(0,cy); ncv2dCtx.lineTo(W,cy); ncv2dCtx.stroke();
+                        ncv2dCtx.setLineDash([]);
+                        ncv2dCtx.fillStyle = 'rgba(255,255,255,0.35)'; ncv2dCtx.font = '7px monospace';
+                        ncv2dCtx.fillText('Z=' + p[2] + ' [' + p[0] + ',' + p[1] + ']  click·scroll', 4, H - 4);
+                        requestAnimationFrame(drawNcv2dSlice);
+                    }
+                    requestAnimationFrame(drawNcv2dSlice);
+                }
 
                 // Layer up/down — versions the nav grid like Electron app
                 document.getElementById('layer-up').addEventListener('click', () => {
