@@ -898,8 +898,31 @@ def run_receive(args):
             await asyncio.sleep(1.0 / 30)  # check at 30fps
 
     async def main_receive():
-        async with websockets.server.serve(handler, "0.0.0.0", port):
-            await render_loop()
+        try:
+            async with websockets.server.serve(handler, "0.0.0.0", port):
+                await render_loop()
+        except OSError as e:
+            if e.errno == 48 or "address already in use" in str(e).lower():
+                show_cursor()
+                clear_screen()
+                print(f"\033[31m  Error: port {port} already in use.\033[0m")
+                print(f"\033[90m  Another hexcast instance may be running.\033[0m")
+                print()
+                print(f"\033[36m  Fix options:\033[0m")
+                print(f"\033[90m    hexcast --receive --port {port + 1}        # use a different port\033[0m")
+                print(f"\033[90m    lsof -ti:{port} | xargs kill              # kill the process on the port\033[0m")
+                print()
+                # Attempt to show what's on the port
+                try:
+                    import subprocess
+                    result = subprocess.run(["lsof", "-ti", f":{port}"], capture_output=True, text=True, timeout=3)
+                    pids = result.stdout.strip()
+                    if pids:
+                        print(f"\033[33m  Process(es) on port {port}: PID {pids.replace(chr(10), ', ')}\033[0m")
+                except Exception:
+                    pass
+            else:
+                raise
 
     try:
         asyncio.run(main_receive())
