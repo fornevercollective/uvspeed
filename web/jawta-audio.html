@@ -298,6 +298,7 @@ note("c2 ~ e2 ~").s("bd")
     </div>
 </div>
 
+<script src="quantum-prefixes.js"></script>
 <script>
 (function(){
 'use strict';
@@ -635,6 +636,20 @@ window.jawta={
     loadPattern(name){if(patterns[name])$('code-editor').value=patterns[name]},
     exportJSON(){return JSON.stringify(this.state)}
 };
+
+// ===== PWA SERVICE WORKER =====
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+
+// ===== QUANTUM PREFIX LIVE SYNC =====
+(function() {
+    const QP = window.QuantumPrefixes;
+    if (!QP) return;
+    QP.onStateChange(function(source, state) { if (source === 'jawta' || !state) return; });
+    QP.broadcastState('jawta', { coverage: 0, totalLines: 0, classifiedLines: 0, prefixCounts: {}, role: 'spatial-audio' });
+    QP.requestStateSync();
+})();
 
 console.log('⚛ jawta audio — spatial audio + live code');
 console.log('{+1, 1, -1, +0, 0, -0, +n, n, -n}');

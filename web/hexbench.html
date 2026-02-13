@@ -11,6 +11,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.jsdelivr.net/npm/marked@15/marked.min.js"></script>
+    <script src="quantum-prefixes.js"></script>
     <style>
         :root {
             --bg:#0d1117;--bg2:#161b22;--bg3:#21262d;--bg4:#2d333b;
@@ -98,7 +99,8 @@
         /* Right: Workbench Canvas */
         .canvas-panel{flex:1;min-width:300px;display:flex;flex-direction:column;overflow:hidden;position:relative}
         .canvas-toolbar{display:flex;align-items:center;gap:4px;padding:6px 10px;border-bottom:1px solid var(--border);background:var(--bg2);flex-shrink:0;flex-wrap:wrap}
-        .canvas-area{flex:1;position:relative;overflow:hidden;background:var(--bg)}
+        .canvas-split{flex:1;display:flex;flex-direction:column;overflow:hidden}
+        .canvas-area{flex:1;position:relative;overflow:hidden;background:var(--bg);min-height:100px}
         .canvas-grid{position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(circle,var(--border) .5px,transparent .5px);background-size:24px 24px;opacity:.4}
         .canvas-scroll{position:absolute;inset:0;overflow:hidden;cursor:grab}
         .canvas-scroll:active{cursor:grabbing}
@@ -107,6 +109,47 @@
         .zoom-controls button{background:var(--bg2);border:1px solid var(--border);color:var(--text);width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center}
         .zoom-controls button:hover{background:var(--accent);color:#fff}
         .zoom-label{background:var(--bg2);border:1px solid var(--border);color:var(--text-m);padding:2px 8px;border-radius:6px;font-size:11px;display:flex;align-items:center}
+
+        /* Horizontal split resize */
+        .hsplit-resize{height:5px;background:var(--border);cursor:row-resize;flex-shrink:0;transition:background .15s;position:relative;z-index:10}
+        .hsplit-resize:hover,.hsplit-resize.active{background:var(--accent)}
+        .hsplit-resize::after{content:'';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:32px;height:3px;border-radius:2px;background:rgba(255,255,255,.18)}
+
+        /* Pybricks Builder panel */
+        .pb-panel{height:38%;min-height:80px;display:flex;flex-direction:column;overflow:hidden;background:var(--bg)}
+        .pb-toolbar{display:flex;align-items:center;gap:4px;padding:4px 10px;border-top:1px solid var(--border);background:var(--bg2);flex-shrink:0;flex-wrap:wrap}
+        .pb-toolbar .pb-title{font-size:.625rem;font-weight:700;color:#f5cd00;margin-right:4px;display:flex;align-items:center;gap:4px}
+        .pb-toolbar .pb-title img{height:14px}
+        .pb-canvas-wrap{flex:1;position:relative;overflow:auto;background:var(--bg)}
+        .pb-canvas{min-width:1400px;min-height:600px;position:relative;padding:20px}
+        .pb-grid{position:absolute;inset:0;pointer-events:none;background-image:linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px);background-size:20px 20px;opacity:.6}
+
+        /* Pybricks blocks */
+        .pb-block{position:absolute;cursor:move;user-select:none;border-radius:6px;font-family:var(--mono);font-size:.6875rem;font-weight:700;min-width:120px;box-shadow:0 2px 8px rgba(0,0,0,.3);transition:box-shadow .12s;z-index:1}
+        .pb-block:hover{box-shadow:0 4px 16px rgba(0,0,0,.5)}
+        .pb-block-head{padding:5px 10px;border-radius:6px 6px 0 0;display:flex;align-items:center;gap:6px;color:#fff}
+        .pb-block-body{padding:4px 10px 6px;border-radius:0 0 6px 6px;display:flex;flex-direction:column;gap:3px}
+        .pb-block-row{display:flex;align-items:center;gap:6px;font-size:.5625rem;color:rgba(255,255,255,.85)}
+        .pb-block-input{background:rgba(0,0,0,.25);border:none;border-radius:4px;padding:2px 6px;font-family:var(--mono);font-size:.5625rem;color:#fff;width:60px;outline:none}
+        .pb-block-input:focus{box-shadow:0 0 0 1px rgba(255,255,255,.4)}
+        .pb-block-select{background:rgba(0,0,0,.25);border:none;border-radius:4px;padding:2px 4px;font-family:var(--mono);font-size:.5625rem;color:#fff;outline:none}
+        .pb-block .pb-notch-top{position:absolute;top:-4px;left:20px;width:24px;height:4px;border-radius:0 0 4px 4px}
+        .pb-block .pb-notch-bot{position:absolute;bottom:-4px;left:20px;width:24px;height:4px;border-radius:4px 4px 0 0}
+        .pb-block-connector{position:absolute;width:8px;height:8px;border-radius:50%;border:2px solid rgba(255,255,255,.4);background:transparent;cursor:pointer;z-index:2}
+        .pb-block-connector:hover{background:rgba(255,255,255,.4)}
+        .pb-block-connector.out{right:-6px;top:50%;transform:translateY(-50%)}
+        .pb-block-connector.in{left:-6px;top:50%;transform:translateY(-50%)}
+
+        /* Pybricks block palette chips */
+        .pb-chip{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;font-size:.5625rem;font-weight:600;border-radius:var(--rad);cursor:pointer;transition:all .12s;white-space:nowrap;border:1px solid transparent}
+        .pb-chip:hover{filter:brightness(1.2);transform:translateY(-1px)}
+        .pb-chip.cat-motion{background:rgba(0,119,220,.2);color:#09f;border-color:rgba(0,119,220,.3)}
+        .pb-chip.cat-sensor{background:rgba(63,185,80,.15);color:var(--green);border-color:rgba(63,185,80,.25)}
+        .pb-chip.cat-logic{background:rgba(240,136,62,.15);color:var(--orange);border-color:rgba(240,136,62,.25)}
+        .pb-chip.cat-hub{background:rgba(245,205,0,.15);color:#f5cd00;border-color:rgba(245,205,0,.25)}
+        .pb-chip.cat-loop{background:rgba(169,128,230,.15);color:#a980e6;border-color:rgba(169,128,230,.25)}
+        .pb-chip.cat-var{background:rgba(255,87,87,.15);color:var(--red);border-color:rgba(255,87,87,.25)}
+        .pb-chip.cat-stream{background:rgba(226,73,138,.15);color:#e2498a;border-color:rgba(226,73,138,.25)}
 
         /* Nodes */
         .node{position:absolute;background:var(--bg2);border:2px solid var(--border);border-radius:10px;min-width:160px;box-shadow:0 4px 16px rgba(0,0,0,.3);cursor:move;user-select:none;transition:box-shadow .15s,border-color .15s;z-index:1}
@@ -263,6 +306,8 @@
             .main{flex-direction:column}
             .doc-panel{width:100%;height:40%}
             .panel-resize{display:none}
+            .canvas-area{min-height:200px}
+            .pb-panel{min-height:160px}
         }
     </style>
 </head>
@@ -390,19 +435,58 @@
                 <span class="pal-chip" id="preset-pybricks" style="color:#f5cd00;border-color:#f5cd00">Pybricks</span>
                 <span class="pal-chip" id="preset-clear" style="color:var(--red);border-color:var(--red)">Clear</span>
             </div>
-            <div class="canvas-area">
-                <div class="canvas-grid" id="canvas-grid"></div>
-                <div class="canvas-scroll" id="canvas-scroll">
-                    <div class="canvas-inner" id="canvas-inner">
-                        <svg class="connections-svg" id="connections-svg"></svg>
+            <div class="canvas-split" id="canvas-split">
+                <!-- Top: Node Canvas -->
+                <div class="canvas-area" id="canvas-area-top">
+                    <div class="canvas-grid" id="canvas-grid"></div>
+                    <div class="canvas-scroll" id="canvas-scroll">
+                        <div class="canvas-inner" id="canvas-inner">
+                            <svg class="connections-svg" id="connections-svg"></svg>
+                        </div>
+                    </div>
+                    <div class="zoom-controls">
+                        <button id="zoom-in" title="Zoom in">+</button>
+                        <span class="zoom-label" id="zoom-label">100%</span>
+                        <button id="zoom-out" title="Zoom out">−</button>
+                        <button id="zoom-fit" title="Fit all">⊙</button>
+                        <button id="zoom-reset" title="Reset">1:1</button>
                     </div>
                 </div>
-                <div class="zoom-controls">
-                    <button id="zoom-in" title="Zoom in">+</button>
-                    <span class="zoom-label" id="zoom-label">100%</span>
-                    <button id="zoom-out" title="Zoom out">−</button>
-                    <button id="zoom-fit" title="Fit all">⊙</button>
-                    <button id="zoom-reset" title="Reset">1:1</button>
+
+                <!-- Horizontal split handle -->
+                <div class="hsplit-resize" id="hsplit-resize" title="Drag to resize"></div>
+
+                <!-- Bottom: Pybricks Block Builder -->
+                <div class="pb-panel" id="pb-panel">
+                    <div class="pb-toolbar" id="pb-toolbar">
+                        <span class="pb-title">🧱 PYBRICKS BUILDER</span>
+                        <span class="pb-chip cat-hub" data-pb="hub_init">Hub Init</span>
+                        <span class="pb-chip cat-motion" data-pb="motor_run">Motor Run</span>
+                        <span class="pb-chip cat-motion" data-pb="motor_stop">Motor Stop</span>
+                        <span class="pb-chip cat-motion" data-pb="motor_angle">Run Angle</span>
+                        <span class="pb-chip cat-sensor" data-pb="color_read">Color Read</span>
+                        <span class="pb-chip cat-sensor" data-pb="distance_read">Distance</span>
+                        <span class="pb-chip cat-sensor" data-pb="force_read">Force</span>
+                        <span class="pb-chip cat-logic" data-pb="if_then">If / Then</span>
+                        <span class="pb-chip cat-logic" data-pb="compare">Compare</span>
+                        <span class="pb-chip cat-loop" data-pb="loop_forever">Loop ∞</span>
+                        <span class="pb-chip cat-loop" data-pb="wait_ms">Wait</span>
+                        <span class="pb-chip cat-var" data-pb="set_var">Set Var</span>
+                        <span class="pb-chip cat-stream" data-pb="print_val">Print</span>
+                        <span class="pb-chip cat-hub" data-pb="hub_light">Hub Light</span>
+                        <span class="pb-chip cat-hub" data-pb="hub_beep">Beep</span>
+                        <span style="flex:1"></span>
+                        <span class="pb-chip cat-hub" id="pb-preset-drive" style="font-weight:700">Drive Bot</span>
+                        <span class="pb-chip cat-hub" id="pb-preset-sorter" style="font-weight:700">Color Sorter</span>
+                        <span class="pb-chip" id="pb-export" style="color:var(--green);border-color:var(--green)">Export .py</span>
+                        <span class="pb-chip" id="pb-clear" style="color:var(--red);border-color:var(--red)">Clear</span>
+                    </div>
+                    <div class="pb-canvas-wrap" id="pb-canvas-wrap">
+                        <div class="pb-canvas" id="pb-canvas">
+                            <div class="pb-grid"></div>
+                            <svg class="connections-svg" id="pb-connections-svg" style="position:absolute;inset:0;pointer-events:none;z-index:0"></svg>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -855,7 +939,7 @@ function renderStages() {
     });
     html += `<div style="display:flex;align-items:center;gap:6px;margin-top:4px">
         <button class="stg-clear-btn" onclick="clearStages()">Clear All</button>
-        ${activePhase ? '<button class="stg-clear-btn" onclick="setActivePhase(\\'\\')">Show All Phases</button>' : ''}
+        ${activePhase ? `<button class="stg-clear-btn" onclick="setActivePhase('')">Show All Phases</button>` : ''}
     </div></div></div>`;
     wrap.innerHTML = html;
 }
@@ -2217,6 +2301,14 @@ function handleConsoleInput() {
             case 'preset': loadAT6301Setup(); break;
             case 'arduino': loadArduinoLab(); break;
             case 'pybricks': case 'lego': loadPybricksLab(); break;
+            case 'pb': case 'builder': {
+                if (arg === 'drive') loadPbDriveBot();
+                else if (arg === 'sorter' || arg === 'color') loadPbColorSorter();
+                else if (arg === 'export') exportPbPython();
+                else if (arg === 'clear') { clearPbCanvas(); logConsole('sys', 'Pybricks Builder cleared'); }
+                else logConsole('sys', 'Pybricks Builder: /pb drive | sorter | export | clear');
+                break;
+            }
             case 'ohm': {
                 const [v, i] = arg.split(/[,\s]+/).map(Number);
                 if (v && i) logConsole('calc', `R = ${(v/i).toFixed(4)} Ω, P = ${(v*i).toFixed(4)} W`);
@@ -2234,7 +2326,7 @@ function handleConsoleInput() {
                 break;
             }
             case 'help':
-                logConsole('sys', 'Commands: /v <volts> /i <amps> /on /off /ohm <V,I> /nodes /run <node> /search <term> /preset /arduino /pybricks /lego /clear /help');
+                logConsole('sys', 'Commands: /v <volts> /i <amps> /on /off /ohm <V,I> /nodes /run <node> /search <term> /preset /arduino /pybricks /lego /pb <drive|sorter|export|clear> /clear /help');
                 break;
             default: logConsole('sys', 'Unknown: /' + cmd + ' — /help');
         }
@@ -2249,16 +2341,356 @@ $('doc-save').addEventListener('click', () => {
     localStorage.setItem('hexbench-psu-v', psuVoltage);
     localStorage.setItem('hexbench-psu-a', psuCurrent);
     localStorage.setItem('hexbench-code', codeEditor.value);
+    // Broadcast quantum prefix state on save
+    const QP = window.QuantumPrefixes;
+    if (QP) {
+        const meta = QP.prefixMetadata(codeEditor.value, 'arduino');
+        QP.broadcastState('hexbench', { coverage: meta.coverage, totalLines: meta.totalLines, classifiedLines: meta.classifiedLines, prefixCounts: meta.prefixCounts });
+    }
     logConsole('sys', 'Settings saved');
 });
 
 $('doc-export').addEventListener('click', () => {
+    const QP = window.QuantumPrefixes;
     const data = { psu: { v: psuVoltage, a: psuCurrent, output: psuOutput }, code: codeEditor.value, nodes: nodesData, connections };
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    // Wrap with quantum prefix metadata
+    const wrapped = QP ? QP.wrapJsonExport(data, [
+        { content: codeEditor.value, language: 'arduino' },
+        ...nodesData.filter(n => n.code).map(n => ({ content: n.code }))
+    ], 'hexbench') : data;
+    // Also include prefixed code
+    if (QP) wrapped.prefixedCode = QP.prefixContent(codeEditor.value, 'arduino');
+    const blob = new Blob([JSON.stringify(wrapped, null, 2)], { type: 'application/json' });
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
     a.download = 'hexbench-' + Date.now() + '.json'; a.click();
-    logConsole('sys', 'Exported hexbench state');
+    // Broadcast state
+    if (QP) {
+        const meta = QP.prefixMetadata(codeEditor.value, 'arduino');
+        QP.broadcastState('hexbench', { coverage: meta.coverage, totalLines: meta.totalLines, classifiedLines: meta.classifiedLines, prefixCounts: meta.prefixCounts });
+    }
+    logConsole('sys', 'Exported hexbench state with quantum gutter');
 });
+
+// ===== HORIZONTAL SPLIT RESIZE =====
+const hsplitHandle = $('hsplit-resize');
+const canvasAreaTop = $('canvas-area-top');
+const pbPanel = $('pb-panel');
+const canvasSplit = $('canvas-split');
+let hsplitDragging = false;
+function hsplitStart() { hsplitDragging = true; hsplitHandle.classList.add('active'); document.body.style.cursor = 'row-resize'; }
+function hsplitMove(clientY) {
+    if (!hsplitDragging) return;
+    const rect = canvasSplit.getBoundingClientRect();
+    const topPct = Math.max(15, Math.min(85, ((clientY - rect.top) / rect.height) * 100));
+    canvasAreaTop.style.flex = 'none';
+    canvasAreaTop.style.height = topPct + '%';
+    pbPanel.style.flex = 'none';
+    pbPanel.style.height = (100 - topPct) + '%';
+}
+function hsplitEnd() { if (hsplitDragging) { hsplitDragging = false; hsplitHandle.classList.remove('active'); document.body.style.cursor = ''; }}
+hsplitHandle.addEventListener('mousedown', hsplitStart);
+hsplitHandle.addEventListener('touchstart', e => { e.preventDefault(); hsplitStart(); }, { passive: false });
+document.addEventListener('mousemove', e => hsplitMove(e.clientY));
+document.addEventListener('touchmove', e => { if (hsplitDragging) hsplitMove(e.touches[0].clientY); }, { passive: true });
+document.addEventListener('mouseup', hsplitEnd);
+document.addEventListener('touchend', hsplitEnd);
+
+// ===== PYBRICKS BLOCK BUILDER =====
+const pbCanvas = $('pb-canvas');
+const pbSvg = $('pb-connections-svg');
+const pbBlocks = [];
+let pbIdCounter = 0;
+const pbConnections = [];
+
+const PB_TYPES = {
+    hub_init:      { cat: 'hub',    color: '#d4a017', label: 'Hub Init',      rows: [{l:'Hub',sel:['EV3','PrimeHub','CityHub','TechnicHub']},{l:'Name',inp:'my_hub'}] },
+    motor_run:     { cat: 'motion', color: '#0077dc', label: 'Motor Run',     rows: [{l:'Port',sel:['A','B','C','D']},{l:'Speed',inp:'500'},{l:'°/s',ro:true}] },
+    motor_stop:    { cat: 'motion', color: '#0077dc', label: 'Motor Stop',    rows: [{l:'Port',sel:['A','B','C','D']},{l:'Then',sel:['hold','coast','brake']}] },
+    motor_angle:   { cat: 'motion', color: '#0077dc', label: 'Run Angle',     rows: [{l:'Port',sel:['A','B','C','D']},{l:'Angle',inp:'360'},{l:'Speed',inp:'500'}] },
+    color_read:    { cat: 'sensor', color: '#3fb950', label: 'Color Sensor',  rows: [{l:'Port',sel:['A','B','C','D']},{l:'Read',sel:['color','reflection','ambient']}] },
+    distance_read: { cat: 'sensor', color: '#3fb950', label: 'Distance',      rows: [{l:'Port',sel:['A','B','C','D']},{l:'Unit',sel:['mm','cm','in']}] },
+    force_read:    { cat: 'sensor', color: '#3fb950', label: 'Force Sensor',  rows: [{l:'Port',sel:['A','B','C','D']},{l:'Read',sel:['force','pressed','distance']}] },
+    if_then:       { cat: 'logic',  color: '#f0883e', label: 'If / Then',     rows: [{l:'Condition',inp:'True'},{l:'→ run block',ro:true}] },
+    compare:       { cat: 'logic',  color: '#f0883e', label: 'Compare',       rows: [{l:'A',inp:'0'},{l:'Op',sel:['==','!=','>','<','>=','<=']},{l:'B',inp:'0'}] },
+    loop_forever:  { cat: 'loop',   color: '#a980e6', label: 'Loop ∞',        rows: [{l:'body →',ro:true}] },
+    wait_ms:       { cat: 'loop',   color: '#a980e6', label: 'Wait',          rows: [{l:'ms',inp:'1000'}] },
+    set_var:       { cat: 'var',    color: '#ff5757', label: 'Set Variable',  rows: [{l:'Name',inp:'x'},{l:'Value',inp:'0'}] },
+    print_val:     { cat: 'stream', color: '#e2498a', label: 'Print',         rows: [{l:'Value',inp:'"Hello"'}] },
+    hub_light:     { cat: 'hub',    color: '#d4a017', label: 'Hub Light',     rows: [{l:'Color',sel:['RED','GREEN','BLUE','YELLOW','ORANGE','NONE']}] },
+    hub_beep:      { cat: 'hub',    color: '#d4a017', label: 'Beep',          rows: [{l:'Freq',inp:'440'},{l:'ms',inp:'200'}] },
+};
+
+function createPbBlock(type, x, y) {
+    const def = PB_TYPES[type];
+    if (!def) return null;
+    const id = 'pb-' + (pbIdCounter++);
+    const el = document.createElement('div');
+    el.className = 'pb-block';
+    el.id = id;
+    el.dataset.type = type;
+    el.style.left = x + 'px';
+    el.style.top = y + 'px';
+
+    const c = def.color;
+    const cDark = c + 'cc';
+    // Notch connectors (Pybricks-style snap tabs)
+    let html = `<div class="pb-notch-top" style="background:${c}"></div>`;
+    html += `<div class="pb-block-head" style="background:${c}"><span style="font-size:.75rem">⬢</span> ${def.label}</div>`;
+    html += `<div class="pb-block-body" style="background:${cDark}">`;
+    def.rows.forEach(r => {
+        html += `<div class="pb-block-row">`;
+        html += `<span>${r.l}</span>`;
+        if (r.sel) {
+            html += `<select class="pb-block-select">${r.sel.map(o => `<option>${o}</option>`).join('')}</select>`;
+        } else if (r.inp !== undefined) {
+            html += `<input class="pb-block-input" value="${r.inp}">`;
+        }
+        html += `</div>`;
+    });
+    html += `</div>`;
+    html += `<div class="pb-notch-bot" style="background:${c}"></div>`;
+    // Connectors for linking
+    html += `<div class="pb-block-connector in" data-dir="in" title="Connect input"></div>`;
+    html += `<div class="pb-block-connector out" data-dir="out" title="Connect output"></div>`;
+    el.innerHTML = html;
+
+    pbCanvas.appendChild(el);
+
+    const data = { id, type, el, x, y };
+    pbBlocks.push(data);
+
+    // Drag
+    let dx = 0, dy = 0, dragging = false;
+    el.addEventListener('mousedown', e => {
+        if (e.target.closest('.pb-block-input') || e.target.closest('.pb-block-select') || e.target.closest('.pb-block-connector')) return;
+        dragging = true;
+        dx = e.clientX - el.offsetLeft;
+        dy = e.clientY - el.offsetTop;
+        el.style.zIndex = 10;
+    });
+    document.addEventListener('mousemove', e => {
+        if (!dragging) return;
+        const nx = e.clientX - dx;
+        const ny = e.clientY - dy;
+        el.style.left = Math.max(0, nx) + 'px';
+        el.style.top = Math.max(0, ny) + 'px';
+        data.x = nx; data.y = ny;
+        drawPbConnections();
+    });
+    document.addEventListener('mouseup', () => { if (dragging) { dragging = false; el.style.zIndex = 1; }});
+
+    // Connection drag
+    let connFrom = null;
+    el.querySelectorAll('.pb-block-connector').forEach(dot => {
+        dot.addEventListener('mousedown', e => {
+            e.stopPropagation();
+            connFrom = { id, dir: dot.dataset.dir, dot };
+        });
+    });
+    el.addEventListener('mouseup', e => {
+        const tgt = e.target.closest('.pb-block-connector');
+        if (tgt && connFrom && connFrom.id !== id) {
+            const fromId = connFrom.dir === 'out' ? connFrom.id : id;
+            const toId = connFrom.dir === 'out' ? id : connFrom.id;
+            if (!pbConnections.find(c => c.from === fromId && c.to === toId)) {
+                pbConnections.push({ from: fromId, to: toId });
+                drawPbConnections();
+            }
+        }
+        connFrom = null;
+    });
+
+    drawPbConnections();
+    return data;
+}
+
+function drawPbConnections() {
+    let svg = '';
+    pbConnections.forEach(c => {
+        const fromEl = document.getElementById(c.from);
+        const toEl = document.getElementById(c.to);
+        if (!fromEl || !toEl) return;
+        const fRect = fromEl.getBoundingClientRect();
+        const tRect = toEl.getBoundingClientRect();
+        const pRect = pbCanvas.getBoundingClientRect();
+        const x1 = fRect.right - pRect.left;
+        const y1 = fRect.top + fRect.height / 2 - pRect.top;
+        const x2 = tRect.left - pRect.left;
+        const y2 = tRect.top + tRect.height / 2 - pRect.top;
+        const mx = (x1 + x2) / 2;
+        svg += `<path d="M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}" fill="none" stroke="rgba(245,205,0,.5)" stroke-width="2.5" stroke-linecap="round"/>`;
+    });
+    pbSvg.innerHTML = svg;
+}
+
+function clearPbCanvas() {
+    pbBlocks.forEach(b => b.el.remove());
+    pbBlocks.length = 0;
+    pbConnections.length = 0;
+    pbIdCounter = 0;
+    pbSvg.innerHTML = '';
+}
+
+function exportPbPython() {
+    let py = `# hexbench — Pybricks Builder Export\n# Auto-generated from block layout\n\n`;
+    // Build ordered list by connections
+    const ordered = [];
+    const placed = new Set();
+    // Find root (hub_init or first block)
+    const root = pbBlocks.find(b => b.type === 'hub_init') || pbBlocks[0];
+    if (!root) { logConsole('error', 'No blocks to export'); return; }
+
+    function traverse(id) {
+        if (placed.has(id)) return;
+        placed.add(id);
+        const b = pbBlocks.find(bl => bl.id === id);
+        if (b) ordered.push(b);
+        pbConnections.filter(c => c.from === id).forEach(c => traverse(c.to));
+    }
+    traverse(root.id);
+    // Any unvisited
+    pbBlocks.forEach(b => { if (!placed.has(b.id)) ordered.push(b); });
+
+    // Generate
+    const imports = new Set();
+    ordered.forEach(b => {
+        const el = b.el;
+        const def = PB_TYPES[b.type];
+        const vals = [...el.querySelectorAll('.pb-block-input,.pb-block-select')].map(i => i.value);
+        switch (b.type) {
+            case 'hub_init':
+                imports.add(`from pybricks.hubs import ${vals[0] || 'EV3Brick'}`);
+                imports.add('from pybricks.parameters import Port, Stop, Color');
+                py += `hub = ${vals[0] || 'EV3Brick'}()  # ${vals[1] || 'my_hub'}\n`;
+                break;
+            case 'motor_run':
+                imports.add('from pybricks.pupdevices import Motor');
+                py += `motor_${(vals[0]||'A').toLowerCase()} = Motor(Port.${vals[0]||'A'})\n`;
+                py += `motor_${(vals[0]||'A').toLowerCase()}.run(${vals[1]||'500'})\n`;
+                break;
+            case 'motor_stop':
+                py += `motor_${(vals[0]||'A').toLowerCase()}.stop()  # ${vals[1]||'hold'}\n`;
+                break;
+            case 'motor_angle':
+                imports.add('from pybricks.pupdevices import Motor');
+                py += `motor_${(vals[0]||'A').toLowerCase()}.run_angle(${vals[2]||'500'}, ${vals[1]||'360'})\n`;
+                break;
+            case 'color_read':
+                imports.add('from pybricks.pupdevices import ColorSensor');
+                py += `color_sensor = ColorSensor(Port.${vals[0]||'C'})\ncolor_val = color_sensor.${vals[1]||'color'}()\n`;
+                break;
+            case 'distance_read':
+                imports.add('from pybricks.pupdevices import UltrasonicSensor');
+                py += `dist_sensor = UltrasonicSensor(Port.${vals[0]||'D'})\ndistance = dist_sensor.distance()\n`;
+                break;
+            case 'force_read':
+                imports.add('from pybricks.pupdevices import ForceSensor');
+                py += `force_sensor = ForceSensor(Port.${vals[0]||'A'})\nforce_val = force_sensor.${vals[1]||'force'}()\n`;
+                break;
+            case 'if_then':
+                py += `if ${vals[0] || 'True'}:\n    pass  # → connect blocks\n`;
+                break;
+            case 'compare':
+                py += `result = (${vals[0]||'0'} ${vals[1]||'=='} ${vals[2]||'0'})\n`;
+                break;
+            case 'loop_forever':
+                imports.add('from pybricks.tools import wait');
+                py += `while True:\n    pass  # body\n    wait(10)\n`;
+                break;
+            case 'wait_ms':
+                imports.add('from pybricks.tools import wait');
+                py += `wait(${vals[0]||'1000'})\n`;
+                break;
+            case 'set_var':
+                py += `${vals[0]||'x'} = ${vals[1]||'0'}\n`;
+                break;
+            case 'print_val':
+                py += `print(${vals[0]||'"Hello"'})\n`;
+                break;
+            case 'hub_light':
+                py += `hub.light.on(Color.${vals[0]||'GREEN'})\n`;
+                break;
+            case 'hub_beep':
+                py += `hub.speaker.beep(${vals[0]||'440'}, ${vals[1]||'200'})\n`;
+                break;
+        }
+    });
+    const header = [...imports].join('\n') + '\n\n';
+    const full = header + py;
+
+    // Copy to code editor
+    codeEditor.value = full;
+    switchTab('code');
+    logConsole('sys', `Exported ${ordered.length} blocks → Code tab (.py)`);
+}
+
+// Presets
+function loadPbDriveBot() {
+    clearPbCanvas();
+    const hub  = createPbBlock('hub_init',    40,  30);
+    const mA   = createPbBlock('motor_run',   260, 20);
+    const mB   = createPbBlock('motor_run',   260, 130);
+    const loop = createPbBlock('loop_forever', 40,  160);
+    const wait = createPbBlock('wait_ms',     260, 250);
+    const stop = createPbBlock('motor_stop',  480, 130);
+    // Set port B for motor B
+    const mBsel = mB.el.querySelector('.pb-block-select');
+    if (mBsel) mBsel.value = 'B';
+    const sBsel = stop.el.querySelector('.pb-block-select');
+    if (sBsel) sBsel.value = 'B';
+
+    pbConnections.push({ from: hub.id, to: mA.id });
+    pbConnections.push({ from: hub.id, to: loop.id });
+    pbConnections.push({ from: loop.id, to: mA.id });
+    pbConnections.push({ from: mA.id, to: mB.id });
+    pbConnections.push({ from: mB.id, to: wait.id });
+    pbConnections.push({ from: wait.id, to: stop.id });
+    drawPbConnections();
+    logConsole('sys', 'Pybricks Builder: Loaded Drive Bot preset');
+}
+
+function loadPbColorSorter() {
+    clearPbCanvas();
+    const hub   = createPbBlock('hub_init',      40,  30);
+    const loop  = createPbBlock('loop_forever',  40,  160);
+    const color = createPbBlock('color_read',    260, 30);
+    const cmp   = createPbBlock('compare',       260, 140);
+    const iff   = createPbBlock('if_then',        480, 30);
+    const mtr   = createPbBlock('motor_angle',   480, 160);
+    const prn   = createPbBlock('print_val',     260, 260);
+    const wait  = createPbBlock('wait_ms',       480, 270);
+
+    // Configure
+    const iffInp = iff.el.querySelector('.pb-block-input');
+    if (iffInp) iffInp.value = 'color_val == Color.RED';
+    const prnInp = prn.el.querySelector('.pb-block-input');
+    if (prnInp) prnInp.value = 'color_val';
+
+    pbConnections.push({ from: hub.id, to: color.id });
+    pbConnections.push({ from: hub.id, to: loop.id });
+    pbConnections.push({ from: color.id, to: cmp.id });
+    pbConnections.push({ from: cmp.id, to: iff.id });
+    pbConnections.push({ from: iff.id, to: mtr.id });
+    pbConnections.push({ from: loop.id, to: prn.id });
+    pbConnections.push({ from: prn.id, to: wait.id });
+    drawPbConnections();
+    logConsole('sys', 'Pybricks Builder: Loaded Color Sorter preset');
+}
+
+// Palette click → add block
+document.querySelectorAll('.pb-chip[data-pb]').forEach(chip => {
+    chip.addEventListener('click', () => {
+        const scrollW = $('pb-canvas-wrap');
+        const sx = scrollW.scrollLeft + 40 + Math.random() * 200;
+        const sy = scrollW.scrollTop + 20 + Math.random() * 100;
+        createPbBlock(chip.dataset.pb, sx, sy);
+    });
+});
+
+$('pb-preset-drive').addEventListener('click', loadPbDriveBot);
+$('pb-preset-sorter').addEventListener('click', loadPbColorSorter);
+$('pb-export').addEventListener('click', exportPbPython);
+$('pb-clear').addEventListener('click', () => { clearPbCanvas(); logConsole('sys', 'Pybricks Builder cleared'); });
 
 // ===== INIT =====
 // Restore saved state
@@ -2271,9 +2703,10 @@ if (sc) codeEditor.value = sc;
 renderBench();
 
 loadAT6301Setup();
+loadPbDriveBot();
 logConsole('sys', 'hexbench initialized — Voltage Lab');
 logConsole('sys', `Device: ${AT6301.name} (${AT6301.maxV}V/${AT6301.maxA}A/${AT6301.maxW}W)`);
-logConsole('sys', 'Left: Bench / Parts / Code / Suppliers | Right: Workbench canvas');
+logConsole('sys', 'Left: Bench / Parts / Code / Suppliers | Right: Node Canvas (top) + Pybricks Builder (bottom)');
 logConsole('sys', 'Type /help for commands');
 
 window.hexbench = {
@@ -2282,7 +2715,41 @@ window.hexbench = {
     addNode: createNode, connect: addConnection, execute: executeNode,
     loadAT6301: loadAT6301Setup, loadArduino: loadArduinoLab, loadPybricks: loadPybricksLab, clear: clearCanvas,
     log: logConsole, setPSU: (v, a) => { psuVoltage = v; psuCurrent = a; renderBench(); },
+    pb: { addBlock: createPbBlock, clear: clearPbCanvas, exportPy: exportPbPython, driveBot: loadPbDriveBot, colorSorter: loadPbColorSorter },
 };
+
+// ===== PWA SERVICE WORKER =====
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+
+// ===== QUANTUM PREFIX LIVE SYNC =====
+(function initQPSync() {
+    const QP = window.QuantumPrefixes;
+    if (!QP) return;
+    // Broadcast state on code editor changes (debounced)
+    let _qpDebounce;
+    codeEditor.addEventListener('input', () => {
+        clearTimeout(_qpDebounce);
+        _qpDebounce = setTimeout(() => {
+            const meta = QP.prefixMetadata(codeEditor.value, 'arduino');
+            QP.broadcastState('hexbench', { coverage: meta.coverage, totalLines: meta.totalLines, classifiedLines: meta.classifiedLines, prefixCounts: meta.prefixCounts });
+        }, 1000);
+    });
+    // Listen for state from other apps
+    QP.onStateChange((source, state, global) => {
+        if (source === 'hexbench') return;
+        // Log cross-app sync events
+        if (state && state.coverage !== undefined) {
+            logConsole('sync', `${source}: ${state.coverage}% quantum coverage (${state.classifiedLines || 0}/${state.totalLines || 0} lines)`);
+        }
+    });
+    // Initial broadcast
+    const meta = QP.prefixMetadata(codeEditor.value, 'arduino');
+    QP.broadcastState('hexbench', { coverage: meta.coverage, totalLines: meta.totalLines, classifiedLines: meta.classifiedLines, prefixCounts: meta.prefixCounts });
+    // Request sync from all other open apps
+    QP.requestStateSync();
+})();
 
 console.log('⚡ hexbench — Voltage Lab | Power Supply + Electronics Workbench');
 console.log('API: window.hexbench');

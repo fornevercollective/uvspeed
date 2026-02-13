@@ -379,13 +379,14 @@
 <script src="https://cdn.jsdelivr.net/npm/@xterm/xterm@5/lib/xterm.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@xterm/addon-fit@0/lib/addon-fit.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@xterm/addon-web-links@0/lib/addon-web-links.min.js"></script>
+<script src="quantum-prefixes.js"></script>
 <script>
 'use strict';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // Config
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-const VERSION = '3.6.0';
+const VERSION = '4.0.0';
 const HOSTNAME = 'hexterm';
 const USER = 'user';
 const HEXCAST_PORT = 9876;
@@ -403,10 +404,10 @@ const FS = {
     '/home/user/projects': { type: 'd', children: ['uvspeed', 'hexcast'] },
     '/home/user/projects/uvspeed': { type: 'd', children: ['README.md', 'pyproject.toml', 'web'] },
     '/home/user/projects/uvspeed/README.md': { type: 'f', content: '# uvspeed\nbeyondBINARY quantum-prefixed code architecture\n{+1, 1, -1, +0, 0, -0, +n, n, -n}' },
-    '/home/user/projects/uvspeed/pyproject.toml': { type: 'f', content: '[project]\nname = "uvspeed-quantum"\nversion = "3.6.0"\n\n[project.scripts]\nhexcast = "uvspeed_hexcast:main"' },
+    '/home/user/projects/uvspeed/pyproject.toml': { type: 'f', content: '[project]\nname = "uvspeed-quantum"\nversion = "4.0.0"\n\n[project.scripts]\nhexcast = "uvspeed_hexcast:main"' },
     '/home/user/projects/uvspeed/web': { type: 'd', children: ['quantum-notepad.html', 'terminal.html', 'hexcast-send.html'] },
     '/home/user/projects/hexcast': { type: 'd', children: ['hexcast.py'] },
-    '/home/user/projects/hexcast/hexcast.py': { type: 'f', content: '#!/usr/bin/env python3\n"""hexcast — live camera → truecolor ANSI terminal art"""\n__version__ = "3.6.0"\n\ndef main():\n    print("hexcast running...")\n\nif __name__ == "__main__":\n    main()' },
+    '/home/user/projects/hexcast/hexcast.py': { type: 'f', content: '#!/usr/bin/env python3\n"""hexcast — live camera → truecolor ANSI terminal art"""\n__version__ = "4.0.0"\n\ndef main():\n    print("hexcast running...")\n\nif __name__ == "__main__":\n    main()' },
     '/home/user/notes.md': { type: 'f', content: '# Notes\n\n- hexcast --serve on Mac\n- hexcast --connect <IP> on phone\n- hexcast send <IP> from PWA terminal\n- hexcast --receive on Mac to get phone camera' },
     '/home/user/.bashrc': { type: 'f', content: '# hexterm shell config\nexport PATH="$HOME/.local/bin:$PATH"\nexport HEXCAST_PORT=9876\nalias ll="ls -la"\nalias h="hexcast"\nalias hc="hexcast --connect"' },
     '/etc': { type: 'd', children: ['hostname', 'os-release'] },
@@ -3242,6 +3243,41 @@ function sendFeedCommand(cmd, feedId, extra) {
     if (extra) Object.assign(msg, extra);
     _feedBC.postMessage(msg);
 }
+
+// ===== QUANTUM PREFIX LIVE SYNC =====
+(function() {
+    const QP = window.QuantumPrefixes;
+    if (!QP) return;
+
+    // Broadcast prefix state whenever a file is cat'd / viewed (throttled)
+    let _lastQPBroadcast = 0;
+    const origGutterLine = window.gutterLine || function(){};
+    window._qpBroadcastForFile = function(content, lang) {
+        if (Date.now() - _lastQPBroadcast < 2000) return; // throttle 2s
+        _lastQPBroadcast = Date.now();
+        const meta = QP.prefixMetadata(content, lang);
+        QP.broadcastState('hexterm', {
+            coverage: meta.coverage,
+            totalLines: meta.totalLines,
+            classifiedLines: meta.classifiedLines,
+            prefixCounts: meta.prefixCounts
+        });
+    };
+
+    // Listen for state from other apps
+    QP.onStateChange(function(source, state) {
+        if (source === 'hexterm' || !state) return;
+        // Can be surfaced via 'sync status' command
+    });
+
+    // Expose shared QP on hexterm API
+    window.hexterm = window.hexterm || {};
+    window.hexterm.quantumPrefixes = QP;
+
+    // Initial state
+    QP.broadcastState('hexterm', { coverage: 0, totalLines: 0, classifiedLines: 0, prefixCounts: {} });
+    QP.requestStateSync();
+})();
 
 </script>
 </body>

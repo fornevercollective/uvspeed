@@ -284,6 +284,7 @@
 
 <audio id="feed-audio" autoplay></audio>
 
+<script src="quantum-prefixes.js"></script>
 <script>
 'use strict';
 
@@ -861,6 +862,22 @@ function devCmd() {
             devPrint(`<span style="color:#da3633">unknown: ${cmd}</span>`);
     }
 }
+
+// ===== PWA SERVICE WORKER =====
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+
+// ===== QUANTUM PREFIX LIVE SYNC =====
+(function() {
+    const QP = window.QuantumPrefixes;
+    if (!QP) return;
+    QP.onStateChange(function(source, state) {
+        if (source === 'feed' || !state) return;
+    });
+    QP.broadcastState('feed', { coverage: 0, totalLines: 0, classifiedLines: 0, prefixCounts: {}, role: 'camera-feed' });
+    QP.requestStateSync();
+})();
 
 </script>
 </body>

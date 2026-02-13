@@ -1,0 +1,651 @@
+/**
+ * ⚛ quantum-prefixes.js — Shared Quantum Gutter Prefix Engine
+ *
+ * Universal module used by all UV-Speed apps (notepad, hexbench, hexterm,
+ * hexcast, archflow, research-lab, dashboard, grid, launcher, etc.)
+ *
+ * Provides:
+ *   • 9-symbol line classifier  (classifyLine)
+ *   • Per-language regex rules   (LANG_PATTERNS)
+ *   • Content prefixing          (prefixContent)
+ *   • Metadata generation        (prefixMetadata)
+ *   • Live cross-app sync        (BroadcastChannel 'quantum-prefixes')
+ *   • IoT/Quantum bridge relay   (WebSocket → iot-quantum-computer)
+ *   • localStorage persistence   (quantum-prefixes-state)
+ *
+ * Usage:
+ *   <script src="quantum-prefixes.js"></script>
+ *   const qp = window.QuantumPrefixes;
+ *   const prefixed = qp.prefixContent(code, 'python');
+ *   qp.broadcastState('hexbench', { cells: 5, coverage: 72 });
+ */
+
+(function (root) {
+    'use strict';
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // 9-Symbol Prefix Map
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    const PREFIXES = {
+        shebang:   { sym: 'n:',  cls: 'pfx-shebang',   color: '#e2b714' },
+        comment:   { sym: '+1:', cls: 'pfx-comment',    color: '#6a9955' },
+        import:    { sym: '-n:', cls: 'pfx-import',     color: '#c586c0' },
+        class:     { sym: '+0:', cls: 'pfx-class',      color: '#4ec9b0' },
+        function:  { sym: '0:',  cls: 'pfx-function',   color: '#569cd6' },
+        error:     { sym: '-1:', cls: 'pfx-error',      color: '#f44747' },
+        condition: { sym: '+n:', cls: 'pfx-condition',   color: '#d7ba7d' },
+        loop:      { sym: '+2:', cls: 'pfx-loop',       color: '#9cdcfe' },
+        return:    { sym: '-0:', cls: 'pfx-return',     color: '#c586c0' },
+        output:    { sym: '+3:', cls: 'pfx-output',     color: '#ce9178' },
+        variable:  { sym: '1:',  cls: 'pfx-variable',   color: '#d4d4d4' },
+        decorator: { sym: '+1:', cls: 'pfx-decorator',  color: '#dcdcaa' },
+        default:   { sym: '   ', cls: 'pfx-default',    color: '#808080' },
+    };
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // ANSI escape codes (for terminal rendering)
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    const PREFIX_ANSI = {
+        'n:':  '\x1b[33m',   // shebang — yellow
+        '+1:': '\x1b[32m',   // comment — green
+        '-n:': '\x1b[35m',   // import — magenta
+        '+0:': '\x1b[36m',   // class — cyan
+        '0:':  '\x1b[34m',   // function — blue
+        '-1:': '\x1b[31m',   // error — red
+        '+n:': '\x1b[33m',   // condition — yellow
+        '+2:': '\x1b[36m',   // loop — cyan
+        '-0:': '\x1b[35m',   // return — magenta
+        '+3:': '\x1b[31m',   // output — red
+        '1:':  '\x1b[37m',   // variable — white
+        '   ': '\x1b[90m',   // default — dim
+    };
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // Language Pattern Rules (regex per category)
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    const LANG_PATTERNS = {
+        python: {
+            shebang:   /^#!.*python/,
+            comment:   /^\s*#/,
+            import:    /^\s*(import|from)\s/,
+            class:     /^\s*class\s/,
+            function:  /^\s*(def|async\s+def)\s/,
+            decorator: /^\s*@/,
+            error:     /^\s*(try|except|finally|raise)/,
+            condition: /^\s*(if|elif|else)\b/,
+            loop:      /^\s*(for|while)\s/,
+            return:    /^\s*(return|yield)\s/,
+            output:    /^\s*print\(/,
+            variable:  /^\s*\w+\s*=/,
+        },
+        javascript: {
+            shebang:   /^#!.*node/,
+            comment:   /^\s*(\/\/|\/\*|\*)/,
+            import:    /^\s*(import|require|const\s+.*=\s*require|export)/,
+            class:     /^\s*(class|interface)\s/,
+            function:  /^\s*(function|const\s+\w+\s*=\s*(\(|async)|=>)/,
+            error:     /^\s*(try|catch|finally|throw)\b/,
+            condition: /^\s*(if|else\s+if|else|switch|case)\b/,
+            loop:      /^\s*(for|while|do)\b/,
+            return:    /^\s*return\s/,
+            output:    /^\s*console\./,
+            variable:  /^\s*(const|let|var)\s/,
+        },
+        typescript: {
+            comment:   /^\s*(\/\/|\/\*|\*)/,
+            import:    /^\s*(import|require|from|export)/,
+            class:     /^\s*(class|interface|type|enum)\s/,
+            function:  /^\s*(function|const\s+\w+\s*[:=]|=>)/,
+            decorator: /^\s*@/,
+            error:     /^\s*(try|catch|finally|throw)\b/,
+            condition: /^\s*(if|else|switch|case)\b/,
+            loop:      /^\s*(for|while|do)\b/,
+            return:    /^\s*return\s/,
+            output:    /^\s*console\./,
+            variable:  /^\s*(const|let|var)\s/,
+        },
+        rust: {
+            comment:   /^\s*(\/\/|\/\*)/,
+            import:    /^\s*(use|extern\s+crate|mod)\s/,
+            class:     /^\s*(struct|enum|trait|impl)\s/,
+            function:  /^\s*(pub\s+)?(fn|async\s+fn)\s/,
+            decorator: /^\s*#\[/,
+            error:     /^\s*(panic!|unwrap|expect|Result|Err)/,
+            condition: /^\s*(if|else|match)\b/,
+            loop:      /^\s*(for|while|loop)\b/,
+            return:    /^\s*return\s/,
+            output:    /^\s*(println!|print!|eprintln!)/,
+            variable:  /^\s*(let|mut|const)\s/,
+        },
+        go: {
+            comment:   /^\s*\/\//,
+            import:    /^\s*(import|package)\s/,
+            class:     /^\s*type\s+\w+\s+(struct|interface)/,
+            function:  /^\s*func\s/,
+            error:     /^\s*(if\s+err|panic\(|log\.(Fatal|Panic))/,
+            condition: /^\s*(if|else|switch|case)\b/,
+            loop:      /^\s*for\b/,
+            return:    /^\s*return\s/,
+            output:    /^\s*fmt\./,
+            variable:  /^\s*(var|:=)\s/,
+        },
+        shell: {
+            shebang:   /^#!\/(bin|usr)\/(bash|sh|zsh)/,
+            comment:   /^\s*#/,
+            import:    /^\s*(source|\.)\s/,
+            function:  /^\s*(\w+\s*\(\)\s*\{|function\s+\w+)/,
+            error:     /^\s*(trap|set\s+-e)/,
+            condition: /^\s*(if|elif|else|fi|then)\b/,
+            loop:      /^\s*(for|while|until|do|done)\b/,
+            return:    /^\s*return\s/,
+            output:    /^\s*echo\s/,
+            variable:  /^\s*\w+=/,
+        },
+        c: {
+            comment:   /^\s*(\/\/|\/\*|\*)/,
+            import:    /^\s*#(include|define|pragma|ifdef|ifndef|endif)/,
+            class:     /^\s*(struct|enum|union|typedef)\s/,
+            function:  /^\s*(void|int|char|float|double|long|unsigned|static|extern)\s+\w+\s*\(/,
+            error:     /^\s*(assert|abort|exit|perror)/,
+            condition: /^\s*(if|else|switch|case)\b/,
+            loop:      /^\s*(for|while|do)\b/,
+            return:    /^\s*return\s/,
+            output:    /^\s*(printf|puts|fprintf|sprintf)/,
+            variable:  /^\s*(int|char|float|double|long|unsigned|const|static|volatile)\s+\w+/,
+        },
+        cpp: {
+            comment:   /^\s*(\/\/|\/\*|\*)/,
+            import:    /^\s*#(include|define|pragma|ifdef|ifndef|endif)|^\s*using\s/,
+            class:     /^\s*(class|struct|enum|namespace|template)\s/,
+            function:  /^\s*(void|int|char|float|double|auto|virtual|static|inline)\s+\w+\s*\(/,
+            error:     /^\s*(try|catch|throw|assert)/,
+            condition: /^\s*(if|else|switch|case)\b/,
+            loop:      /^\s*(for|while|do)\b/,
+            return:    /^\s*return\s/,
+            output:    /^\s*(std::cout|std::cerr|printf|puts)/,
+            variable:  /^\s*(int|char|float|double|auto|const|static|std::)\s*\w+/,
+        },
+        html: {
+            comment:   /^\s*<!--/,
+            import:    /^\s*<(link|script|meta)/,
+            class:     /^\s*<(div|section|article|main|header|footer|nav)/,
+            function:  /^\s*<(form|button|input)/,
+            condition: /^\s*<(template|slot)/,
+            output:    /^\s*<(p|h[1-6]|span|a|li|td)/,
+        },
+        css: {
+            comment:   /^\s*\/\*/,
+            import:    /^\s*@(import|charset|font-face)/,
+            class:     /^\s*\./,
+            variable:  /^\s*--/,
+            condition: /^\s*@(media|supports|keyframes)/,
+        },
+        markdown: {
+            shebang:   /^---/,
+            comment:   /^\s*<!--/,
+            import:    /^\s*!\[/,
+            class:     /^\s*#{1,6}\s/,
+            function:  /^\s*```/,
+            condition: /^\s*>/,
+            loop:      /^\s*[-*+]\s/,
+            output:    /^\s*\|/,
+            variable:  /^\s*\[.*\]:/,
+        },
+        mermaid: {
+            comment:   /^\s*%%/,
+            class:     /^\s*(graph|subgraph|flowchart|sequenceDiagram|classDiagram|stateDiagram|gantt|pie|erDiagram|journey)/,
+            function:  /^\s*(style|click|class)\b/,
+            condition: /^\s*(end|direction)\b/,
+            output:    /-->/,
+            variable:  /^\s*\w+[\[\({"]/,
+        },
+        sql: {
+            comment:   /^\s*--/,
+            import:    /^\s*(USE|DATABASE)\b/i,
+            class:     /^\s*(CREATE|ALTER|DROP)\b/i,
+            function:  /^\s*(SELECT|INSERT|UPDATE|DELETE)\b/i,
+            condition: /^\s*(WHERE|CASE|WHEN|IF)\b/i,
+            loop:      /^\s*(JOIN|UNION|GROUP)\b/i,
+        },
+        yaml: {
+            comment:   /^\s*#/,
+            import:    /^\s*---/,
+            variable:  /^\s*\w+\s*:/,
+            class:     /^\s*-\s/,
+        },
+        json: {
+            class:     /^\s*\{/,
+            variable:  /^\s*"/,
+            loop:      /^\s*\[/,
+        },
+        arduino: {
+            comment:   /^\s*(\/\/|\/\*|\*)/,
+            import:    /^\s*#(include|define)/,
+            class:     /^\s*(struct|enum|class)\s/,
+            function:  /^\s*(void|int|float|char|byte|boolean|unsigned|long)\s+\w+\s*\(/,
+            error:     /^\s*(Serial\.print|assert)/,
+            condition: /^\s*(if|else|switch|case)\b/,
+            loop:      /^\s*(for|while|do)\b/,
+            return:    /^\s*return\s/,
+            output:    /^\s*(Serial\.(print|write|begin)|analogWrite|digitalWrite)/,
+            variable:  /^\s*(int|float|char|byte|boolean|unsigned|long|const|#define)\s+\w+/,
+        },
+    };
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // Language Detection (auto-detect from content)
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    function detectLanguage(content, hint) {
+        if (hint && LANG_PATTERNS[hint]) return hint;
+        const c = content || '';
+        // Shebang detection
+        if (/^#!.*python/.test(c)) return 'python';
+        if (/^#!.*node/.test(c)) return 'javascript';
+        if (/^#!\/(bin|usr)/.test(c)) return 'shell';
+        // Arduino / C++ patterns
+        if (/#include\s*<Arduino\.h>|void\s+setup\(\)|void\s+loop\(\)/m.test(c)) return 'arduino';
+        // Language keyword heuristics
+        if (/^\s*(import|from)\s.*\n.*def\s/m.test(c)) return 'python';
+        if (/^\s*def\s|^\s*class\s.*:/m.test(c)) return 'python';
+        if (/^\s*(const|let|var|function|=>|require\(|import\s.*from)/m.test(c)) return 'javascript';
+        if (/^\s*(fn\s|let\s+mut|impl\s|use\s+\w+::)/m.test(c)) return 'rust';
+        if (/^\s*(func\s|package\s|fmt\.)/m.test(c)) return 'go';
+        if (/^\s*(SELECT|CREATE|INSERT|ALTER)\b/im.test(c)) return 'sql';
+        if (/^\s*<(!DOCTYPE|html|div|section)/im.test(c)) return 'html';
+        if (/^\s*(@media|\.[\w-]+\s*\{)/m.test(c)) return 'css';
+        if (/^\s*(graph|flowchart|sequenceDiagram|classDiagram)/m.test(c)) return 'mermaid';
+        if (/^\s*---\s*\n/m.test(c) && /^\s*\w+:/m.test(c)) return 'yaml';
+        if (/^\s*\{[\s]*"/.test(c)) return 'json';
+        if (/^\s*#.*\n/m.test(c) && /^\s*(echo|export|source)\b/m.test(c)) return 'shell';
+        if (/^\s*#(include|define)/.test(c) && /^\s*(void|int|char)\s+\w+\s*\(/m.test(c)) return 'c';
+        // Markdown detection
+        if (/^\s*#{1,6}\s/.test(c) || /^\s*[-*+]\s/.test(c)) return 'markdown';
+        return 'python'; // default
+    }
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // Line Classifier
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    function classifyLine(line, language) {
+        const lang = language || 'python';
+        const patterns = LANG_PATTERNS[lang] || LANG_PATTERNS.python;
+        for (const [category, regex] of Object.entries(patterns)) {
+            if (regex.test(line)) {
+                const pfx = PREFIXES[category] || PREFIXES.default;
+                return { ...pfx, category };
+            }
+        }
+        return { ...PREFIXES.default, category: 'default' };
+    }
+
+    // Quick classifier (returns just the symbol string — for terminal use)
+    function classifyLineSym(line, language) {
+        return classifyLine(line, language).sym;
+    }
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // Content Prefixing
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    function prefixContent(content, language) {
+        const lang = language || detectLanguage(content);
+        const lines = (content || '').split('\n');
+        return lines.map(function (line) {
+            var result = classifyLine(line, lang);
+            return result.sym + ' ' + line;
+        }).join('\n');
+    }
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // Prefix Metadata (per-content analysis)
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    function prefixMetadata(content, language) {
+        const lang = language || detectLanguage(content);
+        const lines = (content || '').split('\n');
+        var counts = {};
+        var classified = 0;
+        var lineData = lines.map(function (line, i) {
+            var result = classifyLine(line, lang);
+            counts[result.category] = (counts[result.category] || 0) + 1;
+            if (result.category !== 'default') classified++;
+            return { line: i + 1, sym: result.sym, category: result.category };
+        });
+        return {
+            language: lang,
+            totalLines: lines.length,
+            classifiedLines: classified,
+            coverage: lines.length > 0 ? Math.round((classified / lines.length) * 100) : 0,
+            prefixCounts: counts,
+            lines: lineData
+        };
+    }
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // Export Header (for file downloads)
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    function exportHeader(meta, source) {
+        var countsStr = Object.entries(meta.prefixCounts)
+            .map(function (e) { return e[0] + ':' + e[1]; }).join(' · ');
+        return '# ⚛ Quantum Prefix Gutter' +
+            (source ? ' — ' + source : '') +
+            ' — ' + meta.language +
+            ' — ' + meta.coverage + '% coverage (' +
+            meta.classifiedLines + '/' + meta.totalLines + ' lines)\n' +
+            '# Symbols: n: +1: -n: +0: 0: -1: +n: 1: -0:\n' +
+            '# ' + countsStr + '\n\n';
+    }
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // Export with Prefixes (content + header)
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    function exportWithPrefixes(content, language, source) {
+        var lang = language || detectLanguage(content);
+        var meta = prefixMetadata(content, lang);
+        var header = exportHeader(meta, source);
+        var prefixed = prefixContent(content, lang);
+        return { text: header + prefixed, meta: meta };
+    }
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // Download Helper
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    function downloadWithPrefixes(content, filename, language, source) {
+        var result = exportWithPrefixes(content, language, source);
+        var blob = new Blob([result.text], { type: 'text/plain' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(url);
+        return result.meta;
+    }
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // JSON Export (with prefix metadata baked in)
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    function wrapJsonExport(data, contents, source) {
+        // contents: array of { content, language? } or a single string
+        var items = Array.isArray(contents) ? contents : [{ content: contents }];
+        var totalLines = 0, totalClassified = 0, globalCounts = {};
+
+        items.forEach(function (item) {
+            var meta = prefixMetadata(item.content || '', item.language);
+            totalLines += meta.totalLines;
+            totalClassified += meta.classifiedLines;
+            for (var cat in meta.prefixCounts) {
+                globalCounts[cat] = (globalCounts[cat] || 0) + meta.prefixCounts[cat];
+            }
+        });
+
+        return Object.assign({}, data, {
+            quantumGutter: {
+                source: source || 'unknown',
+                version: '9-symbol-v1',
+                symbols: ['n:', '+1:', '-n:', '+0:', '0:', '-1:', '+n:', '1:', '-0:'],
+                totalLines: totalLines,
+                classifiedLines: totalClassified,
+                coverage: totalLines > 0 ? Math.round((totalClassified / totalLines) * 100) + '%' : '0%',
+                prefixCounts: globalCounts,
+                timestamp: new Date().toISOString()
+            }
+        });
+    }
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // ANSI gutter line (for terminal rendering)
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    function gutterLineAnsi(line, lineNum, language) {
+        var result = classifyLine(line, language);
+        var col = PREFIX_ANSI[result.sym] || '\x1b[90m';
+        var num = String(lineNum).padStart(3);
+        return '\x1b[90m' + num + '\x1b[0m ' + col + result.sym.padEnd(3) + '\x1b[0m ' + line;
+    }
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // Live Sync — BroadcastChannel
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    var _syncChannel = null;
+    var _stateListeners = [];
+    var _globalState = {};    // source → { coverage, lines, prefixCounts, ... }
+    var _iotSocket = null;
+    var _iotUrl = null;
+
+    function _ensureChannel() {
+        if (_syncChannel) return _syncChannel;
+        try {
+            _syncChannel = new BroadcastChannel('quantum-prefixes');
+            _syncChannel.onmessage = function (e) {
+                var msg = e.data;
+                if (msg && msg.type === 'qp-state') {
+                    _globalState[msg.source] = msg.state;
+                    _stateListeners.forEach(function (fn) { fn(msg.source, msg.state, _globalState); });
+                    // Relay to IoT bridge if connected
+                    _relayToIoT(msg);
+                } else if (msg && msg.type === 'qp-request') {
+                    // Another app requesting current state — re-broadcast ours
+                    _stateListeners.forEach(function (fn) { fn('__request__', null, _globalState); });
+                }
+            };
+        } catch (e) {
+            // BroadcastChannel not available (e.g. old browser)
+        }
+        return _syncChannel;
+    }
+
+    /**
+     * Broadcast current quantum prefix state for this source app.
+     * @param {string} source  App name (e.g. 'hexbench', 'notepad', 'hexterm')
+     * @param {object} state   State object { coverage, totalLines, classifiedLines, prefixCounts, ... }
+     */
+    function broadcastState(source, state) {
+        var ch = _ensureChannel();
+        var payload = {
+            type: 'qp-state',
+            source: source,
+            state: Object.assign({}, state, { timestamp: Date.now() }),
+        };
+        if (ch) ch.postMessage(payload);
+        // Also persist to localStorage for cold-start recovery
+        _globalState[source] = payload.state;
+        try {
+            localStorage.setItem('quantum-prefixes-state', JSON.stringify(_globalState));
+        } catch (e) { /* quota */ }
+        // Relay to IoT
+        _relayToIoT(payload);
+    }
+
+    /**
+     * Request all apps to re-broadcast their state.
+     */
+    function requestStateSync() {
+        var ch = _ensureChannel();
+        if (ch) ch.postMessage({ type: 'qp-request' });
+    }
+
+    /**
+     * Register a listener for state changes.
+     * @param {function} fn  Called with (source, state, globalState)
+     */
+    function onStateChange(fn) {
+        _stateListeners.push(fn);
+        // Deliver current global state immediately
+        for (var src in _globalState) {
+            fn(src, _globalState[src], _globalState);
+        }
+    }
+
+    /**
+     * Get aggregate global state (all sources combined).
+     */
+    function getGlobalState() {
+        return Object.assign({}, _globalState);
+    }
+
+    /**
+     * Load last-known state from localStorage (call on init).
+     */
+    function loadPersistedState() {
+        try {
+            var raw = localStorage.getItem('quantum-prefixes-state');
+            if (raw) _globalState = JSON.parse(raw);
+        } catch (e) { /* corrupt */ }
+        return Object.assign({}, _globalState);
+    }
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // IoT / Quantum Computer Bridge
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    /**
+     * Connect to an IoT quantum computer bridge via WebSocket.
+     * Messages are JSON: { type: 'qp-state', source, state }
+     * The bridge can also push commands back.
+     * @param {string} url  WebSocket URL (e.g. 'ws://192.168.1.100:9877/quantum')
+     * @param {object} opts  { onMessage, onOpen, onClose, onError, reconnect }
+     */
+    function connectIoT(url, opts) {
+        opts = opts || {};
+        _iotUrl = url;
+
+        function _connect() {
+            try {
+                _iotSocket = new WebSocket(url);
+                _iotSocket.onopen = function () {
+                    // Send full global state on connect
+                    _iotSocket.send(JSON.stringify({
+                        type: 'qp-init',
+                        globalState: _globalState,
+                        timestamp: Date.now()
+                    }));
+                    if (opts.onOpen) opts.onOpen();
+                };
+                _iotSocket.onmessage = function (e) {
+                    try {
+                        var msg = JSON.parse(e.data);
+                        // Forward IoT commands to BroadcastChannel
+                        if (msg.type === 'qp-command') {
+                            var ch = _ensureChannel();
+                            if (ch) ch.postMessage(msg);
+                        }
+                        if (opts.onMessage) opts.onMessage(msg);
+                    } catch (err) { /* parse error */ }
+                };
+                _iotSocket.onclose = function () {
+                    _iotSocket = null;
+                    if (opts.onClose) opts.onClose();
+                    if (opts.reconnect !== false) {
+                        setTimeout(_connect, 5000);
+                    }
+                };
+                _iotSocket.onerror = function (err) {
+                    if (opts.onError) opts.onError(err);
+                };
+            } catch (e) {
+                if (opts.onError) opts.onError(e);
+                if (opts.reconnect !== false) {
+                    setTimeout(_connect, 5000);
+                }
+            }
+        }
+
+        _connect();
+    }
+
+    function _relayToIoT(payload) {
+        if (_iotSocket && _iotSocket.readyState === WebSocket.OPEN) {
+            try {
+                _iotSocket.send(JSON.stringify(payload));
+            } catch (e) { /* socket error */ }
+        }
+    }
+
+    function disconnectIoT() {
+        if (_iotSocket) {
+            _iotSocket.close();
+            _iotSocket = null;
+        }
+        _iotUrl = null;
+    }
+
+    function isIoTConnected() {
+        return _iotSocket && _iotSocket.readyState === WebSocket.OPEN;
+    }
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // Aggregate Stats Helper
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    function aggregateGlobalStats() {
+        var totalLines = 0, totalClassified = 0, counts = {}, sources = [];
+        for (var src in _globalState) {
+            var s = _globalState[src];
+            if (!s) continue;
+            sources.push(src);
+            totalLines += (s.totalLines || 0);
+            totalClassified += (s.classifiedLines || 0);
+            if (s.prefixCounts) {
+                for (var cat in s.prefixCounts) {
+                    counts[cat] = (counts[cat] || 0) + s.prefixCounts[cat];
+                }
+            }
+        }
+        return {
+            sources: sources,
+            totalLines: totalLines,
+            classifiedLines: totalClassified,
+            coverage: totalLines > 0 ? Math.round((totalClassified / totalLines) * 100) : 0,
+            prefixCounts: counts
+        };
+    }
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // Auto-init
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    loadPersistedState();
+    _ensureChannel();
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // Public API
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    var API = {
+        // Constants
+        PREFIXES: PREFIXES,
+        PREFIX_ANSI: PREFIX_ANSI,
+        LANG_PATTERNS: LANG_PATTERNS,
+        VERSION: '9-symbol-v1',
+
+        // Core
+        detectLanguage: detectLanguage,
+        classifyLine: classifyLine,
+        classifyLineSym: classifyLineSym,
+
+        // Content operations
+        prefixContent: prefixContent,
+        prefixMetadata: prefixMetadata,
+        exportHeader: exportHeader,
+        exportWithPrefixes: exportWithPrefixes,
+        downloadWithPrefixes: downloadWithPrefixes,
+        wrapJsonExport: wrapJsonExport,
+        gutterLineAnsi: gutterLineAnsi,
+
+        // Live sync
+        broadcastState: broadcastState,
+        requestStateSync: requestStateSync,
+        onStateChange: onStateChange,
+        getGlobalState: getGlobalState,
+        loadPersistedState: loadPersistedState,
+        aggregateGlobalStats: aggregateGlobalStats,
+
+        // IoT / Quantum bridge
+        connectIoT: connectIoT,
+        disconnectIoT: disconnectIoT,
+        isIoTConnected: isIoTConnected,
+    };
+
+    // Expose globally
+    root.QuantumPrefixes = API;
+
+    // Also expose as module if available
+    if (typeof module !== 'undefined' && module.exports) {
+        module.exports = API;
+    }
+
+})(typeof window !== 'undefined' ? window : (typeof globalThis !== 'undefined' ? globalThis : this));

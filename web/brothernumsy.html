@@ -453,6 +453,7 @@ state.obstacles.forEach((o, i) => {
         </div>
     </div>
 
+    <script src="quantum-prefixes.js"></script>
     <script>
     // ================================================================
     //  brotherNumsy & Freya — beyondBINARY Endless Runner
@@ -2087,6 +2088,20 @@ FreyaUnits.units.forEach(u => {
                 exitFullscreen();
             }
         });
+    })();
+
+    // ===== PWA SERVICE WORKER =====
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js').catch(() => {});
+    }
+
+    // ===== QUANTUM PREFIX LIVE SYNC =====
+    (function() {
+        const QP = window.QuantumPrefixes;
+        if (!QP) return;
+        QP.onStateChange(function(source, state) { if (source === 'brothernumsy' || !state) return; });
+        QP.broadcastState('brothernumsy', { coverage: 0, totalLines: 0, classifiedLines: 0, prefixCounts: {}, role: 'numsy-game' });
+        QP.requestStateSync();
     })();
 
     </script>

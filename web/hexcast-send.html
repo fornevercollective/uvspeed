@@ -199,6 +199,7 @@
 <!-- ━━━ Bottom rainbow ━━━ -->
 <div class="rainbow-bottom"><span style="background:#ff3838"></span><span style="background:#ff8c38"></span><span style="background:#ffe138"></span><span style="background:#3fb950"></span><span style="background:#38a5ff"></span><span style="background:#bc8cff"></span></div>
 
+<script src="quantum-prefixes.js"></script>
 <script>
 'use strict';
 
@@ -887,6 +888,17 @@ if ('serviceWorker' in navigator) {
 
 // Start camera on load
 startCamera();
+
+// ===== QUANTUM PREFIX LIVE SYNC =====
+(function() {
+    const QP = window.QuantumPrefixes;
+    if (!QP) return;
+    QP.onStateChange(function(source, state) {
+        if (source === 'hexcast-send' || !state) return;
+    });
+    QP.broadcastState('hexcast-send', { coverage: 0, totalLines: 0, classifiedLines: 0, prefixCounts: {}, role: 'camera-stream' });
+    QP.requestStateSync();
+})();
 
 console.log('⚛ hexcast send v4.0 — camera → terminal streaming');
 console.log('{+1, 1, -1, +0, 0, -0, +n, n, -n}');

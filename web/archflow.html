@@ -8,6 +8,7 @@
     <link rel="icon" type="image/png" sizes="32x32" href="../icons/favicon.png">
     <link rel="icon" type="image/x-icon" href="../icons/favicon.ico">
     <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+    <script src="quantum-prefixes.js"></script>
     <style>
         :root {
             --cursor-bg: #0d1117; --cursor-bg-secondary: #161b22; --cursor-bg-tertiary: #21262d;
@@ -445,9 +446,16 @@ $('btn-export-mermaid').addEventListener('click',()=>{
     setTimeout(()=>$('btn-export-mermaid').textContent='📋 Copy Mermaid',1500);
 });
 $('btn-export-json').addEventListener('click',()=>{
+    const QP = window.QuantumPrefixes;
     const data={nodes:nodesData,connections,mermaid:$('mermaid-src').value};
-    const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+    const wrapped = QP ? QP.wrapJsonExport(data, $('mermaid-src').value, 'archflow') : data;
+    if (QP) wrapped.prefixedMermaid = QP.prefixContent($('mermaid-src').value, 'mermaid');
+    const blob=new Blob([JSON.stringify(wrapped,null,2)],{type:'application/json'});
     const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='archflow-'+Date.now()+'.json';a.click();
+    if (QP) {
+        const meta = QP.prefixMetadata($('mermaid-src').value, 'mermaid');
+        QP.broadcastState('archflow', { coverage: meta.coverage, totalLines: meta.totalLines, classifiedLines: meta.classifiedLines, prefixCounts: meta.prefixCounts });
+    }
 });
 
 // Load default preset
@@ -463,6 +471,27 @@ window.archflow={
     renderMermaid,
     exportJSON(){return JSON.stringify({nodes:nodesData,connections})}
 };
+
+// ===== PWA SERVICE WORKER =====
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+
+// ===== QUANTUM PREFIX LIVE SYNC =====
+(function() {
+    const QP = window.QuantumPrefixes;
+    if (!QP) return;
+    QP.onStateChange(function(source, state) {
+        if (source === 'archflow' || !state) return;
+        console.log('[QP Sync] ' + source + ': ' + (state.coverage || 0) + '% quantum coverage');
+    });
+    const mSrc = document.getElementById('mermaid-src');
+    if (mSrc) {
+        const meta = QP.prefixMetadata(mSrc.value || '', 'mermaid');
+        QP.broadcastState('archflow', { coverage: meta.coverage, totalLines: meta.totalLines, classifiedLines: meta.classifiedLines, prefixCounts: meta.prefixCounts });
+    }
+    QP.requestStateSync();
+})();
 
 console.log('⚛ archflow — n8n-style architecture visualizer');
 console.log('{+1, 1, -1, +0, 0, -0, +n, n, -n}');

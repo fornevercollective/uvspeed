@@ -724,6 +724,7 @@
     </div>
 
     <!-- ===== JavaScript ===== -->
+    <script src="quantum-prefixes.js"></script>
     <script>
     (function() {
         'use strict';
@@ -978,6 +979,20 @@
                 });
             }
         });
+
+        // ===== PWA SERVICE WORKER =====
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').catch(() => {});
+        }
+
+        // ===== QUANTUM PREFIX LIVE SYNC =====
+        (function() {
+            const QP = window.QuantumPrefixes;
+            if (!QP) return;
+            QP.onStateChange(function(source, state) { if (source === 'blackwell' || !state) return; });
+            QP.broadcastState('blackwell', { coverage: 0, totalLines: 0, classifiedLines: 0, prefixCounts: {}, role: 'blackwell-gpu' });
+            QP.requestStateSync();
+        })();
 
         console.log('⚛ uvspeed Blackwell Live — initialized');
         console.log('{+1, 1, -1, +0, 0, -0, +n, n, -n}');

@@ -246,6 +246,7 @@
     </div>
 </div>
 
+<script src="quantum-prefixes.js"></script>
 <script>
 (function(){
 'use strict';
@@ -506,6 +507,22 @@ window.questcast={
     snapshot(){const c=$('cv-detect');const a=document.createElement('a');a.href=c.toDataURL('image/png');a.download='questcast-'+Date.now()+'.png';a.click()},
     exportJSON(){return JSON.stringify({state:this.state,objects:this.objects})}
 };
+
+// ===== PWA SERVICE WORKER =====
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+
+// ===== QUANTUM PREFIX LIVE SYNC =====
+(function() {
+    const QP = window.QuantumPrefixes;
+    if (!QP) return;
+    QP.onStateChange(function(source, state) {
+        if (source === 'questcast' || !state) return;
+    });
+    QP.broadcastState('questcast', { coverage: 0, totalLines: 0, classifiedLines: 0, prefixCounts: {}, role: 'quest-broadcast' });
+    QP.requestStateSync();
+})();
 
 console.log('⚛ questcast — Meta Quest broadcast + research tools');
 console.log('{+1, 1, -1, +0, 0, -0, +n, n, -n}');

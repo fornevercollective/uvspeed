@@ -43,7 +43,7 @@
         ],
         "category": "DeveloperTool",
         "shortDescription": "uvspeed — beyondBINARY quantum-prefixed development platform",
-        "longDescription": "uvspeed is a development platform with hexterm terminal, hexcast streaming, kbatch keyboard analytics, grid multi-stream view, and the beyondBINARY quantum prefix system. Includes PWA apps for phone/tablet/desktop.",
+        "longDescription": "uvspeed is a development platform with 18 PWA apps: quantum-notepad, hexterm terminal, hexbench voltage lab, hexcast streaming, kbatch keyboard analytics, archflow node visualizer, research-lab, blackwell GPU dashboard, questcast Meta Quest broadcast, jawta spatial audio, brotherNumsy game, grid multi-stream view, and more. Built on the beyondBINARY quantum prefix system with shared quantum-prefixes.js module. Works on phone, tablet, and desktop.",
         "macOS": {
             "minimumSystemVersion": "12.0",
             "dmg": {

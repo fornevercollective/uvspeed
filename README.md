@@ -12,7 +12,7 @@
 [![License](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
 [![Live Demo](https://img.shields.io/badge/Live-GitHub_Pages-00c853)](https://fornevercollective.github.io/uvspeed/web/quantum-notepad.html)
 
-**[Notepad](https://fornevercollective.github.io/uvspeed/web/quantum-notepad.html)** · **[Terminal](https://fornevercollective.github.io/uvspeed/web/terminal.html)** · **[brotherNumsy](https://fornevercollective.github.io/uvspeed/web/brothernumsy.html)** · **[kbatch](https://fornevercollective.github.io/uvspeed/web/kbatch.html)** · **[hexcast](https://fornevercollective.github.io/uvspeed/web/hexcast.html)** · **[Dashboard](https://fornevercollective.github.io/uvspeed/web/github-dashboard.html)** · **[Sponsor](https://fornevercollective.github.io/uvspeed/web/sponsor.html)**
+**[Notepad](https://fornevercollective.github.io/uvspeed/web/quantum-notepad.html)** · **[Terminal](https://fornevercollective.github.io/uvspeed/web/terminal.html)** · **[HexBench](https://fornevercollective.github.io/uvspeed/web/hexbench.html)** · **[hexcast](https://fornevercollective.github.io/uvspeed/web/hexcast.html)** · **[kbatch](https://fornevercollective.github.io/uvspeed/web/kbatch.html)** · **[archflow](https://fornevercollective.github.io/uvspeed/web/archflow.html)** · **[Blackwell](https://fornevercollective.github.io/uvspeed/web/blackwell.html)** · **[brotherNumsy](https://fornevercollective.github.io/uvspeed/web/brothernumsy.html)** · **[Dashboard](https://fornevercollective.github.io/uvspeed/web/github-dashboard.html)** · **[Sponsor](https://fornevercollective.github.io/uvspeed/web/sponsor.html)**
 
 ---
 
@@ -143,11 +143,20 @@ Plus a `{dev}` launch mode that opens the terminal with the dev console active.
 | **[hexcast-send](web/hexcast-send.html)** | Mobile PWA for streaming phone camera to a remote hexcast receiver |
 | **[blackwell](web/blackwell.html)** | NVIDIA Blackwell data visualization + deploy targets (DGX Spark, Lambda) |
 | **[questcast](web/questcast.html)** | Meta Quest broadcast + research tools |
-| **[archflow](web/archflow.html)** | n8n-style architecture node visualizer |
+| **[archflow](web/archflow.html)** | n8n-style architecture node visualizer with mermaid export |
 | **[jawta-audio](web/jawta-audio.html)** | Spatial audio + Strudel live coding |
-| **[research-lab](web/research-lab.html)** | Research lab interface |
-| **[numsy](web/numsy.html)** | Numsy character viewer |
-| **[github-dashboard](web/github-dashboard.html)** | Project health dashboard |
+| **[hexbench](web/hexbench.html)** | Voltage lab — PSU monitor, Arduino code editor, node workbench, Pybricks builder |
+| **[research-lab](web/research-lab.html)** | Markdown research editor with node canvas, mermaid preview, console |
+| **[numsy](web/numsy.html)** | 1080x1080 Instagram visual generator |
+| **[sponsor](web/sponsor.html)** | Sponsor page with Rubik's cube, starfield, tier cards |
+| **[github-dashboard](web/github-dashboard.html)** | Project health dashboard — phases, deps, community, actions |
+
+### Shared Modules
+
+| Module | Description |
+|--------|-------------|
+| **[quantum-prefixes.js](web/quantum-prefixes.js)** | Shared prefix API — `classifyLine()`, `prefixContent()`, cross-app `BroadcastChannel` sync, IoT WebSocket bridge |
+| **[sw.js](web/sw.js)** | Service worker — offline-first cache for all 18 apps + shared assets |
 
 ### CLI Tools
 
@@ -242,15 +251,20 @@ Supported in 20+ languages: Python, JavaScript, TypeScript, Rust, Go, Swift, Kot
 
 ```
 uvspeed/
-├── web/                    # 16 standalone HTML apps (PWA-ready)
-│   ├── launcher.html       # Mode picker + command console
-│   ├── terminal.html       # Full terminal emulator (hexterm)
-│   ├── feed.html           # Lightweight video/audio feed window
-│   ├── grid.html           # Multi-stream canvas grid
+├── web/                    # 18 standalone HTML apps (PWA-ready)
 │   ├── quantum-notepad.html # Main notepad with prefix gutter
-│   ├── kbatch.html         # Keyboard heatmap analyzer
+│   ├── terminal.html       # Full terminal emulator (hexterm)
+│   ├── hexbench.html       # Voltage lab — PSU, Arduino, nodes, Pybricks
 │   ├── hexcast.html        # Video hex broadcast
-│   └── ...                 # brothernumsy, blackwell, archflow, etc.
+│   ├── hexcast-send.html   # Mobile camera streaming PWA
+│   ├── archflow.html       # Architecture node visualizer
+│   ├── research-lab.html   # Markdown research editor + node canvas
+│   ├── blackwell.html      # NVIDIA Blackwell GPU dashboard
+│   ├── questcast.html      # Meta Quest broadcast + research
+│   ├── jawta-audio.html    # Spatial audio + live coding
+│   ├── quantum-prefixes.js # Shared prefix API (cross-app sync)
+│   ├── sw.js               # Service worker (offline cache)
+│   └── ...                 # launcher, feed, grid, kbatch, sponsor, numsy, etc.
 ├── src-tauri/              # Tauri v2 desktop app (Rust)
 │   ├── src/main.rs         # Window management, menus, device presets
 │   └── tauri.conf.json     # App config (launcher as default window)

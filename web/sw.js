@@ -1,8 +1,8 @@
 // beyondBINARY quantum-prefixed | uvspeed | {+1, 1, -1, +0, 0, -0, +n, n, -n}
 // Service Worker — Offline-first PWA cache for quantum notepad
-// Phase 3.4 · Caches all web assets for full offline operation
+// Phase 4.0 · Caches all 18 web apps + shared modules for full offline operation
 
-const CACHE_NAME = 'uvspeed-v4.3';
+const CACHE_NAME = 'uvspeed-v4.4';
 const OFFLINE_URLS = [
     './',
     'quantum-notepad.html',
@@ -25,9 +25,11 @@ const OFFLINE_URLS = [
     'research-lab.html',
     'hexbench.html',
     'numsy.html',
+    'quantum-prefixes.js',
     'manifest.json',
     '../icons/nyan-banner.png',
     '../icons/favicon.png',
+    '../icons/favicon.ico',
     '../icons/icon-192.png',
     '../icons/hexterm-192.png',
     '../icons/hexterm-512.png',

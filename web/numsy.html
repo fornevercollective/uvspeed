@@ -201,6 +201,7 @@
     </div>
 </div>
 
+<script src="quantum-prefixes.js"></script>
 <script>
 (() => {
 'use strict';
@@ -395,6 +396,20 @@ window.numsy = {
         setTimeout(() => setState('idle'), 5000);
     }
 };
+
+// ===== PWA SERVICE WORKER =====
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+
+// ===== QUANTUM PREFIX LIVE SYNC =====
+(function() {
+    const QP = window.QuantumPrefixes;
+    if (!QP) return;
+    QP.onStateChange(function(source, state) { if (source === 'numsy' || !state) return; });
+    QP.broadcastState('numsy', { coverage: 0, totalLines: 0, classifiedLines: 0, prefixCounts: {}, role: 'numsy-visual' });
+    QP.requestStateSync();
+})();
 
 console.log('Numsy standalone — 1080x1080 Instagram format');
 console.log('API: window.numsy');

@@ -13,6 +13,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+    <script src="quantum-prefixes.js"></script>
     <style>
         /* ===== Inlined Design System (cursor-theme.css) ===== */
         :root {
@@ -563,6 +564,86 @@
             50% { opacity: 0.6; }
         }
 
+        /* ===== Quantum Heatmap Fullscreen (COIN360-style) ===== */
+        .ctl-expand {
+            background: none; border: none; color: var(--cursor-text-muted);
+            cursor: pointer; font-size: 0.75rem; padding: 2px 6px;
+            border-radius: 3px; transition: all 0.12s ease; flex-shrink: 0;
+        }
+        .ctl-expand:hover { color: var(--cursor-accent); background: var(--cursor-accent-subtle); }
+
+        .qheat-overlay {
+            position: fixed; inset: 0; z-index: 9999;
+            background: var(--cursor-bg); display: none;
+            flex-direction: column; overflow: hidden;
+        }
+        .qheat-overlay.open { display: flex; }
+
+        .qheat-header {
+            display: flex; align-items: center; gap: 12px;
+            padding: 10px 16px; background: var(--cursor-bg-secondary);
+            border-bottom: 1px solid var(--cursor-border); flex-shrink: 0;
+        }
+        .qheat-title { font-size: 0.875rem; font-weight: 700; color: var(--cursor-text); }
+        .qheat-subtitle { font-size: 0.6875rem; color: var(--cursor-text-muted); }
+        .qheat-close {
+            margin-left: auto; background: none; border: 1px solid var(--cursor-border);
+            color: var(--cursor-text-muted); width: 28px; height: 28px; border-radius: 50%;
+            font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center;
+        }
+        .qheat-close:hover { background: var(--cursor-bg-hover); color: var(--cursor-text); }
+
+        .qheat-toolbar {
+            display: flex; align-items: center; gap: 8px; padding: 6px 16px;
+            background: var(--cursor-bg-tertiary); border-bottom: 1px solid var(--cursor-border-muted);
+            flex-shrink: 0; flex-wrap: wrap;
+        }
+        .qheat-mode-btn {
+            padding: 3px 10px; font-size: 0.625rem; font-weight: 600;
+            border: 1px solid var(--cursor-border); border-radius: 4px;
+            background: var(--cursor-bg); color: var(--cursor-text-muted);
+            cursor: pointer; transition: all 0.12s;
+        }
+        .qheat-mode-btn:hover { color: var(--cursor-text); border-color: var(--cursor-text-muted); }
+        .qheat-mode-btn.active { background: var(--cursor-accent-subtle); color: var(--cursor-accent); border-color: var(--cursor-accent); }
+
+        .qheat-legend {
+            display: flex; gap: 8px; margin-left: auto; align-items: center; flex-wrap: wrap;
+        }
+        .qheat-legend-item {
+            display: flex; align-items: center; gap: 3px; font-size: 0.5625rem;
+            color: var(--cursor-text-secondary);
+        }
+        .qheat-legend-swatch {
+            width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0;
+        }
+
+        .qheat-stats {
+            display: flex; gap: 16px; padding: 6px 16px; background: var(--cursor-bg-secondary);
+            border-bottom: 1px solid var(--cursor-border-muted); flex-shrink: 0;
+            font-size: 0.6875rem; font-family: var(--cursor-font-mono);
+        }
+        .qheat-stat { color: var(--cursor-text-secondary); }
+        .qheat-stat b { color: var(--cursor-accent); }
+
+        .qheat-body { flex: 1; position: relative; overflow: hidden; }
+        .qheat-canvas {
+            position: absolute; inset: 0; width: 100%; height: 100%;
+        }
+
+        .qheat-tooltip {
+            position: fixed; z-index: 10001; pointer-events: none;
+            background: var(--cursor-bg-secondary); border: 1px solid var(--cursor-border);
+            border-radius: var(--cursor-radius-md); padding: 8px 12px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.5); font-size: 0.6875rem;
+            color: var(--cursor-text); max-width: 280px; display: none;
+        }
+        .qheat-tooltip.visible { display: block; }
+        .qheat-tooltip-title { font-weight: 700; margin-bottom: 4px; }
+        .qheat-tooltip-row { display: flex; justify-content: space-between; gap: 12px; }
+        .qheat-tooltip-label { color: var(--cursor-text-muted); }
+        .qheat-tooltip-val { color: var(--cursor-accent); font-family: var(--cursor-font-mono); }
+
         .cell-textarea {
             display: block;
             flex: 1;
@@ -673,6 +754,130 @@
         }
 
         /* ===== Sidebar Tabs ===== */
+        .sidebar-tabs-ext {
+            display: flex; gap: 0; border-bottom: 1px solid var(--cursor-border-muted);
+            background: var(--cursor-bg-tertiary);
+        }
+        .sidebar-tabs-ext .sidebar-tab-ext {
+            flex: 1; padding: 5px 4px; font-size: 0.5625rem; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 0.4px; text-align: center;
+            color: var(--cursor-text-muted); background: none; border: none;
+            cursor: pointer; transition: all 0.15s ease; border-bottom: 2px solid transparent;
+        }
+        .sidebar-tabs-ext .sidebar-tab-ext:hover { color: var(--cursor-text-secondary); background: var(--cursor-bg-hover); }
+        .sidebar-tabs-ext .sidebar-tab-ext.active { color: var(--cursor-accent); border-bottom-color: var(--cursor-accent); }
+        .sidebar-tab-ext-panel { display: none; overflow-y: auto; }
+        .sidebar-tab-ext-panel.active { display: block; }
+
+        /* --- AI/LLM Panel --- */
+        .llm-panel { padding: var(--cursor-space-sm); }
+        .llm-model-card {
+            background: var(--cursor-bg-tertiary); border: 1px solid var(--cursor-border);
+            border-radius: var(--cursor-radius-sm); padding: 8px 10px; margin-bottom: 6px;
+            cursor: pointer; transition: all 0.15s ease;
+        }
+        .llm-model-card:hover { border-color: var(--cursor-text-muted); }
+        .llm-model-card.selected { border-color: var(--cursor-accent); background: var(--cursor-accent-subtle); }
+        .llm-model-name { font-size: 0.6875rem; font-weight: 600; color: var(--cursor-text); }
+        .llm-model-meta { font-size: 0.5625rem; color: var(--cursor-text-muted); margin-top: 2px; }
+        .llm-prompt-row {
+            display: flex; gap: 4px; margin-top: 6px;
+        }
+        .llm-prompt-row input {
+            flex: 1; padding: 4px 8px; font-size: 0.625rem; border-radius: 4px;
+            border: 1px solid var(--cursor-border); background: var(--cursor-bg);
+            color: var(--cursor-text); font-family: var(--cursor-font-mono);
+        }
+        .llm-prompt-row button {
+            padding: 4px 10px; font-size: 0.625rem; font-weight: 600;
+            border: 1px solid var(--cursor-accent); border-radius: 4px;
+            background: var(--cursor-accent-subtle); color: var(--cursor-accent); cursor: pointer;
+        }
+
+        /* --- Language Panel --- */
+        .lang-panel { padding: var(--cursor-space-sm); }
+        .lang-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin-bottom: 8px;
+        }
+        .lang-chip {
+            padding: 4px 2px; font-size: 0.5625rem; font-weight: 600; text-align: center;
+            border: 1px solid var(--cursor-border); border-radius: 4px;
+            background: var(--cursor-bg-tertiary); color: var(--cursor-text-muted);
+            cursor: pointer; transition: all 0.12s ease; white-space: nowrap; overflow: hidden;
+        }
+        .lang-chip:hover { color: var(--cursor-text); border-color: var(--cursor-text-muted); }
+        .lang-chip.active { background: var(--cursor-accent-subtle); color: var(--cursor-accent); border-color: var(--cursor-accent); }
+        .lang-info-box {
+            background: var(--cursor-bg-tertiary); border: 1px solid var(--cursor-border);
+            border-radius: var(--cursor-radius-sm); padding: 8px 10px;
+            font-size: 0.625rem; color: var(--cursor-text-secondary); line-height: 1.6;
+        }
+        .lang-info-box strong { color: var(--cursor-text); }
+
+        /* --- Blocks Panel (mini Pybricks builder) --- */
+        .blocks-panel { padding: var(--cursor-space-sm); }
+        .nb-palette {
+            display: flex; flex-wrap: wrap; gap: 3px; margin-bottom: 6px;
+        }
+        .nb-chip {
+            padding: 2px 6px; font-size: 0.5rem; font-weight: 600;
+            border-radius: 3px; cursor: pointer; border: 1px solid transparent;
+            transition: all 0.12s ease; white-space: nowrap;
+        }
+        .nb-chip:hover { filter: brightness(1.2); }
+        .nb-chip.cat-hub    { background: rgba(88,166,255,0.15); color: #58a6ff; border-color: rgba(88,166,255,0.3); }
+        .nb-chip.cat-motion { background: rgba(255,136,56,0.15); color: #f0883e; border-color: rgba(255,136,56,0.3); }
+        .nb-chip.cat-sensor { background: rgba(63,185,80,0.15); color: #3fb950; border-color: rgba(63,185,80,0.3); }
+        .nb-chip.cat-logic  { background: rgba(210,168,255,0.15); color: #d2a8ff; border-color: rgba(210,168,255,0.3); }
+        .nb-chip.cat-loop   { background: rgba(255,225,56,0.15); color: #ffe138; border-color: rgba(255,225,56,0.3); }
+        .nb-chip.cat-var    { background: rgba(218,54,51,0.15); color: #f97583; border-color: rgba(218,54,51,0.3); }
+        .nb-chip.cat-stream { background: rgba(192,132,252,0.15); color: #c084fc; border-color: rgba(192,132,252,0.3); }
+
+        .nb-canvas {
+            position: relative;
+            min-height: 140px;
+            background: #0a0e14;
+            border: 1px solid var(--cursor-border-muted);
+            border-radius: var(--cursor-radius-sm);
+            overflow: hidden;
+        }
+        .nb-canvas .nb-grid {
+            position: absolute; inset: 0;
+            background-image:
+                linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px);
+            background-size: 20px 20px;
+            pointer-events: none;
+        }
+        .nb-block {
+            position: absolute; min-width: 90px; border-radius: 5px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.4); cursor: grab;
+            font-family: var(--cursor-font-mono); font-size: 0.5625rem; z-index: 2;
+            user-select: none;
+        }
+        .nb-block:active { cursor: grabbing; z-index: 10; }
+        .nb-block-head {
+            padding: 3px 8px; font-weight: 700; font-size: 0.5625rem;
+            border-radius: 5px 5px 0 0; color: rgba(0,0,0,0.7);
+        }
+        .nb-block-body {
+            padding: 3px 6px; background: rgba(0,0,0,0.15); border-radius: 0 0 5px 5px;
+        }
+        .nb-block-body input, .nb-block-body select {
+            width: 100%; padding: 1px 4px; font-size: 0.5rem;
+            background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 2px; color: #fff; font-family: var(--cursor-font-mono);
+        }
+        .nb-conn-dot {
+            position: absolute; right: -5px; top: 50%; width: 8px; height: 8px;
+            border-radius: 50%; background: #ffe138; border: 1px solid rgba(0,0,0,0.3);
+            cursor: crosshair; transform: translateY(-50%); z-index: 5;
+        }
+        .nb-connections-svg {
+            position: absolute; inset: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 1;
+        }
+
         .sidebar-tabs {
             display: flex; gap: 0; border-bottom: 1px solid var(--cursor-border-muted);
         }
@@ -851,15 +1056,122 @@
         }
         .tools-dropdown-item:hover { background: var(--cursor-bg-hover); color: var(--cursor-text); }
 
-        /* ===== Quantum Nav Grid ===== */
-        .quantum-nav-mini {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: var(--cursor-space-sm);
+        /* ===== Quantum Nav 3D Cube ===== */
+        .nav-cube-container {
             margin-bottom: var(--cursor-space-md);
             padding: var(--cursor-space-xs);
             background: var(--cursor-bg);
             border-radius: var(--cursor-radius-md);
+        }
+
+        .nav-cube-scene {
+            position: relative;
+            perspective: 400px;
+            width: 110px;
+            height: 110px;
+            margin: 8px auto;
+            cursor: grab;
+            user-select: none;
+        }
+        .nav-cube-scene:active { cursor: grabbing; }
+
+        .nav-cube-inner {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.25s ease;
+            transform: rotateX(-20deg) rotateY(30deg);
+        }
+
+        .nav-cube-face {
+            position: absolute;
+            width: 110px;
+            height: 110px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2px;
+            padding: 2px;
+            background: rgba(13, 17, 23, 0.55);
+            border: 1px solid var(--cursor-border-muted);
+            border-radius: 4px;
+        }
+        .nav-cube-face.ncf-front  { transform: translateZ(55px); }
+        .nav-cube-face.ncf-back   { transform: rotateY(180deg) translateZ(55px); }
+        .nav-cube-face.ncf-right  { transform: rotateY(90deg) translateZ(55px); }
+        .nav-cube-face.ncf-left   { transform: rotateY(-90deg) translateZ(55px); }
+        .nav-cube-face.ncf-top    { transform: rotateX(90deg) translateZ(55px); }
+        .nav-cube-face.ncf-bottom { transform: rotateX(-90deg) translateZ(55px); }
+
+        .nav-cube-face span {
+            border-radius: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--cursor-font-mono);
+            font-size: 7px;
+            font-weight: 700;
+            color: rgba(0, 0, 0, 0.55);
+            cursor: pointer;
+            transition: box-shadow 0.15s ease, transform 0.1s ease;
+        }
+        .nav-cube-face span:hover {
+            box-shadow: 0 0 6px rgba(255,255,255,0.3);
+            transform: scale(1.08);
+            color: rgba(0,0,0,0.8);
+        }
+        .nav-cube-face span.ncf-active {
+            box-shadow: 0 0 10px rgba(139, 92, 246, 0.7);
+            border: 1px solid rgba(139, 92, 246, 0.6);
+            color: rgba(0,0,0,0.9);
+        }
+
+        /* Rotation arrow buttons around the cube */
+        .nav-cube-arrows {
+            display: grid;
+            grid-template-areas:
+                ".  up  ."
+                "lt  .  rt"
+                ".  dn  .";
+            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-rows: auto 1fr auto;
+            place-items: center;
+            width: 150px;
+            margin: 0 auto;
+        }
+        .nav-cube-arrows .nca-up    { grid-area: up; }
+        .nav-cube-arrows .nca-down  { grid-area: dn; }
+        .nav-cube-arrows .nca-left  { grid-area: lt; }
+        .nav-cube-arrows .nca-right { grid-area: rt; }
+
+        .nav-cube-arrow {
+            width: 28px;
+            height: 28px;
+            border: 1px solid var(--cursor-border);
+            border-radius: 50%;
+            background: var(--cursor-bg-tertiary);
+            color: var(--cursor-text-muted);
+            font-size: 0.75rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.12s ease;
+        }
+        .nav-cube-arrow:hover {
+            background: var(--cursor-bg-hover);
+            color: var(--cursor-text);
+            border-color: var(--cursor-text-muted);
+        }
+        .nav-cube-arrow:active {
+            transform: scale(0.9);
+            background: var(--cursor-accent-subtle);
+            color: var(--cursor-accent);
+        }
+
+        /* Legacy flat grid (keep for underlying nav-btn clicks) */
+        .quantum-nav-mini {
+            display: none;
         }
 
         .nav-btn {
@@ -1942,6 +2254,28 @@
             opacity: 0.5;
         }
 
+        .top-quick-cmds {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            padding: 4px 12px;
+            background: var(--cursor-bg-tertiary);
+            border-bottom: 1px solid var(--cursor-border-muted);
+        }
+        .top-quick-cmds .fqc-tabbar { justify-content: center; }
+        .top-quick-cmds .fqc-panel { justify-content: center; }
+        .top-quick-cmds .btn--xs {
+            padding: 2px 8px;
+            font-size: 0.625rem;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+        .top-quick-cmds .tools-dropdown {
+            bottom: auto;
+            top: 100%;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+        }
+
         .footer-quick-cmds {
             display: flex;
             flex-direction: column;
@@ -2149,6 +2483,7 @@
             }
 
             .footer-quick-cmds { display: none; }
+            .top-quick-cmds { display: none; }
         }
     </style>
 </head>
@@ -2226,6 +2561,97 @@
             </div>
         </div>
 
+        <!-- Top Quick Commands (mirrors footer tabs) -->
+        <div class="top-quick-cmds" id="top-quick-cmds">
+            <div class="fqc-tabbar" id="tqc-tabbar">
+                <span class="fqc-tab active" data-tqc="cells">📝 Cells</span>
+                <span class="fqc-tab" data-tqc="tools">🔧 Tools</span>
+                <span class="fqc-tab" data-tqc="apps">🚀 Apps</span>
+                <span class="fqc-tab" data-tqc="addins">➕ Add-ins</span>
+                <span class="fqc-tab" data-tqc="infra">⚙ Infra</span>
+            </div>
+
+            <!-- Panel: Cells (default) -->
+            <div class="fqc-panel active" data-tqc-panel="cells">
+                <button class="btn btn--xs" id="t-add-cell" title="Add code cell">+ Code</button>
+                <button class="btn btn--xs" id="t-add-mermaid" title="Add diagram cell">+ Diagram</button>
+                <button class="btn btn--xs" id="t-run-all" style="background:var(--cursor-accent);color:#fff;">▶ Run All</button>
+                <button class="btn btn--xs" id="t-undo" title="Undo">↩</button>
+                <button class="btn btn--xs" id="t-redo" title="Redo">↪</button>
+                <button class="btn btn--xs" id="t-save" title="Save">💾</button>
+                <button class="btn btn--xs quick-cmd" data-cmd="qstatus">📊 Status</button>
+                <button class="btn btn--xs quick-cmd" data-cmd="help">❓ Help</button>
+                <button class="btn btn--xs quick-cmd" data-cmd="pos">📍 Pos</button>
+                <button class="btn btn--xs quick-cmd" data-cmd="cells">📋 Cells</button>
+            </div>
+
+            <!-- Panel: Tools -->
+            <div class="fqc-panel" data-tqc-panel="tools">
+                <button class="btn btn--xs" id="t-benchmark" title="Benchmark cell" style="background:#f0883e22;border-color:#f0883e55;color:#f0883e;">⚡ Benchmark</button>
+                <button class="btn btn--xs" id="t-security-scan" title="Security scan" style="background:#da363422;border-color:#da363455;color:#da3634;">🛡 Scan</button>
+                <button class="btn btn--xs" id="t-git-hook" title="Git hook" style="background:#8b5cf622;border-color:#8b5cf655;color:#8b5cf6;">🪝 Hook</button>
+                <button class="btn btn--xs quick-cmd" data-cmd="uv sync">🔄 Sync</button>
+                <button class="btn btn--xs quick-cmd" data-cmd="q tinygrad">🔍 Search</button>
+                <button class="btn btn--xs" id="t-quest" title="Quest status" style="background:#1877f222;border-color:#1877f255;color:#1877f2;">🥽 Quest</button>
+                <div style="position:relative;display:inline-block;">
+                    <button class="btn btn--xs" id="t-tools" title="All tools" style="background:#7c3aed22;border-color:#7c3aed55;color:#7c3aed;">🔧 All Tools ▾</button>
+                    <div class="tools-dropdown" id="top-tools-dropdown">
+                        <div class="tools-dropdown-header">Day Terminal</div>
+                        <div class="tools-dropdown-item" data-tool="kbatch">⌨ Kbatch — Keyboard Analysis</div>
+                        <div class="tools-dropdown-item" data-tool="signal">📡 Signal — Morse/Binary/Waveform</div>
+                        <div class="tools-dropdown-item" data-tool="geokey">🔷 GeoKey — Geometric Mapper</div>
+                        <div class="tools-dropdown-item" data-tool="youtube">🎬 YouTube — Transcript</div>
+                        <div class="tools-dropdown-header">Electronics</div>
+                        <div class="tools-dropdown-item" data-tool="hexbench">⚡ hexbench — Voltage Lab</div>
+                        <div class="tools-dropdown-header">ChartGPU</div>
+                        <div class="tools-dropdown-item" data-tool="chartgpu-dash">📊 ChartGPU Dashboard</div>
+                        <div class="tools-dropdown-item" data-tool="chartgpu-metrics">⚡ Live Metrics + AI</div>
+                        <div class="tools-dropdown-header">Media Pipeline</div>
+                        <div class="tools-dropdown-item" data-tool="jawta">📡 Jawta Signal Intel</div>
+                        <div class="tools-dropdown-item" data-tool="media">🎞 Media Process</div>
+                        <div class="tools-dropdown-header">Meta Quest</div>
+                        <div class="tools-dropdown-item" data-tool="quest-status">🥽 Quest Status</div>
+                        <div class="tools-dropdown-item" data-tool="quest-logs">📜 Quest Logs</div>
+                        <div class="tools-dropdown-item" data-tool="quest-screenshot">📸 Quest Screenshot</div>
+                        <div class="tools-dropdown-header">Lark / Jawta</div>
+                        <div class="tools-dropdown-item" data-tool="lark-status">🐦 Lark IANA Status</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panel: Apps -->
+            <div class="fqc-panel" data-tqc-panel="apps">
+                <button class="btn btn--xs" id="t-play-numsy" title="brotherNumsy" style="background:#e6b42222;border-color:#e6b42255;color:#e6b422;">🎮 brotherNumsy</button>
+                <button class="btn btn--xs" id="t-open-kbatch" title="kbatch" style="background:#f0883e22;border-color:#f0883e55;color:#f0883e;">⌨ kbatch</button>
+                <button class="btn btn--xs" id="t-open-hexcast" title="hexcast" style="background:#da363322;border-color:#da363355;color:#f97583;">📡 hexcast</button>
+                <button class="btn btn--xs" id="t-open-hexbench" title="hexbench" style="background:#ffe13822;border-color:#ffe13855;color:#ffe138;" onclick="openOverlay('hexbench.html','hexbench')">⚡ hexbench</button>
+                <button class="btn btn--xs" id="t-open-blackwell" title="Blackwell" style="background:#76b90022;border-color:#76b90055;color:#76b900;" onclick="openOverlay('blackwell.html','Blackwell')">🟢 Blackwell</button>
+                <button class="btn btn--xs" id="t-open-questcast" title="questcast" style="background:#1877f222;border-color:#1877f255;color:#1877f2;" onclick="openOverlay('questcast.html','questcast')">🥽 questcast</button>
+                <button class="btn btn--xs" id="t-open-archflow" title="archflow" style="background:#ff6d5a22;border-color:#ff6d5a55;color:#ff6d5a;" onclick="openOverlay('archflow.html','archflow')">🔀 archflow</button>
+                <button class="btn btn--xs" id="t-open-researchlab" title="Research Lab" style="background:#da368822;border-color:#da368855;color:#da3688;" onclick="openOverlay('research-lab.html','Research Lab')">🔬 Research Lab</button>
+                <button class="btn btn--xs" id="t-open-jawta" title="jawta audio" style="background:#c084fc22;border-color:#c084fc55;color:#c084fc;" onclick="openOverlay('jawta-audio.html','jawta audio')">🎵 jawta</button>
+                <button class="btn btn--xs" id="t-open-dashboard" title="Dashboard" style="background:#23863622;border-color:#23863655;color:#238636;" onclick="openOverlay('github-dashboard.html','Dashboard')">📊 Dashboard</button>
+            </div>
+
+            <!-- Panel: Add-ins (cell types) -->
+            <div class="fqc-panel" data-tqc-panel="addins">
+                <button class="btn btn--xs" id="t-freya-units" title="FreyaUnits cell" style="background:#7c3aed22;border-color:#7c3aed55;color:#a78bfa;">🔬 FreyaUnits</button>
+                <button class="btn btn--xs" id="t-add-kbatch" title="kbatch cell" style="background:#f0883e22;border-color:#f0883e55;color:#f0883e;">⌨ + kbatch</button>
+                <button class="btn btn--xs" id="t-add-hexcast" title="hexcast cell" style="background:#da363322;border-color:#da363355;color:#f97583;">📡 + hexcast</button>
+                <button class="btn btn--xs" id="t-add-hexbench" title="hexbench cell" style="background:#ffe13822;border-color:#ffe13855;color:#ffe138;">⚡ + hexbench</button>
+            </div>
+
+            <!-- Panel: Infra -->
+            <div class="fqc-panel" data-tqc-panel="infra">
+                <button class="btn btn--xs quick-cmd" data-cmd="bridge">🔌 Bridge</button>
+                <button class="btn btn--xs quick-cmd" data-cmd="save">💾 Save</button>
+                <button class="btn btn--xs quick-cmd" data-cmd="load">📂 Load</button>
+                <button class="btn btn--xs quick-cmd" data-cmd="scan">🛡 Scan All</button>
+                <button class="btn btn--xs quick-cmd" data-cmd="hook">🪝 Git Hook</button>
+                <button class="btn btn--xs quick-cmd" data-cmd="tools">📋 List Tools</button>
+            </div>
+        </div>
+
         <!-- Convert Timeline Bar -->
         <div class="convert-timeline" id="convert-timeline">
             <span class="ctl-label">⚛ CONVERT</span>
@@ -2248,6 +2674,7 @@
                 <span class="ctl-stat" id="ctl-coverage">Coverage: <b>0%</b></span>
                 <span class="ctl-stat" id="ctl-lang">Lang: <b>auto</b></span>
             </div>
+            <button class="ctl-expand" id="ctl-expand" title="Quantum Heatmap — fullscreen COIN360-style visualization">⛶</button>
         </div>
 
         <!-- Main Content -->
@@ -2259,8 +2686,15 @@
 
             <!-- Quantum Sidebar -->
             <div class="quantum-sidebar">
+                <!-- Extended Tab Row (AI / Language / Blocks) -->
+                <div class="sidebar-tabs-ext" id="sidebar-tabs-ext">
+                    <button class="sidebar-tab-ext" data-ext-tab="ai-tab" id="tab-ai">🤖 AI/LLM</button>
+                    <button class="sidebar-tab-ext" data-ext-tab="lang-tab" id="tab-lang">🌐 Language</button>
+                    <button class="sidebar-tab-ext" data-ext-tab="blocks-tab" id="tab-blocks">🧱 Blocks</button>
+                </div>
+
                 <!-- Sidebar Tab Bar -->
-                <div class="sidebar-tabs">
+                <div class="sidebar-tabs" id="sidebar-tabs-main">
                     <button class="sidebar-tab active" data-tab="nav-tab" id="tab-nav">⚛ Nav</button>
                     <button class="sidebar-tab" data-tab="visual-tab" id="tab-visual">🧊 Visual</button>
                     <button class="sidebar-tab" data-tab="thermal-tab" id="tab-thermal">🌡 Thermal</button>
@@ -2270,6 +2704,64 @@
                 <div class="sidebar-tab-panel active" id="nav-tab">
                 <div class="sidebar-section">
                     <div class="sidebar-title">Quantum Navigation</div>
+
+                    <!-- 3D Rubik Cube Nav -->
+                    <div class="nav-cube-container" id="nav-cube-container">
+                        <div class="nav-cube-arrows">
+                            <button class="nav-cube-arrow nca-up" id="nca-up" title="Rotate up">▲</button>
+                            <button class="nav-cube-arrow nca-left" id="nca-left" title="Rotate left">◀</button>
+                            <button class="nav-cube-arrow nca-right" id="nca-right" title="Rotate right">▶</button>
+                            <button class="nav-cube-arrow nca-down" id="nca-down" title="Rotate down">▼</button>
+                        </div>
+                        <div class="nav-cube-scene" id="nav-cube-scene">
+                            <div class="nav-cube-inner" id="nav-cube-inner">
+                                <!-- Front face — the primary 9-symbol pad -->
+                                <div class="nav-cube-face ncf-front">
+                                    <span style="background:#ff3838" data-nav="+1">+1</span>
+                                    <span style="background:#58a6ff" data-nav="0">0</span>
+                                    <span style="background:#ff8c38" data-nav="-1">-1</span>
+                                    <span style="background:#ffe138" data-nav="+0">+0</span>
+                                    <span style="background:#8b949e" data-nav="⚛" class="ncf-active">∞</span>
+                                    <span style="background:#484f58" data-nav="-0">-0</span>
+                                    <span style="background:#bc8cff" data-nav="+n">+n</span>
+                                    <span style="background:#3fb950" data-nav="-n">-n</span>
+                                    <span style="background:#da3633" data-nav="+2">+2</span>
+                                </div>
+                                <!-- Back -->
+                                <div class="nav-cube-face ncf-back">
+                                    <span style="background:#3fb950">n</span><span style="background:#da3633">-n</span><span style="background:#bc8cff">+n</span>
+                                    <span style="background:#484f58">-0</span><span style="background:#8b949e">0</span><span style="background:#ffe138">+0</span>
+                                    <span style="background:#ff8c38">-1</span><span style="background:#58a6ff">1</span><span style="background:#ff3838">+1</span>
+                                </div>
+                                <!-- Right -->
+                                <div class="nav-cube-face ncf-right">
+                                    <span style="background:#ff8c38">-1</span><span style="background:#ffe138">+0</span><span style="background:#3fb950">n</span>
+                                    <span style="background:#ff3838">+1</span><span style="background:#8b949e">0</span><span style="background:#da3633">-n</span>
+                                    <span style="background:#58a6ff">1</span><span style="background:#484f58">-0</span><span style="background:#bc8cff">+n</span>
+                                </div>
+                                <!-- Left -->
+                                <div class="nav-cube-face ncf-left">
+                                    <span style="background:#bc8cff">+n</span><span style="background:#484f58">-0</span><span style="background:#58a6ff">1</span>
+                                    <span style="background:#da3633">-n</span><span style="background:#8b949e">0</span><span style="background:#ff3838">+1</span>
+                                    <span style="background:#3fb950">n</span><span style="background:#ffe138">+0</span><span style="background:#ff8c38">-1</span>
+                                </div>
+                                <!-- Top -->
+                                <div class="nav-cube-face ncf-top">
+                                    <span style="background:#bc8cff">+n</span><span style="background:#bc8cff">+n</span><span style="background:#bc8cff">+n</span>
+                                    <span style="background:#ff3838">+1</span><span style="background:#ff3838">+1</span><span style="background:#ff3838">+1</span>
+                                    <span style="background:#ffe138">+0</span><span style="background:#ffe138">+0</span><span style="background:#ffe138">+0</span>
+                                </div>
+                                <!-- Bottom -->
+                                <div class="nav-cube-face ncf-bottom">
+                                    <span style="background:#da3633">-n</span><span style="background:#da3633">-n</span><span style="background:#da3633">-n</span>
+                                    <span style="background:#ff8c38">-1</span><span style="background:#ff8c38">-1</span><span style="background:#ff8c38">-1</span>
+                                    <span style="background:#484f58">-0</span><span style="background:#484f58">-0</span><span style="background:#484f58">-0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Hidden flat grid (nav-btn clicks still wired) -->
                     <div class="quantum-nav-mini">
                         <button class="nav-btn" data-direction="+1" title="Lines up (+Y)">+1</button>
                         <button class="nav-btn" data-direction="0" title="Neutral">0</button>
@@ -2452,6 +2944,140 @@
                 </div>
                 </div><!-- /thermal-tab -->
 
+                <!-- ===== EXT TAB 1: AI / LLM ===== -->
+                <div class="sidebar-tab-ext-panel" id="ai-tab">
+                <div class="llm-panel">
+                    <div class="sidebar-title">AI / LLM Models</div>
+
+                    <div class="llm-model-card selected" data-llm="local" id="llm-local">
+                        <div class="llm-model-name">🟢 Local (Ollama)</div>
+                        <div class="llm-model-meta">llama3 · 8B · offline · 0 cost</div>
+                    </div>
+                    <div class="llm-model-card" data-llm="openai" id="llm-openai">
+                        <div class="llm-model-name">🔵 OpenAI / GPT-4o</div>
+                        <div class="llm-model-meta">Cloud API · 128K ctx · bridge required</div>
+                    </div>
+                    <div class="llm-model-card" data-llm="claude" id="llm-claude">
+                        <div class="llm-model-name">🟣 Anthropic / Claude</div>
+                        <div class="llm-model-meta">Cloud API · 200K ctx · bridge required</div>
+                    </div>
+                    <div class="llm-model-card" data-llm="gemini" id="llm-gemini">
+                        <div class="llm-model-name">🟡 Google / Gemini</div>
+                        <div class="llm-model-meta">Cloud API · 1M ctx · bridge required</div>
+                    </div>
+                    <div class="llm-model-card" data-llm="hf" id="llm-hf">
+                        <div class="llm-model-name">🤗 Hugging Face</div>
+                        <div class="llm-model-meta">Transformers · local or API · custom models</div>
+                    </div>
+
+                    <div style="font-size:0.5625rem;color:var(--cursor-text-muted);margin:8px 0 4px;font-weight:600;">QUICK PROMPT</div>
+                    <div class="llm-prompt-row">
+                        <input type="text" id="llm-prompt-input" placeholder="Ask the selected model...">
+                        <button id="llm-send-btn">▶</button>
+                    </div>
+
+                    <div style="font-size:0.5625rem;color:var(--cursor-text-muted);margin:10px 0 4px;font-weight:600;">SETTINGS</div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:0.5625rem;">
+                        <div style="color:var(--cursor-text-secondary)">Temperature</div>
+                        <input type="range" min="0" max="100" value="70" id="llm-temp" style="width:100%;">
+                        <div style="color:var(--cursor-text-secondary)">Max tokens</div>
+                        <input type="number" value="2048" min="64" max="8192" id="llm-max-tokens" style="width:100%;padding:2px 4px;font-size:0.5625rem;background:var(--cursor-bg);border:1px solid var(--cursor-border);border-radius:3px;color:var(--cursor-text);font-family:var(--cursor-font-mono);">
+                        <div style="color:var(--cursor-text-secondary)">System prompt</div>
+                        <select id="llm-system" style="width:100%;padding:2px 4px;font-size:0.5rem;background:var(--cursor-bg);border:1px solid var(--cursor-border);border-radius:3px;color:var(--cursor-text);">
+                            <option value="code">Code assistant</option>
+                            <option value="quantum">Quantum prefix</option>
+                            <option value="explain">Explainer</option>
+                            <option value="review">Code review</option>
+                            <option value="custom">Custom</option>
+                        </select>
+                    </div>
+                    <div id="llm-status" style="margin-top:8px;font-size:0.5625rem;color:var(--cursor-text-muted);font-family:var(--cursor-font-mono);">Model: local (ollama) · idle</div>
+                </div>
+                </div><!-- /ai-tab -->
+
+                <!-- ===== EXT TAB 2: Language ===== -->
+                <div class="sidebar-tab-ext-panel" id="lang-tab">
+                <div class="lang-panel">
+                    <div class="sidebar-title">Language Packs</div>
+                    <div style="font-size:0.5625rem;color:var(--cursor-text-muted);margin-bottom:6px;">20 quantum-prefix language packs — select to view coverage &amp; AST rules</div>
+
+                    <div class="lang-grid" id="lang-grid">
+                        <span class="lang-chip active" data-lang="python">Python</span>
+                        <span class="lang-chip" data-lang="javascript">JS</span>
+                        <span class="lang-chip" data-lang="typescript">TS</span>
+                        <span class="lang-chip" data-lang="rust">Rust</span>
+                        <span class="lang-chip" data-lang="go">Go</span>
+                        <span class="lang-chip" data-lang="c">C</span>
+                        <span class="lang-chip" data-lang="cpp">C++</span>
+                        <span class="lang-chip" data-lang="java">Java</span>
+                        <span class="lang-chip" data-lang="shell">Shell</span>
+                        <span class="lang-chip" data-lang="ruby">Ruby</span>
+                        <span class="lang-chip" data-lang="swift">Swift</span>
+                        <span class="lang-chip" data-lang="kotlin">Kotlin</span>
+                        <span class="lang-chip" data-lang="php">PHP</span>
+                        <span class="lang-chip" data-lang="lua">Lua</span>
+                        <span class="lang-chip" data-lang="r">R</span>
+                        <span class="lang-chip" data-lang="sql">SQL</span>
+                        <span class="lang-chip" data-lang="html">HTML</span>
+                        <span class="lang-chip" data-lang="css">CSS</span>
+                        <span class="lang-chip" data-lang="yaml">YAML</span>
+                        <span class="lang-chip" data-lang="toml">TOML</span>
+                    </div>
+
+                    <div class="lang-info-box" id="lang-info-box">
+                        <strong>Python</strong> — Coverage: <span style="color:#7ee787;">98%</span><br>
+                        AST rules: <span style="color:var(--cursor-accent);">47</span> patterns<br>
+                        Prefixes: all 9 symbols mapped<br>
+                        <span style="color:var(--cursor-text-muted);">+1: class/def · +0: assign · n: import · -n: return · 0: pass/comment · -0: del · +n: raise · -1: except · +2: yield</span>
+                    </div>
+
+                    <div style="margin-top:8px;font-size:0.5625rem;color:var(--cursor-text-muted);font-weight:600;">DETECTION</div>
+                    <div style="display:flex;gap:4px;margin-top:4px;">
+                        <button class="btn btn--xs" id="lang-detect-btn" style="background:var(--cursor-accent-subtle);color:var(--cursor-accent);border-color:var(--cursor-accent);">🔍 Auto-detect</button>
+                        <button class="btn btn--xs" id="lang-apply-btn">Apply to cell</button>
+                    </div>
+                    <div id="lang-detect-result" style="margin-top:6px;font-size:0.5625rem;color:var(--cursor-text-muted);font-family:var(--cursor-font-mono);display:none;"></div>
+                </div>
+                </div><!-- /lang-tab -->
+
+                <!-- ===== EXT TAB 3: Blocks (Pybricks-style) ===== -->
+                <div class="sidebar-tab-ext-panel" id="blocks-tab">
+                <div class="blocks-panel">
+                    <div class="sidebar-title">Block Builder</div>
+                    <div style="font-size:0.5625rem;color:var(--cursor-text-muted);margin-bottom:6px;">Pybricks-style visual code blocks — drag, connect, export</div>
+
+                    <div class="nb-palette" id="nb-palette">
+                        <span class="nb-chip cat-hub" data-nb="hub_init">Hub Init</span>
+                        <span class="nb-chip cat-hub" data-nb="hub_light">Light</span>
+                        <span class="nb-chip cat-hub" data-nb="hub_beep">Beep</span>
+                        <span class="nb-chip cat-motion" data-nb="motor_run">Motor</span>
+                        <span class="nb-chip cat-motion" data-nb="motor_stop">Stop</span>
+                        <span class="nb-chip cat-sensor" data-nb="color_read">Color</span>
+                        <span class="nb-chip cat-sensor" data-nb="dist_read">Dist</span>
+                        <span class="nb-chip cat-logic" data-nb="if_then">If</span>
+                        <span class="nb-chip cat-logic" data-nb="wait_ms">Wait</span>
+                        <span class="nb-chip cat-loop" data-nb="loop_forever">Loop</span>
+                        <span class="nb-chip cat-loop" data-nb="loop_n">Loop N</span>
+                        <span class="nb-chip cat-var" data-nb="set_var">Set</span>
+                        <span class="nb-chip cat-var" data-nb="print_val">Print</span>
+                        <span class="nb-chip cat-stream" data-nb="stream_in">Stream</span>
+                    </div>
+
+                    <div style="display:flex;gap:3px;margin-bottom:6px;">
+                        <button class="btn btn--xs" id="nb-preset-drive" style="background:rgba(255,225,56,.1);color:#ffe138;border-color:rgba(255,225,56,.3);">Drive Bot</button>
+                        <button class="btn btn--xs" id="nb-preset-sorter" style="background:rgba(63,185,80,.1);color:#3fb950;border-color:rgba(63,185,80,.3);">Color Sorter</button>
+                        <button class="btn btn--xs" id="nb-export" style="background:rgba(88,166,255,.1);color:#58a6ff;border-color:rgba(88,166,255,.3);">Export .py</button>
+                        <button class="btn btn--xs" id="nb-clear">Clear</button>
+                    </div>
+
+                    <div class="nb-canvas" id="nb-canvas">
+                        <div class="nb-grid"></div>
+                        <svg class="nb-connections-svg" id="nb-connections-svg"></svg>
+                        <!-- blocks inserted by JS -->
+                    </div>
+                </div>
+                </div><!-- /blocks-tab -->
+
                 <!-- ===== ALWAYS-VISIBLE SECTIONS ===== -->
                 <div class="sidebar-section">
                     <div class="sidebar-title">Cell Overview</div>
@@ -2605,6 +3231,42 @@
                 <!-- dynamic -->
             </div>
         </div>
+    </div>
+
+    <!-- ===== QUANTUM HEATMAP FULLSCREEN (COIN360-style) ===== -->
+    <div class="qheat-overlay" id="qheat-overlay">
+        <div class="qheat-header">
+            <span class="qheat-title">⚛ Quantum Heatmap</span>
+            <span class="qheat-subtitle">Treemap visualization of code prefix weight — sized by lines, colored by category</span>
+            <button class="qheat-close" id="qheat-close" title="Close">&times;</button>
+        </div>
+        <div class="qheat-toolbar">
+            <button class="qheat-mode-btn active" data-qheat-mode="treemap" title="Treemap — rectangles sized by weight">Treemap</button>
+            <button class="qheat-mode-btn" data-qheat-mode="bubble" title="Bubble — circles sized by weight">Bubble</button>
+            <button class="qheat-mode-btn" data-qheat-mode="bar" title="Bar chart">Bars</button>
+            <button class="qheat-mode-btn" data-qheat-mode="sunburst" title="Sunburst — radial hierarchy">Sunburst</button>
+            <div class="qheat-legend" id="qheat-legend">
+                <!-- filled by JS -->
+            </div>
+        </div>
+        <div class="qheat-stats" id="qheat-stats">
+            <span class="qheat-stat">Cells: <b id="qh-cells">0</b></span>
+            <span class="qheat-stat">Lines: <b id="qh-lines">0</b></span>
+            <span class="qheat-stat">Coverage: <b id="qh-coverage">0%</b></span>
+            <span class="qheat-stat">Language: <b id="qh-lang">auto</b></span>
+            <span class="qheat-stat">Prefixes: <b id="qh-prefixes">0/9</b></span>
+        </div>
+        <div class="qheat-body" id="qheat-body">
+            <canvas class="qheat-canvas" id="qheat-canvas"></canvas>
+        </div>
+    </div>
+    <div class="qheat-tooltip" id="qheat-tooltip">
+        <div class="qheat-tooltip-title" id="qheat-tt-title"></div>
+        <div class="qheat-tooltip-row"><span class="qheat-tooltip-label">Lines</span><span class="qheat-tooltip-val" id="qheat-tt-lines"></span></div>
+        <div class="qheat-tooltip-row"><span class="qheat-tooltip-label">Weight</span><span class="qheat-tooltip-val" id="qheat-tt-weight"></span></div>
+        <div class="qheat-tooltip-row"><span class="qheat-tooltip-label">Symbol</span><span class="qheat-tooltip-val" id="qheat-tt-sym"></span></div>
+        <div class="qheat-tooltip-row"><span class="qheat-tooltip-label">Category</span><span class="qheat-tooltip-val" id="qheat-tt-cat"></span></div>
+        <div class="qheat-tooltip-row"><span class="qheat-tooltip-label">Cell</span><span class="qheat-tooltip-val" id="qheat-tt-cell"></span></div>
     </div>
 
     <!-- ===== INSPECT PANEL ===== -->
@@ -2792,6 +3454,36 @@
                             <span style="color:var(--cursor-text);">web/github-dashboard.html</span>
                             <span style="color:var(--cursor-text-muted);">GitHub health dashboard &mdash; traffic, code freq, funding, releases</span>
                         </div>
+                        <div style="display:grid;grid-template-columns:24px 60px 260px 1fr;gap:6px;padding:4px 10px;background:rgba(126,231,135,0.04);border-radius:2px;">
+                            <span style="color:var(--cursor-accent);font-weight:700;">+0:</span>
+                            <span style="color:#ffe138;">~95 KB</span>
+                            <span style="color:var(--cursor-text);">web/hexbench.html</span>
+                            <span style="color:var(--cursor-text-muted);">Voltage lab &mdash; PSU monitor, Arduino editor, node workbench, Pybricks builder</span>
+                        </div>
+                        <div style="display:grid;grid-template-columns:24px 60px 260px 1fr;gap:6px;padding:4px 10px;background:rgba(126,231,135,0.04);border-radius:2px;">
+                            <span style="color:var(--cursor-accent);font-weight:700;">+1:</span>
+                            <span style="color:#da3688;">~35 KB</span>
+                            <span style="color:var(--cursor-text);">web/research-lab.html</span>
+                            <span style="color:var(--cursor-text-muted);">Research editor &mdash; markdown + mermaid, node canvas, console</span>
+                        </div>
+                        <div style="display:grid;grid-template-columns:24px 60px 260px 1fr;gap:6px;padding:4px 10px;background:rgba(126,231,135,0.04);border-radius:2px;">
+                            <span style="color:var(--cursor-accent);font-weight:700;">+1:</span>
+                            <span style="color:#58a6ff;">~30 KB</span>
+                            <span style="color:var(--cursor-text);">web/hexcast-send.html</span>
+                            <span style="color:var(--cursor-text-muted);">Mobile PWA &mdash; phone camera streaming to hexcast receiver</span>
+                        </div>
+                        <div style="display:grid;grid-template-columns:24px 60px 260px 1fr;gap:6px;padding:4px 10px;background:rgba(126,231,135,0.04);border-radius:2px;">
+                            <span style="color:var(--cursor-accent);font-weight:700;">+1:</span>
+                            <span style="color:#d2a8ff;">~12 KB</span>
+                            <span style="color:var(--cursor-text);">web/numsy.html</span>
+                            <span style="color:var(--cursor-text-muted);">1080&times;1080 Instagram visual generator</span>
+                        </div>
+                        <div style="display:grid;grid-template-columns:24px 60px 260px 1fr;gap:6px;padding:4px 10px;background:rgba(88,166,255,0.04);border-radius:2px;">
+                            <span style="color:var(--cursor-accent);font-weight:700;">-n:</span>
+                            <span style="color:#58a6ff;">~13 KB</span>
+                            <span style="color:var(--cursor-text);">web/quantum-prefixes.js</span>
+                            <span style="color:var(--cursor-text-muted);">Shared module &mdash; prefix API, cross-app BroadcastChannel sync, IoT bridge</span>
+                        </div>
                         <div style="display:grid;grid-template-columns:24px 60px 260px 1fr;gap:6px;padding:4px 10px;">
                             <span style="color:var(--cursor-accent);font-weight:700;">+1:</span>
                             <span style="color:var(--cursor-text-muted);">~15 KB</span>
@@ -2881,7 +3573,7 @@
                         <span class="tag tag--green">Phase 4.0 &mdash; Tauri Desktop App SHIPPED</span>
                         <span class="tag tag--blue">v4.0.0 &middot; Tauri v2 (Rust) &middot; 55+ endpoints</span>
                         <span class="tag tag--purple">github.com/fornevercollective/uvspeed</span>
-                        <span class="tag tag--yellow">17 web apps + hexterm + multi-stream + funding LIVE</span>
+                        <span class="tag tag--yellow">18 web apps + hexterm + multi-stream + funding LIVE</span>
                     </div>
                 </div>
 
@@ -3090,7 +3782,7 @@
                             <span style="font-size:1rem;">🟢</span>
                             <div>
                                 <div style="font-size:0.75rem;font-weight:700;color:#7ee787;">Project structure v3.3</div>
-                                <div style="font-size:0.625rem;color:var(--cursor-text-muted);">Numbered <code>src/01-07</code> &bull; 17 web apps &bull; Tauri v2 &bull; 55+ endpoints &bull; 10 MCP tools &bull; Rust + Python</div>
+                                <div style="font-size:0.625rem;color:var(--cursor-text-muted);">Numbered <code>src/01-07</code> &bull; 18 web apps &bull; Tauri v2 &bull; 55+ endpoints &bull; 10 MCP tools &bull; Rust + Python + quantum-prefixes.js shared module</div>
                             </div>
                             <span class="tag tag--green" style="font-size:0.5625rem;padding:2px 6px;">Shipped</span>
                             <span style="font-size:0.625rem;color:#7ee787;font-weight:600;">LIVE</span>
@@ -3232,7 +3924,7 @@
 
                     <div style="display:flex;gap:var(--cursor-space-sm);flex-wrap:wrap;">
                         <span class="tag tag--green">26 shipped &middot; 1 planned &middot; Phase 4.0 complete</span>
-                        <span class="tag tag--yellow">17 web apps + Tauri desktop + hexterm + multi-stream LIVE</span>
+                        <span class="tag tag--yellow">18 web apps + Tauri desktop + hexterm + multi-stream LIVE</span>
                         <span class="tag tag--purple">1 planned &rarr; Phase 4.1 (multi-agent orchestration)</span>
                     </div>
                 </div>
@@ -3244,7 +3936,7 @@
                         <div class="limit-card">
                             <div class="limit-label">Install Type</div>
                             <div class="limit-value">Static HTML + Tauri v2 + MCP</div>
-                            <div class="limit-note">Three modes: (1) Zero-install file:// HTML / PWA, (2) Tauri v2 native desktop app (Rust), (3) MCP server for IDE integration. Scales v1 (1 KB) &rarr; v4.0 (17 web apps + Rust).</div>
+                            <div class="limit-note">Three modes: (1) Zero-install file:// HTML / PWA, (2) Tauri v2 native desktop app (Rust), (3) MCP server for IDE integration. Scales v1 (1 KB) &rarr; v4.0 (18 web apps + Rust).</div>
                         </div>
                         <div class="limit-card">
                             <div class="limit-label">Max Cell Count</div>
@@ -3819,7 +4511,7 @@
                         <span class="tag tag--green">PWA offline &middot; 14 cell tools &middot; touch events &middot; full quantum dev kernel</span>
                         <span class="tag tag--blue">20-language prefix system (68&ndash;98% coverage)</span>
                         <span class="tag tag--yellow">55+ endpoints &middot; 10 MCP tools &middot; Cursor rule active</span>
-                        <span class="tag tag--green">17 web apps + Tauri desktop + multi-stream LIVE</span>
+                        <span class="tag tag--green">18 web apps + Tauri desktop + multi-stream LIVE</span>
                         <span class="tag tag--purple">PWA &rarr; Hybrid Terminal &rarr; Native App roadmap</span>
                     </div>
                 </div>
@@ -3894,7 +4586,7 @@
                                     <li>✅ <strong>3.3:</strong> Multi-instance (QubesOS Electron), MCP server (10 tools), InstanceManager, dynamic Ollama, tinygrad prefix classifier</li>
                                     <li>✅ GitHub community standards (CoC, Contributing, Security, templates, Dependabot)</li>
                                     <li>✅ Visual Slice tab &mdash; 2D cross-section, 3D Rubik&rsquo;s cube, quantum orbital in Nav sidebar</li>
-                                    <li>✅ 55+ API endpoints, 10 MCP tools, 17 web apps, 30 screenshots, GitHub health dashboard</li>
+                                    <li>✅ 55+ API endpoints, 10 MCP tools, 18 web apps, 30 screenshots, GitHub health dashboard</li>
                                 </ul>
                                 <div class="tag-row" style="margin-top:var(--cursor-space-xs);">
                                     <span class="tag tag--purple">Agent capability: Full-stack AI-native architecture with multi-instance isolation</span>
@@ -5540,7 +6232,7 @@
                         <span style="color:#d2a8ff;font-weight:700;">v3.3</span><span style="color:#d2a8ff;">+MCP server (10 tools), multi-instance, Ollama, tinygrad, community, dashboard, Visual Slice</span>
                         <span style="color:#f0883e;font-weight:700;">v3.4</span><span style="color:#f0883e;">+14 in-cell tools, touch events, PWA offline mode, manifest.json, Service Worker, PWA&rarr;Terminal roadmap</span>
                         <span style="color:#3fb950;font-weight:700;">v3.5</span><span style="color:#3fb950;">+research-lab.html, data type matrix, tier checkmarks, PWA install prompt, install.sh, Tauri v2 scaffold, xterm.js terminal, Rust prefix, Numsy tamagotchi</span>
-                        <span style="color:#d2a8ff;font-weight:700;">v4.0</span><span style="color:#d2a8ff;">+Tauri v2 desktop app (Rust), hexterm terminal emulator, multi-stream (feed/grid/launcher), hexcast CLI, sponsor page, funding infra, 17 web apps, 30 screenshots</span>
+                        <span style="color:#d2a8ff;font-weight:700;">v4.0</span><span style="color:#d2a8ff;">+Tauri v2 desktop app (Rust), hexterm terminal emulator, multi-stream (feed/grid/launcher), hexcast CLI, hexbench voltage lab, sponsor page, funding infra, 18 web apps, PWA service worker on all apps, quantum-prefixes.js shared module</span>
                     </div>
                     <div style="background:var(--cursor-bg);border:1px solid var(--cursor-border);border-radius:var(--cursor-radius-sm);padding:12px 14px;margin-bottom:var(--cursor-space-md);font-family:var(--cursor-font-mono);font-size:0.5625rem;line-height:1.7;">
                         <span style="color:var(--cursor-accent);font-weight:700;">Key restructure decisions (v3.0):</span><br>
@@ -5555,7 +6247,7 @@
                         &bull; GitHub CI under <code>.github/</code> (workflows, templates, Dependabot)
                     </div>
                     <div style="display:flex;gap:var(--cursor-space-sm);flex-wrap:wrap;">
-                        <span class="tag tag--green">v4.0.0 current &middot; Tauri v2 + 17 web apps</span>
+                        <span class="tag tag--green">v4.0.0 current &middot; Tauri v2 + 18 web apps</span>
                         <span class="tag tag--blue">200+ files &middot; Rust + Python + HTML/JS</span>
                         <span class="tag tag--purple">Clean root &middot; src-tauri/ &middot; web/ &middot; GitHub CI</span>
                     </div>
@@ -5767,7 +6459,7 @@
                             WASM build of prefix engine runs in both terminal and browser contexts.<br>
                             <strong>On-device AI:</strong> Ollama sidecar auto-starts with terminal launch. tinygrad compiled to native for CPU/GPU inference.
                             No cloud dependency for any feature.<br>
-                            <strong>Why hybrid:</strong> Reuses all 17 web apps and existing CSS/JS investment while gaining terminal-native execution speed.
+                            <strong>Why hybrid:</strong> Reuses all 18 web apps (with shared quantum-prefixes.js) and existing CSS/JS investment while gaining terminal-native execution speed.
                             Users can choose terminal or browser &mdash; same data, same tools.
                         </div>
                     </div>
@@ -6025,8 +6717,13 @@
             /* ---------- LocalStorage Persistence ---------- */
             _saveToLocalStorage() {
                 try {
+                    // Include per-cell quantum prefix metadata in persistent storage
+                    const cellsWithMeta = this.cells.map(cell => {
+                        const meta = this.prefixMetadata(cell);
+                        return { ...cell, quantumPrefix: { coverage: meta.coverage, prefixCounts: meta.prefixCounts, language: meta.language } };
+                    });
                     const data = {
-                        cells: this.cells,
+                        cells: cellsWithMeta,
                         quantumPosition: this.quantumPosition,
                         executionCount: this.executionCount,
                         savedAt: new Date().toISOString(),
@@ -6147,6 +6844,56 @@
                     });
                 });
 
+                // ===== NAV CUBE 3D ROTATION =====
+                this._navCubeRx = -20;
+                this._navCubeRy = 30;
+                const navCubeInner = document.getElementById('nav-cube-inner');
+                const navCubeScene = document.getElementById('nav-cube-scene');
+
+                const updateNavCube = () => {
+                    if (navCubeInner) navCubeInner.style.transform = `rotateX(${this._navCubeRx}deg) rotateY(${this._navCubeRy}deg)`;
+                };
+
+                // Arrow buttons — rotate 45 degrees per click
+                document.getElementById('nca-up')?.addEventListener('click', () => { this._navCubeRx -= 45; updateNavCube(); });
+                document.getElementById('nca-down')?.addEventListener('click', () => { this._navCubeRx += 45; updateNavCube(); });
+                document.getElementById('nca-left')?.addEventListener('click', () => { this._navCubeRy -= 45; updateNavCube(); });
+                document.getElementById('nca-right')?.addEventListener('click', () => { this._navCubeRy += 45; updateNavCube(); });
+
+                // Drag-to-rotate (mouse)
+                if (navCubeScene) {
+                    let ncDrag = null;
+                    navCubeScene.addEventListener('pointerdown', (e) => {
+                        if (e.target.dataset && e.target.dataset.nav) return; // let nav clicks through
+                        ncDrag = { x: e.clientX, y: e.clientY, rx: this._navCubeRx, ry: this._navCubeRy };
+                        navCubeScene.setPointerCapture(e.pointerId);
+                    });
+                    navCubeScene.addEventListener('pointermove', (e) => {
+                        if (!ncDrag) return;
+                        this._navCubeRy = ncDrag.ry + (e.clientX - ncDrag.x) * 0.7;
+                        this._navCubeRx = ncDrag.rx + (e.clientY - ncDrag.y) * 0.7;
+                        if (navCubeInner) navCubeInner.style.transition = 'none';
+                        updateNavCube();
+                    });
+                    navCubeScene.addEventListener('pointerup', () => {
+                        ncDrag = null;
+                        if (navCubeInner) navCubeInner.style.transition = 'transform 0.25s ease';
+                    });
+                }
+
+                // Click on cube face cells → trigger nav
+                document.querySelectorAll('.nav-cube-face span[data-nav]').forEach(cell => {
+                    cell.addEventListener('click', () => {
+                        const dir = cell.dataset.nav;
+                        // Find the matching hidden nav-btn and trigger its action
+                        const navBtn = document.querySelector(`.nav-btn[data-direction="${dir}"]`);
+                        if (navBtn) navBtn.click();
+                        // Highlight active cell on cube
+                        document.querySelectorAll('.nav-cube-face span.ncf-active').forEach(s => s.classList.remove('ncf-active'));
+                        cell.classList.add('ncf-active');
+                    });
+                });
+
                 // Layer up/down — versions the nav grid like Electron app
                 document.getElementById('layer-up').addEventListener('click', () => {
                     this.quantumPosition[2] += 1;
@@ -6214,12 +6961,82 @@
                 document.querySelectorAll('#fqc-tabbar .fqc-tab').forEach(tab => {
                     tab.addEventListener('click', () => {
                         document.querySelectorAll('#fqc-tabbar .fqc-tab').forEach(t => t.classList.remove('active'));
-                        document.querySelectorAll('.fqc-panel').forEach(p => p.classList.remove('active'));
+                        document.querySelectorAll('.footer-quick-cmds .fqc-panel').forEach(p => p.classList.remove('active'));
                         tab.classList.add('active');
                         const panel = document.querySelector(`.fqc-panel[data-fqc-panel="${tab.dataset.fqc}"]`);
                         if (panel) panel.classList.add('active');
                     });
                 });
+
+                // Top bar tab switching (mirrors footer)
+                document.querySelectorAll('#tqc-tabbar .fqc-tab').forEach(tab => {
+                    tab.addEventListener('click', () => {
+                        document.querySelectorAll('#tqc-tabbar .fqc-tab').forEach(t => t.classList.remove('active'));
+                        document.querySelectorAll('#top-quick-cmds .fqc-panel').forEach(p => p.classList.remove('active'));
+                        tab.classList.add('active');
+                        const panel = document.querySelector(`.fqc-panel[data-tqc-panel="${tab.dataset.tqc}"]`);
+                        if (panel) panel.classList.add('active');
+                    });
+                });
+
+                // Top bar action buttons
+                document.getElementById('t-add-cell').addEventListener('click', () => this.addCell('code'));
+                document.getElementById('t-add-mermaid').addEventListener('click', () => this.addCell('mermaid'));
+                document.getElementById('t-run-all').addEventListener('click', () => this.runAllCells());
+                document.getElementById('t-undo').addEventListener('click', () => this.undo());
+                document.getElementById('t-redo').addEventListener('click', () => this.redo());
+                document.getElementById('t-save').addEventListener('click', () => this.saveNotebook());
+
+                document.getElementById('t-benchmark').addEventListener('click', () => {
+                    const id = this.addCell('visualization', `# ⚡ UV-Speed System Benchmark & CDN Signal Trace\n# Run this cell to benchmark your machine in real-time`);
+                    this.executeCell(id);
+                    requestAnimationFrame(() => { document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'center' }); });
+                });
+                document.getElementById('t-security-scan').addEventListener('click', () => this._runSecurityScan());
+                document.getElementById('t-git-hook').addEventListener('click', () => this._installGitHook());
+                document.getElementById('t-quest')?.addEventListener('click', () => this._checkQuestStatus());
+
+                document.getElementById('t-freya-units').addEventListener('click', () => {
+                    const id = this.addCell('freya', '# 🔬 FreyaUnits — Precision Converter\n# Planck Length to Parsec — 27 units');
+                    this.executeCell(id);
+                    requestAnimationFrame(() => { document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'center' }); });
+                });
+                document.getElementById('t-play-numsy').addEventListener('click', () => openOverlay('brothernumsy.html', 'brotherNumsy & Freya'));
+                document.getElementById('t-open-kbatch').addEventListener('click', () => openOverlay('kbatch.html', 'kbatch — Keyboard Analyzer'));
+                document.getElementById('t-open-hexcast').addEventListener('click', () => openOverlay('hexcast.html', 'hexcast — Live Video Broadcast'));
+                document.getElementById('t-add-kbatch').addEventListener('click', () => {
+                    const id = this.addCell('kbatch', '# ⌨ kbatch — Keyboard Pattern Analyzer\n# Thermal heatmap, contrails, geometric patterns');
+                    this.executeCell(id);
+                    setTimeout(() => { document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 100);
+                });
+                document.getElementById('t-add-hexcast').addEventListener('click', () => {
+                    const id = this.addCell('hexcast', '# 📡 hexcast — Live Video Hex Broadcast\n# Camera/screen/test → hex stream + latency bench');
+                    this.executeCell(id);
+                    setTimeout(() => { document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 100);
+                });
+                document.getElementById('t-add-hexbench')?.addEventListener('click', () => {
+                    const id = this.addCell('hexbench', '# ⚡ hexbench — Voltage Lab + Electronics Workbench\n# PSU monitor, Freya Dev Toolkit (13 tools), parts catalog, Arduino/Pybricks code');
+                    this.executeCell(id);
+                    setTimeout(() => { document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 100);
+                });
+
+                // Top tools dropdown
+                const topToolsBtn = document.getElementById('t-tools');
+                const topToolsDropdown = document.getElementById('top-tools-dropdown');
+                if (topToolsBtn && topToolsDropdown) {
+                    topToolsBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        topToolsDropdown.classList.toggle('show');
+                    });
+                    document.addEventListener('click', () => topToolsDropdown.classList.remove('show'));
+                    topToolsDropdown.addEventListener('click', (e) => e.stopPropagation());
+                    topToolsDropdown.querySelectorAll('.tools-dropdown-item').forEach(item => {
+                        item.addEventListener('click', () => {
+                            topToolsDropdown.classList.remove('show');
+                            this._runTool(item.dataset.tool);
+                        });
+                    });
+                }
 
                 // Footer action buttons (mirrors header)
                 document.getElementById('f-add-cell').addEventListener('click', () => this.addCell('code'));
@@ -6326,8 +7143,13 @@
                 });
 
                 // ===== SIDEBAR TAB SWITCHING =====
+                // Main row (Nav / Visual / Thermal)
                 document.querySelectorAll('.sidebar-tab').forEach(tab => {
                     tab.addEventListener('click', () => {
+                        // Deactivate ext row
+                        document.querySelectorAll('.sidebar-tab-ext').forEach(t => t.classList.remove('active'));
+                        document.querySelectorAll('.sidebar-tab-ext-panel').forEach(p => p.classList.remove('active'));
+                        // Activate main row
                         document.querySelectorAll('.sidebar-tab').forEach(t => t.classList.remove('active'));
                         document.querySelectorAll('.sidebar-tab-panel').forEach(p => p.classList.remove('active'));
                         tab.classList.add('active');
@@ -6345,6 +7167,260 @@
                         }
                     });
                 });
+
+                // Extended row (AI/LLM / Language / Blocks)
+                document.querySelectorAll('.sidebar-tab-ext').forEach(tab => {
+                    tab.addEventListener('click', () => {
+                        // Deactivate main row
+                        document.querySelectorAll('.sidebar-tab').forEach(t => t.classList.remove('active'));
+                        document.querySelectorAll('.sidebar-tab-panel').forEach(p => p.classList.remove('active'));
+                        this._stopThermalViz();
+                        this._stopVisualViz();
+                        // Activate ext row
+                        document.querySelectorAll('.sidebar-tab-ext').forEach(t => t.classList.remove('active'));
+                        document.querySelectorAll('.sidebar-tab-ext-panel').forEach(p => p.classList.remove('active'));
+                        tab.classList.add('active');
+                        const panel = document.getElementById(tab.dataset.extTab);
+                        if (panel) panel.classList.add('active');
+                    });
+                });
+
+                // ===== AI/LLM PANEL =====
+                this._llmModel = 'local';
+                document.querySelectorAll('.llm-model-card').forEach(card => {
+                    card.addEventListener('click', () => {
+                        document.querySelectorAll('.llm-model-card').forEach(c => c.classList.remove('selected'));
+                        card.classList.add('selected');
+                        this._llmModel = card.dataset.llm;
+                        document.getElementById('llm-status').textContent = `Model: ${this._llmModel} · idle`;
+                    });
+                });
+                document.getElementById('llm-send-btn')?.addEventListener('click', () => {
+                    const input = document.getElementById('llm-prompt-input');
+                    if (!input || !input.value.trim()) return;
+                    const prompt = input.value.trim();
+                    input.value = '';
+                    // Create an AI cell with the prompt
+                    const id = this.addCell('code', `# 🤖 AI Prompt (${this._llmModel})\n# ${prompt}\n`);
+                    document.getElementById('llm-status').textContent = `Model: ${this._llmModel} · sent → cell`;
+                    requestAnimationFrame(() => { document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'center' }); });
+                });
+                document.getElementById('llm-prompt-input')?.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') { e.preventDefault(); document.getElementById('llm-send-btn')?.click(); }
+                });
+
+                // ===== LANGUAGE PANEL =====
+                const LANG_DATA = {
+                    python:     { name: 'Python',     coverage: 98, rules: 47, map: '+1: class/def · +0: assign · n: import · -n: return · 0: pass/comment · -0: del · +n: raise · -1: except · +2: yield' },
+                    javascript: { name: 'JavaScript', coverage: 96, rules: 42, map: '+1: class/function · +0: const/let · n: import · -n: return · 0: comment · -0: delete · +n: throw · -1: catch · +2: yield' },
+                    typescript: { name: 'TypeScript', coverage: 96, rules: 44, map: '+1: class/interface · +0: const/let · n: import · -n: return · 0: comment · -0: delete · +n: throw · -1: catch · +2: yield' },
+                    rust:       { name: 'Rust',       coverage: 94, rules: 38, map: '+1: struct/impl/fn · +0: let · n: use · -n: return · 0: comment · -0: drop · +n: panic · -1: match/err · +2: yield' },
+                    go:         { name: 'Go',         coverage: 92, rules: 35, map: '+1: func/type · +0: var/:= · n: import · -n: return · 0: comment · -0: _ · +n: panic · -1: recover · +2: go' },
+                    c:          { name: 'C',          coverage: 88, rules: 30, map: '+1: function · +0: = · n: #include · -n: return · 0: comment · -0: free · +n: exit · -1: goto · +2: setjmp' },
+                    cpp:        { name: 'C++',        coverage: 90, rules: 36, map: '+1: class/fn · +0: = · n: #include · -n: return · 0: comment · -0: delete · +n: throw · -1: catch · +2: co_yield' },
+                    java:       { name: 'Java',       coverage: 94, rules: 40, map: '+1: class/method · +0: = · n: import · -n: return · 0: comment · -0: null · +n: throw · -1: catch · +2: yield' },
+                    shell:      { name: 'Shell',      coverage: 82, rules: 22, map: '+1: function · +0: = · n: source/. · -n: return/exit · 0: # · -0: unset · +n: trap · -1: || · +2: &' },
+                    ruby:       { name: 'Ruby',       coverage: 86, rules: 28, map: '+1: class/def · +0: = · n: require · -n: return · 0: # · -0: nil · +n: raise · -1: rescue · +2: yield' },
+                    swift:      { name: 'Swift',      coverage: 90, rules: 34, map: '+1: class/func · +0: let/var · n: import · -n: return · 0: // · -0: nil · +n: throw · -1: catch · +2: await' },
+                    kotlin:     { name: 'Kotlin',     coverage: 90, rules: 33, map: '+1: class/fun · +0: val/var · n: import · -n: return · 0: // · -0: null · +n: throw · -1: catch · +2: yield' },
+                    php:        { name: 'PHP',        coverage: 84, rules: 26, map: '+1: class/function · +0: $ · n: use/require · -n: return · 0: // · -0: unset · +n: throw · -1: catch · +2: yield' },
+                    lua:        { name: 'Lua',        coverage: 80, rules: 20, map: '+1: function · +0: local · n: require · -n: return · 0: -- · -0: nil · +n: error · -1: pcall · +2: coroutine' },
+                    r:          { name: 'R',          coverage: 78, rules: 18, map: '+1: function · +0: <- · n: library · -n: return · 0: # · -0: NULL · +n: stop · -1: tryCatch · +2: yield' },
+                    sql:        { name: 'SQL',        coverage: 72, rules: 16, map: '+1: CREATE · +0: INSERT/UPDATE · n: USE · -n: RETURN · 0: -- · -0: DROP · +n: RAISE · -1: EXCEPTION · +2: CURSOR' },
+                    html:       { name: 'HTML',       coverage: 68, rules: 14, map: '+1: <section> · +0: attribute · n: <link>/<script> · -n: </> · 0: <!-- --> · -0: hidden · +n: onerror · -1: noscript · +2: template' },
+                    css:        { name: 'CSS',        coverage: 70, rules: 15, map: '+1: selector · +0: property · n: @import · -n: } · 0: /* */ · -0: display:none · +n: !important · -1: @supports · +2: @keyframes' },
+                    yaml:       { name: 'YAML',       coverage: 74, rules: 12, map: '+1: mapping key · +0: value · n: anchors · -n: --- · 0: # · -0: null · +n: !! · -1: merge · +2: sequence' },
+                    toml:       { name: 'TOML',       coverage: 76, rules: 13, map: '+1: [table] · +0: key = · n: include · -n: --- · 0: # · -0: empty · +n: [[array]] · -1: fallback · +2: datetime' },
+                };
+                document.querySelectorAll('.lang-chip').forEach(chip => {
+                    chip.addEventListener('click', () => {
+                        document.querySelectorAll('.lang-chip').forEach(c => c.classList.remove('active'));
+                        chip.classList.add('active');
+                        const lang = chip.dataset.lang;
+                        const info = LANG_DATA[lang];
+                        if (info) {
+                            document.getElementById('lang-info-box').innerHTML =
+                                `<strong>${info.name}</strong> — Coverage: <span style="color:#7ee787;">${info.coverage}%</span><br>` +
+                                `AST rules: <span style="color:var(--cursor-accent);">${info.rules}</span> patterns<br>` +
+                                `Prefixes: all 9 symbols mapped<br>` +
+                                `<span style="color:var(--cursor-text-muted);">${info.map}</span>`;
+                        }
+                    });
+                });
+                document.getElementById('lang-detect-btn')?.addEventListener('click', () => {
+                    const cell = this.currentCellId ? this.cells.find(c => c.id === this.currentCellId) : null;
+                    const result = document.getElementById('lang-detect-result');
+                    if (result) {
+                        const detected = cell ? (cell.language || this._detectLanguage(cell.content || '')) : 'python';
+                        result.style.display = 'block';
+                        result.textContent = `Detected: ${detected}`;
+                        // Highlight the matching chip
+                        const chip = document.querySelector(`.lang-chip[data-lang="${detected}"]`);
+                        if (chip) chip.click();
+                    }
+                });
+                document.getElementById('lang-apply-btn')?.addEventListener('click', () => {
+                    const activeChip = document.querySelector('.lang-chip.active');
+                    if (activeChip && this.currentCellId) {
+                        const cell = this.cells.find(c => c.id === this.currentCellId);
+                        if (cell) { cell.language = activeChip.dataset.lang; this.renderCells(); }
+                    }
+                });
+
+                // ===== BLOCKS PANEL (mini Pybricks builder) =====
+                this._nbBlocks = [];
+                this._nbConnections = [];
+                this._nbId = 0;
+                const NB_TYPES = {
+                    hub_init:    { cat:'hub',    color:'#58a6ff', label:'Hub Init',    rows:[{type:'select',key:'hub',options:['PrimeHub','InventorHub','CityHub']}] },
+                    hub_light:   { cat:'hub',    color:'#58a6ff', label:'Hub Light',   rows:[{type:'select',key:'color',options:['red','green','blue','yellow','off']}] },
+                    hub_beep:    { cat:'hub',    color:'#58a6ff', label:'Beep',        rows:[{type:'input',key:'freq',placeholder:'440',unit:'Hz'}] },
+                    motor_run:   { cat:'motion', color:'#f0883e', label:'Motor Run',   rows:[{type:'select',key:'port',options:['A','B','C','D']},{type:'input',key:'speed',placeholder:'500',unit:'d/s'}] },
+                    motor_stop:  { cat:'motion', color:'#f0883e', label:'Motor Stop',  rows:[{type:'select',key:'port',options:['A','B','C','D']}] },
+                    color_read:  { cat:'sensor', color:'#3fb950', label:'Color Read',  rows:[{type:'select',key:'port',options:['1','2','3','4']}] },
+                    dist_read:   { cat:'sensor', color:'#3fb950', label:'Distance',    rows:[{type:'select',key:'port',options:['1','2','3','4']}] },
+                    if_then:     { cat:'logic',  color:'#d2a8ff', label:'If Then',     rows:[{type:'input',key:'cond',placeholder:'color == "red"'}] },
+                    wait_ms:     { cat:'logic',  color:'#d2a8ff', label:'Wait',        rows:[{type:'input',key:'ms',placeholder:'1000',unit:'ms'}] },
+                    loop_forever:{ cat:'loop',   color:'#ffe138', label:'Loop ∞',      rows:[] },
+                    loop_n:      { cat:'loop',   color:'#ffe138', label:'Loop N',      rows:[{type:'input',key:'n',placeholder:'10'}] },
+                    set_var:     { cat:'var',    color:'#f97583', label:'Set Var',     rows:[{type:'input',key:'name',placeholder:'x'},{type:'input',key:'val',placeholder:'0'}] },
+                    print_val:   { cat:'var',    color:'#f97583', label:'Print',       rows:[{type:'input',key:'val',placeholder:'x'}] },
+                    stream_in:   { cat:'stream', color:'#c084fc', label:'Stream In',   rows:[{type:'input',key:'ch',placeholder:'hexterm'}] },
+                };
+                const nbCanvas = document.getElementById('nb-canvas');
+                const nbSvg = document.getElementById('nb-connections-svg');
+
+                const createNbBlock = (type, x, y) => {
+                    const def = NB_TYPES[type]; if (!def) return;
+                    const id = 'nb-' + (this._nbId++);
+                    const block = { id, type, x, y, inputs: {} };
+                    this._nbBlocks.push(block);
+                    const el = document.createElement('div');
+                    el.className = 'nb-block';
+                    el.id = id;
+                    el.style.left = x + 'px'; el.style.top = y + 'px'; el.style.background = def.color;
+                    let bodyHtml = '';
+                    def.rows.forEach(r => {
+                        if (r.type === 'input') bodyHtml += `<input data-key="${r.key}" placeholder="${r.placeholder}" value="${r.placeholder}">`;
+                        else if (r.type === 'select') bodyHtml += `<select data-key="${r.key}">${r.options.map(o => `<option>${o}</option>`).join('')}</select>`;
+                    });
+                    el.innerHTML = `<div class="nb-block-head">${def.label}</div>${bodyHtml ? `<div class="nb-block-body">${bodyHtml}</div>` : ''}<div class="nb-conn-dot" data-conn="${id}"></div>`;
+
+                    // Drag
+                    let drag = null;
+                    el.addEventListener('pointerdown', (e) => {
+                        if (e.target.classList.contains('nb-conn-dot')) return;
+                        drag = { ox: e.clientX - block.x, oy: e.clientY - block.y };
+                        el.setPointerCapture(e.pointerId);
+                    });
+                    el.addEventListener('pointermove', (e) => {
+                        if (!drag) return;
+                        block.x = Math.max(0, e.clientX - drag.ox);
+                        block.y = Math.max(0, e.clientY - drag.oy);
+                        el.style.left = block.x + 'px'; el.style.top = block.y + 'px';
+                        drawNbConnections();
+                    });
+                    el.addEventListener('pointerup', () => { drag = null; });
+
+                    // Connection dot
+                    const dot = el.querySelector('.nb-conn-dot');
+                    if (dot) {
+                        dot.addEventListener('pointerdown', (e) => {
+                            e.stopPropagation();
+                            this._nbDrawingFrom = id;
+                        });
+                        dot.addEventListener('pointerup', (e) => {
+                            e.stopPropagation();
+                            if (this._nbDrawingFrom && this._nbDrawingFrom !== id) {
+                                this._nbConnections.push({ from: this._nbDrawingFrom, to: id });
+                                drawNbConnections();
+                            }
+                            this._nbDrawingFrom = null;
+                        });
+                    }
+
+                    nbCanvas.appendChild(el);
+                };
+
+                const drawNbConnections = () => {
+                    if (!nbSvg) return;
+                    let paths = '';
+                    this._nbConnections.forEach(c => {
+                        const fromEl = document.getElementById(c.from);
+                        const toEl = document.getElementById(c.to);
+                        if (!fromEl || !toEl) return;
+                        const fr = fromEl.getBoundingClientRect();
+                        const tr = toEl.getBoundingClientRect();
+                        const cr = nbCanvas.getBoundingClientRect();
+                        const x1 = fr.right - cr.left, y1 = fr.top + fr.height/2 - cr.top;
+                        const x2 = tr.left - cr.left, y2 = tr.top + tr.height/2 - cr.top;
+                        const cx = (x1 + x2) / 2;
+                        paths += `<path d="M${x1},${y1} C${cx},${y1} ${cx},${y2} ${x2},${y2}" fill="none" stroke="#ffe138" stroke-width="2" opacity="0.7"/>`;
+                    });
+                    nbSvg.innerHTML = paths;
+                };
+
+                const clearNbCanvas = () => {
+                    this._nbBlocks = []; this._nbConnections = []; this._nbId = 0;
+                    nbCanvas.querySelectorAll('.nb-block').forEach(b => b.remove());
+                    if (nbSvg) nbSvg.innerHTML = '';
+                };
+
+                const loadNbPreset = (preset) => {
+                    clearNbCanvas();
+                    if (preset === 'drive') {
+                        createNbBlock('hub_init', 10, 10);
+                        createNbBlock('motor_run', 10, 55);
+                        createNbBlock('motor_run', 10, 100);
+                        this._nbConnections.push({ from: 'nb-0', to: 'nb-1' }, { from: 'nb-1', to: 'nb-2' });
+                    } else if (preset === 'sorter') {
+                        createNbBlock('hub_init', 10, 10);
+                        createNbBlock('color_read', 10, 55);
+                        createNbBlock('if_then', 10, 100);
+                        createNbBlock('motor_run', 110, 100);
+                        this._nbConnections.push({ from: 'nb-0', to: 'nb-1' }, { from: 'nb-1', to: 'nb-2' }, { from: 'nb-2', to: 'nb-3' });
+                    }
+                    drawNbConnections();
+                };
+
+                const exportNbPython = () => {
+                    let code = '# 🧱 Generated from Block Builder\nfrom pybricks.hubs import PrimeHub\nfrom pybricks.pupdevices import Motor, ColorSensor\nfrom pybricks.parameters import Port, Color\n\nhub = PrimeHub()\n\n';
+                    this._nbBlocks.forEach(b => {
+                        const def = NB_TYPES[b.type];
+                        const el = document.getElementById(b.id);
+                        if (!el || !def) return;
+                        const vals = {};
+                        el.querySelectorAll('[data-key]').forEach(inp => { vals[inp.dataset.key] = inp.value; });
+                        switch(b.type) {
+                            case 'motor_run': code += `Motor(Port.${vals.port || 'A'}).run(${vals.speed || 500})\n`; break;
+                            case 'motor_stop': code += `Motor(Port.${vals.port || 'A'}).stop()\n`; break;
+                            case 'color_read': code += `color = ColorSensor(Port.${vals.port || '1'}).color()\n`; break;
+                            case 'hub_light': code += `hub.light.on(Color.${(vals.color||'green').toUpperCase()})\n`; break;
+                            case 'hub_beep': code += `hub.speaker.beep(${vals.freq || 440})\n`; break;
+                            case 'if_then': code += `if ${vals.cond || 'True'}:\n    pass\n`; break;
+                            case 'wait_ms': code += `from pybricks.tools import wait\nwait(${vals.ms || 1000})\n`; break;
+                            case 'loop_forever': code += `while True:\n    pass\n`; break;
+                            case 'loop_n': code += `for i in range(${vals.n || 10}):\n    pass\n`; break;
+                            case 'set_var': code += `${vals.name || 'x'} = ${vals.val || 0}\n`; break;
+                            case 'print_val': code += `print(${vals.val || 'x'})\n`; break;
+                            case 'stream_in': code += `# stream from ${vals.ch || 'hexterm'}\n`; break;
+                        }
+                    });
+                    const id = this.addCell('code', code);
+                    requestAnimationFrame(() => { document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'center' }); });
+                };
+
+                // Palette chip clicks
+                document.querySelectorAll('#nb-palette .nb-chip').forEach(chip => {
+                    chip.addEventListener('click', () => {
+                        const nextY = this._nbBlocks.length * 45 + 10;
+                        createNbBlock(chip.dataset.nb, 10, nextY);
+                    });
+                });
+                document.getElementById('nb-preset-drive')?.addEventListener('click', () => loadNbPreset('drive'));
+                document.getElementById('nb-preset-sorter')?.addEventListener('click', () => loadNbPreset('sorter'));
+                document.getElementById('nb-export')?.addEventListener('click', () => exportNbPython());
+                document.getElementById('nb-clear')?.addEventListener('click', () => clearNbCanvas());
 
                 // ===== QUANTUM VISUAL SLICE / 3D CUBE =====
                 this._visualMode = 'slice';
@@ -7176,6 +8252,11 @@ print(f"  Norm:  {qs.normalize().norm().numpy():.6f}")`);
                 // Remove active from all, then mark the clicked button
                 document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
                 if (btnElement) btnElement.classList.add('active');
+
+                // Sync 3D cube face highlight
+                document.querySelectorAll('.nav-cube-face span.ncf-active').forEach(s => s.classList.remove('ncf-active'));
+                const cubeCell = document.querySelector(`.nav-cube-face span[data-nav="${direction}"]`);
+                if (cubeCell) cubeCell.classList.add('ncf-active');
 
                 switch (direction) {
                     case '+1': this.quantumPosition[1] += 1; break;
@@ -9162,6 +10243,38 @@ print(f"  Norm:  {qs.normalize().norm().numpy():.6f}")`);
                 return { ...QuantumNotebookWeb.PREFIXES.default, category: 'default' };
             }
 
+            // Generate prefixed version of cell content (quantum gutter prepended to each line)
+            prefixContent(cell) {
+                const language = this.detectCellLanguage(cell);
+                const lines = (cell.content || '').split('\n');
+                return lines.map(line => {
+                    const { sym } = this.classifyLine(line, language);
+                    return `${sym} ${line}`;
+                }).join('\n');
+            }
+
+            // Generate prefix metadata for a cell (per-line classification + aggregate counts)
+            prefixMetadata(cell) {
+                const language = this.detectCellLanguage(cell);
+                const lines = (cell.content || '').split('\n');
+                const counts = {};
+                let classified = 0;
+                const lineData = lines.map((line, i) => {
+                    const { sym, category } = this.classifyLine(line, language);
+                    counts[category] = (counts[category] || 0) + 1;
+                    if (category !== 'default') classified++;
+                    return { line: i + 1, sym, category };
+                });
+                return {
+                    language,
+                    totalLines: lines.length,
+                    classifiedLines: classified,
+                    coverage: lines.length > 0 ? Math.round((classified / lines.length) * 100) : 0,
+                    prefixCounts: counts,
+                    lines: lineData
+                };
+            }
+
             // Debounced gutter update (100ms) to avoid thrashing on rapid typing
             _gutterTimers = {};
             debouncedUpdateGutter(cellId) {
@@ -9864,13 +10977,18 @@ print(f"  Norm:  {qs.normalize().norm().numpy():.6f}")`);
                         break;
                     }
                     case 'export': {
-                        const blob = new Blob([content], { type: 'text/plain' });
+                        // Build prefixed content with quantum gutter header
+                        const prefixed = this.prefixContent(cell);
+                        const meta = this.prefixMetadata(cell);
+                        const header = `# ⚛ Quantum Prefix Gutter — ${meta.language} — ${meta.coverage}% coverage (${meta.classifiedLines}/${meta.totalLines} lines)\n# Symbols: n: +1: -n: +0: 0: -1: +n: 1: -0:\n# ${Object.entries(meta.prefixCounts).map(([k,v]) => `${k}:${v}`).join(' · ')}\n\n`;
+                        const exportContent = header + prefixed;
+                        const blob = new Blob([exportContent], { type: 'text/plain' });
                         const url = URL.createObjectURL(blob);
                         const ext = cell.type === 'markdown' ? 'md' : cell.type === 'mermaid' ? 'mmd' : cell.type === 'visualization' ? 'html' : 'txt';
                         const a = document.createElement('a');
                         a.href = url; a.download = `${cellId}.${ext}`; a.click();
                         URL.revokeObjectURL(url);
-                        show(`💾 <strong>Exported</strong> as <code>${cellId}.${ext}</code>`);
+                        show(`💾 <strong>Exported</strong> with quantum gutter as <code>${cellId}.${ext}</code> (${meta.coverage}% coverage)`);
                         break;
                     }
                 }
@@ -10096,11 +11214,42 @@ print(f"  Norm:  {qs.normalize().norm().numpy():.6f}")`);
             }
 
             saveNotebook() {
+                // Build cells with quantum prefix metadata + prefixed content
+                const cellsWithPrefixes = this.cells.map(cell => ({
+                    ...cell,
+                    prefixedContent: this.prefixContent(cell),
+                    quantumPrefix: this.prefixMetadata(cell)
+                }));
+
+                // Compute aggregate notebook-level prefix stats
+                let totalLines = 0, totalClassified = 0;
+                const globalCounts = {};
+                cellsWithPrefixes.forEach(c => {
+                    if (c.quantumPrefix) {
+                        totalLines += c.quantumPrefix.totalLines;
+                        totalClassified += c.quantumPrefix.classifiedLines;
+                        for (const [cat, count] of Object.entries(c.quantumPrefix.prefixCounts)) {
+                            globalCounts[cat] = (globalCounts[cat] || 0) + count;
+                        }
+                    }
+                });
+
                 const nb = {
-                    cells: this.cells,
+                    cells: cellsWithPrefixes,
                     quantumPosition: this.quantumPosition,
                     executionCount: this.executionCount,
-                    metadata: { created: new Date().toISOString(), type: 'uvspeed-quantum-notepad' }
+                    metadata: {
+                        created: new Date().toISOString(),
+                        type: 'uvspeed-quantum-notepad',
+                        quantumGutter: {
+                            totalLines,
+                            classifiedLines: totalClassified,
+                            coverage: totalLines > 0 ? Math.round((totalClassified / totalLines) * 100) + '%' : '0%',
+                            prefixCounts: globalCounts,
+                            symbols: ['n:', '+1:', '-n:', '+0:', '0:', '-1:', '+n:', '1:', '-0:'],
+                            version: '9-symbol-v1'
+                        }
+                    }
                 };
 
                 // Always save to localStorage
@@ -10229,8 +11378,8 @@ print(f"  Norm:  {qs.normalize().norm().numpy():.6f}")`);
                 // Update version/phase stamp dynamically
                 const verEl = document.getElementById('inspect-version-stamp');
                 if (verEl) {
-                    const phase = window._uvspeedPhase || '3.4';
-                    const ver   = window._uvspeedVersion || '3.4';
+                    const phase = window._uvspeedPhase || '4.0';
+                    const ver   = window._uvspeedVersion || '4.0';
                     const mode  = notebook && notebook._offlineMode ? ' · offline' : '';
                     verEl.textContent = `v${ver} · Phase ${phase}${mode}`;
                 }
@@ -10266,6 +11415,436 @@ print(f"  Norm:  {qs.normalize().norm().numpy():.6f}")`);
             });
         })();
 
+        // ===== QUANTUM HEATMAP MODULE (COIN360-style treemap) =====
+        (() => {
+            if (!notebook) return;
+
+            const overlay = document.getElementById('qheat-overlay');
+            const canvas  = document.getElementById('qheat-canvas');
+            const ctx     = canvas ? canvas.getContext('2d') : null;
+            const tooltip = document.getElementById('qheat-tooltip');
+            const openBtn = document.getElementById('ctl-expand');
+            const closeBtn= document.getElementById('qheat-close');
+            if (!overlay || !canvas || !ctx) return;
+
+            let qheatMode = 'treemap';
+            let qheatData = []; // {label, cat, sym, color, lines, cellId, cellIdx, pct}
+            let qheatRects = []; // rendered rectangles for hit-testing
+            let dpr = window.devicePixelRatio || 1;
+
+            const PREFIX_COLORS = {
+                shebang:   '#3fb950', comment:  '#58a6ff', import:   '#d2a8ff',
+                class:     '#ff3838', function: '#f0883e', error:    '#da3633',
+                condition: '#ffe138', loop:     '#e6b422', return:   '#484f58',
+                output:    '#c084fc', variable: '#7ee787', decorator:'#bc8cff',
+                default:   '#30363d'
+            };
+            const PREFIX_SYMS = {
+                shebang:'n:', comment:'+1:', import:'-n:', class:'+0:', function:'0:',
+                error:'-1:', condition:'+n:', loop:'+2:', return:'-0:', output:'+3:',
+                variable:'1:', decorator:'+1:', default:'  '
+            };
+
+            // Build legend
+            const legend = document.getElementById('qheat-legend');
+            if (legend) {
+                const cats = ['shebang','comment','import','class','function','error','condition','variable','return'];
+                legend.innerHTML = cats.map(c =>
+                    `<span class="qheat-legend-item"><span class="qheat-legend-swatch" style="background:${PREFIX_COLORS[c]}"></span>${PREFIX_SYMS[c]} ${c}</span>`
+                ).join('');
+            }
+
+            // Gather data from all notebook cells
+            function gatherData() {
+                qheatData = [];
+                let totalLines = 0, classifiedLines = 0, activePrefixes = new Set();
+                const lang = notebook.cells.length > 0 ? notebook.detectCellLanguage(notebook.cells[0]) : 'python';
+
+                notebook.cells.forEach((cell, idx) => {
+                    if (!cell.content) return;
+                    const lines = cell.content.split('\n');
+                    const cellCounts = {};
+                    lines.forEach(line => {
+                        const { category } = notebook.classifyLine(line, notebook.detectCellLanguage(cell));
+                        cellCounts[category] = (cellCounts[category] || 0) + 1;
+                        totalLines++;
+                        if (category !== 'default') { classifiedLines++; activePrefixes.add(category); }
+                    });
+                    for (const [cat, count] of Object.entries(cellCounts)) {
+                        if (count === 0) continue;
+                        qheatData.push({
+                            label: `Cell ${idx + 1}: ${cell.content.split('\n')[0]?.substring(0, 30) || '(empty)'}`,
+                            cat, sym: PREFIX_SYMS[cat] || '  ',
+                            color: PREFIX_COLORS[cat] || '#30363d',
+                            lines: count, cellId: cell.id, cellIdx: idx,
+                            pct: 0
+                        });
+                    }
+                });
+
+                // Calculate percentages
+                qheatData.forEach(d => { d.pct = totalLines > 0 ? ((d.lines / totalLines) * 100) : 0; });
+                // Sort by size descending
+                qheatData.sort((a, b) => b.lines - a.lines);
+
+                // Update stats
+                const coverage = totalLines > 0 ? Math.round((classifiedLines / totalLines) * 100) : 0;
+                const el = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
+                el('qh-cells', notebook.cells.length);
+                el('qh-lines', totalLines);
+                el('qh-coverage', coverage + '%');
+                el('qh-lang', lang);
+                el('qh-prefixes', activePrefixes.size + '/9');
+            }
+
+            // Squarified treemap layout
+            function layoutTreemap(items, x, y, w, h) {
+                const rects = [];
+                const total = items.reduce((s, d) => s + d.lines, 0) || 1;
+                const sorted = [...items].sort((a, b) => b.lines - a.lines);
+                let remaining = sorted.slice();
+                let cx = x, cy = y, cw = w, ch = h;
+
+                while (remaining.length > 0) {
+                    const isWide = cw >= ch;
+                    const side = isWide ? ch : cw;
+                    const remTotal = remaining.reduce((s, d) => s + d.lines, 0);
+
+                    // Greedily pick items for this row
+                    let row = [remaining[0]];
+                    let rowSum = remaining[0].lines;
+                    let bestAspect = Infinity;
+
+                    for (let i = 1; i < remaining.length; i++) {
+                        const newSum = rowSum + remaining[i].lines;
+                        const rowArea = (newSum / remTotal) * cw * ch;
+                        const rowSide = rowArea / side;
+                        let worstAspect = 0;
+                        [...row, remaining[i]].forEach(d => {
+                            const itemSide = (d.lines / newSum) * side;
+                            const ratio = Math.max(rowSide / itemSide, itemSide / rowSide);
+                            worstAspect = Math.max(worstAspect, ratio);
+                        });
+                        if (worstAspect < bestAspect) {
+                            bestAspect = worstAspect;
+                            row.push(remaining[i]);
+                            rowSum = newSum;
+                        } else break;
+                    }
+
+                    // Layout this row
+                    const rowFrac = rowSum / remTotal;
+                    let offset = 0;
+                    row.forEach(d => {
+                        const frac = d.lines / rowSum;
+                        if (isWide) {
+                            const rw = cw * rowFrac;
+                            const rh = ch * frac;
+                            rects.push({ ...d, rx: cx, ry: cy + offset, rw, rh });
+                            offset += rh;
+                        } else {
+                            const rh = ch * rowFrac;
+                            const rw = cw * frac;
+                            rects.push({ ...d, rx: cx + offset, ry: cy, rw, rh });
+                            offset += rw;
+                        }
+                    });
+
+                    // Shrink remaining area
+                    if (isWide) { const rw = cw * rowFrac; cx += rw; cw -= rw; }
+                    else { const rh = ch * rowFrac; cy += rh; ch -= rh; }
+
+                    remaining = remaining.filter(d => !row.includes(d));
+                    if (cw < 1 || ch < 1) break;
+                }
+                return rects;
+            }
+
+            // Bubble layout
+            function layoutBubble(items, w, h) {
+                const total = items.reduce((s, d) => s + d.lines, 0) || 1;
+                const maxR = Math.min(w, h) * 0.35;
+                const cx = w / 2, cy = h / 2;
+                const sorted = [...items].sort((a, b) => b.lines - a.lines);
+                const rects = [];
+                const placed = [];
+
+                sorted.forEach(d => {
+                    const r = Math.max(8, Math.sqrt(d.lines / total) * maxR * 2);
+                    let bx = cx, by = cy, angle = 0, dist = 0;
+                    // Spiral placement
+                    for (let attempt = 0; attempt < 500; attempt++) {
+                        bx = cx + Math.cos(angle) * dist;
+                        by = cy + Math.sin(angle) * dist;
+                        let overlap = false;
+                        for (const p of placed) {
+                            const dx = bx - p.bx, dy = by - p.by;
+                            if (Math.sqrt(dx*dx + dy*dy) < r + p.r + 2) { overlap = true; break; }
+                        }
+                        if (!overlap && bx - r > 0 && bx + r < w && by - r > 0 && by + r < h) break;
+                        angle += 0.5; dist += 0.8;
+                    }
+                    placed.push({ bx, by, r });
+                    rects.push({ ...d, bx, by, br: r });
+                });
+                return rects;
+            }
+
+            // Render
+            function render() {
+                const body = document.getElementById('qheat-body');
+                const bw = body.clientWidth, bh = body.clientHeight;
+                dpr = window.devicePixelRatio || 1;
+                canvas.width = bw * dpr; canvas.height = bh * dpr;
+                canvas.style.width = bw + 'px'; canvas.style.height = bh + 'px';
+                ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                ctx.clearRect(0, 0, bw, bh);
+
+                qheatRects = [];
+
+                if (qheatData.length === 0) {
+                    ctx.fillStyle = '#8b949e'; ctx.font = '14px system-ui';
+                    ctx.textAlign = 'center'; ctx.fillText('No code cells — add cells to see the heatmap', bw/2, bh/2);
+                    return;
+                }
+
+                const pad = 2;
+
+                if (qheatMode === 'treemap') {
+                    const rects = layoutTreemap(qheatData, pad, pad, bw - pad*2, bh - pad*2);
+                    rects.forEach(r => {
+                        const gap = 1.5;
+                        ctx.fillStyle = r.color;
+                        ctx.globalAlpha = 0.85;
+                        ctx.beginPath();
+                        ctx.roundRect(r.rx + gap, r.ry + gap, Math.max(0, r.rw - gap*2), Math.max(0, r.rh - gap*2), 3);
+                        ctx.fill();
+                        ctx.globalAlpha = 1;
+
+                        // Label inside if big enough
+                        if (r.rw > 40 && r.rh > 20) {
+                            ctx.fillStyle = 'rgba(0,0,0,0.7)';
+                            ctx.font = `bold ${Math.min(12, Math.max(8, r.rh * 0.25))}px system-ui`;
+                            ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+                            const txt = `${r.sym} ${r.cat}`;
+                            ctx.fillText(txt, r.rx + gap + 4, r.ry + gap + 3, r.rw - gap*2 - 8);
+                        }
+                        if (r.rw > 50 && r.rh > 34) {
+                            ctx.fillStyle = 'rgba(0,0,0,0.5)';
+                            ctx.font = `${Math.min(10, Math.max(7, r.rh * 0.18))}px monospace`;
+                            ctx.fillText(`${r.lines}L · ${r.pct.toFixed(1)}%`, r.rx + gap + 4, r.ry + gap + 16, r.rw - gap*2 - 8);
+                        }
+                        if (r.rw > 70 && r.rh > 48) {
+                            ctx.fillStyle = 'rgba(0,0,0,0.4)';
+                            ctx.font = `${Math.min(9, Math.max(6, r.rh * 0.14))}px system-ui`;
+                            const cellLabel = r.label.length > 35 ? r.label.substring(0, 35) + '...' : r.label;
+                            ctx.fillText(cellLabel, r.rx + gap + 4, r.ry + gap + 28, r.rw - gap*2 - 8);
+                        }
+
+                        qheatRects.push({ x: r.rx, y: r.ry, w: r.rw, h: r.rh, data: r, shape: 'rect' });
+                    });
+
+                } else if (qheatMode === 'bubble') {
+                    const bubbles = layoutBubble(qheatData, bw, bh);
+                    bubbles.forEach(b => {
+                        ctx.globalAlpha = 0.8;
+                        ctx.fillStyle = b.color;
+                        ctx.beginPath(); ctx.arc(b.bx, b.by, b.br, 0, Math.PI * 2); ctx.fill();
+                        ctx.globalAlpha = 1;
+                        ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.lineWidth = 1;
+                        ctx.beginPath(); ctx.arc(b.bx, b.by, b.br, 0, Math.PI * 2); ctx.stroke();
+
+                        if (b.br > 15) {
+                            ctx.fillStyle = 'rgba(0,0,0,0.7)';
+                            ctx.font = `bold ${Math.min(11, b.br * 0.4)}px system-ui`;
+                            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                            ctx.fillText(b.sym, b.bx, b.by - 4);
+                            ctx.font = `${Math.min(9, b.br * 0.3)}px monospace`;
+                            ctx.fillStyle = 'rgba(0,0,0,0.5)';
+                            ctx.fillText(`${b.lines}L`, b.bx, b.by + 8);
+                        }
+                        qheatRects.push({ bx: b.bx, by: b.by, br: b.br, data: b, shape: 'circle' });
+                    });
+
+                } else if (qheatMode === 'bar') {
+                    // Group by category
+                    const groups = {};
+                    qheatData.forEach(d => { groups[d.cat] = (groups[d.cat] || 0) + d.lines; });
+                    const entries = Object.entries(groups).sort((a, b) => b[1] - a[1]);
+                    const maxVal = entries.length > 0 ? entries[0][1] : 1;
+                    const barH = Math.min(40, (bh - 40) / entries.length - 4);
+                    const barMaxW = bw - 140;
+
+                    entries.forEach(([cat, count], i) => {
+                        const y = 20 + i * (barH + 4);
+                        const w = (count / maxVal) * barMaxW;
+                        ctx.fillStyle = PREFIX_COLORS[cat] || '#30363d';
+                        ctx.globalAlpha = 0.85;
+                        ctx.beginPath(); ctx.roundRect(120, y, w, barH, 3); ctx.fill();
+                        ctx.globalAlpha = 1;
+
+                        ctx.fillStyle = '#8b949e'; ctx.font = '11px monospace';
+                        ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+                        ctx.fillText(`${PREFIX_SYMS[cat] || ''} ${cat}`, 112, y + barH/2);
+
+                        ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.font = 'bold 10px monospace';
+                        ctx.textAlign = 'left';
+                        if (w > 40) ctx.fillText(`${count}L`, 126, y + barH/2);
+
+                        qheatRects.push({ x: 120, y, w, h: barH, data: { cat, lines: count, sym: PREFIX_SYMS[cat], color: PREFIX_COLORS[cat], pct: 0, label: cat, cellId: '' }, shape: 'rect' });
+                    });
+
+                } else if (qheatMode === 'sunburst') {
+                    const groups = {};
+                    qheatData.forEach(d => {
+                        if (!groups[d.cat]) groups[d.cat] = { lines: 0, items: [] };
+                        groups[d.cat].lines += d.lines;
+                        groups[d.cat].items.push(d);
+                    });
+                    const total = qheatData.reduce((s, d) => s + d.lines, 0) || 1;
+                    const cx = bw / 2, cy = bh / 2;
+                    const outerR = Math.min(bw, bh) * 0.42;
+                    const innerR = outerR * 0.35;
+
+                    let angle = -Math.PI / 2;
+                    for (const [cat, group] of Object.entries(groups).sort((a, b) => b[1].lines - a[1].lines)) {
+                        const sweep = (group.lines / total) * Math.PI * 2;
+                        // Outer ring
+                        ctx.fillStyle = PREFIX_COLORS[cat] || '#30363d';
+                        ctx.globalAlpha = 0.8;
+                        ctx.beginPath();
+                        ctx.arc(cx, cy, outerR, angle, angle + sweep);
+                        ctx.arc(cx, cy, innerR, angle + sweep, angle, true);
+                        ctx.closePath(); ctx.fill();
+                        ctx.globalAlpha = 1;
+                        ctx.strokeStyle = 'rgba(13,17,23,0.8)'; ctx.lineWidth = 1.5;
+                        ctx.beginPath();
+                        ctx.arc(cx, cy, outerR, angle, angle + sweep);
+                        ctx.arc(cx, cy, innerR, angle + sweep, angle, true);
+                        ctx.closePath(); ctx.stroke();
+
+                        // Label
+                        if (sweep > 0.15) {
+                            const mid = angle + sweep / 2;
+                            const lx = cx + Math.cos(mid) * (innerR + (outerR - innerR) * 0.5);
+                            const ly = cy + Math.sin(mid) * (innerR + (outerR - innerR) * 0.5);
+                            ctx.fillStyle = 'rgba(0,0,0,0.7)';
+                            ctx.font = 'bold 10px system-ui';
+                            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                            ctx.fillText(`${PREFIX_SYMS[cat]} ${group.lines}L`, lx, ly);
+                        }
+
+                        qheatRects.push({
+                            cx, cy, innerR, outerR, startAngle: angle, endAngle: angle + sweep,
+                            data: { cat, lines: group.lines, sym: PREFIX_SYMS[cat], color: PREFIX_COLORS[cat], pct: (group.lines/total*100), label: cat, cellId: '' },
+                            shape: 'arc'
+                        });
+                        angle += sweep;
+                    }
+
+                    // Center label
+                    ctx.fillStyle = '#8b949e'; ctx.font = 'bold 13px system-ui';
+                    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                    ctx.fillText(`${total} lines`, cx, cy - 6);
+                    ctx.font = '10px monospace'; ctx.fillStyle = '#58a6ff';
+                    const cov = qheatData.filter(d => d.cat !== 'default').reduce((s,d)=>s+d.lines,0);
+                    ctx.fillText(`${Math.round(cov/total*100)}% covered`, cx, cy + 10);
+                }
+            }
+
+            // Hit test
+            function hitTest(mx, my) {
+                for (const r of qheatRects) {
+                    if (r.shape === 'rect') {
+                        if (mx >= r.x && mx <= r.x + r.w && my >= r.y && my <= r.y + r.h) return r.data;
+                    } else if (r.shape === 'circle') {
+                        const dx = mx - r.bx, dy = my - r.by;
+                        if (Math.sqrt(dx*dx + dy*dy) <= r.br) return r.data;
+                    } else if (r.shape === 'arc') {
+                        const dx = mx - r.cx, dy = my - r.cy;
+                        const dist = Math.sqrt(dx*dx + dy*dy);
+                        if (dist >= r.innerR && dist <= r.outerR) {
+                            let a = Math.atan2(dy, dx);
+                            if (a < -Math.PI/2) a += Math.PI * 2;
+                            if (a >= r.startAngle && a <= r.endAngle) return r.data;
+                        }
+                    }
+                }
+                return null;
+            }
+
+            // Mouse move → tooltip
+            canvas.addEventListener('mousemove', (e) => {
+                const rect = canvas.getBoundingClientRect();
+                const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+                const hit = hitTest(mx, my);
+                if (hit) {
+                    tooltip.classList.add('visible');
+                    tooltip.style.left = Math.min(e.clientX + 12, window.innerWidth - 300) + 'px';
+                    tooltip.style.top = Math.min(e.clientY + 12, window.innerHeight - 150) + 'px';
+                    document.getElementById('qheat-tt-title').textContent = hit.label || hit.cat;
+                    document.getElementById('qheat-tt-lines').textContent = hit.lines + ' lines';
+                    document.getElementById('qheat-tt-weight').textContent = (hit.pct || 0).toFixed(1) + '%';
+                    document.getElementById('qheat-tt-sym').textContent = hit.sym || '';
+                    document.getElementById('qheat-tt-cat').textContent = hit.cat || '';
+                    document.getElementById('qheat-tt-cell').textContent = hit.cellId ? `Cell ${hit.cellIdx + 1}` : 'Aggregate';
+                    canvas.style.cursor = 'pointer';
+                } else {
+                    tooltip.classList.remove('visible');
+                    canvas.style.cursor = 'default';
+                }
+            });
+
+            canvas.addEventListener('mouseleave', () => { tooltip.classList.remove('visible'); });
+
+            // Click → scroll to cell
+            canvas.addEventListener('click', (e) => {
+                const rect = canvas.getBoundingClientRect();
+                const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+                const hit = hitTest(mx, my);
+                if (hit && hit.cellId) {
+                    overlay.classList.remove('open');
+                    tooltip.classList.remove('visible');
+                    setTimeout(() => {
+                        const el = document.getElementById(hit.cellId);
+                        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }, 100);
+                }
+            });
+
+            // Mode switching
+            document.querySelectorAll('.qheat-mode-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.qheat-mode-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    qheatMode = btn.dataset.qheatMode;
+                    render();
+                });
+            });
+
+            // Open / close
+            openBtn.addEventListener('click', () => {
+                gatherData();
+                overlay.classList.add('open');
+                requestAnimationFrame(() => render());
+            });
+            closeBtn.addEventListener('click', () => {
+                overlay.classList.remove('open');
+                tooltip.classList.remove('visible');
+            });
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && overlay.classList.contains('open')) {
+                    overlay.classList.remove('open');
+                    tooltip.classList.remove('visible');
+                }
+            });
+
+            // Resize
+            window.addEventListener('resize', () => {
+                if (overlay.classList.contains('open')) render();
+            });
+        })();
+
         // ===== TOUCH EVENTS MODULE =====
         (() => {
             if (!notebook) return;
@@ -10282,8 +11861,11 @@ print(f"  Norm:  {qs.normalize().norm().numpy():.6f}")`);
                     const dx = e.changedTouches[0].clientX - touchStartX;
                     const dy = e.changedTouches[0].clientY - touchStartY;
                     if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) {
-                        // Horizontal swipe on sidebar — cycle tabs
-                        const tabs = [...document.querySelectorAll('.sidebar-tab')];
+                        // Horizontal swipe on sidebar — cycle whichever row is active
+                        const extActive = document.querySelector('.sidebar-tab-ext.active');
+                        const tabs = extActive
+                            ? [...document.querySelectorAll('.sidebar-tab-ext')]
+                            : [...document.querySelectorAll('.sidebar-tab')];
                         const active = tabs.findIndex(t => t.classList.contains('active'));
                         const next = dx > 0 ? (active - 1 + tabs.length) % tabs.length : (active + 1) % tabs.length;
                         tabs[next]?.click();
@@ -10356,6 +11938,35 @@ print(f"  Norm:  {qs.normalize().norm().numpy():.6f}")`);
                     e.preventDefault();
                 }, { passive: false });
                 cubeScene.addEventListener('touchend', () => { cubeTouch = null; }, { passive: true });
+            }
+
+            // -- Touch drag-rotate for Nav Cube --
+            const navCubeSceneEl = document.getElementById('nav-cube-scene');
+            const navCubeInnerEl = document.getElementById('nav-cube-inner');
+            if (navCubeSceneEl && navCubeInnerEl) {
+                let ncTouch = null;
+                navCubeSceneEl.addEventListener('touchstart', (e) => {
+                    if (e.touches.length === 1) {
+                        ncTouch = {
+                            x: e.touches[0].clientX,
+                            y: e.touches[0].clientY,
+                            rx: notebook._navCubeRx,
+                            ry: notebook._navCubeRy
+                        };
+                    }
+                }, { passive: true });
+                navCubeSceneEl.addEventListener('touchmove', (e) => {
+                    if (!ncTouch || e.touches.length !== 1) return;
+                    notebook._navCubeRy = ncTouch.ry + (e.touches[0].clientX - ncTouch.x) * 0.7;
+                    notebook._navCubeRx = ncTouch.rx + (e.touches[0].clientY - ncTouch.y) * 0.7;
+                    navCubeInnerEl.style.transition = 'none';
+                    navCubeInnerEl.style.transform = `rotateX(${notebook._navCubeRx}deg) rotateY(${notebook._navCubeRy}deg)`;
+                    e.preventDefault();
+                }, { passive: false });
+                navCubeSceneEl.addEventListener('touchend', () => {
+                    ncTouch = null;
+                    navCubeInnerEl.style.transition = 'transform 0.25s ease';
+                }, { passive: true });
             }
 
             // -- Touch-friendly footer: long-press tools dropdown --
@@ -10483,6 +12094,71 @@ print(f"  Norm:  {qs.normalize().norm().numpy():.6f}")`);
                 const btn = document.getElementById('pwa-install-btn');
                 if (btn) btn.remove();
             });
+
+            // ===== QUANTUM PREFIX LIVE SYNC (cross-app BroadcastChannel) =====
+            (function initQPSync() {
+                const QP = window.QuantumPrefixes;
+                if (!QP || !window.notebook) return;
+
+                // Broadcast full notepad state periodically (on save, cell change, etc.)
+                function broadcastNotebookState() {
+                    let totalLines = 0, totalClassified = 0, globalCounts = {};
+                    (notebook.cells || []).forEach(cell => {
+                        const meta = notebook.prefixMetadata(cell);
+                        totalLines += meta.totalLines;
+                        totalClassified += meta.classifiedLines;
+                        for (const [cat, count] of Object.entries(meta.prefixCounts)) {
+                            globalCounts[cat] = (globalCounts[cat] || 0) + count;
+                        }
+                    });
+                    QP.broadcastState('quantum-notepad', {
+                        coverage: totalLines > 0 ? Math.round((totalClassified / totalLines) * 100) : 0,
+                        totalLines,
+                        classifiedLines: totalClassified,
+                        prefixCounts: globalCounts,
+                        cellCount: (notebook.cells || []).length,
+                        position: notebook.quantumPosition
+                    });
+                }
+
+                // Hook into notebook save to auto-broadcast
+                const origSave = notebook.saveNotebook.bind(notebook);
+                notebook.saveNotebook = function() {
+                    origSave();
+                    broadcastNotebookState();
+                };
+
+                // Hook into _saveToLocalStorage as well
+                const origLS = notebook._saveToLocalStorage.bind(notebook);
+                notebook._saveToLocalStorage = function() {
+                    origLS();
+                    broadcastNotebookState();
+                };
+
+                // Listen for state from other apps
+                QP.onStateChange(function(source, state, global) {
+                    if (source === 'quantum-notepad' || !state) return;
+                    // Update syncing panel if it exists
+                    if (window._tpLogOutput) {
+                        window._tpLogOutput('quantum-sync', `[${source}] coverage: ${state.coverage || 0}% | lines: ${state.totalLines || 0}`, 'info');
+                    }
+                });
+
+                // Initial broadcast & request sync
+                broadcastNotebookState();
+                QP.requestStateSync();
+
+                // Re-broadcast on cell content changes (debounced 3s)
+                let _nbSyncDebounce;
+                const origUpdateContent = notebook.updateCellContent.bind(notebook);
+                notebook.updateCellContent = function(cellId, content) {
+                    origUpdateContent(cellId, content);
+                    clearTimeout(_nbSyncDebounce);
+                    _nbSyncDebounce = setTimeout(broadcastNotebookState, 3000);
+                };
+
+                console.log('⚛ Quantum Prefix Live Sync active — broadcasting to all UV-Speed apps');
+            })();
         })();
     </script>
 
@@ -10490,14 +12166,72 @@ print(f"  Norm:  {qs.normalize().norm().numpy():.6f}")`);
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@xterm/xterm@5/css/xterm.min.css">
     <style>
         #terminal-panel{position:fixed;bottom:0;left:0;right:0;height:0;background:#0d1117;border-top:2px solid #30363d;z-index:9999;transition:height .25s ease;overflow:hidden;display:flex;flex-direction:column}
-        #terminal-panel.open{height:280px}
+        #terminal-panel.open{height:320px}
         #terminal-panel-hdr{display:flex;align-items:center;gap:8px;padding:4px 12px;background:#161b22;border-bottom:1px solid #30363d;flex-shrink:0;cursor:row-resize}
         #terminal-panel-hdr .t-title{font-size:.6875rem;font-weight:600;color:#e6edf3;font-family:'SF Mono','Fira Code',monospace}
         #terminal-panel-hdr .t-badge{font-size:.5rem;padding:1px 6px;border-radius:8px;border:1px solid #3fb950;color:#3fb950;font-weight:600}
         #terminal-panel-hdr .t-close{margin-left:auto;background:none;border:1px solid #30363d;color:#8b949e;padding:2px 8px;border-radius:4px;cursor:pointer;font-size:.625rem}
         #terminal-panel-hdr .t-close:hover{color:#f85149;border-color:#f85149}
-        #xterm-container{flex:1;padding:4px;overflow:hidden}
+
+        /* Terminal tab bar */
+        .tp-tabs{display:flex;gap:0;background:#161b22;border-bottom:1px solid #30363d;flex-shrink:0;overflow-x:auto}
+        .tp-tab{padding:5px 14px;font-size:.625rem;font-weight:600;color:#8b949e;background:none;border:none;
+            border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;transition:all .12s;
+            font-family:'SF Mono','Fira Code',monospace;text-transform:uppercase;letter-spacing:.3px}
+        .tp-tab:hover{color:#c9d1d9;background:rgba(255,255,255,.03)}
+        .tp-tab.active{color:#58a6ff;border-bottom-color:#58a6ff}
+        .tp-tab .tp-tab-badge{display:inline-block;min-width:14px;padding:0 4px;margin-left:4px;
+            font-size:.5rem;line-height:14px;text-align:center;border-radius:7px;
+            background:#30363d;color:#8b949e;font-weight:700}
+        .tp-tab.active .tp-tab-badge{background:rgba(88,166,255,.15);color:#58a6ff}
+        .tp-tab .tp-tab-badge.has-items{background:rgba(248,81,73,.15);color:#f85149}
+
+        .tp-content{flex:1;overflow:hidden;position:relative}
+        .tp-pane{position:absolute;inset:0;display:none;overflow-y:auto}
+        .tp-pane.active{display:block}
+        .tp-pane-inner{padding:8px 12px;font-family:'SF Mono','Fira Code',monospace;font-size:.6875rem;color:#e6edf3;line-height:1.6}
+        #xterm-container{position:absolute;inset:0;padding:4px;overflow:hidden}
         .xterm .xterm-viewport{overflow-y:auto !important}
+
+        /* Problems list */
+        .tp-problem{display:flex;align-items:flex-start;gap:8px;padding:4px 0;border-bottom:1px solid #21262d}
+        .tp-problem:last-child{border-bottom:none}
+        .tp-problem-icon{flex-shrink:0;font-size:.75rem;line-height:1}
+        .tp-problem-text{font-size:.625rem;color:#c9d1d9;line-height:1.4}
+        .tp-problem-file{font-size:.5625rem;color:#8b949e}
+        .tp-problem-sev-error .tp-problem-icon{color:#f85149}
+        .tp-problem-sev-warn .tp-problem-icon{color:#f0883e}
+        .tp-problem-sev-info .tp-problem-icon{color:#58a6ff}
+
+        /* Output lines */
+        .tp-out-line{padding:1px 0;color:#8b949e;white-space:pre-wrap;word-break:break-all;font-size:.625rem}
+        .tp-out-line.tp-out-info{color:#c9d1d9}
+        .tp-out-line.tp-out-warn{color:#f0883e}
+        .tp-out-line.tp-out-error{color:#f85149}
+
+        /* Debug console */
+        .tp-debug-input{display:flex;gap:4px;padding:6px 0;border-top:1px solid #21262d;margin-top:6px}
+        .tp-debug-input input{flex:1;background:#0d1117;border:1px solid #30363d;border-radius:4px;
+            padding:4px 8px;color:#e6edf3;font-size:.625rem;font-family:'SF Mono',monospace}
+        .tp-debug-input button{padding:4px 10px;border:1px solid #30363d;border-radius:4px;
+            background:#161b22;color:#8b949e;font-size:.625rem;cursor:pointer;font-weight:600}
+        .tp-debug-input button:hover{color:#e6edf3;border-color:#484f58}
+
+        /* Ports table */
+        .tp-ports-table{width:100%;border-collapse:collapse;font-size:.625rem}
+        .tp-ports-table th{text-align:left;padding:4px 8px;color:#8b949e;border-bottom:1px solid #30363d;font-weight:600}
+        .tp-ports-table td{padding:4px 8px;color:#c9d1d9;border-bottom:1px solid #21262d}
+        .tp-port-status{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:4px}
+        .tp-port-active{background:#3fb950}
+        .tp-port-inactive{background:#484f58}
+
+        /* Syncing */
+        .tp-sync-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #21262d}
+        .tp-sync-icon{font-size:.875rem}
+        .tp-sync-label{font-size:.625rem;color:#c9d1d9;flex:1}
+        .tp-sync-status{font-size:.5625rem;padding:2px 8px;border-radius:8px;font-weight:600}
+        .tp-sync-on{background:rgba(63,185,80,.15);color:#3fb950;border:1px solid rgba(63,185,80,.3)}
+        .tp-sync-off{background:rgba(72,79,88,.2);color:#8b949e;border:1px solid #30363d}
     </style>
     <div id="terminal-panel">
         <div id="terminal-panel-hdr">
@@ -10506,7 +12240,140 @@ print(f"  Norm:  {qs.normalize().norm().numpy():.6f}")`);
             <span style="font-size:.5rem;color:#8b949e;font-family:'SF Mono',monospace" id="term-status">local</span>
             <button class="t-close" id="term-close">✕ Close</button>
         </div>
-        <div id="xterm-container"></div>
+
+        <!-- Tab Bar -->
+        <div class="tp-tabs" id="tp-tabs">
+            <button class="tp-tab" data-tp="problems">Problems <span class="tp-tab-badge" id="tp-problems-count">0</span></button>
+            <button class="tp-tab" data-tp="output">Output</button>
+            <button class="tp-tab" data-tp="debug">Debug Console</button>
+            <button class="tp-tab active" data-tp="terminal">Terminal</button>
+            <button class="tp-tab" data-tp="ports">Ports</button>
+            <button class="tp-tab" data-tp="syncing">Syncing</button>
+        </div>
+
+        <!-- Tab Content -->
+        <div class="tp-content">
+            <!-- Problems -->
+            <div class="tp-pane" id="tp-pane-problems">
+                <div class="tp-pane-inner">
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+                        <span style="font-size:.625rem;font-weight:700;color:#e6edf3;">PROBLEMS</span>
+                        <span style="font-size:.5rem;color:#8b949e;">Filter (e.g. errors, warnings)</span>
+                        <input type="text" id="tp-problems-filter" placeholder="Filter problems..." style="margin-left:auto;padding:2px 8px;font-size:.5625rem;background:#0d1117;border:1px solid #30363d;border-radius:3px;color:#c9d1d9;font-family:'SF Mono',monospace;width:160px;">
+                    </div>
+                    <div id="tp-problems-list">
+                        <div style="color:#8b949e;font-size:.625rem;padding:20px 0;text-align:center;">No problems detected in workspace</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Output -->
+            <div class="tp-pane" id="tp-pane-output">
+                <div class="tp-pane-inner">
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+                        <span style="font-size:.625rem;font-weight:700;color:#e6edf3;">OUTPUT</span>
+                        <select id="tp-output-channel" style="padding:2px 6px;font-size:.5625rem;background:#0d1117;border:1px solid #30363d;border-radius:3px;color:#c9d1d9;font-family:'SF Mono',monospace">
+                            <option value="quantum-bridge">Quantum Bridge</option>
+                            <option value="prefix-engine">Prefix Engine</option>
+                            <option value="cell-execution">Cell Execution</option>
+                            <option value="mcp-server">MCP Server</option>
+                            <option value="git">Git</option>
+                        </select>
+                        <button id="tp-output-clear" style="margin-left:auto;padding:2px 8px;font-size:.5625rem;background:none;border:1px solid #30363d;border-radius:3px;color:#8b949e;cursor:pointer">Clear</button>
+                    </div>
+                    <div id="tp-output-log">
+                        <div class="tp-out-line tp-out-info">[quantum-bridge] Waiting for connection...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Debug Console -->
+            <div class="tp-pane" id="tp-pane-debug">
+                <div class="tp-pane-inner">
+                    <div style="font-size:.625rem;font-weight:700;color:#e6edf3;margin-bottom:8px">DEBUG CONSOLE</div>
+                    <div id="tp-debug-log">
+                        <div class="tp-out-line tp-out-info">Debug console ready. Use the input below to evaluate expressions.</div>
+                    </div>
+                    <div class="tp-debug-input">
+                        <input type="text" id="tp-debug-input" placeholder="Evaluate expression..." autocomplete="off">
+                        <button id="tp-debug-run">▶ Run</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Terminal (xterm) -->
+            <div class="tp-pane active" id="tp-pane-terminal">
+                <div id="xterm-container"></div>
+            </div>
+
+            <!-- Ports -->
+            <div class="tp-pane" id="tp-pane-ports">
+                <div class="tp-pane-inner">
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+                        <span style="font-size:.625rem;font-weight:700;color:#e6edf3;">PORTS</span>
+                        <button id="tp-port-add" style="margin-left:auto;padding:2px 8px;font-size:.5625rem;background:none;border:1px solid #30363d;border-radius:3px;color:#8b949e;cursor:pointer">+ Forward Port</button>
+                    </div>
+                    <table class="tp-ports-table">
+                        <thead><tr><th>Port</th><th>Address</th><th>Protocol</th><th>Source</th><th>Status</th></tr></thead>
+                        <tbody id="tp-ports-body">
+                            <tr><td><span class="tp-port-status tp-port-active"></span>8000</td><td>localhost:8000</td><td>HTTP</td><td>Quantum Bridge</td><td style="color:#3fb950">Active</td></tr>
+                            <tr><td><span class="tp-port-status tp-port-inactive"></span>8765</td><td>localhost:8765</td><td>WS</td><td>Bridge WebSocket</td><td style="color:#8b949e">Idle</td></tr>
+                            <tr><td><span class="tp-port-status tp-port-inactive"></span>11434</td><td>localhost:11434</td><td>HTTP</td><td>Ollama</td><td style="color:#8b949e">Idle</td></tr>
+                            <tr><td><span class="tp-port-status tp-port-inactive"></span>5037</td><td>localhost:5037</td><td>TCP</td><td>ADB (Quest)</td><td style="color:#8b949e">Idle</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Syncing -->
+            <div class="tp-pane" id="tp-pane-syncing">
+                <div class="tp-pane-inner">
+                    <div style="font-size:.625rem;font-weight:700;color:#e6edf3;margin-bottom:8px">SYNC STATUS</div>
+                    <div id="tp-sync-list">
+                        <div class="tp-sync-row">
+                            <span class="tp-sync-icon">🔌</span>
+                            <span class="tp-sync-label">Quantum Bridge Server</span>
+                            <span class="tp-sync-status tp-sync-off" id="tp-sync-bridge">Disconnected</span>
+                        </div>
+                        <div class="tp-sync-row">
+                            <span class="tp-sync-icon">💻</span>
+                            <span class="tp-sync-label">hexterm Terminal</span>
+                            <span class="tp-sync-status tp-sync-off" id="tp-sync-hexterm">Not linked</span>
+                        </div>
+                        <div class="tp-sync-row">
+                            <span class="tp-sync-icon">⚡</span>
+                            <span class="tp-sync-label">hexbench Workbench</span>
+                            <span class="tp-sync-status tp-sync-off" id="tp-sync-hexbench">Not linked</span>
+                        </div>
+                        <div class="tp-sync-row">
+                            <span class="tp-sync-icon">🤖</span>
+                            <span class="tp-sync-label">Ollama / LLM</span>
+                            <span class="tp-sync-status tp-sync-off" id="tp-sync-ollama">Offline</span>
+                        </div>
+                        <div class="tp-sync-row">
+                            <span class="tp-sync-icon">🥽</span>
+                            <span class="tp-sync-label">Meta Quest Device</span>
+                            <span class="tp-sync-status tp-sync-off" id="tp-sync-quest">Not detected</span>
+                        </div>
+                        <div class="tp-sync-row">
+                            <span class="tp-sync-icon">📡</span>
+                            <span class="tp-sync-label">BroadcastChannel (tabs)</span>
+                            <span class="tp-sync-status tp-sync-on" id="tp-sync-broadcast">Active</span>
+                        </div>
+                        <div class="tp-sync-row">
+                            <span class="tp-sync-icon">💾</span>
+                            <span class="tp-sync-label">LocalStorage</span>
+                            <span class="tp-sync-status tp-sync-on" id="tp-sync-storage">Available</span>
+                        </div>
+                        <div class="tp-sync-row">
+                            <span class="tp-sync-icon">🌐</span>
+                            <span class="tp-sync-label">Service Worker (PWA)</span>
+                            <span class="tp-sync-status tp-sync-off" id="tp-sync-sw">Checking...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/@xterm/xterm@5/lib/xterm.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@xterm/addon-fit@0/lib/addon-fit.min.js"></script>
@@ -10519,6 +12386,191 @@ print(f"  Norm:  {qs.normalize().norm().numpy():.6f}")`);
         const closeBtn = document.getElementById('term-close');
         const container = document.getElementById('xterm-container');
         const statusEl = document.getElementById('term-status');
+
+        // ===== TAB SWITCHING =====
+        document.querySelectorAll('#tp-tabs .tp-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('#tp-tabs .tp-tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tp-pane').forEach(p => p.classList.remove('active'));
+                tab.classList.add('active');
+                const pane = document.getElementById('tp-pane-' + tab.dataset.tp);
+                if (pane) pane.classList.add('active');
+                // Re-fit xterm when switching back to terminal
+                if (tab.dataset.tp === 'terminal' && fitAddon) {
+                    setTimeout(() => fitAddon.fit(), 50);
+                }
+            });
+        });
+
+        // ===== PROBLEMS PANEL =====
+        const problemsList = document.getElementById('tp-problems-list');
+        const problemsBadge = document.getElementById('tp-problems-count');
+        const problemsFilter = document.getElementById('tp-problems-filter');
+
+        window._tpAddProblem = function(severity, message, file, line) {
+            const icon = severity === 'error' ? '✕' : severity === 'warn' ? '⚠' : 'ℹ';
+            const el = document.createElement('div');
+            el.className = `tp-problem tp-problem-sev-${severity}`;
+            el.dataset.text = (message + ' ' + file).toLowerCase();
+            el.innerHTML = `<span class="tp-problem-icon">${icon}</span><div><div class="tp-problem-text">${message}</div><div class="tp-problem-file">${file}${line ? ':' + line : ''}</div></div>`;
+            // Remove "no problems" placeholder
+            const placeholder = problemsList.querySelector('div[style]');
+            if (placeholder && placeholder.textContent.includes('No problems')) placeholder.remove();
+            problemsList.appendChild(el);
+            const count = problemsList.querySelectorAll('.tp-problem').length;
+            problemsBadge.textContent = count;
+            if (count > 0) problemsBadge.classList.add('has-items');
+        };
+
+        if (problemsFilter) {
+            problemsFilter.addEventListener('input', () => {
+                const q = problemsFilter.value.toLowerCase();
+                problemsList.querySelectorAll('.tp-problem').forEach(p => {
+                    p.style.display = !q || (p.dataset.text && p.dataset.text.includes(q)) ? '' : 'none';
+                });
+            });
+        }
+
+        // ===== OUTPUT PANEL =====
+        const outputLog = document.getElementById('tp-output-log');
+        const outputChannel = document.getElementById('tp-output-channel');
+        const outputClear = document.getElementById('tp-output-clear');
+        const outputChannelData = { 'quantum-bridge': [], 'prefix-engine': [], 'cell-execution': [], 'mcp-server': [], 'git': [] };
+        outputChannelData['quantum-bridge'].push({ cls: 'tp-out-info', text: '[quantum-bridge] Waiting for connection...' });
+
+        window._tpLogOutput = function(channel, text, level) {
+            const cls = level === 'error' ? 'tp-out-error' : level === 'warn' ? 'tp-out-warn' : 'tp-out-info';
+            if (!outputChannelData[channel]) outputChannelData[channel] = [];
+            outputChannelData[channel].push({ cls, text: `[${channel}] ${text}` });
+            if (outputChannel && outputChannel.value === channel) {
+                const line = document.createElement('div');
+                line.className = 'tp-out-line ' + cls;
+                line.textContent = `[${channel}] ${text}`;
+                outputLog.appendChild(line);
+                outputLog.scrollTop = outputLog.scrollHeight;
+            }
+        };
+
+        if (outputChannel) {
+            outputChannel.addEventListener('change', () => {
+                const ch = outputChannel.value;
+                outputLog.innerHTML = '';
+                (outputChannelData[ch] || []).forEach(entry => {
+                    const line = document.createElement('div');
+                    line.className = 'tp-out-line ' + entry.cls;
+                    line.textContent = entry.text;
+                    outputLog.appendChild(line);
+                });
+            });
+        }
+        if (outputClear) {
+            outputClear.addEventListener('click', () => {
+                const ch = outputChannel ? outputChannel.value : 'quantum-bridge';
+                outputChannelData[ch] = [];
+                outputLog.innerHTML = '<div class="tp-out-line" style="color:#484f58">Output cleared</div>';
+            });
+        }
+
+        // ===== DEBUG CONSOLE =====
+        const debugLog = document.getElementById('tp-debug-log');
+        const debugInput = document.getElementById('tp-debug-input');
+        const debugRun = document.getElementById('tp-debug-run');
+
+        function runDebugExpr() {
+            if (!debugInput || !debugInput.value.trim()) return;
+            const expr = debugInput.value.trim();
+            debugInput.value = '';
+            const line = document.createElement('div');
+            line.className = 'tp-out-line';
+            line.innerHTML = `<span style="color:#58a6ff">›</span> <span style="color:#c9d1d9">${expr}</span>`;
+            debugLog.appendChild(line);
+            try {
+                const result = eval(expr);
+                const out = document.createElement('div');
+                out.className = 'tp-out-line tp-out-info';
+                out.textContent = typeof result === 'object' ? JSON.stringify(result, null, 2) : String(result);
+                debugLog.appendChild(out);
+            } catch (e) {
+                const err = document.createElement('div');
+                err.className = 'tp-out-line tp-out-error';
+                err.textContent = e.message;
+                debugLog.appendChild(err);
+            }
+            debugLog.scrollTop = debugLog.scrollHeight;
+        }
+        if (debugRun) debugRun.addEventListener('click', runDebugExpr);
+        if (debugInput) debugInput.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); runDebugExpr(); } });
+
+        // ===== PORTS =====
+        window._tpUpdatePort = function(port, status, source) {
+            const tbody = document.getElementById('tp-ports-body');
+            if (!tbody) return;
+            const rows = tbody.querySelectorAll('tr');
+            for (const row of rows) {
+                if (row.cells[0] && row.cells[0].textContent.includes(String(port))) {
+                    const dot = row.querySelector('.tp-port-status');
+                    if (dot) { dot.className = 'tp-port-status ' + (status === 'active' ? 'tp-port-active' : 'tp-port-inactive'); }
+                    if (row.cells[4]) row.cells[4].textContent = status === 'active' ? 'Active' : 'Idle';
+                    if (row.cells[4]) row.cells[4].style.color = status === 'active' ? '#3fb950' : '#8b949e';
+                    return;
+                }
+            }
+        };
+
+        // ===== SYNCING — live status checks =====
+        function checkSyncStatus() {
+            // Bridge
+            const bridgeEl = document.getElementById('tp-sync-bridge');
+            if (bridgeEl) {
+                const connected = window.notebook && window.notebook.wsConnected;
+                bridgeEl.textContent = connected ? 'Connected' : 'Disconnected';
+                bridgeEl.className = 'tp-sync-status ' + (connected ? 'tp-sync-on' : 'tp-sync-off');
+                if (connected) window._tpUpdatePort(8000, 'active');
+            }
+            // hexterm BroadcastChannel
+            const hextermEl = document.getElementById('tp-sync-hexterm');
+            if (hextermEl) {
+                const linked = window._hextermLinked || false;
+                hextermEl.textContent = linked ? 'Linked' : 'Not linked';
+                hextermEl.className = 'tp-sync-status ' + (linked ? 'tp-sync-on' : 'tp-sync-off');
+            }
+            // hexbench
+            const benchEl = document.getElementById('tp-sync-hexbench');
+            if (benchEl) {
+                const linked = window._hexbenchLinked || false;
+                benchEl.textContent = linked ? 'Linked' : 'Not linked';
+                benchEl.className = 'tp-sync-status ' + (linked ? 'tp-sync-on' : 'tp-sync-off');
+            }
+            // Service Worker
+            const swEl = document.getElementById('tp-sync-sw');
+            if (swEl && 'serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistration().then(reg => {
+                    swEl.textContent = reg ? 'Registered' : 'Not registered';
+                    swEl.className = 'tp-sync-status ' + (reg ? 'tp-sync-on' : 'tp-sync-off');
+                }).catch(() => {
+                    swEl.textContent = 'Unavailable';
+                    swEl.className = 'tp-sync-status tp-sync-off';
+                });
+            }
+        }
+        setTimeout(checkSyncStatus, 1000);
+        setInterval(checkSyncStatus, 5000);
+
+        // Hook into notebook to capture problems and output
+        const origConsoleError = console.error;
+        console.error = function() {
+            origConsoleError.apply(console, arguments);
+            const msg = Array.from(arguments).map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' ');
+            if (window._tpAddProblem) window._tpAddProblem('error', msg, 'console', '');
+            if (window._tpLogOutput) window._tpLogOutput('cell-execution', msg, 'error');
+        };
+        const origConsoleWarn = console.warn;
+        console.warn = function() {
+            origConsoleWarn.apply(console, arguments);
+            const msg = Array.from(arguments).map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' ');
+            if (window._tpAddProblem) window._tpAddProblem('warn', msg, 'console', '');
+            if (window._tpLogOutput) window._tpLogOutput('cell-execution', msg, 'warn');
+        };
 
         let term = null;
         let fitAddon = null;

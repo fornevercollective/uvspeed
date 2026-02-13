@@ -870,6 +870,7 @@
     <div style="margin-top:8px;">uvspeed v4.0 &middot; fornevercollective &middot; MIT</div>
 </div>
 
+<script src="quantum-prefixes.js"></script>
 <script>
 // ── Starfield ──
 function initStarfield(cvs, count) {
@@ -1114,6 +1115,22 @@ const allocObserver = new IntersectionObserver((entries) => {
     });
 }, { threshold: 0.3 });
 document.querySelectorAll('.alloc-bars').forEach(el => allocObserver.observe(el));
+
+// ===== PWA SERVICE WORKER =====
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+
+// ===== QUANTUM PREFIX LIVE SYNC =====
+(function() {
+    const QP = window.QuantumPrefixes;
+    if (!QP) return;
+    QP.onStateChange(function(source, state) {
+        if (source === 'sponsor' || !state) return;
+    });
+    QP.broadcastState('sponsor', { coverage: 0, totalLines: 0, classifiedLines: 0, prefixCounts: {}, role: 'sponsor-page' });
+    QP.requestStateSync();
+})();
 </script>
 </body>
 </html>

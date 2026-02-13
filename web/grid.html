@@ -233,6 +233,7 @@
     </div>
 </div>
 
+<script src="quantum-prefixes.js"></script>
 <script>
 'use strict';
 
@@ -669,6 +670,23 @@ if (autoSrc) {
         addWebSocketStream(url);
     }
 }
+
+// ===== PWA SERVICE WORKER =====
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+
+// ===== QUANTUM PREFIX LIVE SYNC =====
+(function() {
+    const QP = window.QuantumPrefixes;
+    if (!QP) return;
+    QP.onStateChange(function(source, state) {
+        if (source === 'grid' || !state) return;
+        // Grid can display live coverage overlay per tile
+    });
+    QP.broadcastState('grid', { coverage: 0, totalLines: 0, classifiedLines: 0, prefixCounts: {}, role: 'grid-viewer' });
+    QP.requestStateSync();
+})();
 
 </script>
 </body>

@@ -1,0 +1,89 @@
+---
+alwaysApply: true
+---
+# UV-Speed Project Context
+
+## Architecture
+
+Single-page PWA apps in `web/`, each a self-contained HTML file with inline CSS + JS.
+No build system — files serve directly. Shared module: `web/quantum-prefixes.js`.
+
+## All Apps (18 HTML files in web/)
+
+| App | File | Role |
+|-----|------|------|
+| Quantum Notepad | `quantum-notepad.html` | Main notebook — cells, quantum gutter, terminal, sidebar |
+| HexBench | `hexbench.html` | Voltage lab — PSU, code editor (Arduino), node workbench, Pybricks builder |
+| HexTerm | `terminal.html` | xterm.js terminal — quantum gutter on cat/head/tail, filesystem |
+| HexCast | `hexcast.html` | Video hex broadcast — camera/screen capture, latency benchmarks |
+| HexCast Send | `hexcast-send.html` | Camera → terminal streaming |
+| Research Lab | `research-lab.html` | Markdown research editor with mermaid + preview |
+| ArchFlow | `archflow.html` | n8n-style architecture node visualizer + mermaid export |
+| GitHub Dashboard | `github-dashboard.html` | Repo dashboard — phases, deps, community, actions |
+| Launcher | `launcher.html` | App launcher hub |
+| Grid | `grid.html` | Multi-feed grid viewer |
+| Feed | `feed.html` | Camera feed viewer |
+| QuestCast | `questcast.html` | Meta Quest broadcast + research tools |
+| Sponsor | `sponsor.html` | Sponsor page with Rubik's cube, starfield, tiers |
+| Jawta Audio | `jawta-audio.html` | Spatial audio + live code |
+| Numsy | `numsy.html` | 1080x1080 Instagram visual |
+| Brother Numsy | `brothernumsy.html` | Numsy game variant |
+| KBatch | `kbatch.html` | Keyboard batch tool |
+| Blackwell | `blackwell.html` | Blackwell GPU dashboard |
+
+## Shared Module: quantum-prefixes.js
+
+All 18 apps include `<script src="quantum-prefixes.js"></script>` and have a
+`// ===== QUANTUM PREFIX LIVE SYNC =====` init block.
+
+**API** (`window.QuantumPrefixes`):
+- `classifyLine(line, language)` → `{ sym, cls, category }`
+- `prefixContent(content, language)` → prefixed string
+- `prefixMetadata(content, language)` → `{ coverage, totalLines, classifiedLines, prefixCounts, lines }`
+- `exportWithPrefixes(content, language, source)` → `{ text, meta }`
+- `downloadWithPrefixes(content, filename, language, source)` → downloads file
+- `wrapJsonExport(data, contents, source)` → JSON with `quantumGutter` metadata
+- `detectLanguage(content, hint)` → language string
+- `broadcastState(source, state)` — sends via `BroadcastChannel('quantum-prefixes')`
+- `onStateChange(fn)` — listen for cross-app state updates
+- `requestStateSync()` — ask all apps to re-broadcast
+- `connectIoT(wsUrl, opts)` — WebSocket bridge to IoT/quantum computer
+- `aggregateGlobalStats()` — combined coverage across all running apps
+
+**Supported languages** (17): python, javascript, typescript, rust, go, shell, c, cpp, html, css, markdown, mermaid, sql, yaml, json, arduino
+
+## Cross-App Communication
+
+- `BroadcastChannel('hexterm')` — main inter-app messaging (code, serial data, commands)
+- `BroadcastChannel('quantum-prefixes')` — quantum prefix state sync
+- `BroadcastChannel('hexcast-stream')` — video frame broadcast
+- `localStorage` — per-app persistence + `quantum-prefixes-state` for global prefix state
+
+## Quantum Notepad Key Structure
+
+- **Cells**: code/markdown/mermaid/visualization/kbatch/hexcast types
+- **Quantum Position**: `[x, y, z]` — deps, lines, complexity
+- **Sidebar**: Nav (3D cube rotation), Visual, Thermal tabs + AI/LLM, Language, Blocks ext tabs
+- **Footer/Top**: Quick command tab bars (identical, duplicated)
+- **Terminal Panel**: xterm.js with Problems, Output, Debug Console, Terminal, Ports, Syncing tabs
+- **Quantum Heatmap**: Fullscreen overlay — treemap/bubble/bars/sunburst from `⛶` button
+- **Inline methods**: `classifyLine()`, `detectCellLanguage()`, `prefixContent()`, `prefixMetadata()`, `saveNotebook()`, `_saveToLocalStorage()` — all include quantum prefix data in output
+
+## File Export Behavior (IMPORTANT)
+
+All saved/exported files MUST contain quantum gutter prefixes:
+- **Notepad JSON save**: cells include `prefixedContent` + `quantumPrefix` metadata + global `quantumGutter` stats
+- **Notepad cell export**: header with coverage stats + prefixed content
+- **Notepad localStorage**: cells include per-cell `quantumPrefix` summary
+- **HexBench JSON export**: `quantumGutter` metadata + `prefixedCode` field
+- **Research Lab .md export**: uses `QP.downloadWithPrefixes()` for gutter header
+- **Dashboard JSON export**: wrapped with `QP.wrapJsonExport()`
+- **ArchFlow JSON export**: `quantumGutter` metadata + `prefixedMermaid` field
+
+## Common Patterns
+
+- `const $ = id => document.getElementById(id);` — used in hexbench, research-lab, archflow
+- IIFEs wrap most app logic: `(function(){ ... })();`
+- Console commands exposed via `window.appName = { ... }` API objects
+- Dark theme using CSS custom properties (`--cursor-*` vars)
+- Mobile-responsive with `@media(max-width:600px)` rules
