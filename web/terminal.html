@@ -9,8 +9,8 @@
 <meta name="mobile-web-app-capable" content="yes">
 <title>hexterm — terminal PWA</title>
 <link rel="manifest" href="terminal-manifest.json">
-<link rel="apple-touch-icon" href="../icons/nyan-banner.png">
-<link rel="icon" href="../icons/favicon.png">
+<link rel="apple-touch-icon" href="../icons/hexterm-192.png">
+<link rel="icon" href="../icons/hexterm-favicon.png">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@xterm/xterm@5/css/xterm.min.css">
 <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -130,6 +130,7 @@
         align-items: center; justify-content: center;
         transition: opacity 0.6s ease;
         overflow: hidden;
+        cursor: pointer; /* tap anywhere to dismiss */
     }
     #intro-stars {
         position: absolute; inset: 0; z-index: 0; pointer-events: none;
@@ -155,6 +156,10 @@
         position: absolute; bottom: 28px; left: 0; right: 0; text-align: center;
         font-family: 'SF Mono', monospace; font-size: .75rem; color: #8b949e;
         z-index: 2; pointer-events: none;
+    }
+    #intro-hex {
+        position: absolute; z-index: 3; pointer-events: none;
+        bottom: 60px; left: 50%; transform: translateX(-50%);
     }
     #intro-sub .prefix { color: #58a6ff; }
     #intro-prompt {
@@ -258,7 +263,7 @@
 <body>
 
 <!-- ═══ ANIMATED INTRO ═══ -->
-<div id="intro">
+<div id="intro" onclick="if(event.target===this||!event.target.closest('#intro-prompt'))introSkip()">
     <canvas id="intro-stars"></canvas>
     <video id="intro-video" playsinline autoplay muted></video>
     <div id="intro-cutout">
@@ -276,9 +281,10 @@
         </svg>
     </div>
     <div id="intro-prompt">
-        <button onclick="introGrantCamera()">Enable Camera</button>
-        <button class="skip" onclick="introSkip()">skip →</button>
+        <button onclick="event.stopPropagation();introGrantCamera()">Enable Camera</button>
+        <button class="skip" onclick="event.stopPropagation();introSkip()">skip →</button>
     </div>
+    <canvas id="intro-hex" width="48" height="56"></canvas>
     <div id="intro-sub">
         <span class="prefix">+1:</span>decl <span class="prefix">1:</span>logic <span class="prefix">-1:</span>io
         <span class="prefix">+0:</span>assign <span class="prefix">0:</span>neutral <span class="prefix">-0:</span>comment
@@ -2719,6 +2725,70 @@ const introPrompt = document.getElementById('intro-prompt');
     drawStars();
 })();
 
+// Hex mascot — pixel-art character on intro
+(function drawHexMascot() {
+    const hc = document.getElementById('intro-hex');
+    if (!hc) return;
+    const hx = hc.getContext('2d');
+    const W = 48, H = 56;
+    let t = 0;
+    // pixel art: 12x14 grid, scale 4x
+    const S = 4;
+    // color palette
+    const C = { t:'#4da6a8', d:'#3d8a8c', e1:'#58e8ff', e2:'#c084fc', r:'#ff3838', o:'#ff8c38', y:'#ffe138', g:'#3fb950', b:'#38a5ff', p:'#bc8cff', k:'#0d1117', gl:'rgba(88,232,255,0.15)' };
+    // body shape (12 wide, 14 tall) - 0=empty, 1=teal, 2=dark teal, 3=cyan eye, 4=purple eye, 5-10=rainbow
+    const PIX = [
+        [0,0,0,0,1,1,1,1,0,0,0,0],
+        [0,0,0,1,1,1,1,1,1,0,0,0],
+        [0,0,1,1,1,1,1,1,1,1,0,0],
+        [0,1,1,1,3,3,1,4,4,1,1,0],
+        [0,1,1,1,3,3,1,4,4,1,1,0],
+        [0,1,1,1,1,1,1,1,1,1,1,0],
+        [5,6,7,8,9,10,5,6,7,8,9,10],
+        [0,1,1,1,1,1,1,1,1,1,1,0],
+        [0,0,1,1,1,1,1,1,1,1,0,0],
+        [0,0,2,1,1,0,0,1,1,2,0,0],
+        [0,2,2,0,1,0,0,1,0,2,2,0],
+        [0,2,0,0,2,0,0,2,0,0,2,0],
+        [0,0,0,0,2,2,2,2,0,0,0,0],
+        [0,0,0,0,0,2,2,0,0,0,0,0],
+    ];
+    const RC = { 5:C.r, 6:C.o, 7:C.y, 8:C.g, 9:C.b, 10:C.p };
+
+    function frame() {
+        if (!introActive) return;
+        t += 0.03;
+        hx.clearRect(0, 0, W, H);
+        // glow
+        hx.shadowColor = C.e1; hx.shadowBlur = 6;
+        const bob = Math.sin(t * 2) * 2;
+        hx.save();
+        hx.translate(0, bob);
+        for (let y = 0; y < PIX.length; y++) {
+            for (let x = 0; x < PIX[y].length; x++) {
+                const v = PIX[y][x];
+                if (v === 0) continue;
+                if (v === 1) hx.fillStyle = C.t;
+                else if (v === 2) hx.fillStyle = C.d;
+                else if (v === 3) hx.fillStyle = C.e1;
+                else if (v === 4) hx.fillStyle = C.e2;
+                else hx.fillStyle = RC[v] || C.t;
+                hx.fillRect(x * S, y * S, S, S);
+            }
+        }
+        // eye blink every ~3s
+        if (Math.sin(t * 1.1) > 0.97) {
+            hx.fillStyle = C.t;
+            hx.fillRect(4*S, 3*S, 2*S, 2*S);
+            hx.fillRect(7*S, 3*S, 2*S, 2*S);
+        }
+        hx.restore();
+        hx.shadowBlur = 0;
+        requestAnimationFrame(frame);
+    }
+    frame();
+})();
+
 // Check if camera was already granted (skip intro next time)
 const introDone = sessionStorage.getItem('hexterm-intro-done');
 
@@ -2748,6 +2818,7 @@ function introSkip() {
 }
 
 function introDismiss() {
+    if (!introActive) return;
     introActive = false;
     sessionStorage.setItem('hexterm-intro-done', '1');
     introEl.classList.add('fade-out');
@@ -2756,6 +2827,17 @@ function introDismiss() {
         if (term) term.focus();
     }, 600);
 }
+
+// Touch fallback: tap anywhere on intro to dismiss (iOS PWA)
+introEl.addEventListener('touchend', e => {
+    if (!introActive) return;
+    // If they tapped a button, let the button's onclick handle it
+    if (e.target.closest('#intro-prompt button')) return;
+    introSkip();
+}, { passive: true });
+
+// Auto-skip after 8 seconds if user hasn't interacted
+setTimeout(() => { if (introActive) introDismiss(); }, 8000);
 
 // Auto-skip on revisit within same session
 if (introDone) {
