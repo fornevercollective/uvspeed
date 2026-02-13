@@ -14,7 +14,7 @@
 <style>
     * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     html, body { touch-action: manipulation; }
-    body { background: #0d1117; color: #e6edf3; font-family: -apple-system, 'SF Pro', system-ui, sans-serif; min-height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
+    body { background: var(--qp-bg, #0d1117); color: var(--qp-text, #e6edf3); font-family: -apple-system, 'SF Pro', system-ui, sans-serif; min-height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
 
     /* ── Safe-area spacer (iOS status bar / notch) ── */
     .safe-top { flex-shrink: 0; background: #161b22; height: 0; height: env(safe-area-inset-top, 0px); }

@@ -597,10 +597,224 @@
     }
 
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // Theme Engine — Light / Dark mode for all apps
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    var THEMES = {
+        dark: {
+            '--qp-bg':           '#0d1117',
+            '--qp-bg-secondary': '#161b22',
+            '--qp-bg-tertiary':  '#21262d',
+            '--qp-bg-hover':     '#292e36',
+            '--qp-border':       '#30363d',
+            '--qp-border-muted': '#21262d',
+            '--qp-text':         '#e6edf3',
+            '--qp-text-secondary': '#c9d1d9',
+            '--qp-text-muted':   '#8b949e',
+            '--qp-accent':       '#58a6ff',
+            '--qp-accent-subtle':'rgba(56,139,253,0.15)',
+            '--qp-shadow':       'rgba(0,0,0,0.3)',
+            '--qp-card':         '#161b22',
+            '--qp-card-border':  '#21262d',
+            '--qp-input-bg':     '#0d1117',
+            '--qp-canvas-bg':    '#0d1117',
+            '--qp-code-bg':      '#161b22',
+            '--qp-scrollbar':    '#30363d',
+            '--qp-scrollbar-track': '#0d1117',
+        },
+        light: {
+            '--qp-bg':           '#ffffff',
+            '--qp-bg-secondary': '#f6f8fa',
+            '--qp-bg-tertiary':  '#eaeef2',
+            '--qp-bg-hover':     '#e2e6ea',
+            '--qp-border':       '#d0d7de',
+            '--qp-border-muted': '#d8dee4',
+            '--qp-text':         '#1f2328',
+            '--qp-text-secondary': '#424a53',
+            '--qp-text-muted':   '#656d76',
+            '--qp-accent':       '#0969da',
+            '--qp-accent-subtle':'rgba(9,105,218,0.1)',
+            '--qp-shadow':       'rgba(31,35,40,0.12)',
+            '--qp-card':         '#ffffff',
+            '--qp-card-border':  '#d0d7de',
+            '--qp-input-bg':     '#f6f8fa',
+            '--qp-canvas-bg':    '#f6f8fa',
+            '--qp-code-bg':      '#f6f8fa',
+            '--qp-scrollbar':    '#c1c8cd',
+            '--qp-scrollbar-track': '#f6f8fa',
+        }
+    };
+
+    var _currentTheme = 'dark';
+    var _themeStyleEl = null;
+    var _themeToggleEl = null;
+    var _themeChannel = null;
+    var _themeListeners = [];
+
+    function _ensureThemeChannel() {
+        if (_themeChannel) return _themeChannel;
+        try {
+            _themeChannel = new BroadcastChannel('qp-theme');
+            _themeChannel.onmessage = function(e) {
+                if (e.data && e.data.type === 'qp-theme-change' && e.data.theme !== _currentTheme) {
+                    _applyTheme(e.data.theme, true);
+                }
+            };
+        } catch(e) {}
+        return _themeChannel;
+    }
+
+    function _applyTheme(theme, fromBroadcast) {
+        _currentTheme = theme;
+        var vars = THEMES[theme] || THEMES.dark;
+
+        // Set CSS custom properties on :root
+        var root = document.documentElement;
+        for (var key in vars) { root.style.setProperty(key, vars[key]); }
+
+        // Set data attribute for CSS selectors
+        root.setAttribute('data-theme', theme);
+
+        // Inject override stylesheet that maps hardcoded dark colors → variables
+        if (!_themeStyleEl && typeof document !== 'undefined') {
+            _themeStyleEl = document.createElement('style');
+            _themeStyleEl.id = 'qp-theme-overrides';
+            document.head.appendChild(_themeStyleEl);
+        }
+
+        if (_themeStyleEl) {
+            // This CSS overrides hardcoded colors with theme variables.
+            // Pages that already use --cursor-* get mapped too.
+            _themeStyleEl.textContent = theme === 'light' ? [
+                ':root {',
+                '  --cursor-bg: var(--qp-bg); --cursor-bg-secondary: var(--qp-bg-secondary);',
+                '  --cursor-bg-tertiary: var(--qp-bg-tertiary); --cursor-bg-hover: var(--qp-bg-hover);',
+                '  --cursor-border: var(--qp-border); --cursor-border-muted: var(--qp-border-muted);',
+                '  --cursor-text: var(--qp-text); --cursor-text-secondary: var(--qp-text-secondary);',
+                '  --cursor-text-muted: var(--qp-text-muted); --cursor-accent: var(--qp-accent);',
+                '  --cursor-accent-subtle: var(--qp-accent-subtle); --cursor-shadow: var(--qp-shadow);',
+                '  --bg: var(--qp-bg); --bg2: var(--qp-bg-secondary); --bg3: var(--qp-bg-tertiary);',
+                '  --border: var(--qp-border); --text: var(--qp-text); --text-m: var(--qp-text-muted);',
+                '  --muted: var(--qp-text-muted);',
+                '  color-scheme: light;',
+                '}',
+                'body { background: var(--qp-bg) !important; color: var(--qp-text) !important; }',
+                '::-webkit-scrollbar-thumb { background: var(--qp-scrollbar) !important; }',
+                '::-webkit-scrollbar-track { background: var(--qp-scrollbar-track) !important; }',
+                // Map common hardcoded dark backgrounds
+                '[style*="background:#0d1117"], [style*="background: #0d1117"] { background: var(--qp-bg) !important; }',
+                '[style*="background:#161b22"], [style*="background: #161b22"] { background: var(--qp-bg-secondary) !important; }',
+                '[style*="background:#21262d"], [style*="background: #21262d"] { background: var(--qp-bg-tertiary) !important; }',
+                '[style*="color:#e6edf3"], [style*="color: #e6edf3"] { color: var(--qp-text) !important; }',
+                '[style*="color:#c9d1d9"], [style*="color: #c9d1d9"] { color: var(--qp-text-secondary) !important; }',
+                '[style*="color:#8b949e"], [style*="color: #8b949e"] { color: var(--qp-text-muted) !important; }',
+                '[style*="border-color:#30363d"], [style*="border-color: #30363d"] { border-color: var(--qp-border) !important; }',
+                // Common element overrides
+                'input, textarea, select { background: var(--qp-input-bg) !important; color: var(--qp-text) !important; border-color: var(--qp-border) !important; }',
+                'code { background: var(--qp-code-bg) !important; }',
+                'pre { background: var(--qp-code-bg) !important; }',
+                '.hero, .cta { background: var(--qp-bg-secondary) !important; }',
+                'canvas { border-color: var(--qp-border) !important; }',
+            ].join('\n') : [
+                ':root {',
+                '  --cursor-bg: var(--qp-bg); --cursor-bg-secondary: var(--qp-bg-secondary);',
+                '  --cursor-bg-tertiary: var(--qp-bg-tertiary); --cursor-bg-hover: var(--qp-bg-hover);',
+                '  --cursor-border: var(--qp-border); --cursor-border-muted: var(--qp-border-muted);',
+                '  --cursor-text: var(--qp-text); --cursor-text-secondary: var(--qp-text-secondary);',
+                '  --cursor-text-muted: var(--qp-text-muted); --cursor-accent: var(--qp-accent);',
+                '  --cursor-accent-subtle: var(--qp-accent-subtle); --cursor-shadow: var(--qp-shadow);',
+                '  --bg: var(--qp-bg); --bg2: var(--qp-bg-secondary); --bg3: var(--qp-bg-tertiary);',
+                '  --border: var(--qp-border); --text: var(--qp-text); --text-m: var(--qp-text-muted);',
+                '  --muted: var(--qp-text-muted);',
+                '  color-scheme: dark;',
+                '}',
+            ].join('\n');
+        }
+
+        // Update toggle button appearance
+        if (_themeToggleEl) {
+            _themeToggleEl.textContent = theme === 'dark' ? '☀' : '☾';
+            _themeToggleEl.title = 'Switch to ' + (theme === 'dark' ? 'light' : 'dark') + ' mode';
+        }
+
+        // Persist
+        try { localStorage.setItem('qp-theme', theme); } catch(e) {}
+
+        // Broadcast to other tabs
+        if (!fromBroadcast) {
+            var ch = _ensureThemeChannel();
+            if (ch) ch.postMessage({ type: 'qp-theme-change', theme: theme });
+        }
+
+        // Notify listeners
+        _themeListeners.forEach(function(fn) { fn(theme); });
+    }
+
+    function toggleTheme() {
+        _applyTheme(_currentTheme === 'dark' ? 'light' : 'dark');
+    }
+
+    function setTheme(theme) {
+        if (theme === 'dark' || theme === 'light') _applyTheme(theme);
+    }
+
+    function getTheme() { return _currentTheme; }
+
+    function onThemeChange(fn) { _themeListeners.push(fn); }
+
+    function _initTheme() {
+        if (typeof document === 'undefined') return;
+
+        // Load persisted preference or system preference
+        var saved = null;
+        try { saved = localStorage.getItem('qp-theme'); } catch(e) {}
+        var initial = saved || (root.matchMedia && root.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+
+        // Create floating toggle button
+        _themeToggleEl = document.createElement('button');
+        _themeToggleEl.id = 'qp-theme-toggle';
+        var s = _themeToggleEl.style;
+        s.position = 'fixed'; s.bottom = '16px'; s.right = '16px'; s.zIndex = '99999';
+        s.width = '36px'; s.height = '36px'; s.borderRadius = '50%';
+        s.border = '1px solid'; s.borderColor = 'var(--qp-border, #30363d)';
+        s.background = 'var(--qp-bg-secondary, #161b22)'; s.color = 'var(--qp-text, #e6edf3)';
+        s.fontSize = '18px'; s.cursor = 'pointer'; s.display = 'flex';
+        s.alignItems = 'center'; s.justifyContent = 'center';
+        s.boxShadow = '0 2px 8px var(--qp-shadow, rgba(0,0,0,0.3))';
+        s.transition = 'all 0.2s'; s.padding = '0'; s.lineHeight = '1';
+        s.fontFamily = 'system-ui, sans-serif';
+        _themeToggleEl.addEventListener('mouseenter', function() { _themeToggleEl.style.transform = 'scale(1.1)'; });
+        _themeToggleEl.addEventListener('mouseleave', function() { _themeToggleEl.style.transform = ''; });
+        _themeToggleEl.addEventListener('click', toggleTheme);
+
+        document.body.appendChild(_themeToggleEl);
+
+        _ensureThemeChannel();
+        _applyTheme(initial);
+
+        // Listen for system preference changes
+        if (root.matchMedia) {
+            root.matchMedia('(prefers-color-scheme: light)').addEventListener('change', function(e) {
+                if (!localStorage.getItem('qp-theme')) {
+                    _applyTheme(e.matches ? 'light' : 'dark');
+                }
+            });
+        }
+    }
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     // Auto-init
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     loadPersistedState();
     _ensureChannel();
+
+    // Init theme when DOM is ready
+    if (typeof document !== 'undefined') {
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', _initTheme);
+        } else {
+            _initTheme();
+        }
+    }
 
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     // Public API
@@ -638,6 +852,13 @@
         connectIoT: connectIoT,
         disconnectIoT: disconnectIoT,
         isIoTConnected: isIoTConnected,
+
+        // Theme
+        toggleTheme: toggleTheme,
+        setTheme: setTheme,
+        getTheme: getTheme,
+        onThemeChange: onThemeChange,
+        THEMES: THEMES,
     };
 
     // Expose globally
