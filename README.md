@@ -16,6 +16,95 @@
 
 ---
 
+## Preview
+
+<p align="center">
+<img src="icons/01-notepad-main.png" alt="Quantum Notepad — main interface with prefix gutter, convert timeline, and navigation" width="100%">
+</p>
+<p align="center"><em>Quantum Notepad — prefix gutter, convert timeline, 3D navigation, stream history</em></p>
+
+<details>
+<summary><b>More screenshots (click to expand)</b></summary>
+
+<p align="center">
+<img src="icons/14-brothernumsy-game-full.png" alt="brotherNumsy & Freya — endless runner game" width="100%">
+</p>
+<p align="center"><em>brotherNumsy & Freya — endless runner with pixel-art sprites and AI training API</em></p>
+
+<p align="center">
+<img src="icons/22-kbatch-keyboard-analyzer.png" alt="kbatch keyboard analyzer with thermal heatmap" width="100%">
+</p>
+<p align="center"><em>kbatch — keyboard heatmap with thermal contrails and rainbow key lighting</em></p>
+
+<p align="center">
+<img src="icons/23-hexcast-video-broadcast.png" alt="hexcast video broadcast in terminal" width="100%">
+</p>
+<p align="center"><em>hexcast — camera → terminal video streaming with truecolor ANSI rendering</em></p>
+
+<p align="center">
+<img src="icons/25-blackwell-live-dashboard.png" alt="Blackwell NVIDIA data visualization" width="100%">
+</p>
+<p align="center"><em>Blackwell Live — NVIDIA data viz with SM heatmaps and deploy targets</em></p>
+
+<p align="center">
+<img src="icons/26-archflow-node-visualizer.png" alt="archflow architecture node visualizer" width="100%">
+</p>
+<p align="center"><em>archflow — n8n-style drag-and-drop architecture node visualizer</em></p>
+
+<p align="center">
+<img src="icons/24-jawta-audio-spatial.png" alt="jawta spatial audio with Strudel live coding" width="100%">
+</p>
+<p align="center"><em>jawta-audio — Dolby Atmos spatial audio + Strudel live coding</em></p>
+
+<p align="center">
+<img src="icons/27-questcast-meta-research.png" alt="questcast Meta Quest broadcast" width="100%">
+</p>
+<p align="center"><em>questcast — Meta Quest broadcast + research tools</em></p>
+
+<p align="center">
+<img src="icons/02-inspect-timeline.png" alt="Inspect timeline with convert bar" width="100%">
+</p>
+<p align="center"><em>Inspect — convert timeline bar with prefix version history</em></p>
+
+<p align="center">
+<img src="icons/03-language-benchmarks.png" alt="20-language benchmark coverage" width="100%">
+</p>
+<p align="center"><em>Language benchmarks — 20 languages with prefix classification accuracy</em></p>
+
+<p align="center">
+<img src="icons/05-prefix-everything.png" alt="Prefix system applied to code" width="100%">
+</p>
+<p align="center"><em>Prefix everything — 9 symbols structurally addressing any codebase</em></p>
+
+<p align="center">
+<img src="icons/12-quantum-navigation.png" alt="3D quantum navigation panel" width="100%">
+</p>
+<p align="center"><em>Quantum navigation — 3D spatial code navigation with orb visualization</em></p>
+
+<p align="center">
+<img src="icons/18-nyancat-hex-stream.png" alt="Nyan cat hex stream visualization" width="100%">
+</p>
+<p align="center"><em>Nyan cat hex stream — pixel-art characters in the starfield</em></p>
+
+<p align="center">
+<img src="icons/15-freyaunits-converter-cell.png" alt="FreyaUnits converter cell" width="100%">
+</p>
+<p align="center"><em>FreyaUnits — 27-unit precision converter (Planck length → Parsec)</em></p>
+
+<p align="center">
+<img src="icons/10-mermaid-architecture.png" alt="Mermaid architecture diagram" width="100%">
+</p>
+<p align="center"><em>Mermaid diagrams — inline architecture visualization in the notepad</em></p>
+
+<p align="center">
+<img src="icons/07-ide-plugin-rule.png" alt="IDE plugin and Cursor rules" width="100%">
+</p>
+<p align="center"><em>IDE integration — Cursor rules, VS Code, Copilot, Windsurf, MCP server</em></p>
+
+</details>
+
+---
+
 ## What's Inside
 
 uvspeed is a collection of developer tools unified by the quantum prefix system. Everything runs in the browser (zero install) or as a native Tauri desktop app.
