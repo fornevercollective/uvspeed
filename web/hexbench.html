@@ -503,32 +503,177 @@ function initThermalPanel() {
 }
 initThermalPanel();
 
-// ===== PERSISTENT: FREYA CALCS (rendered once) =====
-function initFreyaCalcs() {
-    $('bench-freya-wrap').innerHTML = `
-    <h3 style="color:var(--cyan);font-size:.75rem;margin:0 0 4px;display:flex;align-items:center;gap:4px;padding:0 10px">⚡ Freya Unit Calculator</h3>
-    <div class="psu-monitor" style="margin:0 10px 4px">
-        <div style="font-size:.625rem;color:var(--text-m);margin-bottom:4px">Ohm's Law: V = I × R</div>
-        <div style="display:flex;gap:4px">
-            <input id="calc-v" placeholder="V" style="flex:1;padding:4px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--yellow);font-family:var(--mono);font-size:.75rem">
-            <input id="calc-i" placeholder="A" style="flex:1;padding:4px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--green);font-family:var(--mono);font-size:.75rem">
-            <input id="calc-r" placeholder="Ω" style="flex:1;padding:4px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--cyan);font-family:var(--mono);font-size:.75rem">
-        </div>
-        <button onclick="calcOhm()" style="margin-top:4px;padding:3px 8px;font-size:.5625rem;border:1px solid var(--accent);border-radius:4px;background:var(--accent-s);color:var(--accent);cursor:pointer;width:100%">Calculate</button>
-        <div id="calc-result" style="font-family:var(--mono);font-size:.6875rem;color:var(--text-s);margin-top:4px"></div>
-    </div>
-    <div class="psu-monitor" style="margin:0 10px 6px">
-        <div style="font-size:.625rem;color:var(--text-m);margin-bottom:4px">Power: P = V × I</div>
-        <div style="display:flex;gap:4px">
-            <input id="calc-pv" placeholder="V" style="flex:1;padding:4px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--yellow);font-family:var(--mono);font-size:.75rem">
-            <input id="calc-pi" placeholder="A" style="flex:1;padding:4px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--green);font-family:var(--mono);font-size:.75rem">
-            <input id="calc-pp" placeholder="W" style="flex:1;padding:4px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--orange);font-family:var(--mono);font-size:.75rem">
-        </div>
-        <button onclick="calcPower()" style="margin-top:4px;padding:3px 8px;font-size:.5625rem;border:1px solid var(--accent);border-radius:4px;background:var(--accent-s);color:var(--accent);cursor:pointer;width:100%">Calculate</button>
-        <div id="calc-presult" style="font-family:var(--mono);font-size:.6875rem;color:var(--text-s);margin-top:4px"></div>
-    </div>`;
+// ===== PERSISTENT: FREYA CALCS — FULL DEV TOOLKIT =====
+let freyaActiveTab = 'ohm';
+const freyaToolTabs = [
+    { id:'ohm',      label:'Ohm/Power',    icon:'⚡', color:'var(--yellow)' },
+    { id:'divider',   label:'V-Divider',    icon:'🔀', color:'var(--cyan)' },
+    { id:'rc',        label:'RC/LC',        icon:'〰', color:'var(--purple)' },
+    { id:'led',       label:'LED',          icon:'💡', color:'var(--green)' },
+    { id:'regulator', label:'Regulator',    icon:'🔋', color:'var(--orange)' },
+    { id:'pcb',       label:'PCB Trace',    icon:'📐', color:'#f0883e' },
+    { id:'adc',       label:'ADC/DAC',      icon:'📊', color:'var(--accent)' },
+    { id:'freq',      label:'Freq/Timer',   icon:'🕐', color:'#d2a8ff' },
+    { id:'battery',   label:'Battery',      icon:'🔌', color:'var(--green)' },
+    { id:'units',     label:'FreyaUnits',   icon:'🔬', color:'#a78bfa' },
+    { id:'wire',      label:'Wire AWG',     icon:'〰', color:'var(--text-m)' },
+    { id:'thermal',   label:'Thermal',      icon:'🌡', color:'var(--red)' },
+    { id:'suggest',   label:'Suggest',      icon:'🧠', color:'#f5cd00' },
+];
+
+function freyaInput(id, ph, color) {
+    return `<input id="${id}" placeholder="${ph}" style="flex:1;min-width:0;padding:4px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:${color||'var(--text)'};font-family:var(--mono);font-size:.75rem">`;
 }
-initFreyaCalcs();
+function freyaBtn(onclick, label) {
+    return `<button onclick="${onclick}" style="margin-top:4px;padding:3px 8px;font-size:.5625rem;border:1px solid var(--accent);border-radius:4px;background:var(--accent-s);color:var(--accent);cursor:pointer;width:100%">${label}</button>`;
+}
+function freyaSelect(id, opts, color) {
+    return `<select id="${id}" style="flex:1;min-width:0;padding:4px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:${color||'var(--text)'};font-family:var(--mono);font-size:.7rem">${opts.map(o=>`<option value="${o.v}">${o.l}</option>`).join('')}</select>`;
+}
+
+function renderFreyaCalcs() {
+    const t = freyaActiveTab;
+    let body = '';
+    switch (t) {
+    case 'ohm':
+        body = `<div class="psu-monitor" style="margin:0 0 4px"><div style="font-size:.625rem;color:var(--text-m);margin-bottom:4px">Ohm's Law: V = I × R</div>
+        <div style="display:flex;gap:4px">${freyaInput('calc-v','V','var(--yellow)')}${freyaInput('calc-i','A','var(--green)')}${freyaInput('calc-r','Ω','var(--cyan)')}</div>
+        ${freyaBtn('calcOhm()','Calculate')}<div id="calc-result" style="font-family:var(--mono);font-size:.6875rem;color:var(--text-s);margin-top:4px"></div></div>
+        <div class="psu-monitor" style="margin:0"><div style="font-size:.625rem;color:var(--text-m);margin-bottom:4px">Power: P = V × I</div>
+        <div style="display:flex;gap:4px">${freyaInput('calc-pv','V','var(--yellow)')}${freyaInput('calc-pi','A','var(--green)')}${freyaInput('calc-pp','W','var(--orange)')}</div>
+        ${freyaBtn('calcPower()','Calculate')}<div id="calc-presult" style="font-family:var(--mono);font-size:.6875rem;color:var(--text-s);margin-top:4px"></div></div>`;
+        break;
+    case 'divider':
+        body = `<div class="psu-monitor" style="margin:0"><div style="font-size:.625rem;color:var(--text-m);margin-bottom:4px">Voltage Divider: Vout = Vin × R2 / (R1+R2)</div>
+        <div style="display:flex;gap:4px">${freyaInput('vd-vin','Vin (V)','var(--yellow)')}${freyaInput('vd-r1','R1 (Ω)','var(--cyan)')}${freyaInput('vd-r2','R2 (Ω)','var(--green)')}</div>
+        ${freyaBtn('calcDivider()','Calculate')}<div id="vd-result" style="font-family:var(--mono);font-size:.6875rem;color:var(--text-s);margin-top:4px"></div>
+        <div style="font-size:.5rem;color:var(--text-m);margin-top:4px">Tip: For 3.3V from 5V use R1=1.8kΩ R2=3.3kΩ</div></div>`;
+        break;
+    case 'rc':
+        body = `<div class="psu-monitor" style="margin:0 0 4px"><div style="font-size:.625rem;color:var(--text-m);margin-bottom:4px">RC Time Constant: τ = R × C | f = 1/(2π·R·C)</div>
+        <div style="display:flex;gap:4px">${freyaInput('rc-r','R (Ω)','var(--cyan)')}${freyaInput('rc-c','C (F)','var(--green)')}</div>
+        ${freyaBtn('calcRC()','Calculate RC')}<div id="rc-result" style="font-family:var(--mono);font-size:.6875rem;color:var(--text-s);margin-top:4px"></div></div>
+        <div class="psu-monitor" style="margin:0"><div style="font-size:.625rem;color:var(--text-m);margin-bottom:4px">LC Resonance: f = 1/(2π·√(L·C))</div>
+        <div style="display:flex;gap:4px">${freyaInput('lc-l','L (H)','var(--orange)')}${freyaInput('lc-c','C (F)','var(--green)')}</div>
+        ${freyaBtn('calcLC()','Calculate LC')}<div id="lc-result" style="font-family:var(--mono);font-size:.6875rem;color:var(--text-s);margin-top:4px"></div></div>`;
+        break;
+    case 'led':
+        body = `<div class="psu-monitor" style="margin:0"><div style="font-size:.625rem;color:var(--text-m);margin-bottom:4px">LED Resistor: R = (Vs − Vf) / If</div>
+        <div style="display:flex;gap:4px">${freyaInput('led-vs','Vs (V)','var(--yellow)')}${freyaInput('led-vf','Vf (V)','var(--green)')}${freyaInput('led-if','If (mA)','var(--cyan)')}</div>
+        <div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:4px">
+            <span class="bt-tab" onclick="$('led-vf').value='1.8';$('led-if').value='20'" style="font-size:.5rem;cursor:pointer;background:rgba(255,60,60,.15);border-color:#f66;color:#f66">Red 1.8V</span>
+            <span class="bt-tab" onclick="$('led-vf').value='2.1';$('led-if').value='20'" style="font-size:.5rem;cursor:pointer;background:rgba(255,200,0,.12);border-color:#fc0;color:#fc0">Yellow 2.1V</span>
+            <span class="bt-tab" onclick="$('led-vf').value='3.0';$('led-if').value='20'" style="font-size:.5rem;cursor:pointer;background:rgba(0,200,60,.12);border-color:#0c8;color:#0c8">Green 3.0V</span>
+            <span class="bt-tab" onclick="$('led-vf').value='3.2';$('led-if').value='20'" style="font-size:.5rem;cursor:pointer;background:rgba(0,120,255,.12);border-color:#38f;color:#38f">Blue 3.2V</span>
+            <span class="bt-tab" onclick="$('led-vf').value='3.4';$('led-if').value='20'" style="font-size:.5rem;cursor:pointer;background:rgba(200,200,255,.12);border-color:#ccf;color:#ccf">White 3.4V</span>
+        </div>
+        ${freyaBtn('calcLED()','Calculate')}<div id="led-result" style="font-family:var(--mono);font-size:.6875rem;color:var(--text-s);margin-top:4px"></div></div>`;
+        break;
+    case 'regulator':
+        body = `<div class="psu-monitor" style="margin:0"><div style="font-size:.625rem;color:var(--text-m);margin-bottom:4px">Linear Regulator: Heat = (Vin−Vout) × Iout</div>
+        <div style="display:flex;gap:4px">${freyaInput('reg-vin','Vin','var(--yellow)')}${freyaInput('reg-vout','Vout','var(--green)')}${freyaInput('reg-i','Iout (A)','var(--cyan)')}</div>
+        <div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:4px">
+            <span class="bt-tab" onclick="$('reg-vin').value='5';$('reg-vout').value='3.3';$('reg-i').value='0.5'" style="font-size:.5rem;cursor:pointer">5V→3.3V/500mA</span>
+            <span class="bt-tab" onclick="$('reg-vin').value='12';$('reg-vout').value='5';$('reg-i').value='1'" style="font-size:.5rem;cursor:pointer">12V→5V/1A</span>
+            <span class="bt-tab" onclick="$('reg-vin').value='9';$('reg-vout').value='3.3';$('reg-i').value='0.15'" style="font-size:.5rem;cursor:pointer">9V→3.3V/150mA</span>
+        </div>
+        ${freyaBtn('calcRegulator()','Calculate')}<div id="reg-result" style="font-family:var(--mono);font-size:.6875rem;color:var(--text-s);margin-top:4px"></div>
+        <div class="psu-monitor" style="margin:4px 0 0"><div style="font-size:.625rem;color:var(--text-m);margin-bottom:4px">Buck/Boost Efficiency: Pout = η × Pin</div>
+        <div style="display:flex;gap:4px">${freyaInput('buck-pin','Pin (W)','var(--yellow)')}${freyaInput('buck-eff','η (0-1)','var(--green)')}${freyaInput('buck-vout','Vout','var(--cyan)')}</div>
+        ${freyaBtn('calcBuck()','Calculate')}<div id="buck-result" style="font-family:var(--mono);font-size:.6875rem;color:var(--text-s);margin-top:4px"></div></div></div>`;
+        break;
+    case 'pcb':
+        body = `<div class="psu-monitor" style="margin:0"><div style="font-size:.625rem;color:var(--text-m);margin-bottom:4px">PCB Trace Width (IPC-2221): external copper 1oz</div>
+        <div style="display:flex;gap:4px">${freyaInput('pcb-i','Current (A)','var(--yellow)')}${freyaInput('pcb-rise','Temp Rise °C','var(--orange)')}${freyaInput('pcb-thick','Cu oz','var(--cyan)')}</div>
+        <div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:4px">
+            <span class="bt-tab" onclick="$('pcb-i').value='1';$('pcb-rise').value='10';$('pcb-thick').value='1'" style="font-size:.5rem;cursor:pointer">1A/10°C/1oz</span>
+            <span class="bt-tab" onclick="$('pcb-i').value='3';$('pcb-rise').value='20';$('pcb-thick').value='2'" style="font-size:.5rem;cursor:pointer">3A/20°C/2oz</span>
+        </div>
+        ${freyaBtn('calcPCBTrace()','Calculate')}<div id="pcb-result" style="font-family:var(--mono);font-size:.6875rem;color:var(--text-s);margin-top:4px"></div>
+        <div style="font-size:.5rem;color:var(--text-m);margin-top:4px">IPC-2221 external: W = (I/(k×ΔT^b))^(1/c) / (t×1.378)</div></div>`;
+        break;
+    case 'adc':
+        body = `<div class="psu-monitor" style="margin:0 0 4px"><div style="font-size:.625rem;color:var(--text-m);margin-bottom:4px">ADC Resolution & LSB</div>
+        <div style="display:flex;gap:4px">${freyaInput('adc-bits','Bits','var(--cyan)')}${freyaInput('adc-vref','Vref (V)','var(--yellow)')}</div>
+        <div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:4px">
+            <span class="bt-tab" onclick="$('adc-bits').value='10';$('adc-vref').value='3.3'" style="font-size:.5rem;cursor:pointer">Arduino 10b/3.3V</span>
+            <span class="bt-tab" onclick="$('adc-bits').value='12';$('adc-vref').value='3.3'" style="font-size:.5rem;cursor:pointer">ESP32 12b/3.3V</span>
+            <span class="bt-tab" onclick="$('adc-bits').value='16';$('adc-vref').value='5'" style="font-size:.5rem;cursor:pointer">ADS1115 16b/5V</span>
+            <span class="bt-tab" onclick="$('adc-bits').value='24';$('adc-vref').value='2.5'" style="font-size:.5rem;cursor:pointer">HX711 24b/2.5V</span>
+        </div>
+        ${freyaBtn('calcADC()','Calculate')}<div id="adc-result" style="font-family:var(--mono);font-size:.6875rem;color:var(--text-s);margin-top:4px"></div></div>
+        <div class="psu-monitor" style="margin:0"><div style="font-size:.625rem;color:var(--text-m);margin-bottom:4px">DAC Output: Vout = (code / 2^bits) × Vref</div>
+        <div style="display:flex;gap:4px">${freyaInput('dac-code','Code','var(--green)')}${freyaInput('dac-bits','Bits','var(--cyan)')}${freyaInput('dac-vref','Vref','var(--yellow)')}</div>
+        ${freyaBtn('calcDAC()','Calculate')}<div id="dac-result" style="font-family:var(--mono);font-size:.6875rem;color:var(--text-s);margin-top:4px"></div></div>`;
+        break;
+    case 'freq':
+        body = `<div class="psu-monitor" style="margin:0 0 4px"><div style="font-size:.625rem;color:var(--text-m);margin-bottom:4px">Frequency ↔ Period: f = 1/T</div>
+        <div style="display:flex;gap:4px">${freyaInput('freq-f','Freq (Hz)','var(--cyan)')}${freyaInput('freq-t','Period','var(--green)')}
+        ${freyaSelect('freq-unit',[{v:'s',l:'s'},{v:'ms',l:'ms'},{v:'µs',l:'µs'},{v:'ns',l:'ns'}],'var(--text-m)')}</div>
+        ${freyaBtn('calcFreq()','Calculate')}<div id="freq-result" style="font-family:var(--mono);font-size:.6875rem;color:var(--text-s);margin-top:4px"></div></div>
+        <div class="psu-monitor" style="margin:0"><div style="font-size:.625rem;color:var(--text-m);margin-bottom:4px">Timer Prescaler: OCR = (f_cpu / (prescaler × f_target)) − 1</div>
+        <div style="display:flex;gap:4px">${freyaInput('tmr-cpu','f_cpu (Hz)','var(--yellow)')}${freyaInput('tmr-pre','Prescaler','var(--orange)')}${freyaInput('tmr-target','f_target (Hz)','var(--cyan)')}</div>
+        <div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:4px">
+            <span class="bt-tab" onclick="$('tmr-cpu').value='16000000';$('tmr-pre').value='64'" style="font-size:.5rem;cursor:pointer">ATmega 16MHz/64</span>
+            <span class="bt-tab" onclick="$('tmr-cpu').value='240000000';$('tmr-pre').value='80'" style="font-size:.5rem;cursor:pointer">ESP32 240MHz/80</span>
+            <span class="bt-tab" onclick="$('tmr-cpu').value='133000000';$('tmr-pre').value='1'" style="font-size:.5rem;cursor:pointer">RP2040 133MHz</span>
+        </div>
+        ${freyaBtn('calcTimer()','Calculate')}<div id="tmr-result" style="font-family:var(--mono);font-size:.6875rem;color:var(--text-s);margin-top:4px"></div></div>`;
+        break;
+    case 'battery':
+        body = `<div class="psu-monitor" style="margin:0 0 4px"><div style="font-size:.625rem;color:var(--text-m);margin-bottom:4px">Battery Life: hours = capacity(mAh) / current(mA)</div>
+        <div style="display:flex;gap:4px">${freyaInput('bat-cap','Capacity (mAh)','var(--green)')}${freyaInput('bat-i','Avg Draw (mA)','var(--yellow)')}</div>
+        <div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:4px">
+            <span class="bt-tab" onclick="$('bat-cap').value='3000'" style="font-size:.5rem;cursor:pointer">18650 3Ah</span>
+            <span class="bt-tab" onclick="$('bat-cap').value='1200'" style="font-size:.5rem;cursor:pointer">LiPo 1.2Ah</span>
+            <span class="bt-tab" onclick="$('bat-cap').value='9000'" style="font-size:.5rem;cursor:pointer">6×AA NiMH</span>
+            <span class="bt-tab" onclick="$('bat-cap').value='250'" style="font-size:.5rem;cursor:pointer">CR2032</span>
+        </div>
+        ${freyaBtn('calcBattery()','Calculate')}<div id="bat-result" style="font-family:var(--mono);font-size:.6875rem;color:var(--text-s);margin-top:4px"></div></div>
+        <div class="psu-monitor" style="margin:0"><div style="font-size:.625rem;color:var(--text-m);margin-bottom:4px">Energy: Wh = V × Ah | Joules = Wh × 3600</div>
+        <div style="display:flex;gap:4px">${freyaInput('en-v','Voltage','var(--yellow)')}${freyaInput('en-ah','Capacity (Ah)','var(--green)')}</div>
+        ${freyaBtn('calcEnergy()','Calculate')}<div id="en-result" style="font-family:var(--mono);font-size:.6875rem;color:var(--text-s);margin-top:4px"></div></div>`;
+        break;
+    case 'units':
+        body = `<div class="psu-monitor" style="margin:0"><div style="font-size:.625rem;color:var(--text-m);margin-bottom:4px">FreyaUnits — Planck to Parsec (27 units)</div>
+        <div style="display:flex;gap:4px">
+        ${freyaInput('fu-val','Value','#a78bfa')}
+        ${freyaSelect('fu-from',[{v:'m',l:'m — Meter'},{v:'mm',l:'mm — Millimeter'},{v:'cm',l:'cm — Centimeter'},{v:'km',l:'km — Kilometer'},{v:'in',l:'in — Inch'},{v:'ft',l:'ft — Foot'},{v:'yd',l:'yd — Yard'},{v:'mi',l:'mi — Mile'},{v:'nm',l:'nm — Nanometer'},{v:'µm',l:'µm — Micrometer'},{v:'Å',l:'Å — Angstrom'},{v:'pm',l:'pm — Picometer'},{v:'fm',l:'fm — Femtometer'},{v:'am',l:'am — Attometer'},{v:'ℓp',l:'ℓp — Planck'},{v:'AU',l:'AU — Astro Unit'},{v:'ly',l:'ly — Light Year'},{v:'pc',l:'pc — Parsec'},{v:'mil',l:'mil — Mil/Thou'},{v:'NM',l:'NM — Nautical Mi'},{v:'µin',l:'µin — Microinch'}],'#a78bfa')}
+        </div>
+        ${freyaBtn('calcFreyaUnits()','Convert All')}<div id="fu-result" style="font-family:var(--mono);font-size:.6rem;color:var(--text-s);margin-top:4px;max-height:140px;overflow-y:auto"></div></div>`;
+        break;
+    case 'wire':
+        body = `<div class="psu-monitor" style="margin:0"><div style="font-size:.625rem;color:var(--text-m);margin-bottom:4px">Wire Gauge (AWG) — diameter, resistance, max current</div>
+        <div style="display:flex;gap:4px">${freyaSelect('wire-awg',[{v:'10',l:'10 AWG'},{v:'12',l:'12 AWG'},{v:'14',l:'14 AWG'},{v:'16',l:'16 AWG'},{v:'18',l:'18 AWG'},{v:'20',l:'20 AWG'},{v:'22',l:'22 AWG'},{v:'24',l:'24 AWG'},{v:'26',l:'26 AWG'},{v:'28',l:'28 AWG'},{v:'30',l:'30 AWG'}],'var(--text)')}
+        ${freyaInput('wire-len','Length (m)','var(--cyan)')}${freyaInput('wire-i','Current (A)','var(--yellow)')}</div>
+        ${freyaBtn('calcWire()','Calculate')}<div id="wire-result" style="font-family:var(--mono);font-size:.6875rem;color:var(--text-s);margin-top:4px"></div></div>`;
+        break;
+    case 'thermal':
+        body = `<div class="psu-monitor" style="margin:0"><div style="font-size:.625rem;color:var(--text-m);margin-bottom:4px">Thermal: Tj = Ta + (Pd × Rθja)</div>
+        <div style="display:flex;gap:4px">${freyaInput('th-ta','Ambient °C','var(--yellow)')}${freyaInput('th-pd','Power (W)','var(--orange)')}${freyaInput('th-rth','Rθja (°C/W)','var(--cyan)')}</div>
+        <div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:4px">
+            <span class="bt-tab" onclick="$('th-rth').value='65'" style="font-size:.5rem;cursor:pointer">TO-220 65°C/W</span>
+            <span class="bt-tab" onclick="$('th-rth').value='160'" style="font-size:.5rem;cursor:pointer">SOT-23 160°C/W</span>
+            <span class="bt-tab" onclick="$('th-rth').value='40'" style="font-size:.5rem;cursor:pointer">w/heatsink 40°C/W</span>
+        </div>
+        ${freyaBtn('calcThermal()','Calculate')}<div id="th-result" style="font-family:var(--mono);font-size:.6875rem;color:var(--text-s);margin-top:4px"></div></div>`;
+        break;
+    case 'suggest':
+        body = `<div class="psu-monitor" style="margin:0"><div style="font-size:.625rem;color:#f5cd00;margin-bottom:4px;font-weight:700">🧠 Smart Suggestions (based on live monitoring + build path)</div>
+        <div id="suggest-box" style="font-family:var(--mono);font-size:.625rem;color:var(--text-s);line-height:1.7"></div>
+        ${freyaBtn('generateSuggestions()','Analyze Build & Suggest')}
+        <div style="font-size:.5rem;color:var(--text-m);margin-top:6px">Reads: PSU settings, stage progress, parts list, thermal data, code templates. Future: auto-suggest components, detect issues, recommend settings.</div></div>`;
+        break;
+    }
+    $('bench-freya-wrap').innerHTML = `
+    <div style="padding:0 10px"><div style="display:flex;align-items:center;gap:4px;margin-bottom:4px"><h3 style="color:var(--cyan);font-size:.75rem;margin:0;white-space:nowrap">⚡ Freya Dev Toolkit</h3><span style="font-size:.5rem;color:var(--text-m);margin-left:auto">${freyaToolTabs.length} tools</span></div>
+    <div class="bt-tabs" id="freya-tabs" style="margin-bottom:6px">${freyaToolTabs.map(ft => `<span class="bt-tab${ft.id===t?' active':''}" data-ftab="${ft.id}" style="${ft.id===t?'border-color:'+ft.color+';color:'+ft.color:''}" title="${ft.label}">${ft.icon}</span>`).join('')}</div>
+    ${body}</div>`;
+    document.querySelectorAll('#freya-tabs .bt-tab').forEach(b => {
+        b.addEventListener('click', () => { freyaActiveTab = b.dataset.ftab; renderFreyaCalcs(); });
+    });
+}
+renderFreyaCalcs();
 
 // ===== DYNAMIC: EQUIPMENT + PSU (rebuilt on cycle) =====
 function renderBench() {
@@ -869,7 +1014,6 @@ window.calcOhm = function() {
     else if (!isNaN(i) && !isNaN(r)) el.textContent = `V = ${(i*r).toFixed(4)} V, P = ${(i*i*r).toFixed(4)} W`;
     else el.textContent = 'Enter any two values';
 };
-
 window.calcPower = function() {
     const v = parseFloat($('calc-pv')?.value), i = parseFloat($('calc-pi')?.value), p = parseFloat($('calc-pp')?.value);
     const el = $('calc-presult'); if (!el) return;
@@ -877,6 +1021,247 @@ window.calcPower = function() {
     else if (!isNaN(v) && !isNaN(p)) el.textContent = `I = ${(p/v).toFixed(4)} A, R = ${(v*v/p).toFixed(4)} Ω`;
     else if (!isNaN(i) && !isNaN(p)) el.textContent = `V = ${(p/i).toFixed(4)} V, R = ${(p/(i*i)).toFixed(4)} Ω`;
     else el.textContent = 'Enter any two values';
+};
+// Voltage Divider
+window.calcDivider = function() {
+    const vin = parseFloat($('vd-vin')?.value), r1 = parseFloat($('vd-r1')?.value), r2 = parseFloat($('vd-r2')?.value);
+    const el = $('vd-result'); if (!el) return;
+    if (isNaN(vin) || isNaN(r1) || isNaN(r2)) { el.textContent = 'Enter Vin, R1, R2'; return; }
+    const vout = vin * r2 / (r1 + r2);
+    const ratio = r2 / (r1 + r2);
+    const iTotal = vin / (r1 + r2);
+    el.innerHTML = `Vout = <span style="color:var(--green)">${vout.toFixed(4)}V</span> | Ratio = ${(ratio*100).toFixed(2)}% | I = ${(iTotal*1000).toFixed(3)}mA | P_r1 = ${(iTotal*iTotal*r1*1000).toFixed(2)}mW`;
+};
+// RC / LC
+window.calcRC = function() {
+    const r = parseFloat($('rc-r')?.value), c = parseFloat($('rc-c')?.value);
+    const el = $('rc-result'); if (!el) return;
+    if (isNaN(r) || isNaN(c)) { el.textContent = 'Enter R and C'; return; }
+    const tau = r * c;
+    const f = 1 / (2 * Math.PI * r * c);
+    const t5 = tau * 5;
+    el.innerHTML = `τ = <span style="color:var(--cyan)">${tau < 0.001 ? (tau*1e6).toFixed(2)+'µs' : tau < 1 ? (tau*1000).toFixed(3)+'ms' : tau.toFixed(4)+'s'}</span> | f₃dB = ${f > 1e6 ? (f/1e6).toFixed(2)+'MHz' : f > 1e3 ? (f/1e3).toFixed(2)+'kHz' : f.toFixed(2)+'Hz'} | 5τ(99%) = ${t5 < 1 ? (t5*1000).toFixed(2)+'ms' : t5.toFixed(3)+'s'}`;
+};
+window.calcLC = function() {
+    const l = parseFloat($('lc-l')?.value), c = parseFloat($('lc-c')?.value);
+    const el = $('lc-result'); if (!el) return;
+    if (isNaN(l) || isNaN(c)) { el.textContent = 'Enter L and C'; return; }
+    const f = 1 / (2 * Math.PI * Math.sqrt(l * c));
+    const z = Math.sqrt(l / c);
+    el.innerHTML = `f₀ = <span style="color:var(--orange)">${f > 1e6 ? (f/1e6).toFixed(3)+'MHz' : f > 1e3 ? (f/1e3).toFixed(3)+'kHz' : f.toFixed(3)+'Hz'}</span> | Z₀ = ${z.toFixed(2)}Ω | λ = ${(3e8/f).toFixed(4)}m`;
+};
+// LED Resistor
+window.calcLED = function() {
+    const vs = parseFloat($('led-vs')?.value), vf = parseFloat($('led-vf')?.value), ifmA = parseFloat($('led-if')?.value);
+    const el = $('led-result'); if (!el) return;
+    if (isNaN(vs) || isNaN(vf) || isNaN(ifmA)) { el.textContent = 'Enter Vs, Vf, If'; return; }
+    const ifA = ifmA / 1000;
+    const r = (vs - vf) / ifA;
+    const p = (vs - vf) * ifA;
+    // Find standard resistor (E24 series)
+    const e24 = [1,1.1,1.2,1.3,1.5,1.6,1.8,2,2.2,2.4,2.7,3,3.3,3.6,3.9,4.3,4.7,5.1,5.6,6.2,6.8,7.5,8.2,9.1];
+    const decade = Math.pow(10, Math.floor(Math.log10(r)));
+    const norm = r / decade;
+    const nearest = e24.reduce((a,b) => Math.abs(b-norm) < Math.abs(a-norm) ? b : a);
+    const stdR = nearest * decade;
+    el.innerHTML = `R = <span style="color:var(--cyan)">${r.toFixed(1)}Ω</span> → standard <span style="color:var(--green)">${stdR >= 1000 ? (stdR/1000).toFixed(1)+'kΩ' : stdR.toFixed(0)+'Ω'}</span> | P = ${(p*1000).toFixed(1)}mW (use ¼W)`;
+};
+// Regulator
+window.calcRegulator = function() {
+    const vin = parseFloat($('reg-vin')?.value), vout = parseFloat($('reg-vout')?.value), i = parseFloat($('reg-i')?.value);
+    const el = $('reg-result'); if (!el) return;
+    if (isNaN(vin) || isNaN(vout) || isNaN(i)) { el.textContent = 'Enter Vin, Vout, I'; return; }
+    const pd = (vin - vout) * i;
+    const eff = (vout * i) / (vin * i) * 100;
+    const rthMax = 150;
+    const taDeg = 25;
+    const okMsg = pd < 1.5 ? '✓ OK for TO-220' : pd < 0.5 ? '✓ OK for SOT-223' : '⚠ needs heatsink';
+    el.innerHTML = `Heat = <span style="color:var(--red)">${pd.toFixed(3)}W</span> | η = ${eff.toFixed(1)}% | Tj(no sink) ≈ ${(taDeg + pd * 65).toFixed(0)}°C | ${okMsg}`;
+};
+window.calcBuck = function() {
+    const pin = parseFloat($('buck-pin')?.value), eff = parseFloat($('buck-eff')?.value), vout = parseFloat($('buck-vout')?.value);
+    const el = $('buck-result'); if (!el) return;
+    if (isNaN(pin) || isNaN(eff) || isNaN(vout)) { el.textContent = 'Enter Pin, η, Vout'; return; }
+    const pout = pin * eff;
+    const ploss = pin - pout;
+    const iout = pout / vout;
+    el.innerHTML = `Pout = <span style="color:var(--green)">${pout.toFixed(3)}W</span> | Ploss = ${ploss.toFixed(3)}W | Iout = ${iout > 1 ? iout.toFixed(2)+'A' : (iout*1000).toFixed(1)+'mA'}`;
+};
+// PCB Trace
+window.calcPCBTrace = function() {
+    const i = parseFloat($('pcb-i')?.value), rise = parseFloat($('pcb-rise')?.value), oz = parseFloat($('pcb-thick')?.value);
+    const el = $('pcb-result'); if (!el) return;
+    if (isNaN(i) || isNaN(rise) || isNaN(oz)) { el.textContent = 'Enter current, temp rise, Cu thickness'; return; }
+    const t = oz * 1.378;   // mils (1oz = 1.378 mils)
+    const k = 0.048, b = 0.44, c = 0.725; // IPC-2221 external
+    const area = Math.pow(i / (k * Math.pow(rise, b)), 1/c);
+    const w = area / t;
+    el.innerHTML = `Width = <span style="color:var(--green)">${w.toFixed(1)} mil</span> (${(w*0.0254).toFixed(2)} mm) | Area = ${area.toFixed(1)} mil² | Cu = ${t.toFixed(2)} mil`;
+};
+// ADC / DAC
+window.calcADC = function() {
+    const bits = parseInt($('adc-bits')?.value), vref = parseFloat($('adc-vref')?.value);
+    const el = $('adc-result'); if (!el) return;
+    if (isNaN(bits) || isNaN(vref)) { el.textContent = 'Enter bits and Vref'; return; }
+    const levels = Math.pow(2, bits);
+    const lsb = vref / levels;
+    const snr = 6.02 * bits + 1.76;
+    el.innerHTML = `Levels = ${levels.toLocaleString()} | LSB = <span style="color:var(--cyan)">${lsb > 0.001 ? lsb.toFixed(4)+'V' : (lsb*1e6).toFixed(2)+'µV'}</span> | SNR = ${snr.toFixed(1)} dB | ENOB ≈ ${((snr-1.76)/6.02).toFixed(1)} bits`;
+};
+window.calcDAC = function() {
+    const code = parseInt($('dac-code')?.value), bits = parseInt($('dac-bits')?.value), vref = parseFloat($('dac-vref')?.value);
+    const el = $('dac-result'); if (!el) return;
+    if (isNaN(code) || isNaN(bits) || isNaN(vref)) { el.textContent = 'Enter code, bits, Vref'; return; }
+    const vout = (code / Math.pow(2, bits)) * vref;
+    el.innerHTML = `Vout = <span style="color:var(--green)">${vout.toFixed(4)}V</span> | ${(code/Math.pow(2,bits)*100).toFixed(2)}% of Vref | Step = ${(vref/Math.pow(2,bits)*1000).toFixed(3)}mV`;
+};
+// Frequency / Timer
+window.calcFreq = function() {
+    const f = parseFloat($('freq-f')?.value), t = parseFloat($('freq-t')?.value), u = $('freq-unit')?.value || 's';
+    const el = $('freq-result'); if (!el) return;
+    const mult = {s:1,ms:1e-3,'µs':1e-6,ns:1e-9}[u] || 1;
+    if (!isNaN(f)) {
+        const per = 1 / f;
+        el.innerHTML = `Period = <span style="color:var(--green)">${per > 1 ? per.toFixed(4)+'s' : per > 1e-3 ? (per*1e3).toFixed(3)+'ms' : per > 1e-6 ? (per*1e6).toFixed(3)+'µs' : (per*1e9).toFixed(2)+'ns'}</span> | λ(air) = ${(3e8/f).toFixed(4)}m | ω = ${(2*Math.PI*f).toFixed(2)} rad/s`;
+    } else if (!isNaN(t)) {
+        const per = t * mult;
+        const freq = 1 / per;
+        el.innerHTML = `Freq = <span style="color:var(--cyan)">${freq > 1e6 ? (freq/1e6).toFixed(3)+'MHz' : freq > 1e3 ? (freq/1e3).toFixed(3)+'kHz' : freq.toFixed(3)+'Hz'}</span> | ω = ${(2*Math.PI*freq).toFixed(2)} rad/s`;
+    } else { el.textContent = 'Enter frequency or period'; }
+};
+window.calcTimer = function() {
+    const cpu = parseFloat($('tmr-cpu')?.value), pre = parseFloat($('tmr-pre')?.value), target = parseFloat($('tmr-target')?.value);
+    const el = $('tmr-result'); if (!el) return;
+    if (isNaN(cpu) || isNaN(pre) || isNaN(target)) { el.textContent = 'Enter f_cpu, prescaler, f_target'; return; }
+    const ocr = (cpu / (pre * target)) - 1;
+    const actual = cpu / (pre * (Math.round(ocr) + 1));
+    const err = ((actual - target) / target * 100);
+    el.innerHTML = `OCR = <span style="color:var(--cyan)">${Math.round(ocr)}</span> (${ocr.toFixed(2)}) | Actual = ${actual.toFixed(2)}Hz | Error = ${err.toFixed(4)}% | ${ocr > 65535 ? '<span style="color:var(--red)">⚠ overflow 16-bit</span>' : ocr > 255 ? '16-bit timer' : '8-bit OK'}`;
+};
+// Battery
+window.calcBattery = function() {
+    const cap = parseFloat($('bat-cap')?.value), i = parseFloat($('bat-i')?.value);
+    const el = $('bat-result'); if (!el) return;
+    if (isNaN(cap) || isNaN(i) || i === 0) { el.textContent = 'Enter capacity and current draw'; return; }
+    const hrs = cap / i;
+    const days = hrs / 24;
+    el.innerHTML = `Life = <span style="color:var(--green)">${hrs.toFixed(1)} hours</span> (${days.toFixed(2)} days) | ${(hrs*60).toFixed(0)} min | Eff ~80% → ${(hrs*0.8).toFixed(1)}h real`;
+};
+window.calcEnergy = function() {
+    const v = parseFloat($('en-v')?.value), ah = parseFloat($('en-ah')?.value);
+    const el = $('en-result'); if (!el) return;
+    if (isNaN(v) || isNaN(ah)) { el.textContent = 'Enter voltage and Ah'; return; }
+    const wh = v * ah;
+    const j = wh * 3600;
+    el.innerHTML = `Energy = <span style="color:var(--green)">${wh.toFixed(2)} Wh</span> = ${j > 1e3 ? (j/1e3).toFixed(1)+'kJ' : j.toFixed(1)+'J'} | ${(wh/1000).toFixed(3)} kWh | Cost ≈ $${(wh/1000*0.12).toFixed(4)} (@$0.12/kWh)`;
+};
+// FreyaUnits
+const FREYA_UNITS_TABLE = [
+    { sym:'ℓp', name:'Planck', m:1.616255e-35 },{ sym:'am', name:'Attometer', m:1e-18 },
+    { sym:'fm', name:'Femtometer', m:1e-15 },{ sym:'pm', name:'Picometer', m:1e-12 },
+    { sym:'Å', name:'Angstrom', m:1e-10 },{ sym:'nm', name:'Nanometer', m:1e-9 },
+    { sym:'µin', name:'Microinch', m:2.54e-8 },{ sym:'µm', name:'Micrometer', m:1e-6 },
+    { sym:'mil', name:'Mil', m:2.54e-5 },{ sym:'mm', name:'Millimeter', m:1e-3 },
+    { sym:'cm', name:'Centimeter', m:1e-2 },{ sym:'in', name:'Inch', m:0.0254 },
+    { sym:'ft', name:'Foot', m:0.3048 },{ sym:'yd', name:'Yard', m:0.9144 },
+    { sym:'m', name:'Meter', m:1 },{ sym:'km', name:'Kilometer', m:1e3 },
+    { sym:'mi', name:'Mile', m:1609.34 },{ sym:'NM', name:'Nautical Mi', m:1852 },
+    { sym:'AU', name:'Astro Unit', m:1.496e11 },{ sym:'ly', name:'Light Year', m:9.461e15 },
+    { sym:'pc', name:'Parsec', m:3.086e16 },
+];
+window.calcFreyaUnits = function() {
+    const val = parseFloat($('fu-val')?.value), from = $('fu-from')?.value;
+    const el = $('fu-result'); if (!el) return;
+    if (isNaN(val)) { el.textContent = 'Enter a value'; return; }
+    const src = FREYA_UNITS_TABLE.find(u => u.sym === from);
+    if (!src) { el.textContent = 'Select unit'; return; }
+    const meters = val * src.m;
+    const c = 299792458;
+    const h = 6.62607e-34;
+    const freq = c / meters;
+    const energy = h * freq;
+    let html = FREYA_UNITS_TABLE.map(u => {
+        const v = meters / u.m;
+        const vStr = v > 1e12 || v < 1e-6 ? v.toExponential(4) : v.toFixed(6);
+        const hl = u.sym === from ? 'color:#a78bfa;font-weight:700' : 'color:var(--text-s)';
+        return `<div style="${hl}"><span style="display:inline-block;width:28px;color:var(--cyan)">${u.sym}</span>${vStr} <span style="color:var(--text-m)">${u.name}</span></div>`;
+    }).join('');
+    html += `<div style="margin-top:4px;border-top:1px solid var(--border);padding-top:4px;color:var(--text-m)">Quantum: λ=${meters.toExponential(3)}m | f=${freq.toExponential(3)}Hz | E=${energy.toExponential(3)}J (${(energy/1.602e-19).toExponential(3)}eV)</div>`;
+    el.innerHTML = html;
+};
+// Wire AWG
+const AWG_DATA = {
+    10:{d:2.588,r:3.277}, 12:{d:2.053,r:5.211}, 14:{d:1.628,r:8.282},
+    16:{d:1.291,r:13.17}, 18:{d:1.024,r:20.95}, 20:{d:0.812,r:33.31},
+    22:{d:0.644,r:52.96}, 24:{d:0.511,r:84.22}, 26:{d:0.405,r:133.9},
+    28:{d:0.321,r:212.9}, 30:{d:0.255,r:338.6},
+};
+window.calcWire = function() {
+    const awg = $('wire-awg')?.value, len = parseFloat($('wire-len')?.value), i = parseFloat($('wire-i')?.value);
+    const el = $('wire-result'); if (!el) return;
+    const d = AWG_DATA[awg]; if (!d) { el.textContent = 'Select AWG'; return; }
+    let html = `<span style="color:var(--cyan)">${awg} AWG</span>: ⌀${d.d.toFixed(3)}mm | ${d.r.toFixed(1)} Ω/km`;
+    if (!isNaN(len)) {
+        const rTotal = d.r * len / 1000;
+        html += ` | R(${len}m) = ${rTotal.toFixed(3)}Ω`;
+        if (!isNaN(i)) {
+            const vDrop = i * rTotal;
+            const pLoss = i * i * rTotal;
+            html += ` | Vdrop = <span style="color:var(--orange)">${(vDrop*1000).toFixed(1)}mV</span> | Ploss = ${(pLoss*1000).toFixed(1)}mW`;
+        }
+    }
+    const maxA = [null,null,null,null,null,null,null,null,null,null,30,null,20,null,15,null,10,null,7,null,5,null,3,null,2.1,null,1.3,null,0.83,null,0.52][parseInt(awg)];
+    if (maxA) html += ` | Max ≈ ${maxA}A`;
+    el.innerHTML = html;
+};
+// Thermal
+window.calcThermal = function() {
+    const ta = parseFloat($('th-ta')?.value), pd = parseFloat($('th-pd')?.value), rth = parseFloat($('th-rth')?.value);
+    const el = $('th-result'); if (!el) return;
+    if (isNaN(ta) || isNaN(pd) || isNaN(rth)) { el.textContent = 'Enter ambient temp, power, Rθja'; return; }
+    const tj = ta + pd * rth;
+    const ok = tj < 125;
+    el.innerHTML = `Tj = <span style="color:${ok?'var(--green)':'var(--red)'}">${tj.toFixed(1)}°C</span> ${ok ? '✓ safe (<125°C)' : '⚠ exceeds 125°C!'} | Margin = ${(125 - tj).toFixed(1)}°C | Max Pd @ ${ta}°C = ${((125 - ta) / rth).toFixed(3)}W`;
+};
+// Smart Suggestions
+window.generateSuggestions = function() {
+    const el = $('suggest-box'); if (!el) return;
+    const stageDone = stageItems.filter(s => stageState[s.id]).map(s => s.label);
+    const stageRemaining = stageItems.filter(s => !stageState[s.id]).map(s => s.label);
+    const pct = Math.round(stageDone.length / stageItems.length * 100);
+    const eq = equipmentList[equipIdx];
+    let tips = [];
+    // PSU analysis
+    const pw = psuVoltage * psuCurrent;
+    if (psuVoltage > 0 && psuCurrent > 0) {
+        tips.push(`<span style="color:var(--yellow)">⚡ PSU:</span> ${psuVoltage}V × ${psuCurrent}A = ${pw.toFixed(2)}W load`);
+        if (pw > AT6301.maxW * 0.8) tips.push(`<span style="color:var(--red)">⚠ Warning:</span> Load at ${(pw/AT6301.maxW*100).toFixed(0)}% of ${AT6301.maxW}W max — reduce or add cooling`);
+        if (psuVoltage === 5 && psuCurrent <= 0.5) tips.push(`<span style="color:var(--green)">💡 Tip:</span> 5V/500mA is USB standard — consider powering from USB directly`);
+        if (psuVoltage > 24) tips.push(`<span style="color:var(--orange)">🔌 Note:</span> >24V — ensure all components rated for this voltage. Use fuses.`);
+        if (psuVoltage === 3.3 || psuVoltage === 5 || psuVoltage === 12) tips.push(`<span style="color:var(--green)">✓</span> Standard rail: ${psuVoltage}V — good component compatibility`);
+    }
+    // Stage analysis
+    if (pct === 0) tips.push(`<span style="color:var(--cyan)">📋 Stage:</span> No milestones checked — start with "Specifications defined"`);
+    else if (pct < 50) tips.push(`<span style="color:var(--cyan)">📋 Stage:</span> ${pct}% complete — ${stageRemaining[0]} is next`);
+    else if (pct < 100) tips.push(`<span style="color:var(--green)">📋 Stage:</span> ${pct}% complete — almost there! Remaining: ${stageRemaining.join(', ')}`);
+    else tips.push(`<span style="color:var(--green)">🎉 Stage:</span> All milestones complete! Ready for production.`);
+    // Equipment
+    const linked = equipmentList.filter(e => e.status === 'active');
+    if (linked.length > 0) tips.push(`<span style="color:var(--accent)">🔗 Linked:</span> ${linked.map(e => e.name).join(', ')}`);
+    // Parts suggestions based on stage
+    if (!stageState['s-bom']) tips.push(`<span style="color:var(--purple)">📦 Parts:</span> BOM not finalized — check Parts tab for component catalog`);
+    if (!stageState['s-power'] && psuVoltage > 0) tips.push(`<span style="color:var(--yellow)">⚡ Power:</span> PSU set but not tested — verify with multimeter at load`);
+    if (!stageState['s-firmware']) tips.push(`<span style="color:var(--green)">💻 Code:</span> Firmware not uploaded — check Code tab for templates`);
+    if (stageState['s-proto'] && !stageState['s-stress']) tips.push(`<span style="color:var(--orange)">🌡 Thermal:</span> Prototype built but no stress test — run thermal analysis`);
+    if (stageState['s-stress'] && !stageState['s-pcb']) tips.push(`<span style="color:var(--accent)">🏭 Next:</span> Stress test passed — ready for PCB layout (JLCPCB / KiCad)`);
+    // Regulator suggestion
+    if (psuVoltage > 5) tips.push(`<span style="color:var(--text-m)">💡 Consider:</span> LDO or buck converter for ${psuVoltage}V → 3.3V/5V MCU rail`);
+    // Battery estimate
+    if (psuCurrent > 0 && psuCurrent < 1) tips.push(`<span style="color:var(--green)">🔋 Battery:</span> At ${(psuCurrent*1000).toFixed(0)}mA, an 18650 (3Ah) lasts ~${(3000/(psuCurrent*1000)).toFixed(1)}h`);
+    // Generic
+    tips.push(`<span style="color:var(--text-m)">🧠 Future:</span> Auto-detect connected devices via WebUSB, suggest schematics from parts list, predict thermal issues from power budget`);
+    el.innerHTML = tips.map(t => `<div style="padding:2px 0;border-bottom:1px solid var(--border)">${t}</div>`).join('');
+    logConsole('sys', `Suggestions generated: ${tips.length} tips based on build state (${pct}% complete)`);
 };
 
 renderBench();
