@@ -90,3 +90,8 @@ self.addEventListener('fetch', (e) => {
             })
     );
 });
+
+// Listen for skip-waiting message from clients (used by pull-to-refresh)
+self.addEventListener('message', (e) => {
+    if (e.data === 'skipWaiting') self.skipWaiting();
+});
