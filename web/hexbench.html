@@ -163,25 +163,38 @@
         .bt-tab{padding:2px 7px;font-size:.5rem;font-weight:600;border:1px solid var(--border);border-radius:3px;background:var(--bg3);color:var(--text-m);cursor:pointer;transition:all .12s;white-space:nowrap}
         .bt-tab:hover{color:var(--text);border-color:var(--text-m)}
         .bt-tab.active{background:var(--accent-s);color:var(--accent);border-color:var(--accent)}
-        /* Stage checklist — colored cards */
-        .stage-cards{margin-bottom:6px}
-        .stage-cards .stg-header{display:flex;align-items:center;gap:6px;margin-bottom:4px}
-        .stage-cards .stg-header-title{font-size:.6875rem;font-weight:700;color:var(--text)}
-        .stage-cards .stg-clear{padding:2px 6px;font-size:.5rem;border:1px solid var(--border);border-radius:3px;background:var(--bg3);color:var(--text-m);cursor:pointer;margin-left:auto}
-        .stage-cards .stg-clear:hover{color:var(--red);border-color:var(--red)}
-        .stg-card{border-radius:var(--rad);padding:6px 8px;cursor:pointer;transition:all .15s;border:1px solid transparent;margin-bottom:3px}
-        .stg-card:hover{filter:brightness(1.15)}
-        .stg-card.done{opacity:.55}
-        .stg-card .stg-card-top{display:flex;align-items:center;gap:6px;font-size:.625rem;font-weight:600}
-        .stg-card .stg-card-check{width:14px;height:14px;border-radius:3px;border:1px solid rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;font-size:.5rem;flex-shrink:0;transition:all .15s}
-        .stg-card.done .stg-card-check{background:rgba(255,255,255,.25);border-color:rgba(255,255,255,.5)}
-        .stg-card .stg-card-data{font-size:.5rem;color:rgba(255,255,255,.55);margin-top:3px;padding-left:20px;display:none;font-family:var(--mono)}
-        .stg-card.expanded .stg-card-data{display:block}
-        .stg-card.done .stg-card-top{text-decoration:line-through;opacity:.7}
-        .stg-phase-bar{display:flex;align-items:center;gap:6px;margin:6px 0 3px}
-        .stg-phase-label{font-size:.5rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-m)}
-        .stg-phase-progress{flex:1;height:3px;background:var(--bg);border-radius:2px;overflow:hidden}
-        .stg-phase-fill{height:100%;border-radius:2px;transition:width .3s}
+        /* Stage checklist — collapsible mini cards */
+        .stage-wrap{margin:0 10px 6px;border:1px solid var(--border);border-radius:var(--rad);overflow:hidden}
+        .stage-bar{display:flex;align-items:center;gap:6px;padding:5px 8px;background:var(--bg2);cursor:pointer;user-select:none}
+        .stage-bar:hover{background:var(--bg3)}
+        .stage-bar-title{font-size:.6875rem;font-weight:700;color:var(--text)}
+        .stage-bar-pct{font-size:.5625rem;font-family:var(--mono);margin-left:auto}
+        .stage-bar-chevron{font-size:.6rem;color:var(--text-m);transition:transform .2s}
+        .stage-bar-chevron.open{transform:rotate(180deg)}
+        .stage-bar-progress{height:3px;background:var(--bg);border-radius:2px;overflow:hidden}
+        .stage-bar-fill{height:100%;border-radius:2px;transition:width .3s;background:var(--green)}
+        .stage-body{display:none;padding:6px 8px 8px}
+        .stage-body.open{display:block}
+        /* Phase mini card row */
+        .stg-phase-row{display:flex;gap:4px;margin-bottom:6px;flex-wrap:wrap}
+        .stg-mini{flex:1;min-width:60px;border-radius:var(--rad);padding:6px 6px 4px;cursor:pointer;transition:all .15s;border:1px solid transparent;text-align:center;position:relative}
+        .stg-mini:hover{filter:brightness(1.2);transform:translateY(-1px)}
+        .stg-mini .stg-mini-icon{font-size:.875rem;line-height:1}
+        .stg-mini .stg-mini-label{font-size:.4375rem;font-weight:700;text-transform:uppercase;letter-spacing:.3px;margin-top:2px}
+        .stg-mini .stg-mini-pct{font-size:.5rem;font-family:var(--mono);margin-top:1px}
+        .stg-mini.active{border-color:rgba(255,255,255,.4);box-shadow:0 0 8px rgba(255,255,255,.1)}
+        /* Detail cards inside phase */
+        .stg-detail{margin-top:4px}
+        .stg-dcard{border-radius:4px;padding:4px 6px;cursor:pointer;transition:all .12s;border:1px solid transparent;margin-bottom:2px;display:flex;align-items:center;gap:6px;font-size:.5625rem}
+        .stg-dcard:hover{filter:brightness(1.15)}
+        .stg-dcard.done{opacity:.5}
+        .stg-dcard .stg-dcheck{width:12px;height:12px;border-radius:3px;border:1px solid rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;font-size:.45rem;flex-shrink:0}
+        .stg-dcard.done .stg-dcheck{background:rgba(255,255,255,.3);border-color:rgba(255,255,255,.5)}
+        .stg-dcard.done .stg-dlabel{text-decoration:line-through;opacity:.65}
+        .stg-dcard .stg-dinfo{font-size:.45rem;color:rgba(255,255,255,.4);margin-left:auto;display:none;font-family:var(--mono)}
+        .stg-dcard.expanded .stg-dinfo{display:inline}
+        .stg-clear-btn{padding:2px 6px;font-size:.45rem;border:1px solid var(--border);border-radius:3px;background:var(--bg3);color:var(--text-m);cursor:pointer}
+        .stg-clear-btn:hover{color:var(--red);border-color:var(--red)}
         /* Hex stream viewer in parts */
         .hex-stream-wrap{background:#0a0e14;border:1px solid var(--border);border-radius:var(--rad);overflow:hidden;margin:6px 10px}
         .hex-stream-wrap canvas{width:100%;height:80px;display:block}
@@ -781,37 +794,83 @@ const stageItems = [
     { id:'s-deploy',    label:'Deployed / documented',          phase:'Ship',   data:'README written, pinout diagram saved, firmware versioned, photos taken' },
 ];
 let stageState = JSON.parse(localStorage.getItem('hexbench-stages') || '{}');
+let stageOpen = JSON.parse(localStorage.getItem('hexbench-stages-open') || 'true');
+let activePhase = localStorage.getItem('hexbench-active-phase') || '';
 let expandedStage = null;
+
+const phaseIcons = { Design:'📐', Build:'🔨', Test:'🧪', Ship:'🚀' };
 
 function renderStages() {
     const wrap = $('bench-stage-wrap');
     if (!wrap) return;
     const phases = [...new Set(stageItems.map(s => s.phase))];
-    let html = `<div class="stage-cards"><div class="stg-header" style="padding:0 10px"><span class="stg-header-title">📋 Project Stage Checklist</span><button class="stg-clear" onclick="clearStages()">Clear All</button></div>`;
+    const total = stageItems.length, totalDone = stageItems.filter(s => stageState[s.id]).length;
+    const totalPct = Math.round(totalDone / total * 100);
+
+    let html = `<div class="stage-wrap">
+        <div class="stage-bar" onclick="toggleStageOpen()">
+            <span class="stage-bar-title">📋 Stages</span>
+            <span class="stage-bar-pct" style="color:${totalPct===100?'var(--green)':'var(--text-m)'}">${totalDone}/${total} (${totalPct}%)</span>
+            <span class="stage-bar-chevron${stageOpen?' open':''}">▾</span>
+        </div>
+        <div style="padding:0 8px 2px"><div class="stage-bar-progress"><div class="stage-bar-fill" style="width:${totalPct}%"></div></div></div>
+        <div class="stage-body${stageOpen?' open':''}">
+            <div class="stg-phase-row">`;
 
     phases.forEach(phase => {
         const pc = phaseColors[phase];
         const items = stageItems.filter(s => s.phase === phase);
         const done = items.filter(s => stageState[s.id]).length;
         const pct = Math.round(done / items.length * 100);
-        html += `<div style="padding:0 10px"><div class="stg-phase-bar"><span class="stg-phase-label" style="color:${pc.text}">${phase}</span><div class="stg-phase-progress"><div class="stg-phase-fill" style="width:${pct}%;background:${pc.border}"></div></div><span style="font-size:.5rem;color:${pc.text};font-family:var(--mono)">${done}/${items.length}</span></div>`;
+        const isActive = activePhase === phase;
+        html += `<div class="stg-mini${isActive?' active':''}" style="background:${pc.bg};border-color:${isActive?pc.border:'transparent'}" onclick="setActivePhase('${phase}')">
+            <div class="stg-mini-icon">${phaseIcons[phase]||'📦'}</div>
+            <div class="stg-mini-label" style="color:${pc.text}">${phase}</div>
+            <div class="stg-mini-pct" style="color:${pct===100?pc.text:'var(--text-m)'}">${done}/${items.length}</div>
+            <div style="height:2px;background:rgba(0,0,0,.3);border-radius:1px;margin-top:2px"><div style="height:100%;width:${pct}%;background:${pc.border};border-radius:1px"></div></div>
+        </div>`;
+    });
+    html += `</div>`;
+
+    // Show detail cards for active phase (or all if none selected)
+    const showPhases = activePhase ? [activePhase] : phases;
+    showPhases.forEach(phase => {
+        const pc = phaseColors[phase];
+        const items = stageItems.filter(s => s.phase === phase);
+        if (activePhase) {
+            html += `<div style="font-size:.5rem;font-weight:700;text-transform:uppercase;color:${pc.text};letter-spacing:.4px;margin:2px 0 3px">${phase}</div>`;
+        }
+        html += `<div class="stg-detail">`;
         items.forEach(s => {
             const isDone = !!stageState[s.id];
-            const isExpanded = expandedStage === s.id;
-            html += `<div class="stg-card${isDone?' done':''}${isExpanded?' expanded':''}" style="background:${pc.bg};border-color:${isDone?'transparent':pc.border}" onclick="toggleStage('${s.id}',event)">
-                <div class="stg-card-top"><div class="stg-card-check">${isDone?'✓':''}</div><span style="color:${pc.text}">${s.label}</span><span style="margin-left:auto;font-size:.5rem;cursor:pointer;color:var(--text-m)" onclick="event.stopPropagation();expandStage('${s.id}')">${isExpanded?'▴':'▾'}</span></div>
-                <div class="stg-card-data">${s.data}</div>
+            const isExp = expandedStage === s.id;
+            html += `<div class="stg-dcard${isDone?' done':''}${isExp?' expanded':''}" style="background:${pc.bg}" onclick="toggleStage('${s.id}')">
+                <div class="stg-dcheck" style="border-color:${pc.border}">${isDone?'✓':''}</div>
+                <span class="stg-dlabel" style="color:${pc.text}">${s.label}</span>
+                <span class="stg-dinfo">${s.data}</span>
+                <span style="font-size:.45rem;color:var(--text-m);cursor:pointer;flex-shrink:0" onclick="event.stopPropagation();expandStage('${s.id}')">${isExp?'▴':'▸'}</span>
             </div>`;
         });
-        html += '</div>';
+        html += `</div>`;
     });
-    const total = stageItems.length, totalDone = stageItems.filter(s => stageState[s.id]).length;
-    html += `<div style="padding:2px 10px;font-size:.5625rem;color:var(--text-m);font-family:var(--mono)">${totalDone}/${total} complete (${Math.round(totalDone/total*100)}%)</div></div>`;
+    html += `<div style="display:flex;align-items:center;gap:6px;margin-top:4px">
+        <button class="stg-clear-btn" onclick="clearStages()">Clear All</button>
+        ${activePhase ? '<button class="stg-clear-btn" onclick="setActivePhase(\\'\\')">Show All Phases</button>' : ''}
+    </div></div></div>`;
     wrap.innerHTML = html;
 }
 
-window.toggleStage = function(id, ev) {
-    if (ev && ev.target.closest('[onclick*="expandStage"]')) return;
+window.toggleStageOpen = function() {
+    stageOpen = !stageOpen;
+    localStorage.setItem('hexbench-stages-open', JSON.stringify(stageOpen));
+    renderStages();
+};
+window.setActivePhase = function(p) {
+    activePhase = activePhase === p ? '' : p;
+    localStorage.setItem('hexbench-active-phase', activePhase);
+    renderStages();
+};
+window.toggleStage = function(id) {
     stageState[id] = !stageState[id];
     localStorage.setItem('hexbench-stages', JSON.stringify(stageState));
     renderStages();

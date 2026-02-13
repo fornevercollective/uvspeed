@@ -1944,14 +1944,40 @@
 
         .footer-quick-cmds {
             display: flex;
-            gap: var(--cursor-space-xs);
+            flex-direction: column;
+            gap: 3px;
+        }
+        .fqc-tabbar {
+            display: flex;
+            gap: 2px;
             flex-wrap: wrap;
         }
+        .fqc-tab {
+            padding: 2px 7px;
+            font-size: 0.5625rem;
+            font-weight: 600;
+            border: 1px solid var(--cursor-border);
+            border-radius: 4px;
+            background: var(--cursor-bg-tertiary);
+            color: var(--cursor-text-muted);
+            cursor: pointer;
+            transition: all 0.12s;
+            white-space: nowrap;
+        }
+        .fqc-tab:hover { color: var(--cursor-text-secondary); border-color: var(--cursor-text-muted); }
+        .fqc-tab.active { background: var(--cursor-accent-subtle); color: var(--cursor-accent); border-color: var(--cursor-accent); }
+        .fqc-panel {
+            display: none;
+            gap: 3px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .fqc-panel.active { display: flex; }
 
         .footer-quick-cmds .btn--xs {
             padding: 2px 8px;
-            font-size: 0.6875rem;
-            border-radius: 12px;
+            font-size: 0.625rem;
+            border-radius: 4px;
             font-weight: 500;
         }
 
@@ -2475,61 +2501,94 @@
                 <button class="btn btn--sm" id="cmd-exec-btn">Execute</button>
             </div>
             <div class="footer-quick-cmds">
-                <button class="btn btn--xs" id="f-add-cell" title="Add code cell">+ Code</button>
-                <button class="btn btn--xs" id="f-add-mermaid" title="Add diagram cell">+ Diagram</button>
-                <button class="btn btn--xs" id="f-run-all" style="background:var(--cursor-accent);color:#fff;">▶ Run All</button>
-                <button class="btn btn--xs" id="f-undo" title="Undo">↩</button>
-                <button class="btn btn--xs" id="f-redo" title="Redo">↪</button>
-                <button class="btn btn--xs" id="f-save" title="Save">💾</button>
-                <span style="opacity:0.3;margin:0 2px;">│</span>
-                <button class="btn btn--xs quick-cmd" data-cmd="qstatus">📊 Status</button>
-                <button class="btn btn--xs" id="f-benchmark" title="Add visual benchmark cell" style="background:#f0883e22;border-color:#f0883e55;color:#f0883e;">⚡ Benchmark</button>
-                <button class="btn btn--xs" id="f-security-scan" title="Security scan all cells" style="background:#da363422;border-color:#da363455;color:#da3634;">🛡 Scan</button>
-                <button class="btn btn--xs" id="f-git-hook" title="Install quantum pre-commit hook" style="background:#8b5cf622;border-color:#8b5cf655;color:#8b5cf6;">🪝 Hook</button>
-                <button class="btn btn--xs quick-cmd" data-cmd="uv sync">🔄 Sync</button>
-                <button class="btn btn--xs quick-cmd" data-cmd="q tinygrad">🔍 Search</button>
-                <span style="opacity:0.3;margin:0 2px;">│</span>
-                <button class="btn btn--xs" id="f-freya-units" title="Add FreyaUnits precision converter cell — Planck to Parsec" style="background:#7c3aed22;border-color:#7c3aed55;color:#a78bfa;">🔬 FreyaUnits</button>
-                <button class="btn btn--xs" id="f-play-numsy" title="Play brotherNumsy &amp; Freya — beyondBINARY runner with FreyaUnits conversion engine" style="background:#e6b42222;border-color:#e6b42255;color:#e6b422;">🎮 brotherNumsy &amp; Freya</button>
-                <button class="btn btn--xs" id="f-open-kbatch" title="kbatch — keyboard contrail/pattern analyzer with thermal heatmaps &amp; 3D modeling" style="background:#f0883e22;border-color:#f0883e55;color:#f0883e;">⌨ kbatch</button>
-                <button class="btn btn--xs" id="f-open-hexcast" title="hexcast — live video hex broadcast with latency benchmarks" style="background:#da363322;border-color:#da363355;color:#f97583;">&#x1F4E1; hexcast</button>
-                <span style="opacity:0.3;margin:0 2px;">│</span>
-                <button class="btn btn--xs" id="f-add-kbatch" title="Add kbatch keyboard analyzer cell" style="background:#f0883e22;border-color:#f0883e55;color:#f0883e;">⌨ + kbatch cell</button>
-                <button class="btn btn--xs" id="f-add-hexcast" title="Add hexcast video broadcast cell" style="background:#da363322;border-color:#da363355;color:#f97583;">📡 + hexcast cell</button>
-                <button class="btn btn--xs quick-cmd" data-cmd="help">❓ Help</button>
-                <button class="btn btn--xs quick-cmd" data-cmd="pos">📍 Position</button>
-                <button class="btn btn--xs quick-cmd" data-cmd="cells">📋 Cells</button>
-                <span style="opacity:0.3;margin:0 2px;">│</span>
-                <!-- Cross-project tools -->
-                <div style="position:relative;display:inline-block;">
-                    <button class="btn btn--xs" id="f-tools" title="External tools" style="background:#7c3aed22;border-color:#7c3aed55;color:#7c3aed;">🔧 Tools ▾</button>
-                    <div class="tools-dropdown" id="tools-dropdown">
-                        <div class="tools-dropdown-header">Day Terminal</div>
-                        <div class="tools-dropdown-item" data-tool="kbatch">⌨ Kbatch — Keyboard Analysis</div>
-                        <div class="tools-dropdown-item" data-tool="signal">📡 Signal — Morse/Binary/Waveform</div>
-                        <div class="tools-dropdown-item" data-tool="geokey">🔷 GeoKey — Geometric Mapper</div>
-                        <div class="tools-dropdown-item" data-tool="youtube">🎬 YouTube — Transcript</div>
-                        <div class="tools-dropdown-header">ChartGPU</div>
-                        <div class="tools-dropdown-item" data-tool="chartgpu-dash">📊 ChartGPU Dashboard</div>
-                        <div class="tools-dropdown-item" data-tool="chartgpu-metrics">⚡ Live Metrics + AI</div>
-                        <div class="tools-dropdown-header">Media Pipeline</div>
-                        <div class="tools-dropdown-item" data-tool="jawta">📡 Jawta Signal Intel</div>
-                        <div class="tools-dropdown-item" data-tool="media">🎞 Media Process</div>
-                        <div class="tools-dropdown-header">Meta Quest</div>
-                        <div class="tools-dropdown-item" data-tool="quest-status">🥽 Quest Status</div>
-                        <div class="tools-dropdown-item" data-tool="quest-logs">📜 Quest Logs</div>
-                        <div class="tools-dropdown-item" data-tool="quest-screenshot">📸 Quest Screenshot</div>
-                        <div class="tools-dropdown-header">Lark / Jawta</div>
-                        <div class="tools-dropdown-item" data-tool="lark-status">🐦 Lark IANA Status</div>
+                <!-- Tab bar — hexbench-style compact tabs -->
+                <div class="fqc-tabbar" id="fqc-tabbar">
+                    <span class="fqc-tab active" data-fqc="cells">📝 Cells</span>
+                    <span class="fqc-tab" data-fqc="tools">🔧 Tools</span>
+                    <span class="fqc-tab" data-fqc="apps">🚀 Apps</span>
+                    <span class="fqc-tab" data-fqc="addins">➕ Add-ins</span>
+                    <span class="fqc-tab" data-fqc="infra">⚙ Infra</span>
+                </div>
+
+                <!-- Panel: Cells (default) -->
+                <div class="fqc-panel active" data-fqc-panel="cells">
+                    <button class="btn btn--xs" id="f-add-cell" title="Add code cell">+ Code</button>
+                    <button class="btn btn--xs" id="f-add-mermaid" title="Add diagram cell">+ Diagram</button>
+                    <button class="btn btn--xs" id="f-run-all" style="background:var(--cursor-accent);color:#fff;">▶ Run All</button>
+                    <button class="btn btn--xs" id="f-undo" title="Undo">↩</button>
+                    <button class="btn btn--xs" id="f-redo" title="Redo">↪</button>
+                    <button class="btn btn--xs" id="f-save" title="Save">💾</button>
+                    <button class="btn btn--xs quick-cmd" data-cmd="qstatus">📊 Status</button>
+                    <button class="btn btn--xs quick-cmd" data-cmd="help">❓ Help</button>
+                    <button class="btn btn--xs quick-cmd" data-cmd="pos">📍 Pos</button>
+                    <button class="btn btn--xs quick-cmd" data-cmd="cells">📋 Cells</button>
+                </div>
+
+                <!-- Panel: Tools -->
+                <div class="fqc-panel" data-fqc-panel="tools">
+                    <button class="btn btn--xs" id="f-benchmark" title="Benchmark cell" style="background:#f0883e22;border-color:#f0883e55;color:#f0883e;">⚡ Benchmark</button>
+                    <button class="btn btn--xs" id="f-security-scan" title="Security scan" style="background:#da363422;border-color:#da363455;color:#da3634;">🛡 Scan</button>
+                    <button class="btn btn--xs" id="f-git-hook" title="Git hook" style="background:#8b5cf622;border-color:#8b5cf655;color:#8b5cf6;">🪝 Hook</button>
+                    <button class="btn btn--xs quick-cmd" data-cmd="uv sync">🔄 Sync</button>
+                    <button class="btn btn--xs quick-cmd" data-cmd="q tinygrad">🔍 Search</button>
+                    <button class="btn btn--xs" id="f-quest" title="Quest status" style="background:#1877f222;border-color:#1877f255;color:#1877f2;">🥽 Quest</button>
+                    <div style="position:relative;display:inline-block;">
+                        <button class="btn btn--xs" id="f-tools" title="All tools" style="background:#7c3aed22;border-color:#7c3aed55;color:#7c3aed;">🔧 All Tools ▾</button>
+                        <div class="tools-dropdown" id="tools-dropdown">
+                            <div class="tools-dropdown-header">Day Terminal</div>
+                            <div class="tools-dropdown-item" data-tool="kbatch">⌨ Kbatch — Keyboard Analysis</div>
+                            <div class="tools-dropdown-item" data-tool="signal">📡 Signal — Morse/Binary/Waveform</div>
+                            <div class="tools-dropdown-item" data-tool="geokey">🔷 GeoKey — Geometric Mapper</div>
+                            <div class="tools-dropdown-item" data-tool="youtube">🎬 YouTube — Transcript</div>
+                            <div class="tools-dropdown-header">Electronics</div>
+                            <div class="tools-dropdown-item" data-tool="hexbench">⚡ hexbench — Voltage Lab</div>
+                            <div class="tools-dropdown-header">ChartGPU</div>
+                            <div class="tools-dropdown-item" data-tool="chartgpu-dash">📊 ChartGPU Dashboard</div>
+                            <div class="tools-dropdown-item" data-tool="chartgpu-metrics">⚡ Live Metrics + AI</div>
+                            <div class="tools-dropdown-header">Media Pipeline</div>
+                            <div class="tools-dropdown-item" data-tool="jawta">📡 Jawta Signal Intel</div>
+                            <div class="tools-dropdown-item" data-tool="media">🎞 Media Process</div>
+                            <div class="tools-dropdown-header">Meta Quest</div>
+                            <div class="tools-dropdown-item" data-tool="quest-status">🥽 Quest Status</div>
+                            <div class="tools-dropdown-item" data-tool="quest-logs">📜 Quest Logs</div>
+                            <div class="tools-dropdown-item" data-tool="quest-screenshot">📸 Quest Screenshot</div>
+                            <div class="tools-dropdown-header">Lark / Jawta</div>
+                            <div class="tools-dropdown-item" data-tool="lark-status">🐦 Lark IANA Status</div>
+                        </div>
                     </div>
                 </div>
-                <button class="btn btn--xs" id="f-quest" title="Quest device status" style="background:#1877f222;border-color:#1877f255;color:#1877f2;">🥽 Quest</button>
-                <button class="btn btn--xs" id="f-open-blackwell" title="NVIDIA Blackwell Live — data streams, SM heatmap, deploy targets" style="background:#76b90022;border-color:#76b90055;color:#76b900;" onclick="openOverlay('blackwell.html','Blackwell')">🟢 Blackwell</button>
-                <button class="btn btn--xs" id="f-open-questcast" title="questcast — Meta Quest broadcast + research tools" style="background:#1877f222;border-color:#1877f255;color:#1877f2;" onclick="openOverlay('questcast.html','questcast')">🥽 questcast</button>
-                <button class="btn btn--xs" id="f-open-archflow" title="archflow — n8n-style architecture visualizer" style="background:#ff6d5a22;border-color:#ff6d5a55;color:#ff6d5a;" onclick="openOverlay('archflow.html','archflow')">🔀 archflow</button>
-                <button class="btn btn--xs" id="f-open-researchlab" title="Research Lab — live editable document + node canvas + console" style="background:#da368822;border-color:#da368855;color:#da3688;" onclick="openOverlay('research-lab.html','Research Lab')">🔬 Research Lab</button>
-                <button class="btn btn--xs" id="f-open-jawta" title="jawta audio — spatial audio + Strudel live code" style="background:#c084fc22;border-color:#c084fc55;color:#c084fc;" onclick="openOverlay('jawta-audio.html','jawta audio')">🎵 jawta</button>
-                <button class="btn btn--xs" id="f-open-dashboard" title="GitHub Project Health Dashboard" style="background:#23863622;border-color:#23863655;color:#238636;" onclick="openOverlay('github-dashboard.html','Dashboard')">📊 Dashboard</button>
+
+                <!-- Panel: Apps -->
+                <div class="fqc-panel" data-fqc-panel="apps">
+                    <button class="btn btn--xs" id="f-play-numsy" title="brotherNumsy" style="background:#e6b42222;border-color:#e6b42255;color:#e6b422;">🎮 brotherNumsy</button>
+                    <button class="btn btn--xs" id="f-open-kbatch" title="kbatch" style="background:#f0883e22;border-color:#f0883e55;color:#f0883e;">⌨ kbatch</button>
+                    <button class="btn btn--xs" id="f-open-hexcast" title="hexcast" style="background:#da363322;border-color:#da363355;color:#f97583;">📡 hexcast</button>
+                    <button class="btn btn--xs" id="f-open-hexbench" title="hexbench" style="background:#ffe13822;border-color:#ffe13855;color:#ffe138;" onclick="openOverlay('hexbench.html','hexbench')">⚡ hexbench</button>
+                    <button class="btn btn--xs" id="f-open-blackwell" title="Blackwell" style="background:#76b90022;border-color:#76b90055;color:#76b900;" onclick="openOverlay('blackwell.html','Blackwell')">🟢 Blackwell</button>
+                    <button class="btn btn--xs" id="f-open-questcast" title="questcast" style="background:#1877f222;border-color:#1877f255;color:#1877f2;" onclick="openOverlay('questcast.html','questcast')">🥽 questcast</button>
+                    <button class="btn btn--xs" id="f-open-archflow" title="archflow" style="background:#ff6d5a22;border-color:#ff6d5a55;color:#ff6d5a;" onclick="openOverlay('archflow.html','archflow')">🔀 archflow</button>
+                    <button class="btn btn--xs" id="f-open-researchlab" title="Research Lab" style="background:#da368822;border-color:#da368855;color:#da3688;" onclick="openOverlay('research-lab.html','Research Lab')">🔬 Research Lab</button>
+                    <button class="btn btn--xs" id="f-open-jawta" title="jawta audio" style="background:#c084fc22;border-color:#c084fc55;color:#c084fc;" onclick="openOverlay('jawta-audio.html','jawta audio')">🎵 jawta</button>
+                    <button class="btn btn--xs" id="f-open-dashboard" title="Dashboard" style="background:#23863622;border-color:#23863655;color:#238636;" onclick="openOverlay('github-dashboard.html','Dashboard')">📊 Dashboard</button>
+                </div>
+
+                <!-- Panel: Add-ins (cell types) -->
+                <div class="fqc-panel" data-fqc-panel="addins">
+                    <button class="btn btn--xs" id="f-freya-units" title="FreyaUnits cell" style="background:#7c3aed22;border-color:#7c3aed55;color:#a78bfa;">🔬 FreyaUnits</button>
+                    <button class="btn btn--xs" id="f-add-kbatch" title="kbatch cell" style="background:#f0883e22;border-color:#f0883e55;color:#f0883e;">⌨ + kbatch</button>
+                    <button class="btn btn--xs" id="f-add-hexcast" title="hexcast cell" style="background:#da363322;border-color:#da363355;color:#f97583;">📡 + hexcast</button>
+                    <button class="btn btn--xs" id="f-add-hexbench" title="hexbench cell" style="background:#ffe13822;border-color:#ffe13855;color:#ffe138;">⚡ + hexbench</button>
+                </div>
+
+                <!-- Panel: Infra -->
+                <div class="fqc-panel" data-fqc-panel="infra">
+                    <button class="btn btn--xs quick-cmd" data-cmd="bridge">🔌 Bridge</button>
+                    <button class="btn btn--xs quick-cmd" data-cmd="save">💾 Save</button>
+                    <button class="btn btn--xs quick-cmd" data-cmd="load">📂 Load</button>
+                    <button class="btn btn--xs quick-cmd" data-cmd="scan">🛡 Scan All</button>
+                    <button class="btn btn--xs quick-cmd" data-cmd="hook">🪝 Git Hook</button>
+                    <button class="btn btn--xs quick-cmd" data-cmd="tools">📋 List Tools</button>
+                </div>
             </div>
         </div>
     </div>
@@ -2830,7 +2889,7 @@
                 <div class="inspect-section">
                     <h3>uvspeed &mdash; Agent-Ready Status Dashboard</h3>
                     <p style="margin-bottom:var(--cursor-space-sm);font-size:0.75rem;color:var(--cursor-text-muted);">
-                        27 capabilities tracked. 26 shipped to production, 1 planned. <strong style="color:#7ee787;">Phase 4.0 shipped.</strong>
+                        28 capabilities tracked. 27 shipped to production, 1 planned. <strong style="color:#7ee787;">Phase 4.0 shipped.</strong>
                     </p>
                     <div style="display:grid;grid-template-columns:1fr;gap:6px;margin-bottom:var(--cursor-space-md);">
 
@@ -3146,7 +3205,19 @@
                             <span style="font-size:0.625rem;color:var(--cursor-text-muted);"></span>
                         </div>
 
-                        <!-- Row 27: Multi-agent orchestration ⚪ PLANNED → Phase 4.1 -->
+                        <!-- Row 27: hexbench electronics workbench 🟢 SHIPPED -->
+                        <div style="display:grid;grid-template-columns:24px 1fr 100px 80px 70px;align-items:center;gap:8px;background:var(--cursor-bg-secondary);border:1px solid rgba(126,231,135,0.25);border-radius:var(--cursor-radius-sm);padding:8px 12px;">
+                            <span style="font-size:1rem;">🟢</span>
+                            <div>
+                                <div style="font-size:0.75rem;font-weight:700;color:#7ee787;">hexbench electronics workbench</div>
+                                <div style="font-size:0.625rem;color:var(--cursor-text-muted);">AT6301 PSU monitor &bull; Freya Dev Toolkit (13 tools: Ohm/V-divider/RC-LC/LED/Regulator/PCB/ADC/Freq/Battery/FreyaUnits/Wire/Thermal/Suggest) &bull; equipment carousel &bull; stage checklist &bull; parts catalog &bull; Arduino + Pybricks code &bull; suppliers &bull; node workbench</div>
+                            </div>
+                            <span class="tag tag--green" style="font-size:0.5625rem;padding:2px 6px;">Shipped</span>
+                            <span style="font-size:0.625rem;color:#7ee787;font-weight:600;">LIVE</span>
+                            <span style="font-size:0.625rem;color:var(--cursor-text-muted);">✓ Done</span>
+                        </div>
+
+                        <!-- Row 28: Multi-agent orchestration ⚪ PLANNED → Phase 4.1 -->
                         <div style="display:grid;grid-template-columns:24px 1fr 100px 80px 70px;align-items:center;gap:8px;background:var(--cursor-bg-tertiary);border:1px solid var(--cursor-border);border-radius:var(--cursor-radius-sm);padding:8px 12px;">
                             <span style="font-size:1rem;">⚪</span>
                             <div>
@@ -6139,6 +6210,17 @@
                     });
                 });
 
+                // Footer tab switching (hexbench-style)
+                document.querySelectorAll('#fqc-tabbar .fqc-tab').forEach(tab => {
+                    tab.addEventListener('click', () => {
+                        document.querySelectorAll('#fqc-tabbar .fqc-tab').forEach(t => t.classList.remove('active'));
+                        document.querySelectorAll('.fqc-panel').forEach(p => p.classList.remove('active'));
+                        tab.classList.add('active');
+                        const panel = document.querySelector(`.fqc-panel[data-fqc-panel="${tab.dataset.fqc}"]`);
+                        if (panel) panel.classList.add('active');
+                    });
+                });
+
                 // Footer action buttons (mirrors header)
                 document.getElementById('f-add-cell').addEventListener('click', () => this.addCell('code'));
                 document.getElementById('f-add-mermaid').addEventListener('click', () => this.addCell('mermaid'));
@@ -6202,6 +6284,13 @@
                 // hexcast cell — add inline video broadcast
                 document.getElementById('f-add-hexcast').addEventListener('click', () => {
                     const id = this.addCell('hexcast', '# 📡 hexcast — Live Video Hex Broadcast\n# Camera/screen/test → hex stream + latency bench');
+                    this.executeCell(id);
+                    setTimeout(() => { document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 100);
+                });
+
+                // hexbench cell — add inline electronics workbench
+                document.getElementById('f-add-hexbench')?.addEventListener('click', () => {
+                    const id = this.addCell('hexbench', '# ⚡ hexbench — Voltage Lab + Electronics Workbench\n# PSU monitor, Freya Dev Toolkit (13 tools), parts catalog, Arduino/Pybricks code');
                     this.executeCell(id);
                     setTimeout(() => { document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 100);
                 });
@@ -8767,6 +8856,7 @@ print(f"  Norm:  {qs.normalize().norm().numpy():.6f}")`);
                         });
                         this.displayOutput(id, {type:'text', data: lines});
                     },
+                    'hexbench': () => openOverlay('hexbench.html', 'hexbench — Voltage Lab'),
                     'quest-status': () => this._checkQuestStatus(),
                     'quest-logs': async () => {
                         const resp = await fetch('http://localhost:8085/api/quest/logs');
@@ -9440,8 +9530,9 @@ print(f"  Norm:  {qs.normalize().norm().numpy():.6f}")`);
                     'jawta': () => { this._runTool('jawta'); return '📡 Launching Jawta signal intel...'; },
                     'media': () => { this._runTool('media'); return '🎞 Launching media pipeline...'; },
                     'lark': () => { this._runTool('lark-status'); return '🐦 Checking Lark status...'; },
+                    'hexbench': () => { openOverlay('hexbench.html', 'hexbench'); return '⚡ Opening hexbench Voltage Lab...'; },
                     'tools': () => {
-                        return '🔧 Available tools:\n  kbatch   — keyboard analysis\n  signal   — Morse/binary/waveform\n  geokey   — geometric keyboard mapper\n  youtube  — transcript extraction\n  chartgpu — GPU metrics + AI analysis\n  quest    — Meta Quest device status\n  jawta    — signal intel + spectrum\n  media    — audio/video pipeline\n  lark     — Lark IANA status';
+                        return '🔧 Available tools:\n  kbatch   — keyboard analysis\n  signal   — Morse/binary/waveform\n  geokey   — geometric keyboard mapper\n  youtube  — transcript extraction\n  chartgpu — GPU metrics + AI analysis\n  quest    — Meta Quest device status\n  jawta    — signal intel + spectrum\n  media    — audio/video pipeline\n  lark     — Lark IANA status\n  hexbench — voltage lab + electronics workbench';
                     },
                 };
 
