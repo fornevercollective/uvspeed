@@ -281,8 +281,7 @@
         </svg>
     </div>
     <div id="intro-prompt">
-        <button onclick="event.stopPropagation();introGrantCamera()">Enable Camera</button>
-        <button class="skip" onclick="event.stopPropagation();introSkip()">skip →</button>
+        <div style="color:#6e7681;font-family:'SF Mono',monospace;font-size:.75rem">tap anywhere to continue</div>
     </div>
     <canvas id="intro-hex" width="48" height="56"></canvas>
     <div id="intro-sub">
@@ -2792,25 +2791,28 @@ const introPrompt = document.getElementById('intro-prompt');
 // Check if camera was already granted (skip intro next time)
 const introDone = sessionStorage.getItem('hexterm-intro-done');
 
-function introGrantCamera() {
-    if (!navigator.mediaDevices) {
-        introSkip();
+function introAutoCamera() {
+    // Auto-trigger native browser camera permission popup (like hexcast-send does)
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        introDismiss();
         return;
     }
-    introPrompt.style.display = 'none';
     navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } }, audio: false })
         .then(stream => {
             introVideo.srcObject = stream;
             introVideo.play();
             introVideo.classList.add('show');
-            // Hold for 2.5s then transition out
+            introPrompt.style.display = 'none';
+            // Show camera selfie briefly, then dismiss
             setTimeout(() => {
                 introDismiss();
-                // Keep stream alive briefly so terminal can reuse permission
                 setTimeout(() => stream.getTracks().forEach(t => t.stop()), 1500);
-            }, 2500);
+            }, 2000);
         })
-        .catch(() => introSkip());
+        .catch(() => {
+            // Permission denied or no camera — just dismiss
+            introDismiss();
+        });
 }
 
 function introSkip() {
@@ -2831,13 +2833,16 @@ function introDismiss() {
 // Touch fallback: tap anywhere on intro to dismiss (iOS PWA)
 introEl.addEventListener('touchend', e => {
     if (!introActive) return;
-    // If they tapped a button, let the button's onclick handle it
-    if (e.target.closest('#intro-prompt button')) return;
     introSkip();
 }, { passive: true });
 
-// Auto-skip after 8 seconds if user hasn't interacted
-setTimeout(() => { if (introActive) introDismiss(); }, 8000);
+// Auto-trigger native camera popup after brief splash (1s to see the branding)
+if (!introDone) {
+    setTimeout(() => { if (introActive) introAutoCamera(); }, 1000);
+}
+
+// Fallback: auto-dismiss after 6 seconds total if nothing happened
+setTimeout(() => { if (introActive) introDismiss(); }, 6000);
 
 // Auto-skip on revisit within same session
 if (introDone) {
