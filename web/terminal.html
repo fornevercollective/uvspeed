@@ -1,0 +1,3161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0d1117">
+<meta name="mobile-web-app-capable" content="yes">
+<title>hexterm — terminal PWA</title>
+<link rel="manifest" href="terminal-manifest.json">
+<link rel="apple-touch-icon" href="../icons/nyan-banner.png">
+<link rel="icon" href="../icons/favicon.png">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@xterm/xterm@5/css/xterm.min.css">
+<style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+        width: 100%; height: 100%;
+        background: #0d1117; color: #e6edf3;
+        font-family: -apple-system, 'SF Pro', system-ui, sans-serif;
+        overflow: hidden;
+        -webkit-touch-callout: none;
+        -webkit-user-select: none; user-select: none;
+        touch-action: manipulation;
+    }
+    /* PWA safe area */
+    body { padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
+    #app { display: flex; flex-direction: column; width: 100%; height: 100%; }
+
+    /* Custom title bar (Tauri overlay mode) */
+    #titlebar {
+        display: flex; align-items: center;
+        flex-shrink: 0; height: 38px;
+        background: #0d1117; position: relative;
+        -webkit-app-region: drag;
+        overflow: hidden;
+        border-bottom: 1px solid #21262d;
+    }
+    #titlebar-stars {
+        position: absolute; inset: 0; z-index: 0;
+    }
+    /* Traffic light spacer (macOS) */
+    #titlebar .traffic-spacer {
+        width: 78px; flex-shrink: 0; /* space for native macOS traffic lights */
+    }
+    #titlebar .tabs {
+        display: flex; align-items: center; gap: 0;
+        flex: 1; z-index: 1; overflow-x: auto;
+        -webkit-app-region: no-drag;
+        -webkit-overflow-scrolling: touch;
+    }
+    #titlebar .tab {
+        padding: 6px 14px; font-size: .6875rem;
+        color: #8b949e; cursor: pointer; white-space: nowrap;
+        border-right: 1px solid rgba(48,54,61,0.5);
+        font-family: 'SF Mono', monospace;
+        background: none; border-top: none; border-bottom: none; border-left: none;
+        position: relative; z-index: 1;
+        transition: color 0.15s, background 0.15s;
+    }
+    #titlebar .tab:hover { color: #c9d1d9; background: rgba(33,38,45,0.6); }
+    #titlebar .tab.active { color: #58a6ff; background: rgba(22,27,34,0.8); border-bottom: 2px solid #58a6ff; }
+    #titlebar .tab .dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 5px; }
+    #titlebar .tab .dot.green { background: #3fb950; }
+    #titlebar .tab .dot.blue { background: #58a6ff; }
+    #titlebar .tab .dot.purple { background: #bc8cff; }
+    #titlebar .tab .dot.yellow { background: #d29922; }
+    #titlebar .tab-add {
+        padding: 4px 10px; color: #484f58; cursor: pointer;
+        font-size: .875rem; background: none; border: none;
+        font-family: 'SF Mono', monospace; z-index: 1;
+        -webkit-app-region: no-drag;
+    }
+    #titlebar .tab-add:hover { color: #8b949e; }
+    #titlebar .title-center {
+        position: absolute; left: 50%; top: 50%;
+        transform: translate(-50%, -50%);
+        font-size: .5625rem; color: #484f58;
+        font-family: 'SF Mono', monospace;
+        z-index: 0; pointer-events: none;
+    }
+
+    /* Hide titlebar on non-Tauri (PWA/browser have no traffic lights) */
+    body:not(.tauri) #titlebar { display: none; }
+    body:not(.tauri) #app { padding-top: 0; }
+
+    /* Nyan rainbow bar */
+    #latency-bar {
+        display: flex; align-items: center; gap: 8px;
+        padding: 1px 8px; min-height: 16px;
+        background: #0d1117; flex-shrink: 0; overflow: hidden;
+        font-size: .5rem; font-family: 'SF Mono', monospace; color: #484f58;
+    }
+    #latency-bar .metric { color: #8b949e; }
+    #latency-bar .val { color: #3fb950; }
+    #latency-bar .val.warn { color: #d29922; }
+    #latency-bar .val.err { color: #da3633; }
+    #latency-bar .spacer { flex: 1; }
+    #rainbow, #rainbow-bottom {
+        display: flex; flex-shrink: 0; height: 3px; width: 100%;
+    }
+    #rainbow span, #rainbow-bottom span { flex: 1; }
+    #rainbow .r1, #rainbow-bottom .r1 { background: #ff3838; }
+    #rainbow .r2, #rainbow-bottom .r2 { background: #ff8c38; }
+    #rainbow .r3, #rainbow-bottom .r3 { background: #ffe138; }
+    #rainbow .r4, #rainbow-bottom .r4 { background: #3fb950; }
+    #rainbow .r5, #rainbow-bottom .r5 { background: #38a5ff; }
+    #rainbow .r6, #rainbow-bottom .r6 { background: #bc8cff; }
+    #bottom-stats {
+        display: flex; align-items: center; gap: 8px;
+        padding: 1px 8px; min-height: 14px;
+        background: #0d1117; flex-shrink: 0; overflow: hidden;
+        font-size: .5rem; font-family: 'SF Mono', monospace; color: #484f58;
+    }
+    #bottom-stats .lbl { color: #6e7681; }
+    #bottom-stats .val { color: #58a6ff; }
+    #bottom-stats .spacer { flex: 1; }
+    #rainbow-kb { display: flex; flex-shrink: 0; height: 2px; width: 100%; }
+    #rainbow-kb span { flex: 1; }
+    #rainbow-kb .r1 { background: #ff3838; }
+    #rainbow-kb .r2 { background: #ff8c38; }
+    #rainbow-kb .r3 { background: #ffe138; }
+    #rainbow-kb .r4 { background: #3fb950; }
+    #rainbow-kb .r5 { background: #38a5ff; }
+    #rainbow-kb .r6 { background: #bc8cff; }
+    /* Intro overlay */
+    #intro {
+        position: fixed; inset: 0; z-index: 200;
+        background: #0d1117; display: flex; flex-direction: column;
+        align-items: center; justify-content: center;
+        transition: opacity 0.6s ease;
+        overflow: hidden;
+    }
+    #intro-stars {
+        position: absolute; inset: 0; z-index: 0; pointer-events: none;
+    }
+    #intro.fade-out { opacity: 0; pointer-events: none; }
+    #intro-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 1s ease; pointer-events: none; }
+    #intro-video.show { opacity: 1; }
+    #intro-cutout {
+        position: absolute; z-index: 1; width: 100%; height: 100%;
+        display: flex; align-items: center; justify-content: center;
+        pointer-events: none;
+    }
+    #intro-cutout svg { width: 90%; max-width: 700px; pointer-events: none; }
+    #intro-rainbow { position: absolute; bottom: 0; left: 0; right: 0; display: flex; height: 4px; }
+    #intro-rainbow span { flex: 1; }
+    #intro-rainbow .r1 { background: #ff3838; }
+    #intro-rainbow .r2 { background: #ff8c38; }
+    #intro-rainbow .r3 { background: #ffe138; }
+    #intro-rainbow .r4 { background: #3fb950; }
+    #intro-rainbow .r5 { background: #38a5ff; }
+    #intro-rainbow .r6 { background: #bc8cff; }
+    #intro-sub {
+        position: absolute; bottom: 28px; left: 0; right: 0; text-align: center;
+        font-family: 'SF Mono', monospace; font-size: .75rem; color: #8b949e;
+        z-index: 2; pointer-events: none;
+    }
+    #intro-sub .prefix { color: #58a6ff; }
+    #intro-prompt {
+        position: absolute; top: 50%; left: 50%; transform: translate(-50%, 60px);
+        z-index: 300; text-align: center; pointer-events: auto;
+    }
+    #intro-prompt button {
+        background: #238636; border: none; color: #fff;
+        padding: 12px 32px; border-radius: 8px; font-size: 1rem;
+        font-weight: 600; cursor: pointer; font-family: -apple-system, system-ui, sans-serif;
+        pointer-events: auto; position: relative; z-index: 301;
+        -webkit-tap-highlight-color: rgba(35,134,54,0.3);
+        touch-action: manipulation;
+    }
+    #intro-prompt button:hover { background: #2ea043; }
+    #intro-prompt button:active { transform: scale(0.96); }
+    #intro-prompt .skip {
+        display: block; margin-top: 12px; color: #6e7681; font-size: .85rem;
+        background: none; border: none; padding: 8px 16px; cursor: pointer;
+        font-family: 'SF Mono', monospace; pointer-events: auto; position: relative; z-index: 301;
+        -webkit-tap-highlight-color: rgba(110,118,129,0.3);
+        touch-action: manipulation;
+    }
+    #intro-prompt .skip:hover { color: #c9d1d9; }
+    /* Status bar */
+    #status-bar {
+        display: flex; align-items: center; gap: 6px;
+        padding: 4px 8px; min-height: 28px;
+        background: #161b22; border-bottom: 1px solid #21262d;
+        font-size: .625rem; font-family: 'SF Mono', 'Menlo', 'Cascadia Code', monospace;
+        color: #8b949e; overflow: hidden; flex-shrink: 0;
+    }
+    #status-bar .title { color: #58a6ff; font-weight: 600; }
+    #status-bar .sep { color: #30363d; }
+    #status-bar .tag { background: #238636; color: #fff; padding: 1px 5px; border-radius: 6px; font-size: .5625rem; }
+    #status-bar .tag.warn { background: #d29922; }
+    #status-bar .tag.err { background: #da3633; }
+    #status-bar .spacer { flex: 1; }
+    #status-bar .btn { background: none; border: 1px solid #30363d; color: #8b949e; padding: 1px 6px; border-radius: 4px; font-size: .5625rem; cursor: pointer; }
+    #status-bar .btn:active { background: #21262d; }
+    /* Terminal fills rest */
+    #terminal-wrap { flex: 1; overflow: hidden; position: relative; }
+    #terminal-wrap .xterm { height: 100% !important; }
+    .xterm .xterm-viewport { overflow-y: auto !important; }
+    /* Tab bar (optional: for multiple tabs later) */
+    #tab-bar {
+        display: flex; align-items: center; gap: 0;
+        background: #0d1117; border-top: 1px solid #21262d;
+        min-height: 32px; flex-shrink: 0; overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    .tab-item {
+        padding: 6px 12px; font-size: .6875rem;
+        color: #8b949e; cursor: pointer; white-space: nowrap;
+        border-right: 1px solid #21262d;
+        font-family: 'SF Mono', monospace;
+    }
+    .tab-item.active { color: #58a6ff; background: #161b22; }
+    .tab-item:active { background: #21262d; }
+    /* Quick-action toolbar for mobile */
+    #quick-bar {
+        display: flex; align-items: center; gap: 0;
+        background: #161b22; border-top: 1px solid #21262d;
+        min-height: 36px; flex-shrink: 0; overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    .qk {
+        padding: 6px 10px; font-size: .75rem;
+        color: #e6edf3; cursor: pointer; white-space: nowrap;
+        font-family: 'SF Mono', monospace; border: none; background: none;
+        touch-action: manipulation; -webkit-tap-highlight-color: rgba(48,54,61,0.4);
+    }
+    .qk:active { background: #30363d; }
+    .qk.sep { color: #30363d; padding: 6px 2px; }
+    /* Keyboard heatmap panel */
+    #kb-panel {
+        flex-shrink: 0; height: 160px; position: relative;
+        background: #0d1117; border-top: 1px solid #21262d;
+    }
+    #kb-panel .kb-title {
+        position: absolute; top: 4px; left: 8px; z-index: 1;
+        font-size: .5625rem; color: #484f58; font-family: 'SF Mono', monospace;
+    }
+    #kb-panel .kb-sync {
+        position: absolute; top: 4px; right: 8px; z-index: 1;
+        font-size: .5rem; color: #484f58; font-family: 'SF Mono', monospace;
+    }
+    #kb-panel .kb-sync.live { color: #3fb950; }
+    #kb-panel .kb-sync.live::before { content: ''; display: inline-block; width: 5px; height: 5px; background: #3fb950; border-radius: 50%; margin-right: 3px; animation: pulse 1.2s infinite; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
+    #kb-canvas { width: 100%; height: 100%; display: block; }
+    /* Overlay for pages */
+    #overlay { display: none; position: fixed; inset: 0; z-index: 100; background: #0d1117; }
+    #overlay.show { display: flex; flex-direction: column; }
+    #overlay-bar { display: flex; align-items: center; padding: 6px 10px; background: #161b22; border-bottom: 1px solid #21262d; gap: 8px; min-height: 32px; }
+    #overlay-bar .title { flex: 1; font-size: .75rem; color: #58a6ff; font-weight: 600; }
+    #overlay-bar .close-btn { background: #da3633; color: #fff; border: none; padding: 3px 10px; border-radius: 4px; font-size: .6875rem; cursor: pointer; }
+    #overlay iframe { flex: 1; border: none; width: 100%; }
+</style>
+</head>
+<body>
+
+<!-- ═══ ANIMATED INTRO ═══ -->
+<div id="intro">
+    <canvas id="intro-stars"></canvas>
+    <video id="intro-video" playsinline autoplay muted></video>
+    <div id="intro-cutout">
+        <svg viewBox="0 0 600 140" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <mask id="text-mask">
+                    <rect width="600" height="140" fill="white"/>
+                    <text x="300" y="95" text-anchor="middle" font-family="'SF Mono', 'Menlo', monospace"
+                          font-size="90" font-weight="900" fill="black" letter-spacing="-2">hexterm</text>
+                    <text x="300" y="128" text-anchor="middle" font-family="'SF Mono', monospace"
+                          font-size="14" fill="black">{+1, 1, -1, +0, 0, -0, +n, n, -n}</text>
+                </mask>
+            </defs>
+            <rect width="600" height="140" fill="#0d1117" mask="url(#text-mask)"/>
+        </svg>
+    </div>
+    <div id="intro-prompt">
+        <button onclick="introGrantCamera()">Enable Camera</button>
+        <button class="skip" onclick="introSkip()">skip →</button>
+    </div>
+    <div id="intro-sub">
+        <span class="prefix">+1:</span>decl <span class="prefix">1:</span>logic <span class="prefix">-1:</span>io
+        <span class="prefix">+0:</span>assign <span class="prefix">0:</span>neutral <span class="prefix">-0:</span>comment
+    </div>
+    <div id="intro-rainbow" onclick="introSkip()" style="cursor:pointer;pointer-events:auto;z-index:300;position:relative"><span class="r1"></span><span class="r2"></span><span class="r3"></span><span class="r4"></span><span class="r5"></span><span class="r6"></span></div>
+</div>
+
+<div id="app">
+    <div id="titlebar">
+        <canvas id="titlebar-stars"></canvas>
+        <div class="traffic-spacer"></div>
+        <div class="tabs" id="titlebar-tabs">
+            <button class="tab active" data-tab="terminal" onclick="switchTab('terminal')"><span class="dot green"></span>terminal</button>
+            <button class="tab" data-tab="hexcast" onclick="switchTab('hexcast')"><span class="dot blue"></span>hexcast</button>
+            <button class="tab" data-tab="sync" onclick="switchTab('sync')"><span class="dot purple"></span>sync</button>
+            <button class="tab" data-tab="console" onclick="switchTab('console')"><span class="dot yellow"></span>console</button>
+        </div>
+        <button class="tab-add" onclick="addTab()" title="New tab">+</button>
+        <span class="title-center">hexterm — {+1, 1, -1, +0, 0, -0, +n, n, -n}</span>
+    </div>
+    <div id="latency-bar">
+        <span class="metric">latency</span> <span class="val" id="lat-ping">—</span>
+        <span class="metric">fps</span> <span class="val" id="lat-fps">—</span>
+        <span class="metric">mem</span> <span class="val" id="lat-mem">—</span>
+        <span class="metric">cpu</span> <span class="val" id="lat-cpu">—</span>
+        <span class="spacer"></span>
+        <span class="metric">uptime</span> <span class="val" id="lat-uptime">0s</span>
+    </div>
+    <div id="rainbow"><span class="r1"></span><span class="r2"></span><span class="r3"></span><span class="r4"></span><span class="r5"></span><span class="r6"></span></div>
+    <div id="status-bar">
+        <span class="title">hexterm</span>
+        <span class="sep">|</span>
+        <span id="sb-mode">local</span>
+        <span class="sep">|</span>
+        <span id="sb-cwd">~</span>
+        <span class="spacer"></span>
+        <span id="sb-net" class="tag">offline</span>
+        <span id="sb-battery"></span>
+        <button class="btn" onclick="toggleFullscreen()">⛶</button>
+    </div>
+    <div id="terminal-wrap"></div>
+    <div id="quick-bar">
+        <button class="qk" onclick="qk('Tab')">⇥</button>
+        <button class="qk" onclick="qk('Escape')">esc</button>
+        <span class="qk sep">│</span>
+        <button class="qk" onclick="qkCopy()">copy</button>
+        <button class="qk" onclick="qkPaste()">paste</button>
+        <span class="qk sep">│</span>
+        <button class="qk" onclick="qk('ArrowUp')">↑</button>
+        <button class="qk" onclick="qk('ArrowDown')">↓</button>
+        <button class="qk" onclick="qkMoveUp()">⌥↑</button>
+        <button class="qk" onclick="qkMoveDown()">⌥↓</button>
+        <span class="qk sep">│</span>
+        <button class="qk" onclick="typeStr('hexcast ')">hexcast</button>
+        <button class="qk" onclick="typeStr('sync ')">sync</button>
+        <button class="qk" onclick="typeStr('console ')">console</button>
+        <button class="qk" onclick="typeStr('device ')">device</button>
+        <span class="qk sep">│</span>
+        <button class="qk" onclick="typeStr('ls ')">ls</button>
+        <button class="qk" onclick="typeStr('cd ')">cd</button>
+        <button class="qk" onclick="typeStr('cat ')">cat</button>
+        <button class="qk" onclick="typeStr('./')">./</button>
+        <button class="qk" onclick="typeStr('|')">|</button>
+        <button class="qk" onclick="typeStr(' && ')">&amp;&amp;</button>
+        <button class="qk" onclick="processEnter()">&#x23CE;</button>
+    </div>
+    <div id="rainbow-kb"><span class="r1"></span><span class="r2"></span><span class="r3"></span><span class="r4"></span><span class="r5"></span><span class="r6"></span></div>
+    <div id="kb-panel">
+        <span class="kb-title">kbatch</span>
+        <span class="kb-sync" id="kb-sync-label">local</span>
+        <canvas id="kb-canvas"></canvas>
+    </div>
+    <div id="rainbow-bottom"><span class="r1"></span><span class="r2"></span><span class="r3"></span><span class="r4"></span><span class="r5"></span><span class="r6"></span></div>
+    <div id="bottom-stats">
+        <span class="lbl">src:</span><span class="val" id="bs-source">local</span>
+        <span class="lbl">fps:</span><span class="val" id="bs-fps">—</span>
+        <span class="lbl">res:</span><span class="val" id="bs-res">—</span>
+        <span class="lbl">streams:</span><span class="val" id="bs-streams">0</span>
+        <span class="spacer"></span>
+        <span class="lbl">uvspeed</span>
+        <span class="val" id="bs-ver">v3.6</span>
+    </div>
+</div>
+
+<div id="overlay">
+    <div id="overlay-bar">
+        <span class="title" id="overlay-title">Page</span>
+        <button class="close-btn" onclick="closeOverlay()">✕ Close</button>
+    </div>
+    <iframe id="overlay-frame" sandbox="allow-scripts allow-same-origin allow-popups allow-forms"></iframe>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@xterm/xterm@5/lib/xterm.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@xterm/addon-fit@0/lib/addon-fit.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@xterm/addon-web-links@0/lib/addon-web-links.min.js"></script>
+<script>
+'use strict';
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Config
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const VERSION = '3.6.0';
+const HOSTNAME = 'hexterm';
+const USER = 'user';
+const HEXCAST_PORT = 9876;
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Virtual filesystem
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const FS = {
+    '/': { type: 'd', children: ['home', 'etc', 'tmp', 'usr', 'var'] },
+    '/home': { type: 'd', children: ['user'] },
+    '/home/user': { type: 'd', children: ['.hexcast', 'projects', 'notes.md', '.bashrc'] },
+    '/home/user/.hexcast': { type: 'd', children: ['config.json', 'peers.log'] },
+    '/home/user/.hexcast/config.json': { type: 'f', content: '{\n  "port": 9876,\n  "thermal": false,\n  "ascii": false,\n  "fps": 15\n}' },
+    '/home/user/.hexcast/peers.log': { type: 'f', content: '# discovered peers\n# (run hexcast discover to populate)' },
+    '/home/user/projects': { type: 'd', children: ['uvspeed', 'hexcast'] },
+    '/home/user/projects/uvspeed': { type: 'd', children: ['README.md', 'pyproject.toml', 'web'] },
+    '/home/user/projects/uvspeed/README.md': { type: 'f', content: '# uvspeed\nbeyondBINARY quantum-prefixed code architecture\n{+1, 1, -1, +0, 0, -0, +n, n, -n}' },
+    '/home/user/projects/uvspeed/pyproject.toml': { type: 'f', content: '[project]\nname = "uvspeed-quantum"\nversion = "3.6.0"\n\n[project.scripts]\nhexcast = "uvspeed_hexcast:main"' },
+    '/home/user/projects/uvspeed/web': { type: 'd', children: ['quantum-notepad.html', 'terminal.html', 'hexcast-send.html'] },
+    '/home/user/projects/hexcast': { type: 'd', children: ['hexcast.py'] },
+    '/home/user/projects/hexcast/hexcast.py': { type: 'f', content: '#!/usr/bin/env python3\n"""hexcast — live camera → truecolor ANSI terminal art"""\n__version__ = "3.6.0"\n\ndef main():\n    print("hexcast running...")\n\nif __name__ == "__main__":\n    main()' },
+    '/home/user/notes.md': { type: 'f', content: '# Notes\n\n- hexcast --serve on Mac\n- hexcast --connect <IP> on phone\n- hexcast send <IP> from PWA terminal\n- hexcast --receive on Mac to get phone camera' },
+    '/home/user/.bashrc': { type: 'f', content: '# hexterm shell config\nexport PATH="$HOME/.local/bin:$PATH"\nexport HEXCAST_PORT=9876\nalias ll="ls -la"\nalias h="hexcast"\nalias hc="hexcast --connect"' },
+    '/etc': { type: 'd', children: ['hostname', 'os-release'] },
+    '/etc/hostname': { type: 'f', content: 'hexterm' },
+    '/etc/os-release': { type: 'f', content: `NAME="hexterm"\nVERSION="${VERSION}"\nID=hexterm\nPRETTY_NAME="hexterm ${VERSION} (beyondBINARY)"` },
+    '/tmp': { type: 'd', children: [] },
+    '/usr': { type: 'd', children: ['bin', 'lib'] },
+    '/usr/bin': { type: 'd', children: ['hexcast', 'uvspeed-bridge', 'python3', 'node', 'git'] },
+    '/var': { type: 'd', children: ['log'] },
+    '/var/log': { type: 'd', children: ['hexcast.log'] },
+    '/var/log/hexcast.log': { type: 'f', content: `[${new Date().toISOString()}] hexterm started\n[${new Date().toISOString()}] shell initialized` },
+};
+
+let cwd = '/home/user';
+let env = {
+    HOME: '/home/user',
+    USER: USER,
+    HOSTNAME: HOSTNAME,
+    PATH: '/usr/bin:/home/user/.local/bin',
+    SHELL: '/bin/hexsh',
+    TERM: 'xterm-256color',
+    HEXCAST_PORT: '9876',
+    PWD: '/home/user',
+};
+
+function resolvePath(p) {
+    if (!p) return cwd;
+    if (p === '~' || p === '$HOME') return env.HOME;
+    if (p.startsWith('~/')) p = env.HOME + p.slice(1);
+    if (!p.startsWith('/')) p = cwd + (cwd === '/' ? '' : '/') + p;
+    // Resolve . and ..
+    const parts = p.split('/').filter(Boolean);
+    const resolved = [];
+    for (const seg of parts) {
+        if (seg === '.') continue;
+        else if (seg === '..') resolved.pop();
+        else resolved.push(seg);
+    }
+    return '/' + resolved.join('/') || '/';
+}
+
+function fsGet(path) { return FS[resolvePath(path)]; }
+function fsExists(path) { return !!FS[resolvePath(path)]; }
+
+// Persist user-created files in localStorage
+function fsSave() {
+    try {
+        const userFiles = {};
+        for (const [k, v] of Object.entries(FS)) {
+            if (k.startsWith('/home/user') || k.startsWith('/tmp')) {
+                userFiles[k] = v;
+            }
+        }
+        localStorage.setItem('hexterm-fs', JSON.stringify(userFiles));
+    } catch(e) {}
+}
+function fsLoad() {
+    try {
+        const saved = localStorage.getItem('hexterm-fs');
+        if (saved) {
+            const data = JSON.parse(saved);
+            for (const [k, v] of Object.entries(data)) {
+                FS[k] = v;
+            }
+        }
+    } catch(e) {}
+}
+fsLoad();
+
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Dev console — capture JS logs/errors
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const DEV_LOG_MAX = 100;
+const devLog = [];         // ring buffer of { ts, level, msg }
+let devWatching = false;   // if console watch is active
+
+(function interceptConsole() {
+    const orig = { log: console.log, warn: console.warn, error: console.error, info: console.info };
+    function capture(level, args) {
+        const msg = Array.from(args).map(a => {
+            try { return typeof a === 'object' ? JSON.stringify(a) : String(a); }
+            catch(e) { return String(a); }
+        }).join(' ');
+        const entry = { ts: Date.now(), level, msg };
+        devLog.push(entry);
+        if (devLog.length > DEV_LOG_MAX) devLog.shift();
+        if (devWatching && typeof term !== 'undefined' && term) {
+            const col = level === 'error' ? '31' : level === 'warn' ? '33' : '90';
+            term.writeln(`\x1b[${col}m  [${level}] ${msg}\x1b[0m`);
+        }
+    }
+    console.log   = function() { capture('log', arguments);   orig.log.apply(console, arguments); };
+    console.warn  = function() { capture('warn', arguments);  orig.warn.apply(console, arguments); };
+    console.error = function() { capture('error', arguments); orig.error.apply(console, arguments); };
+    console.info  = function() { capture('info', arguments);  orig.info.apply(console, arguments); };
+
+    window.addEventListener('error', function(e) {
+        capture('error', [`Uncaught ${e.message} at ${e.filename}:${e.lineno}:${e.colno}`]);
+    });
+    window.addEventListener('unhandledrejection', function(e) {
+        capture('error', [`Unhandled rejection: ${e.reason}`]);
+    });
+})();
+
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Terminal setup
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const termEl = document.getElementById('terminal-wrap');
+let term, fitAddon;
+
+function initTerminal() {
+    if (typeof Terminal === 'undefined') {
+        termEl.innerHTML = '<div style="padding:20px;color:#f85149;font-size:.8rem;">xterm.js CDN not loaded — check network and reload</div>';
+        return;
+    }
+    term = new Terminal({
+        cursorBlink: true,
+        cursorStyle: 'bar',
+        fontSize: 14,
+        fontFamily: "'SF Mono', 'Menlo', 'Cascadia Code', 'Fira Code', monospace",
+        theme: {
+            background: '#0d1117',
+            foreground: '#e6edf3',
+            cursor: '#58a6ff',
+            cursorAccent: '#0d1117',
+            selectionBackground: 'rgba(88,166,255,0.3)',
+            black: '#484f58',
+            red: '#ff7b72',
+            green: '#3fb950',
+            yellow: '#d29922',
+            blue: '#58a6ff',
+            magenta: '#bc8cff',
+            cyan: '#39d353',
+            white: '#e6edf3',
+            brightBlack: '#6e7681',
+            brightRed: '#ffa198',
+            brightGreen: '#56d364',
+            brightYellow: '#e3b341',
+            brightBlue: '#79c0ff',
+            brightMagenta: '#d2a8ff',
+            brightCyan: '#56d364',
+            brightWhite: '#f0f6fc',
+        },
+        allowTransparency: true,
+        scrollback: 5000,
+        convertEol: true,
+    });
+
+    fitAddon = new FitAddon.FitAddon();
+    term.loadAddon(fitAddon);
+    try {
+        const wl = new WebLinksAddon.WebLinksAddon();
+        term.loadAddon(wl);
+    } catch(e) {}
+
+    term.open(termEl);
+    fitAddon.fit();
+
+    // Resize handling
+    const ro = new ResizeObserver(() => { try { fitAddon.fit(); } catch(e) {} });
+    ro.observe(termEl);
+    window.addEventListener('resize', () => { try { fitAddon.fit(); } catch(e) {} });
+
+    // Input handling
+    let cmdBuffer = '';
+    let cursorPos = 0;
+    let history = JSON.parse(localStorage.getItem('hexterm-history') || '[]');
+    let histIdx = -1;
+    let histTmp = '';
+
+    term.onData(data => {
+        const code = data.charCodeAt(0);
+
+        if (code === 13) { // Enter
+            term.writeln('');
+            const trimmed = cmdBuffer.trim();
+            if (trimmed) {
+                history.push(trimmed);
+                if (history.length > 200) history.shift();
+                localStorage.setItem('hexterm-history', JSON.stringify(history.slice(-200)));
+            }
+            processCommand(cmdBuffer);
+            cmdBuffer = '';
+            cursorPos = 0;
+            histIdx = -1;
+            histTmp = '';
+            return;
+        }
+
+        if (code === 127 || code === 8) { // Backspace
+            if (cursorPos > 0) {
+                cmdBuffer = cmdBuffer.slice(0, cursorPos - 1) + cmdBuffer.slice(cursorPos);
+                cursorPos--;
+                redrawLine();
+            }
+            return;
+        }
+
+        if (code === 3) { // Ctrl+C
+            if (window._hexTermFeed) {
+                window._hexTermFeed.stop();
+                term.writeln('\r\n\x1b[33m  ^C hexcast stopped\x1b[0m');
+            }
+            if (window._hexTermSend) {
+                window._hexTermSend.stop();
+                term.writeln('\r\n\x1b[33m  ^C send stopped\x1b[0m');
+            }
+            if (window._hexTermWS) {
+                window._hexTermWS.stop();
+                term.writeln('\r\n\x1b[33m  ^C connect stopped\x1b[0m');
+            }
+            if (devWatching) {
+                devWatching = false;
+                term.writeln('\r\n\x1b[33m  ^C console watch stopped\x1b[0m');
+            }
+            cmdBuffer = '';
+            cursorPos = 0;
+            showPrompt();
+            return;
+        }
+
+        if (code === 12) { // Ctrl+L
+            term.clear();
+            showPrompt();
+            term.write(cmdBuffer);
+            return;
+        }
+
+        // Escape sequences (arrows)
+        if (data === '\x1b[A') { // Up
+            if (history.length === 0) return;
+            if (histIdx === -1) { histTmp = cmdBuffer; histIdx = history.length - 1; }
+            else if (histIdx > 0) { histIdx--; }
+            cmdBuffer = history[histIdx] || '';
+            cursorPos = cmdBuffer.length;
+            redrawLine();
+            return;
+        }
+        if (data === '\x1b[B') { // Down
+            if (histIdx === -1) return;
+            histIdx++;
+            if (histIdx >= history.length) { histIdx = -1; cmdBuffer = histTmp; }
+            else { cmdBuffer = history[histIdx]; }
+            cursorPos = cmdBuffer.length;
+            redrawLine();
+            return;
+        }
+        if (data === '\x1b[D') { // Left
+            if (cursorPos > 0) { cursorPos--; term.write(data); }
+            return;
+        }
+        if (data === '\x1b[C') { // Right
+            if (cursorPos < cmdBuffer.length) { cursorPos++; term.write(data); }
+            return;
+        }
+        if (data === '\x1b[H' || data === '\x1b[1~') { // Home
+            while (cursorPos > 0) { cursorPos--; term.write('\x1b[D'); }
+            return;
+        }
+        if (data === '\x1b[F' || data === '\x1b[4~') { // End
+            while (cursorPos < cmdBuffer.length) { cursorPos++; term.write('\x1b[C'); }
+            return;
+        }
+
+        // Tab completion
+        if (code === 9) {
+            const completions = tabComplete(cmdBuffer, cursorPos);
+            if (completions.length === 1) {
+                cmdBuffer = completions[0];
+                cursorPos = cmdBuffer.length;
+                redrawLine();
+            } else if (completions.length > 1) {
+                term.writeln('');
+                term.writeln('\x1b[90m  ' + completions.join('  ') + '\x1b[0m');
+                showPrompt();
+                term.write(cmdBuffer);
+            }
+            return;
+        }
+
+        // Regular character
+        if (code >= 32) {
+            cmdBuffer = cmdBuffer.slice(0, cursorPos) + data + cmdBuffer.slice(cursorPos);
+            cursorPos += data.length;
+            redrawLine();
+        }
+    });
+
+    function redrawLine() {
+        const prompt = getPromptStr();
+        term.write('\r\x1b[K' + prompt + cmdBuffer);
+        // Move cursor to correct position
+        const back = cmdBuffer.length - cursorPos;
+        if (back > 0) term.write(`\x1b[${back}D`);
+    }
+
+    function getPromptStr() {
+        const dir = cwd === env.HOME ? '~' : cwd.split('/').pop() || '/';
+        return `\x1b[36m${USER}@${HOSTNAME}\x1b[0m:\x1b[34m${dir}\x1b[0m$ `;
+    }
+
+    window.showPrompt = function() {
+        term.write(getPromptStr());
+        updateStatusBar();
+    };
+
+    window.processEnter = function() {
+        term.onData('\r');
+    };
+
+    window.typeStr = function(s) {
+        for (const ch of s) term.onData(ch);
+        term.focus();
+    };
+
+    // ── Boot sequence ──
+    const camOk = !!navigator.mediaDevices;
+    const isPWA = window.matchMedia('(display-mode: standalone)').matches;
+    const isTauri = !!window.__TAURI__;
+    const modeStr = isTauri ? 'tauri' : isPWA ? 'pwa' : 'browser';
+
+    term.writeln('');
+    term.writeln('\x1b[36m  _               _                     \x1b[0m');
+    term.writeln('\x1b[36m | |__   _____  _| |_ ___ _ __ _ __ ___\x1b[0m');
+    term.writeln('\x1b[36m | \'_ \\ / _ \\ \\/ / __/ _ \\ \'__| \'_ ` _ \\\x1b[0m');
+    term.writeln('\x1b[36m | | | |  __/>  <| ||  __/ |  | | | | | |\x1b[0m');
+    term.writeln('\x1b[36m |_| |_|\\___/_/\\_\\\\__\\___|_|  |_| |_| |_|\x1b[0m');
+    term.writeln('');
+
+    // Quantum prefix bumper
+    term.writeln('  \x1b[90m+1:\x1b[35mdecl  \x1b[90m1:\x1b[35mlogic  \x1b[90m-1:\x1b[35mio  \x1b[90m+0:\x1b[35massign  \x1b[90m0:\x1b[35mneutral\x1b[0m');
+    term.writeln('  \x1b[90m-0:\x1b[35mcomment  \x1b[90m+n:\x1b[35mmod  \x1b[90mn:\x1b[35mimport  \x1b[90m-n:\x1b[35munknown\x1b[0m');
+    term.writeln('');
+    term.writeln(`  \x1b[90m${VERSION}\x1b[0m  \x1b[35mbeyondBINARY\x1b[0m  \x1b[90m${modeStr} / ${navigator.platform}\x1b[0m`);
+    term.writeln(`  \x1b[90m{+1, 1, -1, +0, 0, -0, +n, n, -n}\x1b[0m`);
+    term.writeln('');
+    term.writeln(`  \x1b[32m+\x1b[0m terminal    \x1b[32mready\x1b[0m`);
+    term.writeln(`  ${camOk ? '\x1b[32m+' : '\x1b[33m-'}\x1b[0m camera      ${camOk ? '\x1b[32mready' : '\x1b[33munavailable'}\x1b[0m`);
+    term.writeln(`  \x1b[32m+\x1b[0m websocket   \x1b[32mready\x1b[0m`);
+    term.writeln(`  \x1b[32m+\x1b[0m kbatch      \x1b[32mlive keyboard\x1b[0m`);
+    term.writeln('');
+    term.writeln('  \x1b[36mhelp\x1b[0m \x1b[90mcmds\x1b[0m   \x1b[36mhexcast\x1b[0m \x1b[90mcam\x1b[0m   \x1b[36mdevice\x1b[0m \x1b[90msize\x1b[0m   \x1b[36msync\x1b[0m \x1b[90mlink\x1b[0m   \x1b[36mconsole\x1b[0m \x1b[90mdev\x1b[0m');
+    term.writeln('');
+
+    showPrompt();
+    term.focus();
+
+    // Refocus on tap (mobile)
+    termEl.addEventListener('touchstart', () => term.focus(), { passive: true });
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Tab completion
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const ALL_CMDS = [
+    'help', 'clear', 'ls', 'cd', 'pwd', 'cat', 'mkdir', 'touch', 'echo', 'rm',
+    'date', 'uname', 'whoami', 'hostname', 'env', 'export', 'unset',
+    'history', 'which', 'alias', 'type', 'exit',
+    'hexcast', 'hexcast send', 'hexcast connect', 'hexcast test', 'hexcast front',
+    'hexcast back', 'hexcast screen', 'hexcast stop', 'hexcast ping', 'hexcast discover',
+    'ssh', 'curl', 'ping', 'ifconfig', 'ip', 'open', 'version',
+    'neofetch', 'cowsay', 'fortune', 'write', 'head', 'tail', 'wc', 'grep',
+    'device', 'device iphone', 'device iphone-se', 'device iphone-pm',
+    'device galaxy', 'device pixel',
+    'device ipad', 'device ipad-mini', 'device ipad-pro',
+    'device desktop', 'device macbook', 'device 1080p', 'device 1440p',
+    'device quest3', 'device quest-pro', 'device raybans', 'device vision-pro',
+    'window', 'window new', 'window list',
+    'sync', 'sync serve', 'sync status', 'sync stop',
+    'console', 'console clear', 'console watch', 'console stop',
+    'prefix', 'gutter', 'gutter on', 'gutter off',
+    'chart', 'sparkline', 'bar', 'table', 'heatmap',
+    'grep', 'rg',
+    'feed', 'feed camera', 'feed camera front', 'feed camera back',
+    'feed list', 'feed close', 'feed close all', 'feed watch', 'feed unwatch',
+    'feed mute', 'feed transcript',
+];
+
+function tabComplete(buf, pos) {
+    const prefix = buf.slice(0, pos).toLowerCase();
+    const parts = prefix.split(/\s+/);
+    // Command completion
+    if (parts.length <= 1) {
+        return ALL_CMDS.filter(c => c.startsWith(prefix) && !c.includes(' '));
+    }
+    // Path completion
+    const partial = parts[parts.length - 1];
+    const dir = partial.includes('/') ? resolvePath(partial.substring(0, partial.lastIndexOf('/'))) : cwd;
+    const base = partial.includes('/') ? partial.substring(partial.lastIndexOf('/') + 1) : partial;
+    const node = FS[dir];
+    if (node && node.type === 'd') {
+        const matches = node.children.filter(c => c.startsWith(base));
+        return matches.map(m => {
+            const pre = parts.slice(0, -1).join(' ') + ' ';
+            const fullPath = dir === '/' ? `/${m}` : `${dir}/${m}`;
+            const rel = partial.includes('/') ? partial.substring(0, partial.lastIndexOf('/') + 1) + m : m;
+            const node2 = FS[fullPath];
+            return pre + rel + (node2 && node2.type === 'd' ? '/' : '');
+        });
+    }
+    return [];
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Quantum prefix gutter classifier
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+let gutterEnabled = localStorage.getItem('hexterm-gutter') !== '0'; // default on
+
+const PREFIX_COLORS = {
+    'n:':  '\x1b[33m',  // shebang — yellow
+    '+1:': '\x1b[32m',  // comment — green
+    '-n:': '\x1b[35m',  // import — magenta
+    '+0:': '\x1b[36m',  // class — cyan
+    '0:':  '\x1b[34m',  // function — blue
+    '-1:': '\x1b[31m',  // error — red
+    '+n:': '\x1b[33m',  // condition — yellow
+    '+2:': '\x1b[36m',  // loop — cyan
+    '-0:': '\x1b[35m',  // return — magenta
+    '+3:': '\x1b[31m',  // output — red
+    '1:':  '\x1b[37m',  // variable — white
+    '  ':  '\x1b[90m',  // default — dim
+};
+
+function classifyLine(line) {
+    const t = line.trim();
+    if (!t) return '  ';
+    // Shebang
+    if (t.startsWith('#!') || t.startsWith('#!/')) return 'n:';
+    // Comment
+    if (t.startsWith('//') || t.startsWith('#') || t.startsWith('/*') || t.startsWith('*') || t.startsWith('--') || t.startsWith('"""') || t.startsWith("'''")) return '+1:';
+    // Import
+    if (t.startsWith('import ') || t.startsWith('from ') || t.startsWith('use ') || t.startsWith('require') || t.startsWith('#include') || t.startsWith('@import')) return '-n:';
+    // Class/struct/type
+    if (t.startsWith('class ') || t.startsWith('struct ') || t.startsWith('enum ') || t.startsWith('type ') || t.startsWith('interface ') || t.startsWith('trait ')) return '+0:';
+    // Function
+    if (t.startsWith('fn ') || t.startsWith('function ') || t.startsWith('def ') || t.startsWith('async ') || t.startsWith('pub fn') || t.startsWith('export function') || t.startsWith('const ') && t.includes('=>')) return '0:';
+    // Error handling
+    if (t.startsWith('try') || t.startsWith('catch') || t.startsWith('except') || t.startsWith('raise ') || t.startsWith('throw ') || t.startsWith('finally')) return '-1:';
+    // Conditionals
+    if (t.startsWith('if ') || t.startsWith('else') || t.startsWith('switch') || t.startsWith('match ') || t.startsWith('case ') || t.startsWith('} else')) return '+n:';
+    // Loops
+    if (t.startsWith('for ') || t.startsWith('while ') || t.startsWith('loop') || t.startsWith('.forEach') || t.startsWith('.map(')) return '+2:';
+    // Return
+    if (t.startsWith('return ') || t.startsWith('yield ') || t.startsWith('break') || t.startsWith('continue')) return '-0:';
+    // Output
+    if (t.includes('console.') || t.includes('print(') || t.includes('println') || t.includes('echo ') || t.includes('log(') || t.includes('writeln')) return '+3:';
+    // Variable
+    if (t.includes(' = ') || t.includes(' := ') || t.startsWith('let ') || t.startsWith('var ') || t.startsWith('const ')) return '1:';
+    return '  ';
+}
+
+function gutterLine(line, lineNum) {
+    const prefix = classifyLine(line);
+    const col = PREFIX_COLORS[prefix] || '\x1b[90m';
+    const num = String(lineNum).padStart(3);
+    return `\x1b[90m${num}\x1b[0m ${col}${prefix.padEnd(3)}\x1b[0m ${line}`;
+}
+
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Built-in rich output tools (charm-style)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const SPARK_CHARS = '▁▂▃▄▅▆▇█';
+
+function sparkline(data) {
+    if (!data.length) return '';
+    const mn = Math.min(...data), mx = Math.max(...data);
+    const range = mx - mn || 1;
+    return data.map(v => {
+        const idx = Math.round(((v - mn) / range) * (SPARK_CHARS.length - 1));
+        return SPARK_CHARS[idx];
+    }).join('');
+}
+
+function barChart(data, maxWidth) {
+    maxWidth = maxWidth || 30;
+    const mx = Math.max(...data.map(d => d.value));
+    const lines = [];
+    const RAINBOW = ['#ff3838', '#ff8c38', '#ffe138', '#3fb950', '#38a5ff', '#bc8cff'];
+    for (let i = 0; i < data.length; i++) {
+        const d = data[i];
+        const w = Math.round((d.value / mx) * maxWidth);
+        const hex = RAINBOW[i % RAINBOW.length];
+        const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+        const bar = `\x1b[38;2;${r};${g};${b}m${'█'.repeat(w)}${'░'.repeat(maxWidth - w)}\x1b[0m`;
+        lines.push(`  ${(d.label || '').padEnd(12)} ${bar} ${d.value}`);
+    }
+    return lines;
+}
+
+function asciiTable(headers, rows) {
+    const widths = headers.map((h, i) => Math.max(h.length, ...rows.map(r => String(r[i] || '').length)));
+    const sep = '─' + widths.map(w => '─'.repeat(w + 2)).join('┬') + '─';
+    const lines = [];
+    lines.push('\x1b[90m┌' + widths.map(w => '─'.repeat(w + 2)).join('┬') + '┐\x1b[0m');
+    lines.push('\x1b[90m│\x1b[0m ' + headers.map((h, i) => `\x1b[1m${h.padEnd(widths[i])}\x1b[0m`).join(' \x1b[90m│\x1b[0m ') + ' \x1b[90m│\x1b[0m');
+    lines.push('\x1b[90m├' + widths.map(w => '─'.repeat(w + 2)).join('┼') + '┤\x1b[0m');
+    for (const row of rows) {
+        lines.push('\x1b[90m│\x1b[0m ' + row.map((c, i) => String(c || '').padEnd(widths[i])).join(' \x1b[90m│\x1b[0m ') + ' \x1b[90m│\x1b[0m');
+    }
+    lines.push('\x1b[90m└' + widths.map(w => '─'.repeat(w + 2)).join('┴') + '┘\x1b[0m');
+    return lines;
+}
+
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Command processor
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function processCommand(raw) {
+    // Auto-dismiss intro if a command comes in (e.g. from native menu)
+    if (introActive) introDismiss();
+
+    const c = raw.trim();
+    if (!c) { showPrompt(); return; }
+
+    // Handle chained commands with &&
+    if (c.includes('&&')) {
+        const cmds = c.split('&&').map(s => s.trim()).filter(Boolean);
+        for (const sub of cmds) processCommand(sub);
+        return;
+    }
+
+    // Handle pipes (basic — just display)
+    const pipeIdx = c.indexOf('|');
+    let cmd = c, pipeTarget = null;
+    if (pipeIdx > 0 && c[pipeIdx-1] !== '|' && c[pipeIdx+1] !== '|') {
+        cmd = c.slice(0, pipeIdx).trim();
+        pipeTarget = c.slice(pipeIdx + 1).trim();
+    }
+
+    const parts = cmd.split(/\s+/);
+    const command = parts[0].toLowerCase();
+    const args = parts.slice(1);
+
+    switch (command) {
+        // ── Shell builtins ──
+        case 'help':
+            term.writeln('\x1b[36m  Shell commands:\x1b[0m');
+            term.writeln('  help             — this help');
+            term.writeln('  clear / Ctrl+L   — clear screen');
+            term.writeln('  ls [-la] [dir]   — list files');
+            term.writeln('  cd [dir]         — change directory');
+            term.writeln('  pwd              — print working directory');
+            term.writeln('  cat <file>       — display file');
+            term.writeln('  head <file>      — first 10 lines');
+            term.writeln('  tail <file>      — last 10 lines');
+            term.writeln('  echo <text>      — print text');
+            term.writeln('  write <file>     — write stdin to file');
+            term.writeln('  mkdir <dir>      — create directory');
+            term.writeln('  touch <file>     — create empty file');
+            term.writeln('  rm <path>        — remove file');
+            term.writeln('  grep <pat> <f>   — search in file');
+            term.writeln('  wc <file>        — line/word/char count');
+            term.writeln('  env / export     — environment variables');
+            term.writeln('  history          — command history');
+            term.writeln('  which <cmd>      — locate command');
+            term.writeln('  date / uname     — system info');
+            term.writeln('  neofetch         — system overview');
+            term.writeln('  open <page>      — open uvspeed page');
+            term.writeln('');
+            term.writeln('\x1b[36m  Hexcast commands:\x1b[0m');
+            term.writeln('  hexcast          — live camera → terminal (truecolor)');
+            term.writeln('  hexcast front    — front camera');
+            term.writeln('  hexcast back     — back/rear camera');
+            term.writeln('  hexcast test     — test pattern');
+            term.writeln('  hexcast screen   — screen capture');
+            term.writeln('  hexcast send <IP>     — stream camera to remote');
+            term.writeln('  hexcast connect <IP>  — view remote stream');
+            term.writeln('  hexcast ping <IP>     — latency test');
+            term.writeln('  hexcast discover      — scan LAN for peers');
+            term.writeln('  hexcast stop / Ctrl+C — stop active feed');
+            term.writeln('');
+            term.writeln('\x1b[36m  Network:\x1b[0m');
+            term.writeln('  ssh <user@host>  — open SSH (system)');
+            term.writeln('  curl <url>       — fetch URL');
+            term.writeln('  ping <host>      — WebSocket ping');
+            term.writeln('  ifconfig / ip    — show network info');
+            term.writeln('');
+            term.writeln('\x1b[36m  Sync & Link:\x1b[0m');
+            term.writeln('  sync <IP>        — connect kb + hexcast to remote device');
+            term.writeln('  sync serve       — start kb + hexcast broadcast');
+            term.writeln('  sync status      — show active connections');
+            term.writeln('  kb sync <IP>     — receive keystrokes from phone');
+            term.writeln('  kb serve         — broadcast keystrokes');
+            term.writeln('');
+            term.writeln('\x1b[36m  Dev Console:\x1b[0m');
+            term.writeln('  console          — show captured JS logs/errors');
+            term.writeln('  console clear    — clear log buffer');
+            term.writeln('  console watch    — tail live (Ctrl+C to stop)');
+            term.writeln('');
+            term.writeln('\x1b[36m  Quantum Prefix Gutter:\x1b[0m');
+            term.writeln('  gutter on/off    — toggle prefix gutter on cat/head/tail');
+            term.writeln('  prefix <line>    — classify a single code line');
+            term.writeln('');
+            term.writeln('\x1b[36m  Rich Output Tools:\x1b[0m');
+            term.writeln('  chart [nums...]  — sparkline + bar chart (try: chart demo)');
+            term.writeln('  bar [k=v ...]    — horizontal bar chart (try: bar demo)');
+            term.writeln('  table demo       — ASCII table');
+            term.writeln('  heatmap          — random 32×8 heatmap grid');
+            term.writeln('  rg <pattern>     — grep through virtual filesystem');
+            term.writeln('');
+            term.writeln('\x1b[36m  Device emulator:\x1b[0m');
+            term.writeln('  device <preset>  — resize to device frame');
+            term.writeln('  device 400x800   — custom size');
+            term.writeln('  window new <page> <device> — open new window');
+            term.writeln('  window list      — list open windows');
+            term.writeln('');
+            term.writeln('\x1b[36m  Device presets:\x1b[0m');
+            term.writeln('  \x1b[90mPhones:\x1b[0m  iphone  iphone-se  iphone-pm  galaxy  pixel');
+            term.writeln('  \x1b[90mTablets:\x1b[0m ipad  ipad-mini  ipad-pro');
+            term.writeln('  \x1b[90mDesktop:\x1b[0m desktop  macbook  1080p  1440p');
+            term.writeln('  \x1b[90mXR:\x1b[0m      quest3  quest-pro  raybans  vision-pro');
+            term.writeln('');
+            term.writeln('\x1b[36m  Feed windows:\x1b[0m');
+            term.writeln('  feed <IP>        — open video feed from remote hexcast');
+            term.writeln('  feed camera      — open local camera feed window');
+            term.writeln('  feed list        — list active feed windows');
+            term.writeln('  feed close <id>  — close a feed (or "all")');
+            term.writeln('  feed watch "x"   — highlight phrase across all feeds');
+            term.writeln('  feed transcript <id> — dump feed transcript');
+            break;
+
+        case 'clear':
+            term.clear();
+            break;
+
+        case 'ls': {
+            const flagA = args.includes('-a') || args.includes('-la') || args.includes('-al');
+            const flagL = args.includes('-l') || args.includes('-la') || args.includes('-al');
+            const target = args.find(a => !a.startsWith('-')) || cwd;
+            const resolved = resolvePath(target);
+            const node = FS[resolved];
+            if (!node) { term.writeln(`\x1b[31mls: ${target}: No such file or directory\x1b[0m`); break; }
+            if (node.type === 'f') { term.writeln(resolved.split('/').pop()); break; }
+            let items = [...node.children];
+            if (flagA) items = ['.', '..', ...items];
+            if (flagL) {
+                term.writeln(`\x1b[90mtotal ${items.length}\x1b[0m`);
+                for (const name of items) {
+                    if (name === '.' || name === '..') {
+                        term.writeln(`\x1b[34mdrwxr-xr-x  \x1b[36m${name}\x1b[0m`);
+                        continue;
+                    }
+                    const childPath = resolved === '/' ? `/${name}` : `${resolved}/${name}`;
+                    const child = FS[childPath];
+                    if (child && child.type === 'd') {
+                        term.writeln(`\x1b[34mdrwxr-xr-x  \x1b[36m${name}/\x1b[0m`);
+                    } else if (child) {
+                        const sz = child.content ? child.content.length : 0;
+                        term.writeln(`-rw-r--r--  \x1b[90m${String(sz).padStart(6)}\x1b[0m  ${name}`);
+                    } else {
+                        term.writeln(`???????     ${name}`);
+                    }
+                }
+            } else {
+                const colored = items.map(name => {
+                    if (name === '.' || name === '..') return `\x1b[36m${name}\x1b[0m`;
+                    const childPath = resolved === '/' ? `/${name}` : `${resolved}/${name}`;
+                    const child = FS[childPath];
+                    if (child && child.type === 'd') return `\x1b[36m${name}/\x1b[0m`;
+                    if (name.startsWith('.')) return `\x1b[90m${name}\x1b[0m`;
+                    return name;
+                });
+                term.writeln(colored.join('  '));
+            }
+            break;
+        }
+
+        case 'cd': {
+            const target = args[0] || '~';
+            const resolved = resolvePath(target);
+            const node = FS[resolved];
+            if (!node) { term.writeln(`\x1b[31mcd: ${target}: No such file or directory\x1b[0m`); break; }
+            if (node.type !== 'd') { term.writeln(`\x1b[31mcd: ${target}: Not a directory\x1b[0m`); break; }
+            cwd = resolved;
+            env.PWD = resolved;
+            break;
+        }
+
+        case 'pwd':
+            term.writeln(cwd);
+            break;
+
+        case 'cat': {
+            if (!args[0]) { term.writeln('\x1b[33mUsage: cat <file>\x1b[0m'); break; }
+            const resolved = resolvePath(args[0]);
+            const node = FS[resolved];
+            if (!node) { term.writeln(`\x1b[31mcat: ${args[0]}: No such file or directory\x1b[0m`); break; }
+            if (node.type === 'd') { term.writeln(`\x1b[31mcat: ${args[0]}: Is a directory\x1b[0m`); break; }
+            const content = node.content || '';
+            if (gutterEnabled) {
+                const lines = content.split('\n');
+                lines.forEach((line, i) => term.writeln(gutterLine(line, i + 1)));
+            } else {
+                term.writeln(content);
+            }
+            break;
+        }
+
+        case 'head': {
+            if (!args[0]) { term.writeln('\x1b[33mUsage: head <file>\x1b[0m'); break; }
+            const node = FS[resolvePath(args[0])];
+            if (!node || node.type === 'd') { term.writeln(`\x1b[31mhead: ${args[0]}: error\x1b[0m`); break; }
+            const lines = (node.content || '').split('\n').slice(0, 10);
+            if (gutterEnabled) { lines.forEach((l, i) => term.writeln(gutterLine(l, i + 1))); }
+            else { term.writeln(lines.join('\n')); }
+            break;
+        }
+
+        case 'tail': {
+            if (!args[0]) { term.writeln('\x1b[33mUsage: tail <file>\x1b[0m'); break; }
+            const node = FS[resolvePath(args[0])];
+            if (!node || node.type === 'd') { term.writeln(`\x1b[31mtail: ${args[0]}: error\x1b[0m`); break; }
+            const allLines = (node.content || '').split('\n');
+            const lines = allLines.slice(-10);
+            const offset = allLines.length - lines.length;
+            if (gutterEnabled) { lines.forEach((l, i) => term.writeln(gutterLine(l, offset + i + 1))); }
+            else { term.writeln(lines.join('\n')); }
+            break;
+        }
+
+        case 'grep': {
+            if (args.length < 2) { term.writeln('\x1b[33mUsage: grep <pattern> <file>\x1b[0m'); break; }
+            const pat = args[0], file = args[1];
+            const node = FS[resolvePath(file)];
+            if (!node || node.type === 'd') { term.writeln(`\x1b[31mgrep: ${file}: error\x1b[0m`); break; }
+            const lines = (node.content || '').split('\n');
+            const re = new RegExp(pat, 'gi');
+            let found = 0;
+            lines.forEach((line, i) => {
+                if (re.test(line)) {
+                    term.writeln(`\x1b[90m${i+1}:\x1b[0m${line.replace(re, m => `\x1b[31m${m}\x1b[0m`)}`);
+                    found++;
+                }
+            });
+            if (!found) term.writeln('\x1b[90m(no matches)\x1b[0m');
+            break;
+        }
+
+        case 'wc': {
+            if (!args[0]) { term.writeln('\x1b[33mUsage: wc <file>\x1b[0m'); break; }
+            const node = FS[resolvePath(args[0])];
+            if (!node || node.type === 'd') { term.writeln(`\x1b[31mwc: ${args[0]}: error\x1b[0m`); break; }
+            const content = node.content || '';
+            const lines = content.split('\n').length;
+            const words = content.split(/\s+/).filter(Boolean).length;
+            const chars = content.length;
+            term.writeln(`  ${lines} ${words} ${chars} ${args[0]}`);
+            break;
+        }
+
+        case 'mkdir': {
+            if (!args[0]) { term.writeln('\x1b[33mUsage: mkdir <dir>\x1b[0m'); break; }
+            const resolved = resolvePath(args[0]);
+            if (FS[resolved]) { term.writeln(`\x1b[31mmkdir: ${args[0]}: Already exists\x1b[0m`); break; }
+            const parent = resolved.substring(0, resolved.lastIndexOf('/')) || '/';
+            const name = resolved.split('/').pop();
+            if (!FS[parent] || FS[parent].type !== 'd') { term.writeln(`\x1b[31mmkdir: parent not found\x1b[0m`); break; }
+            FS[resolved] = { type: 'd', children: [] };
+            FS[parent].children.push(name);
+            fsSave();
+            break;
+        }
+
+        case 'touch': {
+            if (!args[0]) { term.writeln('\x1b[33mUsage: touch <file>\x1b[0m'); break; }
+            const resolved = resolvePath(args[0]);
+            if (FS[resolved]) break; // exists, just "touch"
+            const parent = resolved.substring(0, resolved.lastIndexOf('/')) || '/';
+            const name = resolved.split('/').pop();
+            if (!FS[parent] || FS[parent].type !== 'd') { term.writeln(`\x1b[31mtouch: parent not found\x1b[0m`); break; }
+            FS[resolved] = { type: 'f', content: '' };
+            FS[parent].children.push(name);
+            fsSave();
+            break;
+        }
+
+        case 'write': {
+            if (!args[0]) { term.writeln('\x1b[33mUsage: write <file> <content...>\x1b[0m'); break; }
+            const resolved = resolvePath(args[0]);
+            const content = args.slice(1).join(' ');
+            const parent = resolved.substring(0, resolved.lastIndexOf('/')) || '/';
+            const name = resolved.split('/').pop();
+            if (!FS[parent] || FS[parent].type !== 'd') { term.writeln(`\x1b[31mwrite: parent not found\x1b[0m`); break; }
+            if (!FS[resolved]) {
+                FS[resolved] = { type: 'f', content };
+                FS[parent].children.push(name);
+            } else {
+                FS[resolved].content = content;
+            }
+            fsSave();
+            term.writeln(`\x1b[32m  wrote ${content.length} bytes → ${args[0]}\x1b[0m`);
+            break;
+        }
+
+        case 'rm': {
+            if (!args[0]) { term.writeln('\x1b[33mUsage: rm <file>\x1b[0m'); break; }
+            const resolved = resolvePath(args[0]);
+            if (!FS[resolved]) { term.writeln(`\x1b[31mrm: ${args[0]}: not found\x1b[0m`); break; }
+            const parent = resolved.substring(0, resolved.lastIndexOf('/')) || '/';
+            const name = resolved.split('/').pop();
+            if (FS[parent] && FS[parent].children) {
+                FS[parent].children = FS[parent].children.filter(c => c !== name);
+            }
+            delete FS[resolved];
+            fsSave();
+            break;
+        }
+
+        case 'echo':
+            term.writeln(args.join(' ').replace(/\$(\w+)/g, (_, k) => env[k] || ''));
+            break;
+
+        case 'date': {
+            const now = new Date();
+            term.writeln(`  ${now.toISOString()}`);
+            term.writeln(`  \x1b[90munix\x1b[0m ${Math.floor(now.getTime()/1000)}`);
+            break;
+        }
+
+        case 'uname':
+            if (args[0] === '-a') {
+                term.writeln(`hexterm ${VERSION} ${navigator.platform} ${navigator.userAgent.slice(0,50)}...`);
+            } else {
+                term.writeln(`hexterm ${VERSION} — ${navigator.platform}`);
+            }
+            break;
+
+        case 'whoami':
+            term.writeln(USER);
+            break;
+
+        case 'hostname':
+            term.writeln(HOSTNAME);
+            break;
+
+        case 'env':
+            for (const [k, v] of Object.entries(env)) {
+                term.writeln(`\x1b[33m${k}\x1b[0m=${v}`);
+            }
+            break;
+
+        case 'export': {
+            if (!args[0]) { term.writeln('\x1b[33mUsage: export KEY=VALUE\x1b[0m'); break; }
+            const eq = args.join(' ');
+            const idx = eq.indexOf('=');
+            if (idx > 0) {
+                env[eq.slice(0, idx)] = eq.slice(idx + 1);
+                term.writeln(`\x1b[32m  set ${eq.slice(0, idx)}\x1b[0m`);
+            }
+            break;
+        }
+
+        case 'unset':
+            if (args[0] && env[args[0]]) { delete env[args[0]]; }
+            break;
+
+        case 'which':
+            if (!args[0]) break;
+            if (ALL_CMDS.includes(args[0])) term.writeln(`/usr/bin/${args[0]}`);
+            else term.writeln(`\x1b[31m${args[0]} not found\x1b[0m`);
+            break;
+
+        case 'type':
+            if (!args[0]) break;
+            if (['cd', 'pwd', 'echo', 'export', 'unset', 'history', 'alias'].includes(args[0])) {
+                term.writeln(`${args[0]} is a shell builtin`);
+            } else if (ALL_CMDS.includes(args[0])) {
+                term.writeln(`${args[0]} is /usr/bin/${args[0]}`);
+            } else {
+                term.writeln(`\x1b[31m${args[0]}: not found\x1b[0m`);
+            }
+            break;
+
+        case 'history': {
+            const hist = JSON.parse(localStorage.getItem('hexterm-history') || '[]');
+            hist.forEach((h, i) => term.writeln(`  \x1b[90m${String(i+1).padStart(4)}\x1b[0m  ${h}`));
+            break;
+        }
+
+        case 'alias':
+            term.writeln('  ll="ls -la"');
+            term.writeln('  h="hexcast"');
+            term.writeln('  hc="hexcast --connect"');
+            break;
+
+        case 'll':
+            processCommand('ls -la ' + args.join(' '));
+            return; // already shows prompt
+
+        case 'h':
+            processCommand('hexcast ' + args.join(' '));
+            return;
+
+        case 'version':
+            term.writeln(`\x1b[35m  hexterm v${VERSION} · beyondBINARY\x1b[0m`);
+            term.writeln('  {+1, 1, -1, +0, 0, -0, +n, n, -n}');
+            break;
+
+        // ━━━ QUANTUM PREFIX GUTTER ━━━
+        case 'gutter': {
+            const sub = args[0] || '';
+            if (sub === 'on') {
+                gutterEnabled = true;
+                localStorage.setItem('hexterm-gutter', '1');
+                term.writeln('\x1b[32m  gutter ON\x1b[0m — cat/head/tail will show prefix gutter');
+            } else if (sub === 'off') {
+                gutterEnabled = false;
+                localStorage.setItem('hexterm-gutter', '0');
+                term.writeln('\x1b[33m  gutter OFF\x1b[0m');
+            } else {
+                term.writeln(`\x1b[36m  Quantum prefix gutter:\x1b[0m ${gutterEnabled ? '\x1b[32mON' : '\x1b[33mOFF'}\x1b[0m`);
+                term.writeln('    gutter on    — enable prefix annotations on cat/head/tail');
+                term.writeln('    gutter off   — disable');
+                term.writeln('    prefix <line>  — classify a single line');
+                term.writeln('');
+                term.writeln('  \x1b[90mPrefixes: n: shebang  +1: comment  -n: import  +0: class\x1b[0m');
+                term.writeln('  \x1b[90m  0: function  -1: error  +n: condition  +2: loop\x1b[0m');
+                term.writeln('  \x1b[90m  -0: return  +3: output  1: variable\x1b[0m');
+            }
+            break;
+        }
+
+        case 'prefix': {
+            const line = args.join(' ');
+            if (!line) {
+                term.writeln('\x1b[33m  Usage: prefix <code line>\x1b[0m');
+                term.writeln('\x1b[90m  Example: prefix import numpy as np\x1b[0m');
+                break;
+            }
+            const prefix = classifyLine(line);
+            const col = PREFIX_COLORS[prefix] || '\x1b[90m';
+            term.writeln(`  ${col}${prefix.padEnd(3)}\x1b[0m ${line}`);
+            break;
+        }
+
+        // ━━━ BUILT-IN RICH OUTPUT TOOLS ━━━
+        case 'chart':
+        case 'sparkline': {
+            const sub = args[0] || 'demo';
+            if (sub === 'demo' || sub === 'test') {
+                const vals = Array.from({length: 40}, () => Math.random() * 100);
+                term.writeln(`\x1b[36m  sparkline:\x1b[0m ${sparkline(vals)}`);
+                term.writeln('');
+                const bars = [
+                    { label: 'latency', value: Math.round(Math.random()*50+5) },
+                    { label: 'fps', value: Math.round(Math.random()*30+30) },
+                    { label: 'memory', value: Math.round(Math.random()*200+50) },
+                    { label: 'streams', value: Math.round(Math.random()*8+1) },
+                    { label: 'keys/sec', value: Math.round(Math.random()*20+1) },
+                    { label: 'bandwidth', value: Math.round(Math.random()*100+10) },
+                ];
+                barChart(bars, 25).forEach(l => term.writeln(l));
+                term.writeln('');
+                const tbl = asciiTable(
+                    ['Metric', 'Value', 'Status'],
+                    bars.map(b => [b.label, String(b.value), b.value > 50 ? '\x1b[32m●\x1b[0m' : '\x1b[33m●\x1b[0m'])
+                );
+                tbl.forEach(l => term.writeln('  ' + l));
+            } else {
+                // Parse numbers from args
+                const nums = args.map(Number).filter(n => !isNaN(n));
+                if (nums.length > 0) {
+                    term.writeln(`  ${sparkline(nums)}`);
+                } else {
+                    term.writeln('\x1b[33m  Usage: chart <numbers...> | chart demo\x1b[0m');
+                }
+            }
+            break;
+        }
+
+        case 'bar': {
+            if (!args.length || args[0] === 'demo') {
+                const bars = [
+                    { label: 'CPU', value: Math.round(Math.random()*100) },
+                    { label: 'GPU', value: Math.round(Math.random()*100) },
+                    { label: 'MEM', value: Math.round(Math.random()*100) },
+                    { label: 'NET', value: Math.round(Math.random()*100) },
+                ];
+                barChart(bars).forEach(l => term.writeln(l));
+            } else {
+                // bar label1=val1 label2=val2 ...
+                const bars = args.map(a => {
+                    const [l, v] = a.split('=');
+                    return { label: l, value: parseInt(v) || 0 };
+                });
+                barChart(bars).forEach(l => term.writeln(l));
+            }
+            break;
+        }
+
+        case 'table': {
+            if (!args.length || args[0] === 'demo') {
+                const tbl = asciiTable(
+                    ['Device', 'Resolution', 'Type'],
+                    [
+                        ['iPhone 15 Pro', '393×852', 'phone'],
+                        ['iPad Air', '820×1180', 'tablet'],
+                        ['Quest 3', '2064×2208', 'XR'],
+                        ['Vision Pro', '3660×3200', 'XR'],
+                        ['MacBook Air', '1440×900', 'desktop'],
+                    ]
+                );
+                tbl.forEach(l => term.writeln('  ' + l));
+            } else {
+                term.writeln('\x1b[33m  Usage: table demo\x1b[0m');
+            }
+            break;
+        }
+
+        case 'heatmap': {
+            // Show a mini heatmap grid of random data
+            const W = 32, H = 8;
+            const HEAT = ' ░▒▓█';
+            const RAINBOW = ['\x1b[38;2;255;56;56m','\x1b[38;2;255;140;56m','\x1b[38;2;255;225;56m','\x1b[38;2;63;185;80m','\x1b[38;2;56;165;255m','\x1b[38;2;188;140;255m'];
+            for (let y = 0; y < H; y++) {
+                let row = '  ';
+                for (let x = 0; x < W; x++) {
+                    const v = Math.random();
+                    const ci = Math.floor(x / W * RAINBOW.length);
+                    const hi = Math.floor(v * (HEAT.length - 1));
+                    row += RAINBOW[ci] + HEAT[hi];
+                }
+                term.writeln(row + '\x1b[0m');
+            }
+            term.writeln('\x1b[90m  heatmap — 32×8 random data\x1b[0m');
+            break;
+        }
+
+        case 'rg': {
+            // rg/grep through virtual filesystem
+            const pattern = args[0] || '';
+            if (!pattern) { term.writeln('\x1b[33m  Usage: rg <pattern> [path]\x1b[0m'); break; }
+            const searchDir = args[1] ? resolvePath(args[1]) : cwd;
+            let found = 0;
+            try {
+                const re = new RegExp(pattern, 'gi');
+                for (const [path, node] of Object.entries(FS)) {
+                    if (node.type !== 'f' || !path.startsWith(searchDir)) continue;
+                    const lines = (node.content || '').split('\n');
+                    lines.forEach((line, i) => {
+                        if (re.test(line)) {
+                            re.lastIndex = 0; // reset
+                            const hl = line.replace(re, m => `\x1b[31m${m}\x1b[0m`);
+                            const relPath = path.replace(searchDir === '/' ? '' : searchDir, '');
+                            term.writeln(`\x1b[35m${relPath}\x1b[0m:\x1b[90m${i+1}\x1b[0m: ${hl}`);
+                            found++;
+                        }
+                    });
+                }
+            } catch(e) {
+                term.writeln(`\x1b[31m  Invalid regex: ${e.message}\x1b[0m`);
+                break;
+            }
+            if (!found) term.writeln('\x1b[90m  No matches found\x1b[0m');
+            else term.writeln(`\x1b[90m  ${found} match${found > 1 ? 'es' : ''}\x1b[0m`);
+            break;
+        }
+
+        case 'neofetch': {
+            const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+            term.writeln('\x1b[36m  ██  ██\x1b[0m  \x1b[1mhexterm\x1b[0m');
+            term.writeln('\x1b[36m  ██████\x1b[0m  \x1b[90m---------\x1b[0m');
+            term.writeln('\x1b[36m  ██  ██\x1b[0m  \x1b[33mOS:\x1b[0m hexterm ' + VERSION);
+            term.writeln('\x1b[36m  ██  ██\x1b[0m  \x1b[33mHost:\x1b[0m ' + navigator.platform);
+            term.writeln('\x1b[36m        \x1b[0m  \x1b[33mKernel:\x1b[0m ' + (navigator.userAgent.match(/\(([^)]+)\)/)?.[1] || '?'));
+            term.writeln('\x1b[36m  ██████\x1b[0m  \x1b[33mShell:\x1b[0m hexsh ' + VERSION);
+            term.writeln('\x1b[36m  ██  ██\x1b[0m  \x1b[33mTerminal:\x1b[0m xterm.js');
+            term.writeln('\x1b[36m  ██████\x1b[0m  \x1b[33mPWA:\x1b[0m ' + (isStandalone ? 'standalone' : 'browser'));
+            term.writeln('           \x1b[33mCamera:\x1b[0m ' + (navigator.mediaDevices ? 'available' : 'unavailable'));
+            term.writeln('           \x1b[33mOnline:\x1b[0m ' + navigator.onLine);
+            const mem = navigator.deviceMemory;
+            if (mem) term.writeln('           \x1b[33mMemory:\x1b[0m ~' + mem + ' GB');
+            const cores = navigator.hardwareConcurrency;
+            if (cores) term.writeln('           \x1b[33mCPU:\x1b[0m ' + cores + ' cores');
+            term.writeln('');
+            term.writeln('  \x1b[40m  \x1b[41m  \x1b[42m  \x1b[43m  \x1b[44m  \x1b[45m  \x1b[46m  \x1b[47m  \x1b[0m');
+            break;
+        }
+
+        case 'cowsay': {
+            const msg = args.join(' ') || 'moo';
+            const top = ' ' + '_'.repeat(msg.length + 2);
+            const mid = `< ${msg} >`;
+            const bot = ' ' + '-'.repeat(msg.length + 2);
+            term.writeln(top);
+            term.writeln(mid);
+            term.writeln(bot);
+            term.writeln('        \\   ^__^');
+            term.writeln('         \\  (oo)\\_______');
+            term.writeln('            (__)\\       )\\/\\');
+            term.writeln('                ||----w |');
+            term.writeln('                ||     ||');
+            break;
+        }
+
+        case 'fortune':
+            const fortunes = [
+                'The best way to predict the future is to invent it. — Alan Kay',
+                'Simplicity is the ultimate sophistication. — Leonardo da Vinci',
+                'Any sufficiently advanced technology is indistinguishable from magic. — Arthur C. Clarke',
+                'The only way to do great work is to love what you do. — Steve Jobs',
+                '{+1, 1, -1, +0, 0, -0, +n, n, -n} — beyondBINARY',
+                'First, solve the problem. Then, write the code. — John Johnson',
+                'Talk is cheap. Show me the code. — Linus Torvalds',
+            ];
+            term.writeln('  ' + fortunes[Math.floor(Math.random() * fortunes.length)]);
+            break;
+
+        // ── Network ──
+        case 'ifconfig':
+        case 'ip': {
+            term.writeln('\x1b[32mlo0\x1b[0m: flags=8049<UP,LOOPBACK,RUNNING>');
+            term.writeln('      inet 127.0.0.1 netmask 0xff000000');
+            term.writeln('');
+            term.writeln('\x1b[32mwlan0\x1b[0m: flags=8863<UP,BROADCAST,RUNNING>');
+            term.writeln(`      inet \x1b[36m${window._localIP || '?.?.?.?'}\x1b[0m`);
+            term.writeln(`      status: ${navigator.onLine ? '\x1b[32mactive\x1b[0m' : '\x1b[31minactive\x1b[0m'}`);
+            break;
+        }
+
+        case 'ping': {
+            const host = args[0];
+            if (!host) { term.writeln('\x1b[33mUsage: ping <host>\x1b[0m'); break; }
+            term.writeln(`\x1b[36mPING ${host} via WebSocket...\x1b[0m`);
+            let wsHost = host;
+            if (!wsHost.includes(':')) wsHost += ':' + HEXCAST_PORT;
+            if (!wsHost.startsWith('ws://')) wsHost = 'ws://' + wsHost;
+            try {
+                const ws = new WebSocket(wsHost);
+                let count = 0;
+                const times = [];
+                ws.onopen = () => {
+                    const doPing = () => {
+                        if (count >= 4) {
+                            ws.close();
+                            const avg = times.reduce((a,b) => a+b, 0) / times.length;
+                            term.writeln(`\x1b[90m--- ${host} ping statistics ---\x1b[0m`);
+                            term.writeln(`${count} packets, avg=${avg.toFixed(1)}ms, min=${Math.min(...times).toFixed(1)}ms, max=${Math.max(...times).toFixed(1)}ms`);
+                            showPrompt();
+                            return;
+                        }
+                        const t0 = performance.now();
+                        ws.send(JSON.stringify({ type: 'ping', t: Date.now() / 1000 }));
+                        // We measure open→message or just send time
+                        const t1 = performance.now();
+                        const rtt = t1 - t0;
+                        times.push(rtt);
+                        count++;
+                        term.writeln(`  \x1b[90m${count}:\x1b[0m rtt=${rtt.toFixed(1)}ms`);
+                        setTimeout(doPing, 1000);
+                    };
+                    doPing();
+                };
+                ws.onerror = () => {
+                    term.writeln(`\x1b[31m  Connection failed to ${host}\x1b[0m`);
+                    showPrompt();
+                };
+                ws.onclose = () => {};
+            } catch(e) {
+                term.writeln(`\x1b[31m  Error: ${e.message}\x1b[0m`);
+            }
+            return; // async
+        }
+
+        case 'curl': {
+            const url = args[0];
+            if (!url) { term.writeln('\x1b[33mUsage: curl <url>\x1b[0m'); break; }
+            term.writeln(`\x1b[90mfetching ${url}...\x1b[0m`);
+            fetch(url, { mode: 'cors' })
+                .then(r => r.text())
+                .then(body => {
+                    const lines = body.split('\n').slice(0, 50);
+                    lines.forEach(l => term.writeln(l));
+                    if (body.split('\n').length > 50) term.writeln('\x1b[90m... (truncated)\x1b[0m');
+                    showPrompt();
+                })
+                .catch(e => {
+                    term.writeln(`\x1b[31m  ${e.message}\x1b[0m`);
+                    term.writeln('\x1b[90m  (CORS may block cross-origin requests)\x1b[0m');
+                    showPrompt();
+                });
+            return; // async
+
+        }
+
+        case 'ssh': {
+            const target = args[0] || '';
+            if (!target) { term.writeln('\x1b[33mUsage: ssh user@host\x1b[0m'); break; }
+            // On iOS, we can open an ssh:// URL which might invoke Termius/Prompt/etc.
+            const sshUrl = target.includes('@') ? `ssh://${target}` : `ssh://${USER}@${target}`;
+            term.writeln(`\x1b[36m  Opening ${sshUrl}\x1b[0m`);
+            term.writeln('\x1b[90m  (requires SSH app like Termius, Prompt, or Blink)\x1b[0m');
+            window.open(sshUrl, '_blank');
+            break;
+        }
+
+        case 'open': {
+            const pages = {
+                notepad: 'quantum-notepad.html', archflow: 'archflow.html',
+                blackwell: 'blackwell.html', questcast: 'questcast.html',
+                jawta: 'jawta-audio.html', hexcast: 'hexcast.html',
+                game: 'brothernumsy.html', dashboard: 'github-dashboard.html',
+                lab: 'research-lab.html', send: 'hexcast-send.html',
+                terminal: 'terminal.html',
+            };
+            const target = pages[args[0]];
+            if (target) {
+                openOverlay(target, args[0]);
+                term.writeln(`\x1b[32m  Opening ${target}\x1b[0m`);
+            } else {
+                if (args[0] && (args[0].startsWith('http') || args[0].includes('.'))) {
+                    window.open(args[0], '_blank');
+                    term.writeln(`\x1b[32m  Opening ${args[0]}\x1b[0m`);
+                } else {
+                    term.writeln(`\x1b[33m  Pages: ${Object.keys(pages).join(', ')}\x1b[0m`);
+                }
+            }
+            break;
+        }
+
+        case 'kb':
+        case 'kbatch':
+        case 'keyboard': {
+            const sub = args[0] || '';
+            if (sub === 'sync' || sub === 'connect') {
+                const host = args[1] || '';
+                if (!host) {
+                    term.writeln('\x1b[33m  Usage: kb sync <IP>  — receive typing from phone\x1b[0m');
+                    term.writeln('\x1b[90m  Phone runs hexterm PWA, keystrokes show on Mac keyboard\x1b[0m');
+                    break;
+                }
+                kbSyncConnect(host);
+                term.writeln(`\x1b[36m  kbatch sync\x1b[0m connecting to ${host}...`);
+            } else if (sub === 'serve') {
+                kbSyncServe(args[1] ? parseInt(args[1]) : 9877);
+            } else if (sub === 'reset' || sub === 'clear') {
+                KB.heatmap = {};
+                KB.trails = [];
+                KB.totalKeys = 0;
+                KB.lastKey = null;
+                term.writeln('\x1b[33m  kbatch reset\x1b[0m');
+            } else {
+                term.writeln('\x1b[36m  Keyboard heatmap (kbatch):\x1b[0m');
+                term.writeln('    kb sync <IP>    — receive keystrokes from phone');
+                term.writeln('    kb serve        — broadcast keystrokes');
+                term.writeln('    kb reset        — clear heatmap');
+                term.writeln('');
+                term.writeln(`  \x1b[90m  Total keys: ${KB.totalKeys}  Peers: ${KB.syncPeers}\x1b[0m`);
+                const top = Object.entries(KB.heatmap)
+                    .sort((a,b) => b[1] - a[1]).slice(0, 10)
+                    .map(([k, v]) => `${k === ' ' ? 'SPC' : k.toUpperCase()}:${Math.round(v)}`)
+                    .join('  ');
+                if (top) term.writeln(`  \x1b[33m  Hot: ${top}\x1b[0m`);
+            }
+            break;
+        }
+
+        // ━━━ DEV CONSOLE ━━━
+        case 'console':
+        case 'devlog': {
+            const sub = args[0] || '';
+            if (sub === 'clear') {
+                devLog.length = 0;
+                term.writeln('\x1b[33m  console cleared\x1b[0m');
+            } else if (sub === 'watch') {
+                devWatching = true;
+                term.writeln('\x1b[36m  console watch\x1b[0m — tailing JS logs (Ctrl+C to stop)');
+                term.writeln('\x1b[90m  Waiting for log output...\x1b[0m');
+            } else if (sub === 'stop' || sub === 'unwatch') {
+                devWatching = false;
+                term.writeln('\x1b[33m  console watch stopped\x1b[0m');
+            } else {
+                // Show buffered logs
+                if (devLog.length === 0) {
+                    term.writeln('\x1b[90m  (no logs captured)\x1b[0m');
+                } else {
+                    term.writeln(`\x1b[36m  Dev Console\x1b[0m — ${devLog.length} entries (max ${DEV_LOG_MAX}):`);
+                    term.writeln('');
+                    for (const entry of devLog) {
+                        const t = new Date(entry.ts).toLocaleTimeString();
+                        const col = entry.level === 'error' ? '31' : entry.level === 'warn' ? '33' : '90';
+                        const lvl = entry.level.toUpperCase().padEnd(5);
+                        term.writeln(`  \x1b[90m${t}\x1b[0m \x1b[${col}m${lvl}\x1b[0m ${entry.msg}`);
+                    }
+                    term.writeln('');
+                    term.writeln('\x1b[90m  console clear | console watch | console stop\x1b[0m');
+                }
+            }
+            break;
+        }
+
+        // ━━━ SYNC (quick link) ━━━
+        case 'sync':
+        case 'link': {
+            const sub = args[0] || '';
+            if (sub === 'serve' || sub === 'start') {
+                term.writeln('\x1b[36m  sync serve\x1b[0m — starting kb broadcast + hexcast serve');
+                kbSyncServe(args[1] ? parseInt(args[1]) : 9877);
+                // Also start hexcast serve (if available)
+                term.writeln('\x1b[32m  + kb serve\x1b[0m listening on :9877');
+                term.writeln('\x1b[32m  + hexcast\x1b[0m ready for camera stream');
+                term.writeln('\x1b[90m  Remote device: sync <this-IP>\x1b[0m');
+            } else if (sub === 'status') {
+                term.writeln('\x1b[36m  Sync status:\x1b[0m');
+                term.writeln(`    \x1b[90mKB peers:\x1b[0m    ${KB.syncPeers}`);
+                term.writeln(`    \x1b[90mKB total keys:\x1b[0m ${KB.totalKeys}`);
+                const kbConnected = KB.syncWs && KB.syncWs.readyState === 1;
+                term.writeln(`    \x1b[90mKB sync:\x1b[0m     ${kbConnected ? '\x1b[32mconnected' : 'idle'}\x1b[0m`);
+                term.writeln(`    \x1b[90mKB serve:\x1b[0m    ${_kbServer ? '\x1b[32mlistening' : 'idle'}\x1b[0m`);
+                const hexActive = window._hexTermWS && !window._hexTermWS._stopped;
+                const hexSend = window._hexTermSend && !window._hexTermSend._stopped;
+                term.writeln(`    \x1b[90mHexcast in:\x1b[0m  ${hexActive ? '\x1b[32mconnected' : 'idle'}\x1b[0m`);
+                term.writeln(`    \x1b[90mHexcast out:\x1b[0m ${hexSend ? '\x1b[32msending' : 'idle'}\x1b[0m`);
+                const feedCount = getActiveFeeds().length;
+                term.writeln(`    \x1b[90mFeed windows:\x1b[0m ${feedCount > 0 ? '\x1b[32m' + feedCount + ' active' : '0'}\x1b[0m`);
+            } else if (sub === 'stop') {
+                term.writeln('\x1b[33m  sync stopped\x1b[0m — closing connections');
+                // Close kb sync WS
+                if (KB.syncWs) { try { KB.syncWs.close(); } catch(e) {} KB.syncWs = null; }
+                // Close hexcast connections
+                if (window._hexTermWS) { try { window._hexTermWS.stop(); } catch(e) {} }
+                if (window._hexTermSend) { try { window._hexTermSend.stop(); } catch(e) {} }
+            } else if (sub) {
+                // sync <IP> — connect both kb and hexcast + open feed window
+                const host = sub;
+                term.writeln(`\x1b[36m  sync\x1b[0m connecting to ${host}...`);
+                // kb sync
+                kbSyncConnect(host);
+                term.writeln(`\x1b[32m  + kb sync\x1b[0m → ${host}:9877`);
+                // hexcast connect (in-terminal)
+                term.writeln(`\x1b[32m  + hexcast connect\x1b[0m → ${host}`);
+                setTimeout(() => processCommand(`hexcast connect ${host}`), 100);
+                // Also open a feed window
+                term.writeln(`\x1b[32m  + feed window\x1b[0m → ${host}`);
+                setTimeout(() => processCommand(`feed ${host}`), 200);
+            } else {
+                term.writeln('\x1b[36m  Sync — quick link to another device:\x1b[0m');
+                term.writeln('    sync <IP>      — connect kb + hexcast to remote');
+                term.writeln('    sync serve     — broadcast kb + hexcast locally');
+                term.writeln('    sync status    — show active connections');
+                term.writeln('    sync stop      — close all sync connections');
+            }
+            break;
+        }
+
+        case 'device': {
+            const preset = args[0] || '';
+            const devices = {
+                // Phones
+                'iphone':      '393×852',   'phone':     '393×852',
+                'iphone-se':   '375×667',   'se':        '375×667',
+                'iphone-pm':   '430×932',   'pro-max':   '430×932',
+                'galaxy':      '360×780',   'samsung':   '360×780',
+                'pixel':       '412×915',   'android':   '412×915',
+                // Tablets
+                'ipad':        '820×1180',  'tablet':    '820×1180',
+                'ipad-mini':   '744×1133',
+                'ipad-pro':    '1024×1366',
+                // Desktop
+                'desktop':     '1400×900',
+                'macbook':     '1440×900',  'laptop':    '1440×900',
+                '1080p':       '1920×1080', 'fhd':       '1920×1080',
+                '1440p':       '2560×1440', 'qhd':       '2560×1440',
+                // XR
+                'quest3':      '2064×2208', 'meta-quest': '2064×2208',
+                'quest-pro':   '1800×1920',
+                'raybans':     '1280×960',  'meta-glasses': '1280×960',
+                'vision':      '3660×3200', 'vision-pro':  '3660×3200',
+            };
+            // De-dupe for display: show primary names only
+            const displayDevices = {
+                'iphone':      '393×852',
+                'iphone-se':   '375×667',
+                'iphone-pm':   '430×932',
+                'galaxy':      '360×780',
+                'pixel':       '412×915',
+                'ipad':        '820×1180',
+                'ipad-mini':   '744×1133',
+                'ipad-pro':    '1024×1366',
+                'desktop':     '1400×900',
+                'macbook':     '1440×900',
+                '1080p':       '1920×1080',
+                '1440p':       '2560×1440',
+                'quest3':      '2064×2208',
+                'quest-pro':   '1800×1920',
+                'raybans':     '1280×960',
+                'vision-pro':  '3660×3200',
+            };
+            if (!preset) {
+                term.writeln('\x1b[36m  Device presets:\x1b[0m');
+                term.writeln('  \x1b[90m── Phones ──\x1b[0m');
+                ['iphone','iphone-se','iphone-pm','galaxy','pixel'].forEach(n =>
+                    term.writeln(`    \x1b[33m${n.padEnd(14)}\x1b[0m ${displayDevices[n]}`));
+                term.writeln('  \x1b[90m── Tablets ──\x1b[0m');
+                ['ipad','ipad-mini','ipad-pro'].forEach(n =>
+                    term.writeln(`    \x1b[33m${n.padEnd(14)}\x1b[0m ${displayDevices[n]}`));
+                term.writeln('  \x1b[90m── Desktop ──\x1b[0m');
+                ['desktop','macbook','1080p','1440p'].forEach(n =>
+                    term.writeln(`    \x1b[33m${n.padEnd(14)}\x1b[0m ${displayDevices[n]}`));
+                term.writeln('  \x1b[90m── XR ──\x1b[0m');
+                ['quest3','quest-pro','raybans','vision-pro'].forEach(n =>
+                    term.writeln(`    \x1b[33m${n.padEnd(14)}\x1b[0m ${displayDevices[n]}`));
+                term.writeln('');
+                term.writeln('\x1b[90m  Usage: device iphone | device 400x800\x1b[0m');
+                if (window.__TAURI__) {
+                    term.writeln('\x1b[90m  (Tauri native resize enabled)\x1b[0m');
+                } else {
+                    term.writeln('\x1b[90m  (Browser mode — resize manually)\x1b[0m');
+                }
+                break;
+            }
+            // Tauri native resize
+            if (window.__TAURI__) {
+                window.__TAURI__.core.invoke('set_device_frame', {
+                    label: 'hexterm',
+                    device: preset,
+                }).then(r => {
+                    term.writeln(`\x1b[32m  ✓ Resized to ${r.device} (${r.width}×${r.height})\x1b[0m`);
+                    showPrompt();
+                }).catch(e => {
+                    term.writeln(`\x1b[31m  ${e}\x1b[0m`);
+                    showPrompt();
+                });
+                return;
+            } else {
+                // Browser fallback — just log
+                const size = devices[preset];
+                if (size) {
+                    const [w, h] = size.split('×').map(Number);
+                    try { window.resizeTo(w + 16, h + 88); } catch(e) {}
+                    term.writeln(`\x1b[33m  device ${preset} (${size}) — manual resize in browser\x1b[0m`);
+                } else if (preset.includes('x')) {
+                    term.writeln(`\x1b[33m  Custom size: ${preset}\x1b[0m`);
+                } else {
+                    term.writeln(`\x1b[31m  Unknown device: ${preset}\x1b[0m`);
+                }
+            }
+            break;
+        }
+
+        case 'window': {
+            const sub = args[0] || '';
+            if (sub === 'new' || sub === 'open') {
+                const page = args[1] || 'terminal.html';
+                const dev = args[2] || 'iphone';
+                if (window.__TAURI__) {
+                    window.__TAURI__.core.invoke('open_window', {
+                        label: `win-${Date.now() % 10000}`,
+                        url: page,
+                        title: page.replace('.html', ''),
+                        device: dev,
+                    }).then(r => {
+                        term.writeln(`\x1b[32m  ✓ Opened ${page} as ${r.device} (${r.width}×${r.height})\x1b[0m`);
+                        showPrompt();
+                    }).catch(e => {
+                        term.writeln(`\x1b[31m  ${e}\x1b[0m`);
+                        showPrompt();
+                    });
+                    return;
+                } else {
+                    window.open(page, '_blank', `width=420,height=860`);
+                    term.writeln(`\x1b[32m  Opened ${page}\x1b[0m`);
+                }
+            } else if (sub === 'list' || sub === 'ls') {
+                if (window.__TAURI__) {
+                    window.__TAURI__.core.invoke('list_windows').then(wins => {
+                        term.writeln('\x1b[36m  Open windows:\x1b[0m');
+                        wins.forEach(w => {
+                            term.writeln(`    \x1b[33m${w.label}\x1b[0m  ${w.width}×${w.height}`);
+                        });
+                        showPrompt();
+                    });
+                    return;
+                } else {
+                    term.writeln('\x1b[90m  Window list requires Tauri native app\x1b[0m');
+                }
+            } else {
+                term.writeln('\x1b[36m  Window commands:\x1b[0m');
+                term.writeln('    window new [page] [device]  — open new window');
+                term.writeln('    window list                 — list open windows');
+                term.writeln('');
+                term.writeln('\x1b[90m  Examples:\x1b[0m');
+                term.writeln('    window new terminal.html iphone');
+                term.writeln('    window new quantum-notepad.html desktop');
+                term.writeln('    window new hexcast-send.html ipad');
+            }
+            break;
+        }
+
+        case 'exit':
+            if (window.__TAURI__) {
+                window.__TAURI__.core.invoke('plugin:process|exit', { exitCode: 0 });
+            } else {
+                term.writeln('\x1b[90m  (PWA mode — close the tab to exit)\x1b[0m');
+            }
+            break;
+
+        // ━━━ HEXCAST ━━━
+        case 'hexcast':
+        case 'camera': {
+            const sub = (args[0] || '').toLowerCase();
+
+            // Stop
+            if (sub === 'stop' || sub === 'off' || sub === 'quit') {
+                let stopped = false;
+                if (window._hexTermFeed) { window._hexTermFeed.stop(); stopped = true; term.writeln('\x1b[33m  hexcast stopped\x1b[0m'); }
+                if (window._hexTermSend) { window._hexTermSend.stop(); stopped = true; term.writeln('\x1b[33m  send stopped\x1b[0m'); }
+                if (window._hexTermWS) { window._hexTermWS.stop(); stopped = true; term.writeln('\x1b[33m  connect stopped\x1b[0m'); }
+                if (!stopped) term.writeln('\x1b[90m  No active feed\x1b[0m');
+                break;
+            }
+
+            // Discover (simulated — scans common IPs for open WS)
+            if (sub === 'discover') {
+                term.writeln('\x1b[36m  hexcast discover\x1b[0m — scanning LAN...');
+                term.writeln('\x1b[90m  (browser mDNS not available — trying common IPs)\x1b[0m');
+                let found = 0;
+                const subnet = '192.168.1';
+                const probe = async (ip) => {
+                    return new Promise(resolve => {
+                        try {
+                            const ws = new WebSocket(`ws://${ip}:${HEXCAST_PORT}`);
+                            const timer = setTimeout(() => { ws.close(); resolve(null); }, 800);
+                            ws.onopen = () => { clearTimeout(timer); ws.close(); resolve(ip); };
+                            ws.onerror = () => { clearTimeout(timer); resolve(null); };
+                        } catch(e) { resolve(null); }
+                    });
+                };
+                (async () => {
+                    // Probe last octets: common router ranges
+                    const targets = [];
+                    for (let i = 1; i <= 30; i++) targets.push(`${subnet}.${i}`);
+                    for (let i = 100; i <= 110; i++) targets.push(`${subnet}.${i}`);
+
+                    const batch = 10;
+                    for (let i = 0; i < targets.length; i += batch) {
+                        const chunk = targets.slice(i, i + batch);
+                        const results = await Promise.all(chunk.map(probe));
+                        for (const ip of results) {
+                            if (ip) {
+                                found++;
+                                term.writeln(`  \x1b[32m✓\x1b[0m ${ip}:${HEXCAST_PORT} — \x1b[36mhexcast connect ${ip}\x1b[0m`);
+                            }
+                        }
+                    }
+                    if (found === 0) {
+                        term.writeln('\x1b[90m  No hexcast peers found. Start one: hexcast --serve\x1b[0m');
+                    } else {
+                        term.writeln(`\x1b[32m  Found ${found} peer(s)\x1b[0m`);
+                    }
+                    showPrompt();
+                })();
+                return;
+            }
+
+            // Ping
+            if (sub === 'ping') {
+                const host = args[1];
+                if (!host) { term.writeln('\x1b[33m  Usage: hexcast ping <IP>\x1b[0m'); break; }
+                processCommand(`ping ${host}`);
+                return;
+            }
+
+            // Send
+            if (sub === 'send') {
+                let sendHost = args[1] || '';
+                if (!sendHost) {
+                    term.writeln('\x1b[33m  Usage: hexcast send <IP>\x1b[0m');
+                    term.writeln('\x1b[90m  Remote runs: hexcast --receive\x1b[0m');
+                    break;
+                }
+                if (!sendHost.includes(':')) sendHost += ':' + HEXCAST_PORT;
+                if (!sendHost.startsWith('ws://')) sendHost = 'ws://' + sendHost;
+                term.writeln(`\x1b[36m  hexcast send\x1b[0m → ${sendHost}`);
+
+                (async function() {
+                    try {
+                        const sendFacing = (args[2] === 'back') ? 'environment' : 'user';
+                        const stream = await navigator.mediaDevices.getUserMedia({
+                            video: { facingMode: sendFacing, width: { ideal: 480 }, height: { ideal: 360 } },
+                            audio: false
+                        });
+                        const vid = document.createElement('video');
+                        vid.setAttribute('playsinline', '');
+                        vid.muted = true;
+                        vid.srcObject = stream;
+                        await vid.play();
+
+                        const cvs = document.createElement('canvas');
+                        cvs.width = 480; cvs.height = 360;
+                        const cctx = cvs.getContext('2d');
+
+                        const ws = new WebSocket(sendHost);
+                        let n = 0, running = true, timer = null;
+
+                        ws.onopen = () => {
+                            term.writeln(`\x1b[32m  Connected! Streaming ${sendFacing === 'user' ? 'front' : 'back'} camera\x1b[0m`);
+                            timer = setInterval(() => {
+                                if (!running) return;
+                                cctx.drawImage(vid, 0, 0, 480, 360);
+                                const dataUrl = cvs.toDataURL('image/jpeg', 0.5);
+                                const b64 = dataUrl.split(',')[1];
+                                const sz = Math.round(b64.length * 0.75);
+                                const packet = JSON.stringify({
+                                    type: 'frame', v: VERSION,
+                                    src: `pwa:${sendFacing === 'user' ? 'front' : 'back'}`,
+                                    w: 480, h: 360, sz, t: Date.now() / 1000,
+                                }) + '\n' + b64;
+                                try { ws.send(packet); n++; } catch(e) {}
+                                if (n % 30 === 0) {
+                                    term.write(`\r\x1b[K\x1b[90m  streaming: ${n} frames, ${(sz/1024).toFixed(1)}KB/frame\x1b[0m`);
+                                }
+                            }, 67);
+                        };
+                        ws.onerror = () => term.writeln('\x1b[31m  Connection error\x1b[0m');
+                        ws.onclose = () => {
+                            running = false;
+                            if (timer) clearInterval(timer);
+                            stream.getTracks().forEach(t => t.stop());
+                            term.writeln(`\r\n\x1b[33m  Send ended — ${n} frames\x1b[0m`);
+                            window._hexTermSend = null;
+                            showPrompt();
+                        };
+
+                        window._hexTermSend = {
+                            stop() { running = false; if (timer) clearInterval(timer); ws.close(); stream.getTracks().forEach(t => t.stop()); window._hexTermSend = null; }
+                        };
+                    } catch(e) {
+                        term.writeln(`\x1b[31m  Error: ${e.message}\x1b[0m`);
+                        showPrompt();
+                    }
+                })();
+                return;
+            }
+
+            // Connect (receive and render remote stream)
+            if (sub === 'connect') {
+                let host = args[1] || '';
+                if (!host) {
+                    term.writeln('\x1b[33m  Usage: hexcast connect <IP>\x1b[0m');
+                    term.writeln('\x1b[90m  Remote runs: hexcast --serve\x1b[0m');
+                    break;
+                }
+                if (!host.includes(':')) host += ':' + HEXCAST_PORT;
+                if (!host.startsWith('ws://')) host = 'ws://' + host;
+                term.writeln(`\x1b[36m  hexcast connect\x1b[0m → ${host}`);
+
+                try {
+                    const ws = new WebSocket(host);
+                    let n = 0, running = true;
+
+                    ws.onopen = () => {
+                        term.writeln('\x1b[32m  Connected! Rendering remote stream...\x1b[0m');
+                        term.writeln('\x1b[90m  Ctrl+C or hexcast stop to disconnect\x1b[0m');
+                    };
+
+                    ws.onmessage = (evt) => {
+                        if (!running) return;
+                        try {
+                            const parts = evt.data.split('\n', 2);
+                            const meta = JSON.parse(parts[0]);
+                            if (meta.type !== 'frame' || !parts[1]) return;
+
+                            const b64 = parts[1];
+                            n++;
+
+                            // Decode JPEG → canvas → ANSI
+                            const img = new Image();
+                            img.onload = () => {
+                                const cols = term.cols || 80;
+                                const rows = (term.rows || 24) - 2;
+                                const pixH = rows * 2;
+
+                                const cvs = document.createElement('canvas');
+                                cvs.width = cols;
+                                cvs.height = pixH;
+                                const ctx = cvs.getContext('2d', { willReadFrequently: true });
+                                ctx.drawImage(img, 0, 0, cols, pixH);
+                                const px = ctx.getImageData(0, 0, cols, pixH).data;
+
+                                let frame = '\x1b[H';
+                                for (let row = 0; row < rows; row++) {
+                                    let line = '';
+                                    const y0 = row * 2, y1 = row * 2 + 1;
+                                    for (let x = 0; x < cols; x++) {
+                                        const i0 = (y0 * cols + x) * 4;
+                                        const i1 = (y1 * cols + x) * 4;
+                                        line += `\x1b[38;2;${px[i0]};${px[i0+1]};${px[i0+2]}m\x1b[48;2;${px[i1]};${px[i1+1]};${px[i1+2]}m▀`;
+                                    }
+                                    frame += line + '\x1b[0m' + (row < rows - 1 ? '\r\n' : '');
+                                }
+                                frame += `\r\n\x1b[36m hexcast\x1b[0m \x1b[90m← ${meta.src || '?'} ${meta.w}×${meta.h} f:${n}\x1b[0m`;
+                                term.write(frame);
+                            };
+                            img.src = 'data:image/jpeg;base64,' + b64;
+                        } catch(e) {}
+                    };
+
+                    ws.onerror = () => { term.writeln('\x1b[31m  Connection error\x1b[0m'); showPrompt(); };
+                    ws.onclose = () => {
+                        if (!running) return;
+                        running = false;
+                        term.write('\x1b[0m\x1b[2J\x1b[H');
+                        term.writeln(`\x1b[33m  Disconnected — ${n} frames received\x1b[0m`);
+                        window._hexTermWS = null;
+                        showPrompt();
+                    };
+
+                    window._hexTermWS = {
+                        stop() { running = false; ws.close(); term.write('\x1b[0m\x1b[2J\x1b[H'); window._hexTermWS = null; }
+                    };
+                } catch(e) {
+                    term.writeln(`\x1b[31m  Error: ${e.message}\x1b[0m`);
+                }
+                return;
+            }
+
+            // ── Local camera / test / screen feed ──
+            const source = (sub === 'screen') ? 'screen' : (sub === 'test') ? 'test' : 'camera';
+            const facingMode = (sub === 'back' || sub === 'rear') ? 'environment' : 'user';
+            const cols = term.cols || 80;
+            const res = cols;
+            const rows = (term.rows || 24) - 2;
+            const pixH = rows * 2;
+
+            term.writeln(`\x1b[36m  hexcast — live ${source} → terminal\x1b[0m`);
+            term.writeln(`\x1b[90m  ${res}×${pixH}px → ${res}×${rows} chars | Ctrl+C to stop\x1b[0m`);
+
+            (async function() {
+                let stream = null, video = null, canvas = null, ctx = null, running = true, animId = null;
+                try {
+                    video = document.createElement('video');
+                    video.setAttribute('playsinline', '');
+                    video.muted = true;
+                    canvas = document.createElement('canvas');
+                    canvas.width = res; canvas.height = pixH;
+                    ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+                    if (source === 'camera') {
+                        stream = await navigator.mediaDevices.getUserMedia({
+                            video: { width: { ideal: res }, height: { ideal: pixH }, facingMode }, audio: false
+                        });
+                    } else if (source === 'screen') {
+                        stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
+                    }
+
+                    if (stream) { video.srcObject = stream; await video.play(); }
+
+                    let frameN = 0;
+                    const fps = 12;
+                    const interval = 1000 / fps;
+                    let lastFrame = 0;
+
+                    function thermalRGB(v) {
+                        if (v < 64)  return [0, Math.round(v * 2), Math.round(v * 4)];
+                        if (v < 128) return [0, Math.round((v-64)*4), 255-Math.round((v-64)*2)];
+                        if (v < 192) return [Math.round((v-128)*4), 255-Math.round((v-128)*2), 0];
+                        return [255, Math.round((v-192)*4), Math.round((v-192)*2)];
+                    }
+
+                    function renderFrame(ts) {
+                        if (!running) return;
+                        if (ts - lastFrame < interval) { animId = requestAnimationFrame(renderFrame); return; }
+                        lastFrame = ts; frameN++;
+
+                        if (source === 'test') {
+                            for (let y = 0; y < pixH; y++) {
+                                for (let x = 0; x < res; x++) {
+                                    const bar = Math.floor(x / (res / 8));
+                                    const colors = [[255,255,255],[255,255,0],[0,255,255],[0,255,0],[255,0,255],[255,0,0],[0,0,255],[0,0,0]];
+                                    const c = colors[bar % 8];
+                                    const scan = (y + frameN * 2) % pixH;
+                                    const fade = Math.abs(y - scan) < 3 ? 0.5 : 1;
+                                    ctx.fillStyle = `rgb(${Math.round(c[0]*fade)},${Math.round(c[1]*fade)},${Math.round(c[2]*fade)})`;
+                                    ctx.fillRect(x, y, 1, 1);
+                                }
+                            }
+                        } else {
+                            ctx.drawImage(video, 0, 0, res, pixH);
+                        }
+
+                        const px = ctx.getImageData(0, 0, res, pixH).data;
+                        let frame = '\x1b[H';
+                        for (let row = 0; row < rows; row++) {
+                            let line = '';
+                            const y0 = row * 2, y1 = row * 2 + 1;
+                            for (let x = 0; x < res; x++) {
+                                const i0 = (y0 * res + x) * 4;
+                                const i1 = (y1 * res + x) * 4;
+                                line += `\x1b[38;2;${px[i0]};${px[i0+1]};${px[i0+2]}m\x1b[48;2;${px[i1]};${px[i1+1]};${px[i1+2]}m▀`;
+                            }
+                            frame += line + '\x1b[0m' + (row < rows - 1 ? '\r\n' : '');
+                        }
+                        frame += `\r\n\x1b[36m hexcast\x1b[0m \x1b[90m${source} ${res}×${pixH} f:${frameN}\x1b[0m`;
+                        term.write(frame);
+                        animId = requestAnimationFrame(renderFrame);
+                    }
+
+                    animId = requestAnimationFrame(renderFrame);
+
+                    window._hexTermFeed = {
+                        stop() {
+                            running = false;
+                            if (animId) cancelAnimationFrame(animId);
+                            if (stream) stream.getTracks().forEach(t => t.stop());
+                            window._hexTermFeed = null;
+                            term.write('\x1b[0m\x1b[2J\x1b[H');
+                            showPrompt();
+                        }
+                    };
+                } catch(e) {
+                    term.writeln(`\x1b[31m  Error: ${e.message}\x1b[0m`);
+                    term.writeln('\x1b[90m  Try: hexcast test\x1b[0m');
+                    showPrompt();
+                }
+            })();
+            return;
+        }
+
+        // ━━━ FEED (multi-stream windows) ━━━
+        case 'feed': {
+            const sub = args[0] || '';
+            const arg2 = args[1] || '';
+
+            // feed (no args) — help
+            if (!sub) {
+                term.writeln('\x1b[36m  feed\x1b[0m — multi-stream feed windows');
+                term.writeln('');
+                term.writeln('  \x1b[33mfeed <IP>\x1b[0m           open feed from remote hexcast stream');
+                term.writeln('  \x1b[33mfeed camera [front|back]\x1b[0m  open local camera feed');
+                term.writeln('  \x1b[33mfeed list\x1b[0m           list active feed windows');
+                term.writeln('  \x1b[33mfeed close <id>\x1b[0m     close a feed window');
+                term.writeln('  \x1b[33mfeed close all\x1b[0m      close all feeds');
+                term.writeln('  \x1b[33mfeed watch "<phrase>"\x1b[0m set watch phrase across all feeds');
+                term.writeln('  \x1b[33mfeed unwatch\x1b[0m        clear watch phrases');
+                term.writeln('  \x1b[33mfeed mute <id>\x1b[0m      toggle mute on a feed');
+                term.writeln('  \x1b[33mfeed transcript <id>\x1b[0m dump transcript from a feed');
+                break;
+            }
+
+            // feed list
+            if (sub === 'list' || sub === 'ls') {
+                const feeds = getActiveFeeds();
+                if (feeds.length === 0) {
+                    term.writeln('\x1b[90m  No active feeds\x1b[0m');
+                } else {
+                    term.writeln(`\x1b[36m  ${feeds.length} active feed(s):\x1b[0m`);
+                    for (const f of feeds) {
+                        const age = ((Date.now() - f.lastSeen) / 1000).toFixed(0);
+                        term.writeln(`  \x1b[33m${f.id}\x1b[0m  src:\x1b[32m${f.src}\x1b[0m  status:\x1b[36m${f.status}\x1b[0m  fps:\x1b[32m${f.fps}\x1b[0m  transcript:\x1b[90m${f.transcriptLen} lines\x1b[0m  \x1b[90m${age}s ago\x1b[0m`);
+                    }
+                }
+                break;
+            }
+
+            // feed close
+            if (sub === 'close' || sub === 'kill') {
+                if (arg2 === 'all') {
+                    const feeds = getActiveFeeds();
+                    for (const f of feeds) sendFeedCommand('close', f.id);
+                    term.writeln(`\x1b[32m  Closing ${feeds.length} feed(s)\x1b[0m`);
+                } else if (arg2) {
+                    sendFeedCommand('close', arg2);
+                    term.writeln(`\x1b[32m  Closing feed: ${arg2}\x1b[0m`);
+                } else {
+                    term.writeln('\x1b[33m  Usage: feed close <id|all>\x1b[0m');
+                }
+                break;
+            }
+
+            // feed watch
+            if (sub === 'watch') {
+                const phrase = args.slice(1).join(' ').replace(/"/g, '').trim();
+                if (!phrase) {
+                    term.writeln('\x1b[33m  Usage: feed watch "phrase"\x1b[0m');
+                    break;
+                }
+                if (!window._feedWatchPhrases) window._feedWatchPhrases = [];
+                window._feedWatchPhrases.push(phrase);
+                sendFeedCommand('watch', null, { phrases: window._feedWatchPhrases });
+                term.writeln(`\x1b[32m  Watch set:\x1b[0m "${phrase}" \x1b[90m(${window._feedWatchPhrases.length} active)\x1b[0m`);
+                break;
+            }
+
+            // feed unwatch
+            if (sub === 'unwatch') {
+                window._feedWatchPhrases = [];
+                sendFeedCommand('watch', null, { phrases: [] });
+                term.writeln('\x1b[32m  Watch phrases cleared\x1b[0m');
+                break;
+            }
+
+            // feed mute
+            if (sub === 'mute') {
+                if (arg2) {
+                    sendFeedCommand('mute', arg2);
+                    term.writeln(`\x1b[32m  Toggle mute: ${arg2}\x1b[0m`);
+                } else {
+                    term.writeln('\x1b[33m  Usage: feed mute <id>\x1b[0m');
+                }
+                break;
+            }
+
+            // feed transcript
+            if (sub === 'transcript' || sub === 'log') {
+                if (!arg2) {
+                    term.writeln('\x1b[33m  Usage: feed transcript <id>\x1b[0m');
+                    break;
+                }
+                const feed = _activeFeeds[arg2];
+                if (!feed || !feed.transcripts || feed.transcripts.length === 0) {
+                    term.writeln(`\x1b[90m  No transcript for feed: ${arg2}\x1b[0m`);
+                    break;
+                }
+                term.writeln(`\x1b[36m  Transcript for ${arg2}\x1b[0m (${feed.transcripts.length} entries):`);
+                for (const t of feed.transcripts.slice(-50)) {
+                    const cls = t.watchHit ? '\x1b[33m' : '\x1b[90m';
+                    term.writeln(`  ${cls}${t.time}\x1b[0m ${t.text}`);
+                }
+                break;
+            }
+
+            // feed camera [front|back]
+            if (sub === 'camera' || sub === 'cam') {
+                const facing = (arg2 === 'back' || arg2 === 'rear') ? 'camera:back' : 'camera';
+                const feedId = 'cam-' + Date.now() % 10000;
+                term.writeln(`\x1b[36m  Opening camera feed:\x1b[0m ${feedId}`);
+
+                if (window.__TAURI__) {
+                    window.__TAURI__.core.invoke('open_feed', { feedId, source: facing })
+                        .then(r => term.writeln(`\x1b[32m  ✓ Feed window opened\x1b[0m: ${r.feedId}`))
+                        .catch(e => term.writeln(`\x1b[31m  Error: ${e}\x1b[0m`));
+                } else {
+                    const w = window.open(`feed.html?id=${feedId}&src=${facing}`, feedId, 'width=480,height=640');
+                    if (w) term.writeln(`\x1b[32m  ✓ Feed window opened\x1b[0m`);
+                    else term.writeln('\x1b[31m  Popup blocked — allow popups for this site\x1b[0m');
+                }
+                break;
+            }
+
+            // feed <IP> — open feed from remote stream
+            {
+                let host = sub;
+                if (!host.includes(':')) host += ':' + HEXCAST_PORT;
+                const wsUrl = host.startsWith('ws://') ? host : 'ws://' + host;
+                const feedId = 'feed-' + Date.now() % 10000;
+                term.writeln(`\x1b[36m  Opening remote feed:\x1b[0m ${feedId} → ${wsUrl}`);
+
+                if (window.__TAURI__) {
+                    window.__TAURI__.core.invoke('open_feed', { feedId, source: wsUrl })
+                        .then(r => term.writeln(`\x1b[32m  ✓ Feed window opened\x1b[0m: ${r.feedId}`))
+                        .catch(e => term.writeln(`\x1b[31m  Error: ${e}\x1b[0m`));
+                } else {
+                    const w = window.open(`feed.html?id=${feedId}&src=${encodeURIComponent(wsUrl)}`, feedId, 'width=480,height=640');
+                    if (w) term.writeln(`\x1b[32m  ✓ Feed window opened\x1b[0m`);
+                    else term.writeln('\x1b[31m  Popup blocked — allow popups for this site\x1b[0m');
+                }
+                break;
+            }
+        }
+
+        default:
+            term.writeln(`\x1b[31m  ${command}: command not found\x1b[0m`);
+            term.writeln('\x1b[90m  Type \'help\' for commands\x1b[0m');
+    }
+
+    showPrompt();
+}
+
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Status bar updates
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function updateStatusBar() {
+    const sbMode = document.getElementById('sb-mode');
+    const sbCwd = document.getElementById('sb-cwd');
+    const sbNet = document.getElementById('sb-net');
+
+    const dir = cwd === env.HOME ? '~' : cwd;
+    sbCwd.textContent = dir;
+
+    if (window._hexTermFeed) { sbMode.textContent = 'hexcast'; }
+    else if (window._hexTermSend) { sbMode.textContent = 'sending'; }
+    else if (window._hexTermWS) { sbMode.textContent = 'connected'; }
+    else { sbMode.textContent = 'local'; }
+
+    sbNet.textContent = navigator.onLine ? 'online' : 'offline';
+    sbNet.className = 'tag' + (navigator.onLine ? '' : ' err');
+
+    // Battery
+    if (navigator.getBattery) {
+        navigator.getBattery().then(b => {
+            const pct = Math.round(b.level * 100);
+            document.getElementById('sb-battery').textContent = `${b.charging ? '⚡' : ''}${pct}%`;
+        }).catch(() => {});
+    }
+}
+
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Overlay (for opening pages)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function openOverlay(url, title) {
+    const overlay = document.getElementById('overlay');
+    const frame = document.getElementById('overlay-frame');
+    const titleEl = document.getElementById('overlay-title');
+    titleEl.textContent = title || url;
+    frame.src = url;
+    overlay.classList.add('show');
+}
+
+function closeOverlay() {
+    const overlay = document.getElementById('overlay');
+    const frame = document.getElementById('overlay-frame');
+    overlay.classList.remove('show');
+    frame.src = '';
+}
+
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Fullscreen
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function toggleFullscreen() {
+    if (document.fullscreenElement) {
+        document.exitFullscreen();
+    } else {
+        document.documentElement.requestFullscreen().catch(() => {});
+    }
+}
+
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Quick keys
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function qk(key) {
+    if (!term) return;
+    if (key === 'Tab') term.onData('\t');
+    else if (key === 'Escape') term.onData('\x1b');
+    else if (key === 'ArrowUp') term.onData('\x1b[A');
+    else if (key === 'ArrowDown') term.onData('\x1b[B');
+    term.focus();
+}
+
+function qkCopy() {
+    if (!term) return;
+    const sel = term.getSelection();
+    if (sel) {
+        navigator.clipboard.writeText(sel).then(() => {
+            term.writeln('\r\n\x1b[90m  copied to clipboard\x1b[0m');
+            showPrompt();
+        }).catch(() => {});
+    }
+    term.focus();
+}
+
+function qkPaste() {
+    if (!term) return;
+    navigator.clipboard.readText().then(text => {
+        if (text) for (const ch of text.replace(/\n/g, '')) term.onData(ch);
+    }).catch(() => {});
+    term.focus();
+}
+
+function qkMoveUp() {
+    // Option+Up: move cursor to start of line
+    if (!term) return;
+    term.onData('\x1b[1;3A'); // Alt+Up escape sequence
+    term.focus();
+}
+
+function qkMoveDown() {
+    // Option+Down: move cursor to end of line
+    if (!term) return;
+    term.onData('\x1b[1;3B'); // Alt+Down escape sequence
+    term.focus();
+}
+
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Latency benchmark ticker
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const _bootTime = Date.now();
+let _benchFps = 0, _benchFrames = 0, _benchLastSec = Date.now();
+
+function updateLatencyBar() {
+    const elPing = document.getElementById('lat-ping');
+    const elFps = document.getElementById('lat-fps');
+    const elMem = document.getElementById('lat-mem');
+    const elCpu = document.getElementById('lat-cpu');
+    const elUp = document.getElementById('lat-uptime');
+
+    // Uptime
+    const uptimeSec = Math.floor((Date.now() - _bootTime) / 1000);
+    const m = Math.floor(uptimeSec / 60), s = uptimeSec % 60;
+    elUp.textContent = m > 0 ? `${m}m${s}s` : `${s}s`;
+
+    // FPS (render frames)
+    _benchFrames++;
+    const now = Date.now();
+    if (now - _benchLastSec >= 1000) {
+        _benchFps = _benchFrames;
+        _benchFrames = 0;
+        _benchLastSec = now;
+    }
+    elFps.textContent = _benchFps || '—';
+
+    // Memory (JS heap if available)
+    if (performance.memory) {
+        const mb = Math.round(performance.memory.usedJSHeapSize / 1048576);
+        elMem.textContent = mb + 'MB';
+        elMem.className = 'val' + (mb > 200 ? ' warn' : mb > 500 ? ' err' : '');
+    }
+
+    // Pseudo CPU (event loop latency)
+    const lt = performance.now();
+    setTimeout(() => {
+        const lag = performance.now() - lt - 1;
+        elCpu.textContent = lag.toFixed(0) + 'ms';
+        elCpu.className = 'val' + (lag > 50 ? ' err' : lag > 16 ? ' warn' : '');
+    }, 1);
+
+    // Ping (WebSocket or network)
+    const kbLat = KB.syncWs && KB.syncWs.readyState === 1 ? '<1ms' : '—';
+    elPing.textContent = kbLat;
+}
+
+setInterval(updateLatencyBar, 1000);
+updateLatencyBar();
+
+// Bottom stats update (hexcast feed info)
+function updateBottomStats() {
+    const src = document.getElementById('bs-source');
+    const fps = document.getElementById('bs-fps');
+    const res = document.getElementById('bs-res');
+    const streams = document.getElementById('bs-streams');
+
+    let count = 0;
+    if (window._hexTermFeed) { src.textContent = 'camera'; count++; }
+    else if (window._hexTermSend) { src.textContent = 'sending'; count++; }
+    else if (window._hexTermWS) { src.textContent = 'remote'; count++; }
+    else { src.textContent = 'local'; }
+
+    if (KB.syncWs && KB.syncWs.readyState === 1) count++;
+    streams.textContent = String(count);
+
+    // FPS from hexcast stats if available
+    if (window._hexStats) {
+        fps.textContent = (window._hexStats.fps || '—');
+        res.textContent = (window._hexStats.res || '—');
+    }
+}
+
+setInterval(updateBottomStats, 2000);
+
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Title bar — starfield + tabs (Tauri only)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+if (window.__TAURI__) {
+    document.body.classList.add('tauri');
+}
+
+(function initTitlebarStars() {
+    const cvs = document.getElementById('titlebar-stars');
+    if (!cvs) return;
+    const ctx = cvs.getContext('2d');
+    const stars = [];
+    const COUNT = 60;
+
+    function resize() {
+        cvs.width = cvs.parentElement.offsetWidth;
+        cvs.height = cvs.parentElement.offsetHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    for (let i = 0; i < COUNT; i++) {
+        stars.push({
+            x: Math.random() * 2000,
+            y: Math.random() * 40,
+            r: Math.random() * 1.0 + 0.2,
+            a: Math.random() * 0.5 + 0.2,
+            tw: Math.random() * 2 + 1,
+            ph: Math.random() * Math.PI * 2,
+        });
+    }
+
+    function draw() {
+        ctx.clearRect(0, 0, cvs.width, cvs.height);
+        const t = Date.now() / 1000;
+        for (const s of stars) {
+            const alpha = 0.2 + 0.8 * s.a * (0.5 + 0.5 * Math.sin(t * s.tw + s.ph));
+            ctx.fillStyle = `rgba(255,255,255,${alpha})`;
+            ctx.beginPath();
+            ctx.arc(s.x % cvs.width, s.y % cvs.height, s.r, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        requestAnimationFrame(draw);
+    }
+    draw();
+})();
+
+// Tab switching — runs commands or focuses panels
+function switchTab(name) {
+    // Update visual state
+    document.querySelectorAll('#titlebar .tab').forEach(t => {
+        t.classList.toggle('active', t.dataset.tab === name);
+    });
+
+    // Focus actions
+    if (!term) return;
+    switch (name) {
+        case 'terminal':
+            term.focus();
+            break;
+        case 'hexcast':
+            processCommand('hexcast');
+            break;
+        case 'sync':
+            processCommand('sync status');
+            break;
+        case 'console':
+            processCommand('console');
+            break;
+        default:
+            processCommand(name);
+    }
+}
+
+function addTab() {
+    if (window.__TAURI__) {
+        processCommand('window new terminal.html ipad');
+    } else {
+        window.open(location.href, '_blank');
+    }
+}
+
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Service Worker + PWA
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+
+// Online/offline events
+window.addEventListener('online', updateStatusBar);
+window.addEventListener('offline', updateStatusBar);
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Animated intro
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+let introActive = true;
+const introEl = document.getElementById('intro');
+const introVideo = document.getElementById('intro-video');
+const introPrompt = document.getElementById('intro-prompt');
+
+// Starfield
+(function initStarfield() {
+    const cvs = document.getElementById('intro-stars');
+    if (!cvs) return;
+    const ctx = cvs.getContext('2d');
+    const stars = [];
+    const STAR_COUNT = 120;
+
+    function resize() {
+        cvs.width = window.innerWidth;
+        cvs.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    for (let i = 0; i < STAR_COUNT; i++) {
+        stars.push({
+            x: Math.random() * cvs.width,
+            y: Math.random() * cvs.height,
+            r: Math.random() * 1.5 + 0.3,
+            a: Math.random(),              // base alpha
+            tw: Math.random() * 3 + 1.5,   // twinkle speed
+            ph: Math.random() * Math.PI * 2 // phase
+        });
+    }
+
+    let frame = 0;
+    function drawStars() {
+        if (!introActive && frame > 10) return; // stop after dismiss
+        frame++;
+        ctx.clearRect(0, 0, cvs.width, cvs.height);
+        const t = Date.now() / 1000;
+        for (const s of stars) {
+            const alpha = 0.3 + 0.7 * s.a * (0.5 + 0.5 * Math.sin(t * s.tw + s.ph));
+            // Slight color: mostly white, some faint blue/warm
+            const hue = s.ph > 4 ? '200,220,255' : s.ph > 2 ? '255,240,220' : '255,255,255';
+            ctx.fillStyle = `rgba(${hue},${alpha})`;
+            ctx.beginPath();
+            ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+            ctx.fill();
+            // Cross sparkle on bright stars
+            if (s.r > 1.2 && alpha > 0.6) {
+                ctx.strokeStyle = `rgba(${hue},${alpha * 0.3})`;
+                ctx.lineWidth = 0.5;
+                ctx.beginPath();
+                ctx.moveTo(s.x - s.r * 3, s.y);
+                ctx.lineTo(s.x + s.r * 3, s.y);
+                ctx.moveTo(s.x, s.y - s.r * 3);
+                ctx.lineTo(s.x, s.y + s.r * 3);
+                ctx.stroke();
+            }
+        }
+        requestAnimationFrame(drawStars);
+    }
+    drawStars();
+})();
+
+// Check if camera was already granted (skip intro next time)
+const introDone = sessionStorage.getItem('hexterm-intro-done');
+
+function introGrantCamera() {
+    if (!navigator.mediaDevices) {
+        introSkip();
+        return;
+    }
+    introPrompt.style.display = 'none';
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } }, audio: false })
+        .then(stream => {
+            introVideo.srcObject = stream;
+            introVideo.play();
+            introVideo.classList.add('show');
+            // Hold for 2.5s then transition out
+            setTimeout(() => {
+                introDismiss();
+                // Keep stream alive briefly so terminal can reuse permission
+                setTimeout(() => stream.getTracks().forEach(t => t.stop()), 1500);
+            }, 2500);
+        })
+        .catch(() => introSkip());
+}
+
+function introSkip() {
+    introDismiss();
+}
+
+function introDismiss() {
+    introActive = false;
+    sessionStorage.setItem('hexterm-intro-done', '1');
+    introEl.classList.add('fade-out');
+    setTimeout(() => {
+        introEl.style.display = 'none';
+        if (term) term.focus();
+    }, 600);
+}
+
+// Auto-skip on revisit within same session
+if (introDone) {
+    introEl.style.display = 'none';
+    introActive = false;
+}
+
+// Init terminal (behind intro)
+initTerminal();
+setInterval(updateStatusBar, 5000);
+
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Kbatch — live keyboard heatmap + sync
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+const ROWS = [
+    ['`','1','2','3','4','5','6','7','8','9','0','-','='],
+    ['q','w','e','r','t','y','u','i','o','p','[',']','\\'],
+    ['a','s','d','f','g','h','j','k','l',';','\''],
+    ['z','x','c','v','b','n','m',',','.','/'],
+];
+const ROW_OFFSETS = [0, 0.4, 0.7, 1.1]; // stagger (in key widths)
+
+const KB = {
+    heatmap: {},        // key → count
+    lastKey: null,
+    trails: [],         // {from, to, t}
+    totalKeys: 0,
+    decay: 0.997,       // heatmap decay per frame
+    syncWs: null,
+    syncPeers: 0,
+};
+
+// Track key from terminal input
+function kbTrack(ch) {
+    const key = ch.toLowerCase();
+    KB.heatmap[key] = (KB.heatmap[key] || 0) + 1;
+    KB.totalKeys++;
+    if (KB.lastKey && KB.lastKey !== key) {
+        KB.trails.push({ from: KB.lastKey, to: key, t: Date.now() });
+        if (KB.trails.length > 300) KB.trails.shift();
+    }
+    KB.lastKey = key;
+    // Broadcast to sync peers
+    if (KB.syncWs && KB.syncWs.readyState === WebSocket.OPEN) {
+        KB.syncWs.send(JSON.stringify({ type: 'key', k: key, t: Date.now() }));
+    }
+}
+
+// Hook into terminal input
+const _origOnData = term ? term.onData : null;
+if (term) {
+    term.onData(data => {
+        for (const ch of data) {
+            const code = ch.charCodeAt(0);
+            if (code >= 32 && code < 127) kbTrack(ch);
+            if (code === 13) kbTrack(' '); // enter as space for trails
+        }
+    });
+}
+
+// Thermal color ramp
+// Rainbow colors matching the nyan banner bars
+const RAINBOW = [
+    [255, 56, 56],   // red
+    [255, 140, 56],  // orange
+    [255, 225, 56],  // yellow
+    [63, 185, 80],   // green
+    [56, 165, 255],  // blue
+    [188, 140, 255], // purple
+];
+
+function kbRainbow(position, intensity) {
+    // position: 0..1 across keyboard (left=red, right=purple)
+    // intensity: 0..1 brightness
+    const i = Math.min(1, Math.max(0, intensity));
+    const p = Math.min(1, Math.max(0, position));
+    const idx = p * (RAINBOW.length - 1);
+    const lo = Math.floor(idx);
+    const hi = Math.min(RAINBOW.length - 1, lo + 1);
+    const t = idx - lo;
+    const r = Math.round(RAINBOW[lo][0] + (RAINBOW[hi][0] - RAINBOW[lo][0]) * t);
+    const g = Math.round(RAINBOW[lo][1] + (RAINBOW[hi][1] - RAINBOW[lo][1]) * t);
+    const b = Math.round(RAINBOW[lo][2] + (RAINBOW[hi][2] - RAINBOW[lo][2]) * t);
+    // Dim by intensity: blend toward dark
+    const dim = 0.15 + i * 0.85;
+    return `rgb(${Math.round(r * dim)},${Math.round(g * dim)},${Math.round(b * dim)})`;
+}
+
+// Fallback for things that don't have position
+function kbThermal(intensity) {
+    return kbRainbow(0.5, intensity);
+}
+
+// Render keyboard on canvas
+function renderKeyboard() {
+    const canvas = document.getElementById('kb-canvas');
+    if (!canvas) return;
+    const parent = canvas.parentElement;
+    const W = canvas.width = parent.clientWidth;
+    const H = canvas.height = parent.clientHeight;
+    const ctx = canvas.getContext('2d');
+
+    ctx.fillStyle = '#0d1117';
+    ctx.fillRect(0, 0, W, H);
+
+    const maxCount = Math.max(1, ...Object.values(KB.heatmap));
+    const keyW = (W - 24) / 14;
+    const keyH = Math.min((H - 28) / 4.5, keyW * 0.85);
+    const padTop = 18;
+    const padLeft = 12;
+
+    // Decay
+    for (const k in KB.heatmap) {
+        KB.heatmap[k] *= KB.decay;
+        if (KB.heatmap[k] < 0.05) delete KB.heatmap[k];
+    }
+
+    // Draw trails (contrails between keys)
+    const now = Date.now();
+    ctx.lineWidth = 1;
+    for (let i = KB.trails.length - 1; i >= 0; i--) {
+        const tr = KB.trails[i];
+        const age = (now - tr.t) / 4000; // fade over 4s
+        if (age > 1) { KB.trails.splice(i, 1); continue; }
+        const alpha = (1 - age) * 0.35;
+        const fromPos = keyPos(tr.from, padLeft, padTop, keyW, keyH);
+        const toPos = keyPos(tr.to, padLeft, padTop, keyW, keyH);
+        if (!fromPos || !toPos) continue;
+        // Rainbow contrail based on destination position
+        const trailPos = toPos.x / W;
+        const rc = RAINBOW[Math.min(5, Math.floor(trailPos * 6))];
+        ctx.strokeStyle = `rgba(${rc[0]},${rc[1]},${rc[2]},${alpha})`;
+        ctx.lineWidth = 0.5 + (1 - age) * 2;
+        ctx.beginPath();
+        ctx.moveTo(fromPos.x, fromPos.y);
+        ctx.lineTo(toPos.x, toPos.y);
+        ctx.stroke();
+    }
+
+    // Draw keys with rainbow position coloring
+    const totalKeysW = 13; // widest row
+    ROWS.forEach((row, r) => {
+        const offset = ROW_OFFSETS[r] * keyW;
+        row.forEach((key, c) => {
+            const x = padLeft + offset + c * keyW;
+            const y = padTop + r * (keyH + 3);
+            const count = KB.heatmap[key] || 0;
+            const intensity = count / maxCount;
+            const isActive = KB.lastKey === key && (now - (KB._lastT || 0)) < 300;
+            // Rainbow position: 0 (left/red) → 1 (right/purple)
+            const rbPos = (offset + c * keyW) / (totalKeysW * keyW);
+
+            // Glow
+            if (intensity > 0.05) {
+                ctx.fillStyle = kbRainbow(rbPos, intensity);
+                ctx.globalAlpha = 0.1 + intensity * 0.3;
+                ctx.beginPath();
+                ctx.arc(x + keyW / 2, y + keyH / 2, keyW * 0.6, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1;
+            }
+
+            // Key bg
+            ctx.fillStyle = intensity > 0.05 ? kbRainbow(rbPos, intensity) : '#161b22';
+            const rad = 3;
+            ctx.beginPath();
+            ctx.roundRect(x + 1.5, y + 1.5, keyW - 3, keyH - 3, rad);
+            ctx.fill();
+
+            // Active flash
+            if (isActive) {
+                ctx.fillStyle = kbRainbow(rbPos, 1);
+                ctx.globalAlpha = 0.35;
+                ctx.beginPath();
+                ctx.roundRect(x + 1.5, y + 1.5, keyW - 3, keyH - 3, rad);
+                ctx.fill();
+                ctx.globalAlpha = 1;
+            }
+
+            // Border
+            ctx.strokeStyle = intensity > 0.05 ? kbRainbow(rbPos, Math.min(1, intensity + 0.15)) : '#30363d';
+            ctx.lineWidth = isActive ? 1.5 : 0.5;
+            ctx.beginPath();
+            ctx.roundRect(x + 1.5, y + 1.5, keyW - 3, keyH - 3, rad);
+            ctx.stroke();
+
+            // Label
+            ctx.fillStyle = intensity > 0.4 ? '#0d1117' : '#6e7681';
+            ctx.font = `${Math.max(8, keyH * 0.38)}px 'SF Mono', monospace`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(key.toUpperCase(), x + keyW / 2, y + keyH / 2);
+            ctx.textAlign = 'start';
+            ctx.textBaseline = 'alphabetic';
+        });
+    });
+
+    // Space bar (rainbow gradient fill when active)
+    {
+        const spW = keyW * 5;
+        const spX = padLeft + ROW_OFFSETS[3] * keyW + 1.5 * keyW;
+        const spY = padTop + 4 * (keyH + 3);
+        if (spY + keyH * 0.7 < H) {
+            const spCount = KB.heatmap[' '] || 0;
+            const spI = spCount / maxCount;
+            if (spI > 0.05) {
+                const grad = ctx.createLinearGradient(spX, 0, spX + spW, 0);
+                RAINBOW.forEach((c, i) => {
+                    grad.addColorStop(i / (RAINBOW.length - 1),
+                        `rgba(${c[0]},${c[1]},${c[2]},${0.2 + spI * 0.8})`);
+                });
+                ctx.fillStyle = grad;
+            } else {
+                ctx.fillStyle = '#161b22';
+            }
+            ctx.beginPath();
+            ctx.roundRect(spX, spY, spW, keyH * 0.65, 3);
+            ctx.fill();
+            ctx.strokeStyle = spI > 0.05 ? kbRainbow(0.5, spI + 0.1) : '#30363d';
+            ctx.lineWidth = 0.5;
+            ctx.beginPath();
+            ctx.roundRect(spX, spY, spW, keyH * 0.65, 3);
+            ctx.stroke();
+        }
+    }
+
+    // Stats line
+    ctx.fillStyle = '#484f58';
+    ctx.font = '9px monospace';
+    ctx.textAlign = 'right';
+    ctx.fillText(`keys:${KB.totalKeys}  peers:${KB.syncPeers}`, W - 8, H - 4);
+    ctx.textAlign = 'start';
+
+    requestAnimationFrame(renderKeyboard);
+}
+
+function keyPos(key, padLeft, padTop, keyW, keyH) {
+    for (let r = 0; r < ROWS.length; r++) {
+        const c = ROWS[r].indexOf(key);
+        if (c >= 0) {
+            return {
+                x: padLeft + ROW_OFFSETS[r] * keyW + c * keyW + keyW / 2,
+                y: padTop + r * (keyH + 3) + keyH / 2,
+            };
+        }
+    }
+    if (key === ' ') {
+        return {
+            x: padLeft + ROW_OFFSETS[3] * keyW + 4 * keyW,
+            y: padTop + 4 * (keyH + 3) + keyH * 0.325,
+        };
+    }
+    return null;
+}
+
+// Keyboard sync via WebSocket (connect to phone running hexterm PWA)
+function kbSyncConnect(host) {
+    const label = document.getElementById('kb-sync-label');
+    let wsUrl = host;
+    if (!wsUrl.includes(':')) wsUrl += ':9877';
+    if (!wsUrl.startsWith('ws://')) wsUrl = 'ws://' + wsUrl;
+
+    if (KB.syncWs) { KB.syncWs.close(); }
+
+    KB.syncWs = new WebSocket(wsUrl);
+    label.textContent = 'connecting...';
+    label.className = 'kb-sync';
+
+    KB.syncWs.onopen = () => {
+        label.textContent = 'synced';
+        label.className = 'kb-sync live';
+        KB.syncPeers++;
+    };
+    KB.syncWs.onmessage = (evt) => {
+        try {
+            const msg = JSON.parse(evt.data);
+            if (msg.type === 'key' && msg.k) {
+                kbTrack(msg.k);
+                KB._lastT = Date.now();
+            }
+        } catch(e) {}
+    };
+    KB.syncWs.onclose = () => {
+        label.textContent = 'local';
+        label.className = 'kb-sync';
+        KB.syncPeers = Math.max(0, KB.syncPeers - 1);
+    };
+    KB.syncWs.onerror = () => {
+        label.textContent = 'error';
+        label.className = 'kb-sync';
+    };
+}
+
+// Start keyboard sync server (for phone to connect to)
+let _kbServer = null;
+function kbSyncServe(port) {
+    port = port || 9877;
+    const label = document.getElementById('kb-sync-label');
+    label.textContent = `listening :${port}`;
+    label.className = 'kb-sync live';
+    // Note: Browser can't run a WS server. This broadcasts to connected peers via the
+    // existing hexcast WS infrastructure. In Tauri, we could add a native server.
+    // For now, the "serve" mode just marks that this keyboard sends to any connected hexcast.
+    if (term) term.writeln(`\x1b[36m  kbatch sync\x1b[0m listening on :${port}`);
+}
+
+// Start rendering
+requestAnimationFrame(renderKeyboard);
+
+// ──────────────────────────────────────────────────────────
+// BroadcastChannel Hub — master window for feed coordination
+// ──────────────────────────────────────────────────────────
+const _feedBC = new BroadcastChannel('hexterm');
+const _activeFeeds = {};     // feedId → { src, status, fps, transcriptLen, lastSeen }
+
+_feedBC.onmessage = (evt) => {
+    const msg = evt.data;
+    if (!msg || !msg.type) return;
+
+    switch (msg.type) {
+        // Keystroke from feed window → route to kbatch
+        case 'key':
+            if (msg.k && typeof kbTrack === 'function') kbTrack(msg.k);
+            break;
+
+        // Feed window opened
+        case 'feed-open':
+            _activeFeeds[msg.feedId] = {
+                src: msg.src || '?',
+                status: 'opened',
+                fps: 0,
+                transcriptLen: 0,
+                lastSeen: Date.now(),
+            };
+            if (typeof consoleBuf !== 'undefined') {
+                consoleBuf.push({ ts: Date.now(), level: 'info', msg: `[feed] ${msg.feedId} opened (src: ${msg.src})` });
+            }
+            break;
+
+        // Feed window closed
+        case 'feed-close':
+            if (_activeFeeds[msg.feedId]) {
+                _activeFeeds[msg.feedId].status = 'closed';
+            }
+            break;
+
+        // Feed status change
+        case 'feed-status':
+            if (_activeFeeds[msg.feedId]) {
+                _activeFeeds[msg.feedId].status = msg.status;
+                _activeFeeds[msg.feedId].lastSeen = Date.now();
+            }
+            break;
+
+        // Feed periodic stats
+        case 'feed-stats':
+            if (!_activeFeeds[msg.feedId]) {
+                _activeFeeds[msg.feedId] = { src: msg.src || '?', status: 'active', fps: 0, transcriptLen: 0, lastSeen: Date.now() };
+            }
+            _activeFeeds[msg.feedId].fps = msg.fps || 0;
+            _activeFeeds[msg.feedId].transcriptLen = msg.transcriptLen || 0;
+            _activeFeeds[msg.feedId].lastSeen = Date.now();
+            break;
+
+        // Transcript from feed window
+        case 'transcript':
+            // Store transcript in master
+            if (!_activeFeeds[msg.feedId]) {
+                _activeFeeds[msg.feedId] = { src: '?', status: 'active', fps: 0, transcriptLen: 0, lastSeen: Date.now() };
+            }
+            if (!_activeFeeds[msg.feedId].transcripts) _activeFeeds[msg.feedId].transcripts = [];
+            _activeFeeds[msg.feedId].transcripts.push({ time: msg.time, text: msg.text, watchHit: msg.watchHit });
+            // Cap transcripts at 500 per feed
+            if (_activeFeeds[msg.feedId].transcripts.length > 500) {
+                _activeFeeds[msg.feedId].transcripts.shift();
+            }
+            // If watch hit, log to console
+            if (msg.watchHit && typeof consoleBuf !== 'undefined') {
+                consoleBuf.push({ ts: Date.now(), level: 'warn', msg: `[feed:${msg.feedId}] WATCH: ${msg.text}` });
+            }
+            break;
+    }
+};
+
+// Helper: get list of active feeds
+function getActiveFeeds() {
+    return Object.entries(_activeFeeds)
+        .filter(([_, f]) => f.status !== 'closed')
+        .map(([id, f]) => ({ id, ...f }));
+}
+
+// Helper: send command to a specific feed or all feeds
+function sendFeedCommand(cmd, feedId, extra) {
+    const msg = { type: 'command', cmd, feedId: feedId || null };
+    if (extra) Object.assign(msg, extra);
+    _feedBC.postMessage(msg);
+}
+
+</script>
+</body>
+</html>

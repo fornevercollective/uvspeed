@@ -9,7 +9,7 @@
     <link rel="icon" type="image/x-icon" href="../icons/favicon.ico">
     <link rel="apple-touch-icon" sizes="192x192" href="../icons/icon-192.png">
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#8b5cf6">
+    <meta name="theme-color" content="#0d1117">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
@@ -114,6 +114,53 @@
             height: 28px;
             width: auto;
             border-radius: 4px;
+            display: none; /* replaced by live Numsy */
+        }
+        /* ---- Numsy inline logo (header companion) ---- */
+        #numsy-logo {
+            display: inline-flex;
+            align-items: center;
+            vertical-align: middle;
+            margin-right: 6px;
+            cursor: pointer;
+            position: relative;
+            flex-shrink: 0;
+        }
+        .numsy-logo-body{position:relative;width:40px;height:28px;display:inline-block}
+        .numsy-logo-cat{width:40px;height:28px;position:relative;display:block}
+        .numsy-logo-rainbow{position:absolute;left:-18px;top:3px;width:18px;height:22px;display:flex;flex-direction:column;overflow:hidden;border-radius:2px 0 0 2px}
+        .nls{flex:1;transition:width .3s}
+        .numsy-logo-torso{position:absolute;left:0;top:3px;width:24px;height:20px;background:#f97583;border-radius:3px;border:1.5px solid #484f58}
+        .numsy-logo-torso::before{content:'';position:absolute;inset:2px;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.1) 2px,rgba(0,0,0,.1) 4px)}
+        .numsy-logo-head{position:absolute;left:18px;top:0;width:20px;height:20px;background:#8b949e;border-radius:3px;border:1.5px solid #484f58;z-index:2}
+        .nle-l,.nle-r{position:absolute;width:0;height:0;top:-4px;border-left:3px solid transparent;border-right:3px solid transparent;border-bottom:5px solid #8b949e}
+        .nle-l{left:1px}.nle-r{right:1px}
+        .nle-l::after,.nle-r::after{content:'';position:absolute;top:2px;left:-2px;width:0;height:0;border-left:2px solid transparent;border-right:2px solid transparent;border-bottom:3px solid #f97583}
+        .numsy-logo-eyes{position:absolute;top:5px;left:3px;display:flex;gap:4px}
+        .numsy-logo-eye{width:4px;height:4px;background:#e6edf3;border-radius:50%;position:relative}
+        .numsy-logo-eye::after{content:'';position:absolute;width:2px;height:2px;background:#0d1117;border-radius:50%;top:1px;left:1px;transition:all .2s}
+        .numsy-logo-mouth{position:absolute;bottom:2px;left:50%;transform:translateX(-50%);font-size:5px;line-height:1;color:#f97583}
+        .numsy-logo-feet{position:absolute;bottom:-3px;left:3px;display:flex;gap:5px}
+        .nlf{width:5px;height:4px;background:#8b949e;border-radius:0 0 2px 2px;border:1px solid #484f58;border-top:none}
+        .numsy-logo-tail{position:absolute;left:-5px;top:6px;width:7px;height:3px;background:#8b949e;border-radius:2px 0 0 2px;transform-origin:right center}
+        .numsy-logo-bubble{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);background:#161b22;border:1px solid #30363d;border-radius:6px;padding:2px 6px;font-size:.5rem;color:#e6edf3;white-space:nowrap;opacity:0;transition:opacity .3s;pointer-events:none;font-family:'SF Mono',monospace;box-shadow:0 2px 6px rgba(0,0,0,.3);margin-bottom:4px;z-index:99999}
+        .numsy-logo-bubble::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:3px solid transparent;border-top-color:#30363d}
+        .numsy-logo-bubble.show{opacity:1}
+        /* Logo numsy states */
+        .numsy-logo-body.idle .numsy-logo-torso{animation:nl-float 3s ease-in-out infinite}
+        .numsy-logo-body.thinking .numsy-logo-torso{animation:nl-wobble 0.4s ease-in-out infinite}
+        .numsy-logo-body.happy .nls{animation:nl-rainbow .5s ease infinite}
+        .numsy-logo-body.dance .numsy-logo-cat{animation:nl-dance 0.3s ease infinite}
+        .numsy-logo-body.wiggle .numsy-logo-cat{animation:nl-wiggle 0.5s ease infinite}
+        .numsy-logo-body.fly .numsy-logo-cat{animation:nl-fly 1s ease infinite}
+        .numsy-logo-body.fly .nls{animation:nl-rainbow .3s ease infinite}
+        .numsy-logo-body.sleepy{filter:brightness(.6) saturate(.5)}
+        @keyframes nl-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
+        @keyframes nl-wobble{0%,100%{transform:rotate(-2deg)}50%{transform:rotate(2deg)}}
+        @keyframes nl-rainbow{0%,100%{opacity:1}50%{opacity:.6}}
+        @keyframes nl-dance{0%{transform:rotate(0) scale(1)}25%{transform:rotate(-3deg) scale(1.05)}50%{transform:rotate(0) scale(1)}75%{transform:rotate(3deg) scale(1.05)}}
+        @keyframes nl-wiggle{0%{transform:translateX(0)}25%{transform:translateX(-2px)}50%{transform:translateX(2px)}75%{transform:translateX(-1px)}100%{transform:translateX(0)}}
+        @keyframes nl-fly{0%{transform:translateY(0) rotate(0)}25%{transform:translateY(-4px) rotate(-2deg)}50%{transform:translateY(-1px) rotate(0)}75%{transform:translateY(-5px) rotate(2deg)}100%{transform:translateY(0) rotate(0)}}
             flex-shrink: 0;
             image-rendering: auto;
             filter: drop-shadow(0 0 6px rgba(139, 92, 246, 0.4));
@@ -2080,11 +2127,39 @@
     </style>
 </head>
 <body>
+    <div style="display:flex;height:2px;width:100%;flex-shrink:0"><span style="flex:1;background:#ff3838"></span><span style="flex:1;background:#ff8c38"></span><span style="flex:1;background:#ffe138"></span><span style="flex:1;background:#3fb950"></span><span style="flex:1;background:#38a5ff"></span><span style="flex:1;background:#bc8cff"></span></div>
     <div class="notepad-container">
         <!-- Header -->
         <div class="notepad-header">
             <div class="notepad-title">
-                <img src="../icons/nyan-banner.png" alt="uvspeed" class="notepad-logo" title="uvspeed — beyondBINARY">
+                <span id="numsy-logo" title="Numsy — click to interact">
+                    <span class="numsy-logo-bubble" id="numsy-bubble"></span>
+                    <span class="numsy-logo-body idle" id="numsy-body">
+                        <span class="numsy-logo-cat" id="numsy-cat">
+                            <span class="numsy-logo-rainbow">
+                                <span class="nls" style="background:#f85149"></span>
+                                <span class="nls" style="background:#f0883e"></span>
+                                <span class="nls" style="background:#e3b341"></span>
+                                <span class="nls" style="background:#3fb950"></span>
+                                <span class="nls" style="background:#58a6ff"></span>
+                                <span class="nls" style="background:#a78bfa"></span>
+                            </span>
+                            <span class="numsy-logo-tail" id="numsy-tail"></span>
+                            <span class="numsy-logo-torso"></span>
+                            <span class="numsy-logo-head">
+                                <span class="nle-l"></span><span class="nle-r"></span>
+                                <span class="numsy-logo-eyes">
+                                    <span class="numsy-logo-eye" id="numsy-eye-l"></span>
+                                    <span class="numsy-logo-eye" id="numsy-eye-r"></span>
+                                </span>
+                                <span class="numsy-logo-mouth" id="numsy-mouth">w</span>
+                            </span>
+                            <span class="numsy-logo-feet">
+                                <span class="nlf"></span><span class="nlf"></span>
+                            </span>
+                        </span>
+                    </span>
+                </span>
                 uvspeed — Quantum beyond<span style="font-weight:900;letter-spacing:0.5px;">BINARY</span> notepad
                 <span class="subtitle">Dimensional code addressing &middot; {+1, 1, -1, +0, 0, -0, +n, n, -n} &middot; Charm visual layer</span>
             </div>
@@ -2105,6 +2180,7 @@
                     <button class="btn btn--sm" id="save-btn">💾 Save</button>
                     <button class="btn btn--sm" id="load-btn" title="Load .json notebook">📂 Load</button>
                     <button class="btn btn--sm" id="inspect-btn" title="Inspect: limits, comparisons, trade-offs">🔍 Inspect</button>
+                    <button class="btn btn--sm" id="terminal-btn" title="Toggle xterm.js terminal panel" style="font-size:0.75rem;">💻 Term</button>
                     <span id="bridge-status" style="font-size:0.625rem;color:var(--cursor-text-muted);padding:4px 8px;">🔴 Bridge: offline</span>
                     <span id="quest-status" style="font-size:0.625rem;color:var(--cursor-text-muted);padding:4px 8px;cursor:pointer;" title="Click to check Quest device">🥽 Quest: —</span>
                 </div>
@@ -2448,11 +2524,12 @@
                     </div>
                 </div>
                 <button class="btn btn--xs" id="f-quest" title="Quest device status" style="background:#1877f222;border-color:#1877f255;color:#1877f2;">🥽 Quest</button>
-                <button class="btn btn--xs" id="f-open-blackwell" title="NVIDIA Blackwell Live — data streams, SM heatmap, deploy targets" style="background:#76b90022;border-color:#76b90055;color:#76b900;" onclick="window.open('blackwell.html','_blank')">🟢 Blackwell</button>
-                <button class="btn btn--xs" id="f-open-questcast" title="questcast — Meta Quest broadcast + research tools" style="background:#1877f222;border-color:#1877f255;color:#1877f2;" onclick="window.open('questcast.html','_blank')">🥽 questcast</button>
-                <button class="btn btn--xs" id="f-open-archflow" title="archflow — n8n-style architecture visualizer" style="background:#ff6d5a22;border-color:#ff6d5a55;color:#ff6d5a;" onclick="window.open('archflow.html','_blank')">🔀 archflow</button>
-                <button class="btn btn--xs" id="f-open-jawta" title="jawta audio — spatial audio + Strudel live code" style="background:#c084fc22;border-color:#c084fc55;color:#c084fc;" onclick="window.open('jawta-audio.html','_blank')">🎵 jawta</button>
-                <button class="btn btn--xs" id="f-open-dashboard" title="GitHub Project Health Dashboard" style="background:#23863622;border-color:#23863655;color:#238636;" onclick="window.open('github-dashboard.html','_blank')">📊 Dashboard</button>
+                <button class="btn btn--xs" id="f-open-blackwell" title="NVIDIA Blackwell Live — data streams, SM heatmap, deploy targets" style="background:#76b90022;border-color:#76b90055;color:#76b900;" onclick="openOverlay('blackwell.html','Blackwell')">🟢 Blackwell</button>
+                <button class="btn btn--xs" id="f-open-questcast" title="questcast — Meta Quest broadcast + research tools" style="background:#1877f222;border-color:#1877f255;color:#1877f2;" onclick="openOverlay('questcast.html','questcast')">🥽 questcast</button>
+                <button class="btn btn--xs" id="f-open-archflow" title="archflow — n8n-style architecture visualizer" style="background:#ff6d5a22;border-color:#ff6d5a55;color:#ff6d5a;" onclick="openOverlay('archflow.html','archflow')">🔀 archflow</button>
+                <button class="btn btn--xs" id="f-open-researchlab" title="Research Lab — live editable document + node canvas + console" style="background:#da368822;border-color:#da368855;color:#da3688;" onclick="openOverlay('research-lab.html','Research Lab')">🔬 Research Lab</button>
+                <button class="btn btn--xs" id="f-open-jawta" title="jawta audio — spatial audio + Strudel live code" style="background:#c084fc22;border-color:#c084fc55;color:#c084fc;" onclick="openOverlay('jawta-audio.html','jawta audio')">🎵 jawta</button>
+                <button class="btn btn--xs" id="f-open-dashboard" title="GitHub Project Health Dashboard" style="background:#23863622;border-color:#23863655;color:#238636;" onclick="openOverlay('github-dashboard.html','Dashboard')">📊 Dashboard</button>
             </div>
         </div>
     </div>
@@ -5280,6 +5357,7 @@
                         <span style="color:var(--cursor-accent);font-weight:700;">v3.2</span><span style="color:var(--cursor-text-muted);">+questcast, archflow, jawta-audio dev pages</span>
                         <span style="color:#d2a8ff;font-weight:700;">v3.3</span><span style="color:#d2a8ff;">+MCP server (10 tools), multi-instance, Ollama, tinygrad, community, dashboard, Visual Slice</span>
                         <span style="color:#f0883e;font-weight:700;">v3.4</span><span style="color:#f0883e;">+14 in-cell tools, touch events, PWA offline mode, manifest.json, Service Worker, PWA&rarr;Terminal roadmap</span>
+                        <span style="color:#3fb950;font-weight:700;">v3.5</span><span style="color:#3fb950;">+research-lab.html, data type matrix, tier checkmarks, PWA install prompt, install.sh, Tauri v2 scaffold, xterm.js terminal, Rust prefix, Numsy tamagotchi</span>
                     </div>
                     <div style="background:var(--cursor-bg);border:1px solid var(--cursor-border);border-radius:var(--cursor-radius-sm);padding:12px 14px;margin-bottom:var(--cursor-space-md);font-family:var(--cursor-font-mono);font-size:0.5625rem;line-height:1.7;">
                         <span style="color:var(--cursor-accent);font-weight:700;">Key restructure decisions (v3.0):</span><br>
@@ -5337,6 +5415,134 @@
                         <span class="tag tag--blue">Phase 4 &mdash; after multi-agent is stable</span>
                         <span class="tag tag--purple">All Phase 1&ndash;3 tools unified natively</span>
                         <span class="tag tag--yellow">Native perf &middot; WebXR &middot; P2P &middot; Plugins</span>
+                    </div>
+                </div>
+
+                <!-- ====== DATA TYPE MATRIX (CORRECTED) ====== -->
+                <div class="inspect-section">
+                    <h3>uvspeed &mdash; Data Type Matrix (Corrected)</h3>
+                    <p style="margin-bottom:var(--cursor-space-sm);font-size:0.6875rem;color:var(--cursor-text-muted);">
+                        Binary/Bits is the only universal full-speed data type across all tiers. INT8 is the universal compute type. The prefix classifier (4 bits for 9 symbols) maps to both.
+                    </p>
+                    <table style="width:100%;border-collapse:collapse;font-size:0.5625rem;font-family:var(--cursor-font-mono);margin-bottom:var(--cursor-space-md);">
+                        <thead>
+                            <tr style="background:var(--cursor-bg-tertiary);">
+                                <th style="padding:4px 6px;border:1px solid var(--cursor-border);color:var(--cursor-accent);font-weight:700;text-align:left;">Data Type</th>
+                                <th style="padding:4px 6px;border:1px solid var(--cursor-border);color:#d2a8ff;font-weight:700;text-align:left;">Quantum QPU</th>
+                                <th style="padding:4px 6px;border:1px solid var(--cursor-border);color:#76b900;font-weight:700;text-align:left;">Server GPU</th>
+                                <th style="padding:4px 6px;border:1px solid var(--cursor-border);color:#58a6ff;font-weight:700;text-align:left;">Desktop</th>
+                                <th style="padding:4px 6px;border:1px solid var(--cursor-border);color:#f0883e;font-weight:700;text-align:left;">Mobile</th>
+                                <th style="padding:4px 6px;border:1px solid var(--cursor-border);color:#8b949e;font-weight:700;text-align:left;">IoT MCU</th>
+                                <th style="padding:4px 6px;border:1px solid var(--cursor-border);color:#56d4dd;font-weight:700;text-align:left;">Photonic</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="background:rgba(63,185,80,.08);">
+                                <td style="padding:4px 6px;border:1px solid var(--cursor-border);color:#3fb950;font-weight:700;">Binary/Bits</td>
+                                <td style="padding:4px 6px;border:1px solid var(--cursor-border);color:#3fb950;font-weight:700;">NATIVE (measurement)</td>
+                                <td style="padding:4px 6px;border:1px solid var(--cursor-border);color:#3fb950;">Full speed</td>
+                                <td style="padding:4px 6px;border:1px solid var(--cursor-border);color:#3fb950;">Full speed</td>
+                                <td style="padding:4px 6px;border:1px solid var(--cursor-border);color:#3fb950;">Full speed</td>
+                                <td style="padding:4px 6px;border:1px solid var(--cursor-border);color:#3fb950;">Full speed</td>
+                                <td style="padding:4px 6px;border:1px solid var(--cursor-border);color:#3fb950;">Full speed</td>
+                            </tr>
+                            <tr>
+                                <td style="padding:4px 6px;border:1px solid var(--cursor-border);color:var(--cursor-accent);font-weight:700;">INT8</td>
+                                <td style="padding:4px 6px;border:1px solid var(--cursor-border);color:var(--cursor-text-muted);">Post-process</td>
+                                <td style="padding:4px 6px;border:1px solid var(--cursor-border);color:var(--cursor-text-s);">Tensor Core</td>
+                                <td style="padding:4px 6px;border:1px solid var(--cursor-border);color:var(--cursor-text-s);">NPU native</td>
+                                <td style="padding:4px 6px;border:1px solid var(--cursor-border);color:var(--cursor-text-s);">NPU fastest</td>
+                                <td style="padding:4px 6px;border:1px solid var(--cursor-border);color:var(--cursor-text-s);">ESP-DL native</td>
+                                <td style="padding:4px 6px;border:1px solid var(--cursor-border);color:var(--cursor-text-muted);">Digital post</td>
+                            </tr>
+                            <tr>
+                                <td style="padding:4px 6px;border:1px solid var(--cursor-border);color:var(--cursor-accent);">FP16</td>
+                                <td style="padding:4px 6px;border:1px solid var(--cursor-border);color:var(--cursor-text-muted);">Not used</td>
+                                <td style="padding:4px 6px;border:1px solid var(--cursor-border);color:var(--cursor-text-s);">Tensor Core</td>
+                                <td style="padding:4px 6px;border:1px solid var(--cursor-border);color:var(--cursor-text-s);">NPU accel</td>
+                                <td style="padding:4px 6px;border:1px solid var(--cursor-border);color:var(--cursor-text-s);">NPU accel</td>
+                                <td style="padding:4px 6px;border:1px solid var(--cursor-border);color:var(--cursor-text-muted);">Limited</td>
+                                <td style="padding:4px 6px;border:1px solid var(--cursor-border);color:var(--cursor-text-muted);">R&amp;D</td>
+                            </tr>
+                            <tr>
+                                <td style="padding:4px 6px;border:1px solid var(--cursor-border);color:var(--cursor-accent);">FP32</td>
+                                <td style="padding:4px 6px;border:1px solid var(--cursor-border);color:var(--cursor-text-muted);">Simulation only</td>
+                                <td style="padding:4px 6px;border:1px solid var(--cursor-border);color:#3fb950;">Full speed</td>
+                                <td style="padding:4px 6px;border:1px solid var(--cursor-border);color:#3fb950;">Full speed</td>
+                                <td style="padding:4px 6px;border:1px solid var(--cursor-border);color:#3fb950;">Full speed</td>
+                                <td style="padding:4px 6px;border:1px solid var(--cursor-border);color:var(--cursor-text-muted);">Limited</td>
+                                <td style="padding:4px 6px;border:1px solid var(--cursor-border);color:var(--cursor-text-muted);">Optical matmul</td>
+                            </tr>
+                            <tr>
+                                <td style="padding:4px 6px;border:1px solid var(--cursor-border);color:var(--cursor-accent);">FP64</td>
+                                <td style="padding:4px 6px;border:1px solid var(--cursor-border);color:var(--cursor-text-muted);">State vector sim</td>
+                                <td style="padding:4px 6px;border:1px solid var(--cursor-border);color:#3fb950;">Full speed</td>
+                                <td style="padding:4px 6px;border:1px solid var(--cursor-border);color:#3fb950;">Full speed</td>
+                                <td style="padding:4px 6px;border:1px solid var(--cursor-border);color:var(--cursor-text-muted);">Emulated</td>
+                                <td style="padding:4px 6px;border:1px solid var(--cursor-border);color:var(--cursor-text-muted);">N/A</td>
+                                <td style="padding:4px 6px;border:1px solid var(--cursor-border);color:var(--cursor-text-muted);">N/A</td>
+                            </tr>
+                            <tr>
+                                <td style="padding:4px 6px;border:1px solid var(--cursor-border);color:var(--cursor-accent);">BF16</td>
+                                <td style="padding:4px 6px;border:1px solid var(--cursor-border);color:var(--cursor-text-muted);">Not used</td>
+                                <td style="padding:4px 6px;border:1px solid var(--cursor-border);color:var(--cursor-text-s);">NVIDIA/AMD</td>
+                                <td style="padding:4px 6px;border:1px solid var(--cursor-border);color:var(--cursor-text-s);">Apple M4</td>
+                                <td style="padding:4px 6px;border:1px solid var(--cursor-border);color:var(--cursor-text-muted);">Not practical</td>
+                                <td style="padding:4px 6px;border:1px solid var(--cursor-border);color:var(--cursor-text-muted);">N/A</td>
+                                <td style="padding:4px 6px;border:1px solid var(--cursor-border);color:var(--cursor-text-muted);">N/A</td>
+                            </tr>
+                            <tr>
+                                <td style="padding:4px 6px;border:1px solid var(--cursor-border);color:var(--cursor-accent);">UTF-8 bytes</td>
+                                <td style="padding:4px 6px;border:1px solid var(--cursor-border);color:var(--cursor-text-muted);">Classical interface</td>
+                                <td style="padding:4px 6px;border:1px solid var(--cursor-border);color:var(--cursor-text-s);">Unlimited</td>
+                                <td style="padding:4px 6px;border:1px solid var(--cursor-border);color:var(--cursor-text-s);">CPU bound</td>
+                                <td style="padding:4px 6px;border:1px solid var(--cursor-border);color:var(--cursor-text-muted);">Memory limited</td>
+                                <td style="padding:4px 6px;border:1px solid var(--cursor-border);color:var(--cursor-text-muted);">Flash limited</td>
+                                <td style="padding:4px 6px;border:1px solid var(--cursor-border);color:var(--cursor-text-muted);">Transport only</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div style="display:flex;gap:var(--cursor-space-sm);flex-wrap:wrap;">
+                        <span class="tag tag--green">Binary/Bits &mdash; universal full speed</span>
+                        <span class="tag tag--blue">INT8 &mdash; universal compute (NPU accelerated)</span>
+                        <span class="tag tag--purple">Prefix: 4 bits &rarr; 9 symbols &rarr; maps to both</span>
+                    </div>
+                </div>
+
+                <!-- ====== TIER CHECKMARK MATRIX ====== -->
+                <div class="inspect-section">
+                    <h3>uvspeed &mdash; Tier Checkmark Matrix</h3>
+                    <p style="margin-bottom:var(--cursor-space-sm);font-size:0.6875rem;color:var(--cursor-text-muted);">
+                        Capability coverage across all deployment tiers. Each layer is additive &mdash; Layer 0 works alone.
+                    </p>
+                    <table style="width:100%;border-collapse:collapse;font-size:0.5625rem;font-family:var(--cursor-font-mono);margin-bottom:var(--cursor-space-md);">
+                        <thead>
+                            <tr style="background:var(--cursor-bg-tertiary);">
+                                <th style="padding:4px 6px;border:1px solid var(--cursor-border);color:var(--cursor-accent);text-align:left;">Capability</th>
+                                <th style="padding:4px 6px;border:1px solid var(--cursor-border);color:#58a6ff;text-align:left;">T0 PWA</th>
+                                <th style="padding:4px 6px;border:1px solid var(--cursor-border);color:#f0883e;text-align:left;">T1 uv+bridge</th>
+                                <th style="padding:4px 6px;border:1px solid var(--cursor-border);color:#3fb950;text-align:left;">T2 Tauri</th>
+                                <th style="padding:4px 6px;border:1px solid var(--cursor-border);color:#a78bfa;text-align:left;">T3 Mobile</th>
+                                <th style="padding:4px 6px;border:1px solid var(--cursor-border);color:#8b949e;text-align:left;">T4 IoT</th>
+                                <th style="padding:4px 6px;border:1px solid var(--cursor-border);color:#d2a8ff;text-align:left;">T5 QPU</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td style="padding:3px 6px;border:1px solid var(--cursor-border);color:var(--cursor-text-s);">Prefix gutter</td><td style="padding:3px 6px;border:1px solid var(--cursor-border);">JS heuristic</td><td style="padding:3px 6px;border:1px solid var(--cursor-border);">Python</td><td style="padding:3px 6px;border:1px solid var(--cursor-border);color:#3fb950;">Rust native</td><td style="padding:3px 6px;border:1px solid var(--cursor-border);">Rust WASM</td><td style="padding:3px 6px;border:1px solid var(--cursor-border);">ANSI</td><td style="padding:3px 6px;border:1px solid var(--cursor-border);color:#d2a8ff;">Quantum basis</td></tr>
+                            <tr><td style="padding:3px 6px;border:1px solid var(--cursor-border);color:var(--cursor-text-s);">Cell tools (14)</td><td style="padding:3px 6px;border:1px solid var(--cursor-border);color:#3fb950;">All</td><td style="padding:3px 6px;border:1px solid var(--cursor-border);color:#3fb950;">All</td><td style="padding:3px 6px;border:1px solid var(--cursor-border);color:#3fb950;">All</td><td style="padding:3px 6px;border:1px solid var(--cursor-border);color:#3fb950;">All</td><td style="padding:3px 6px;border:1px solid var(--cursor-border);color:#3fb950;">All</td><td style="padding:3px 6px;border:1px solid var(--cursor-border);color:#3fb950;">All</td></tr>
+                            <tr><td style="padding:3px 6px;border:1px solid var(--cursor-border);color:var(--cursor-text-s);">Viz (orb/cube)</td><td style="padding:3px 6px;border:1px solid var(--cursor-border);">Canvas 2D</td><td style="padding:3px 6px;border:1px solid var(--cursor-border);">Canvas 2D</td><td style="padding:3px 6px;border:1px solid var(--cursor-border);color:#3fb950;">wgpu/WebGL</td><td style="padding:3px 6px;border:1px solid var(--cursor-border);">Canvas 2D</td><td style="padding:3px 6px;border:1px solid var(--cursor-border);color:var(--cursor-text-muted);">Minimal</td><td style="padding:3px 6px;border:1px solid var(--cursor-border);color:var(--cursor-text-muted);">N/A</td></tr>
+                            <tr><td style="padding:3px 6px;border:1px solid var(--cursor-border);color:var(--cursor-text-s);">Terminal</td><td style="padding:3px 6px;border:1px solid var(--cursor-border);color:var(--cursor-text-muted);">No</td><td style="padding:3px 6px;border:1px solid var(--cursor-border);">SSH browser</td><td style="padding:3px 6px;border:1px solid var(--cursor-border);color:#3fb950;">PTY native</td><td style="padding:3px 6px;border:1px solid var(--cursor-border);">SSH</td><td style="padding:3px 6px;border:1px solid var(--cursor-border);">BusyBox</td><td style="padding:3px 6px;border:1px solid var(--cursor-border);">SSH QPU cloud</td></tr>
+                            <tr><td style="padding:3px 6px;border:1px solid var(--cursor-border);color:var(--cursor-text-s);">AI inference</td><td style="padding:3px 6px;border:1px solid var(--cursor-border);color:var(--cursor-text-muted);">No</td><td style="padding:3px 6px;border:1px solid var(--cursor-border);">Ollama+tinygrad</td><td style="padding:3px 6px;border:1px solid var(--cursor-border);color:#3fb950;">Sidecar Ollama</td><td style="padding:3px 6px;border:1px solid var(--cursor-border);">NPU (CoreML)</td><td style="padding:3px 6px;border:1px solid var(--cursor-border);">INT8 micro</td><td style="padding:3px 6px;border:1px solid var(--cursor-border);color:#d2a8ff;">QPU circuits</td></tr>
+                            <tr><td style="padding:3px 6px;border:1px solid var(--cursor-border);color:var(--cursor-text-s);">Execution</td><td style="padding:3px 6px;border:1px solid var(--cursor-border);color:var(--cursor-text-muted);">No</td><td style="padding:3px 6px;border:1px solid var(--cursor-border);">Python bridge</td><td style="padding:3px 6px;border:1px solid var(--cursor-border);color:#3fb950;">Python sidecar</td><td style="padding:3px 6px;border:1px solid var(--cursor-border);">WiFi bridge</td><td style="padding:3px 6px;border:1px solid var(--cursor-border);color:var(--cursor-text-muted);">N/A</td><td style="padding:3px 6px;border:1px solid var(--cursor-border);">Qiskit cloud</td></tr>
+                            <tr><td style="padding:3px 6px;border:1px solid var(--cursor-border);color:var(--cursor-text-s);">Auto-update</td><td style="padding:3px 6px;border:1px solid var(--cursor-border);">SW cache</td><td style="padding:3px 6px;border:1px solid var(--cursor-border);">uv self update</td><td style="padding:3px 6px;border:1px solid var(--cursor-border);color:#3fb950;">Tauri updater</td><td style="padding:3px 6px;border:1px solid var(--cursor-border);">App Store</td><td style="padding:3px 6px;border:1px solid var(--cursor-border);">OTA</td><td style="padding:3px 6px;border:1px solid var(--cursor-border);color:var(--cursor-text-muted);">N/A</td></tr>
+                            <tr><td style="padding:3px 6px;border:1px solid var(--cursor-border);color:var(--cursor-text-s);">Offline</td><td style="padding:3px 6px;border:1px solid var(--cursor-border);color:#3fb950;">Full (SW)</td><td style="padding:3px 6px;border:1px solid var(--cursor-border);color:#3fb950;">Full</td><td style="padding:3px 6px;border:1px solid var(--cursor-border);color:#3fb950;">Full</td><td style="padding:3px 6px;border:1px solid var(--cursor-border);color:#3fb950;">Full</td><td style="padding:3px 6px;border:1px solid var(--cursor-border);color:#3fb950;">Full</td><td style="padding:3px 6px;border:1px solid var(--cursor-border);color:var(--cursor-text-muted);">Cloud-dependent</td></tr>
+                            <tr><td style="padding:3px 6px;border:1px solid var(--cursor-border);color:var(--cursor-text-s);">Install</td><td style="padding:3px 6px;border:1px solid var(--cursor-border);color:#3fb950;">Open URL</td><td style="padding:3px 6px;border:1px solid var(--cursor-border);">curl | sh</td><td style="padding:3px 6px;border:1px solid var(--cursor-border);">brew install</td><td style="padding:3px 6px;border:1px solid var(--cursor-border);">App Store</td><td style="padding:3px 6px;border:1px solid var(--cursor-border);">Flash / PWA</td><td style="padding:3px 6px;border:1px solid var(--cursor-border);">API key</td></tr>
+                        </tbody>
+                    </table>
+                    <div style="display:flex;gap:var(--cursor-space-sm);flex-wrap:wrap;">
+                        <span class="tag tag--green">Layer 0 (PWA) works alone</span>
+                        <span class="tag tag--blue">Each tier additive, nothing breaks</span>
+                        <span class="tag tag--purple">T0-3: HTML/JS + Rust + Python | T4: WASM + ANSI | T5: Qiskit + cloud QPU</span>
                     </div>
                 </div>
 
@@ -5642,8 +5848,22 @@
                         executionCount: this.executionCount,
                         savedAt: new Date().toISOString(),
                     };
-                    localStorage.setItem('uvspeed-quantum-notepad', JSON.stringify(data));
-                } catch (e) { /* storage full or unavailable */ }
+                    const payload = JSON.stringify(data);
+                    // Guard: warn if approaching 5MB localStorage limit
+                    const sizeKB = Math.round(payload.length / 1024);
+                    if (sizeKB > 4500) {
+                        this._logStream('warn', `Save skipped — notebook too large (${sizeKB} KB). Export & trim cells.`, 'error');
+                        return;
+                    }
+                    if (sizeKB > 3000) {
+                        this._logStream('warn', `Notebook save is ${sizeKB} KB — approaching storage limit.`, 'warn');
+                    }
+                    localStorage.setItem('uvspeed-quantum-notepad', payload);
+                } catch (e) {
+                    if (e.name === 'QuotaExceededError') {
+                        this._logStream('warn', 'localStorage full — cannot save. Export notebook & delete cells.', 'error');
+                    }
+                }
             }
 
             _loadFromLocalStorage() {
@@ -5841,19 +6061,19 @@
                     });
                 });
 
-                // brotherNumsy game button — opens in new tab
+                // brotherNumsy game button — overlay
                 document.getElementById('f-play-numsy').addEventListener('click', () => {
-                    window.open('brothernumsy.html', '_blank');
+                    openOverlay('brothernumsy.html', 'brotherNumsy & Freya');
                 });
 
                 // kbatch keyboard analyzer — opens in new tab
                 document.getElementById('f-open-kbatch').addEventListener('click', () => {
-                    window.open('kbatch.html', '_blank');
+                    openOverlay('kbatch.html', 'kbatch — Keyboard Analyzer');
                 });
 
                 // hexcast live video broadcast — opens in new tab
                 document.getElementById('f-open-hexcast').addEventListener('click', () => {
-                    window.open('hexcast.html', '_blank');
+                    openOverlay('hexcast.html', 'hexcast — Live Video Broadcast');
                 });
 
                 // kbatch cell — add inline keyboard analyzer
@@ -6058,7 +6278,8 @@
                 this._hexCanvas = document.getElementById('hex-canvas');
                 this._hexCtx = this._hexCanvas?.getContext('2d');
                 this._nyanFrame = 0;
-                setInterval(() => {
+                this._hexInterval = setInterval(() => {
+                    if (document.hidden) return; // pause when tab/app not visible
                     if (document.getElementById('thermal-tab')?.classList.contains('active')) {
                         // Shift background hex data
                         for (let i = 0; i < 64; i++) {
@@ -6166,7 +6387,18 @@ print("Position:", quantum_position)`);
             }
 
             /* ---------- Cell CRUD ---------- */
+            static MAX_CELLS = 500;
+
             addCell(cellType = 'code', content = '') {
+                if (this.cells.length >= QuantumNotebook.MAX_CELLS) {
+                    this._logStream('warn', `Cell limit reached (${QuantumNotebook.MAX_CELLS}). Delete cells to add more.`, 'error');
+                    alert(`Cell limit: ${QuantumNotebook.MAX_CELLS} cells maximum.\nDelete unused cells to free space.`);
+                    return null;
+                }
+                if (this.cells.length === QuantumNotebook.MAX_CELLS - 50) {
+                    this._logStream('warn', `Approaching cell limit (${this.cells.length}/${QuantumNotebook.MAX_CELLS})`, 'warn');
+                }
+
                 const cellId = `cell_${this.cells.length}_${Date.now()}`;
 
                 const cell = {
@@ -8820,6 +9052,7 @@ print("Position:", quantum_position)`);
                     quantumPosition: c.quantumPosition, executionCount: c.executionCount,
                 })));
                 this._redoStack.push(currentSnapshot);
+                if (this._redoStack.length > 50) this._redoStack.shift(); // cap at 50
 
                 const prev = JSON.parse(this._undoStack.pop());
                 prev.forEach(snap => {
@@ -9947,7 +10180,821 @@ print("Position:", quantum_position)`);
             }
 
             console.log('📴 Offline mode module loaded (online:', navigator.onLine, ')');
+
+            // ===== PWA INSTALL PROMPT =====
+            let _deferredInstallPrompt = null;
+
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                _deferredInstallPrompt = e;
+                // Show install button in toolbar
+                const toolbar = document.querySelector('.toolbar');
+                if (toolbar && !document.getElementById('pwa-install-btn')) {
+                    const btn = document.createElement('button');
+                    btn.id = 'pwa-install-btn';
+                    btn.className = 'btn btn--sm';
+                    btn.title = 'Install uvspeed as app';
+                    btn.innerHTML = '📲 Install';
+                    btn.style.cssText = 'color:#3fb950;border-color:#3fb950;animation:pulse-border 2s ease infinite;';
+                    btn.addEventListener('click', async () => {
+                        if (!_deferredInstallPrompt) return;
+                        _deferredInstallPrompt.prompt();
+                        const { outcome } = await _deferredInstallPrompt.userChoice;
+                        console.log('⚡ PWA install:', outcome);
+                        if (outcome === 'accepted') {
+                            btn.innerHTML = '✅ Installed';
+                            btn.style.color = '#3fb950';
+                            setTimeout(() => btn.remove(), 3000);
+                        }
+                        _deferredInstallPrompt = null;
+                    });
+                    // Insert before bridge-status
+                    const bridgeEl = document.getElementById('bridge-status');
+                    if (bridgeEl) toolbar.insertBefore(btn, bridgeEl);
+                    else toolbar.appendChild(btn);
+                }
+            });
+
+            window.addEventListener('appinstalled', () => {
+                console.log('⚡ uvspeed PWA installed');
+                _deferredInstallPrompt = null;
+                const btn = document.getElementById('pwa-install-btn');
+                if (btn) btn.remove();
+            });
         })();
+    </script>
+
+    <!-- ====== XTERM.JS TERMINAL PANEL ====== -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@xterm/xterm@5/css/xterm.min.css">
+    <style>
+        #terminal-panel{position:fixed;bottom:0;left:0;right:0;height:0;background:#0d1117;border-top:2px solid #30363d;z-index:9999;transition:height .25s ease;overflow:hidden;display:flex;flex-direction:column}
+        #terminal-panel.open{height:280px}
+        #terminal-panel-hdr{display:flex;align-items:center;gap:8px;padding:4px 12px;background:#161b22;border-bottom:1px solid #30363d;flex-shrink:0;cursor:row-resize}
+        #terminal-panel-hdr .t-title{font-size:.6875rem;font-weight:600;color:#e6edf3;font-family:'SF Mono','Fira Code',monospace}
+        #terminal-panel-hdr .t-badge{font-size:.5rem;padding:1px 6px;border-radius:8px;border:1px solid #3fb950;color:#3fb950;font-weight:600}
+        #terminal-panel-hdr .t-close{margin-left:auto;background:none;border:1px solid #30363d;color:#8b949e;padding:2px 8px;border-radius:4px;cursor:pointer;font-size:.625rem}
+        #terminal-panel-hdr .t-close:hover{color:#f85149;border-color:#f85149}
+        #xterm-container{flex:1;padding:4px;overflow:hidden}
+        .xterm .xterm-viewport{overflow-y:auto !important}
+    </style>
+    <div id="terminal-panel">
+        <div id="terminal-panel-hdr">
+            <span class="t-title">💻 Terminal</span>
+            <span class="t-badge">xterm.js</span>
+            <span style="font-size:.5rem;color:#8b949e;font-family:'SF Mono',monospace" id="term-status">local</span>
+            <button class="t-close" id="term-close">✕ Close</button>
+        </div>
+        <div id="xterm-container"></div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/@xterm/xterm@5/lib/xterm.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@xterm/addon-fit@0/lib/addon-fit.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@xterm/addon-web-links@0/lib/addon-web-links.min.js"></script>
+    <script>
+    (() => {
+        'use strict';
+        const panel = document.getElementById('terminal-panel');
+        const toggleBtn = document.getElementById('terminal-btn');
+        const closeBtn = document.getElementById('term-close');
+        const container = document.getElementById('xterm-container');
+        const statusEl = document.getElementById('term-status');
+
+        let term = null;
+        let fitAddon = null;
+        let ws = null;
+        let initialized = false;
+        let cmdBuffer = '';
+        const history = [];
+        let histIdx = -1;
+
+        function initTerminal() {
+            if (initialized) return;
+            initialized = true;
+
+            if (typeof Terminal === 'undefined') {
+                container.innerHTML = '<div style="padding:12px;color:#f85149;font-size:.75rem;">xterm.js CDN not loaded — check network</div>';
+                return;
+            }
+
+            term = new Terminal({
+                theme: {
+                    background: '#0d1117',
+                    foreground: '#e6edf3',
+                    cursor: '#58a6ff',
+                    cursorAccent: '#0d1117',
+                    selectionBackground: 'rgba(88,166,255,.25)',
+                    black: '#0d1117', red: '#f85149', green: '#3fb950', yellow: '#f0883e',
+                    blue: '#58a6ff', magenta: '#a78bfa', cyan: '#56d4dd', white: '#e6edf3',
+                    brightBlack: '#484f58', brightRed: '#f85149', brightGreen: '#7ee787',
+                    brightYellow: '#f0883e', brightBlue: '#79c0ff', brightMagenta: '#d2a8ff',
+                    brightCyan: '#56d4dd', brightWhite: '#ffffff',
+                },
+                fontFamily: "'SF Mono','Fira Code','JetBrains Mono','Cascadia Code',monospace",
+                fontSize: 13,
+                cursorBlink: true,
+                cursorStyle: 'bar',
+                scrollback: 5000,
+                allowProposedApi: true,
+            });
+
+            if (typeof FitAddon !== 'undefined') {
+                fitAddon = new FitAddon.FitAddon();
+                term.loadAddon(fitAddon);
+            }
+
+            if (typeof WebLinksAddon !== 'undefined') {
+                term.loadAddon(new WebLinksAddon.WebLinksAddon());
+            }
+
+            term.open(container);
+            if (fitAddon) fitAddon.fit();
+
+            // Show welcome banner
+            term.writeln('\x1b[35m⚛ uvspeed terminal\x1b[0m — \x1b[36mbeyondBINARY\x1b[0m {+1, 1, -1, +0, 0, -0, +n, n, -n}');
+            term.writeln('\x1b[90m─────────────────────────────────────────────────────────────\x1b[0m');
+
+            // Try to connect to bridge WebSocket for real shell
+            connectBridgeWS();
+
+            // Local command handler (fallback when no bridge)
+            term.onKey(({ key, domEvent }) => {
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    // Send to bridge PTY
+                    ws.send(JSON.stringify({ type: 'input', data: key }));
+                    return;
+                }
+
+                // Local mode — basic command line emulator
+                const code = domEvent.keyCode;
+                if (code === 13) { // Enter
+                    term.writeln('');
+                    processLocalCommand(cmdBuffer);
+                    if (cmdBuffer.trim()) {
+                        history.push(cmdBuffer);
+                        if (history.length > 200) history.shift(); // cap at 200
+                    }
+                    histIdx = history.length;
+                    cmdBuffer = '';
+                } else if (code === 8) { // Backspace
+                    if (cmdBuffer.length > 0) {
+                        cmdBuffer = cmdBuffer.slice(0, -1);
+                        term.write('\b \b');
+                    }
+                } else if (code === 38) { // Up arrow
+                    if (histIdx > 0) {
+                        histIdx--;
+                        clearLine();
+                        cmdBuffer = history[histIdx];
+                        term.write(cmdBuffer);
+                    }
+                } else if (code === 40) { // Down arrow
+                    if (histIdx < history.length - 1) {
+                        histIdx++;
+                        clearLine();
+                        cmdBuffer = history[histIdx];
+                        term.write(cmdBuffer);
+                    } else {
+                        histIdx = history.length;
+                        clearLine();
+                        cmdBuffer = '';
+                    }
+                } else if (key.length === 1 && !domEvent.ctrlKey && !domEvent.altKey && !domEvent.metaKey) {
+                    cmdBuffer += key;
+                    term.write(key);
+                } else if (domEvent.ctrlKey && domEvent.key === 'c') {
+                    term.writeln('^C');
+                    cmdBuffer = '';
+                    showPrompt();
+                } else if (domEvent.ctrlKey && domEvent.key === 'l') {
+                    term.clear();
+                    showPrompt();
+                }
+            });
+
+            showPrompt();
+
+            new ResizeObserver(() => {
+                if (fitAddon && panel.classList.contains('open')) fitAddon.fit();
+            }).observe(container);
+        }
+
+        function clearLine() {
+            term.write('\x1b[2K\r');
+            showPromptInline();
+        }
+
+        function showPrompt() {
+            term.write('\x1b[32m⚛\x1b[0m \x1b[34muvspeed\x1b[0m \x1b[90m$\x1b[0m ');
+        }
+
+        function showPromptInline() {
+            term.write('\x1b[32m⚛\x1b[0m \x1b[34muvspeed\x1b[0m \x1b[90m$\x1b[0m ');
+        }
+
+        function processLocalCommand(cmd) {
+            const c = cmd.trim();
+            if (!c) { showPrompt(); return; }
+
+            const parts = c.split(/\s+/);
+            const command = parts[0].toLowerCase();
+
+            switch (command) {
+                case 'help':
+                    term.writeln('\x1b[36m  Available commands:\x1b[0m');
+                    term.writeln('  help              — show this help');
+                    term.writeln('  clear             — clear terminal');
+                    term.writeln('  version           — show uvspeed version');
+                    term.writeln('  status            — bridge server status');
+                    term.writeln('  prefix <line>     — classify a code line');
+                    term.writeln('  cells             — list notebook cells');
+                    term.writeln('  run <id>          — run a notebook cell');
+                    term.writeln('  eval <expr>       — evaluate JavaScript');
+                    term.writeln('  echo <text>       — print text');
+                    term.writeln('  date              — show date/time + unix');
+                    term.writeln('  uname             — show platform info');
+                    term.writeln('  open <page>       — open uvspeed web page');
+                    term.writeln('  \x1b[36mhexcast\x1b[0m            — live camera → terminal (truecolor)');
+                    term.writeln('  \x1b[36mhexcast front\x1b[0m      — front camera');
+                    term.writeln('  \x1b[36mhexcast back\x1b[0m       — back/rear camera');
+                    term.writeln('  \x1b[36mhexcast screen\x1b[0m     — screen capture → terminal');
+                    term.writeln('  \x1b[36mhexcast test\x1b[0m       — test color bars → terminal');
+                    term.writeln('  \x1b[36mhexcast send <IP>\x1b[0m  — stream camera to remote terminal');
+                    term.writeln('  \x1b[36mhexcast stop\x1b[0m       — stop live feed');
+                    term.writeln('  connect           — connect to bridge WS');
+                    term.writeln('\x1b[90m  Connect bridge for full shell (PTY)\x1b[0m');
+                    break;
+                case 'clear': term.clear(); break;
+                case 'version':
+                    term.writeln(`\x1b[35m  uvspeed v3.5 · Phase 3.5 · beyondBINARY\x1b[0m`);
+                    term.writeln(`  {+1, 1, -1, +0, 0, -0, +n, n, -n}`);
+                    break;
+                case 'status':
+                    term.writeln(`  Bridge: ${ws && ws.readyState === WebSocket.OPEN ? '\x1b[32mconnected\x1b[0m' : '\x1b[31moffline\x1b[0m'}`);
+                    term.writeln(`  Mode: ${ws && ws.readyState === WebSocket.OPEN ? 'PTY (bridge)' : 'local (emulated)'}`);
+                    term.writeln(`  Online: ${navigator.onLine}`);
+                    break;
+                case 'prefix': {
+                    const line = parts.slice(1).join(' ');
+                    if (!line) { term.writeln('\x1b[33m  Usage: prefix <code line>\x1b[0m'); break; }
+                    const result = classifyLocal(line);
+                    term.writeln(`  \x1b[36m${result.symbol}\x1b[0m  \x1b[33m${result.category}\x1b[0m  ${line}`);
+                    break;
+                }
+                case 'cells':
+                    if (window.notebook && notebook.cells) {
+                        notebook.cells.forEach((c, i) => {
+                            term.writeln(`  \x1b[90m[${i}]\x1b[0m ${c.id.slice(0,8)} \x1b[33m${c.type}\x1b[0m ${(c.code||'').slice(0,40).replace(/\n/g,' ')}`);
+                        });
+                    } else { term.writeln('\x1b[31m  No notebook loaded\x1b[0m'); }
+                    break;
+                case 'run':
+                    if (parts[1] && window.notebook) {
+                        const cell = notebook.cells?.find(c => c.id.startsWith(parts[1]));
+                        if (cell) { notebook.executeCell(cell.id); term.writeln(`\x1b[32m  Running cell ${parts[1]}...\x1b[0m`); }
+                        else term.writeln(`\x1b[31m  Cell not found: ${parts[1]}\x1b[0m`);
+                    } else term.writeln('\x1b[33m  Usage: run <cell-id-prefix>\x1b[0m');
+                    break;
+                case 'eval':
+                case 'js': {
+                    const expr = parts.slice(1).join(' ');
+                    try {
+                        const result = eval(expr);
+                        term.writeln(`  \x1b[32m${String(result)}\x1b[0m`);
+                    } catch(e) { term.writeln(`  \x1b[31m${e.message}\x1b[0m`); }
+                    break;
+                }
+                case 'echo': term.writeln('  ' + parts.slice(1).join(' ')); break;
+                case 'date': {
+                    const now = new Date();
+                    term.writeln(`  ${now.toISOString()}`);
+                    term.writeln(`  \x1b[90munix\x1b[0m ${Math.floor(now.getTime()/1000)}`);
+                    break;
+                }
+                case 'uname':
+                    term.writeln(`  ${navigator.platform} | ${navigator.userAgent.slice(0,60)}...`);
+                    break;
+                case 'open': {
+                    const pages = { notepad:'quantum-notepad.html', archflow:'archflow.html', blackwell:'blackwell.html',
+                                    questcast:'questcast.html', jawta:'jawta-audio.html', hexcast:'hexcast.html',
+                                    game:'brothernumsy.html', dashboard:'github-dashboard.html', lab:'research-lab.html',
+                                                    terminal:'terminal.html', send:'hexcast-send.html' };
+                    const target = pages[parts[1]];
+                    if (target) { openOverlay(target, parts[1]); term.writeln(`\x1b[32m  Opening ${target}\x1b[0m`); }
+                    else { term.writeln(`\x1b[33m  Pages: ${Object.keys(pages).join(', ')}\x1b[0m`); }
+                    break;
+                }
+                case 'connect': connectBridgeWS(); break;
+
+                // ===== HEXCAST LIVE CAMERA IN TERMINAL =====
+                case 'hexcast':
+                case 'camera': {
+                    const sub = (parts[1] || '').toLowerCase();
+                    if (sub === 'stop' || sub === 'off' || sub === 'quit') {
+                        if (window._hexTermFeed) {
+                            window._hexTermFeed.stop();
+                            term.writeln('\x1b[33m  hexcast stopped\x1b[0m');
+                        }
+                        if (window._hexTermSend) {
+                            window._hexTermSend.stop();
+                            term.writeln('\x1b[33m  hexcast send stopped\x1b[0m');
+                        }
+                        if (!window._hexTermFeed && !window._hexTermSend) {
+                            term.writeln('\x1b[90m  No active feed\x1b[0m');
+                        }
+                        break;
+                    }
+                    // ── hexcast send <host> — stream camera to remote terminal ──
+                    if (sub === 'send') {
+                        let sendHost = parts[2] || '';
+                        if (!sendHost) {
+                            term.writeln('\x1b[33m  Usage: hexcast send <IP>\x1b[0m');
+                            term.writeln('\x1b[90m  e.g. hexcast send 192.168.1.42\x1b[0m');
+                            break;
+                        }
+                        if (!sendHost.includes(':')) sendHost += ':9876';
+                        if (!sendHost.startsWith('ws://')) sendHost = 'ws://' + sendHost;
+                        term.writeln(`\x1b[36m  hexcast send\x1b[0m → ${sendHost}`);
+                        term.writeln('\x1b[90m  Connecting + streaming camera... hexcast stop to end\x1b[0m');
+
+                        (async function() {
+                            try {
+                                const sendFacing = (parts[3] === 'back') ? 'environment' : 'user';
+                                const stream = await navigator.mediaDevices.getUserMedia({
+                                    video: { facingMode: sendFacing, width: { ideal: 480 }, height: { ideal: 360 } },
+                                    audio: false
+                                });
+                                const vid = document.createElement('video');
+                                vid.setAttribute('playsinline', '');
+                                vid.muted = true;
+                                vid.srcObject = stream;
+                                await vid.play();
+
+                                const cvs = document.createElement('canvas');
+                                cvs.width = 480; cvs.height = 360;
+                                const cctx = cvs.getContext('2d');
+
+                                const sendWs = new WebSocket(sendHost);
+                                let sendN = 0, running = true, sendTimer = null;
+
+                                sendWs.onopen = () => {
+                                    term.writeln(`\x1b[32m  Connected! Streaming ${sendFacing === 'user' ? 'front' : 'back'} camera\x1b[0m`);
+                                    sendTimer = setInterval(() => {
+                                        if (!running) return;
+                                        cctx.drawImage(vid, 0, 0, 480, 360);
+                                        const dataUrl = cvs.toDataURL('image/jpeg', 0.5);
+                                        const b64 = dataUrl.split(',')[1];
+                                        const sz = Math.round(b64.length * 0.75);
+                                        const packet = JSON.stringify({
+                                            type: 'frame', v: '3.6.0',
+                                            src: `phone:${sendFacing === 'user' ? 'front' : 'back'}`,
+                                            w: 480, h: 360, sz, t: Date.now() / 1000,
+                                        }) + '\n' + b64;
+                                        try { sendWs.send(packet); sendN++; } catch(e) {}
+                                    }, 67); // ~15 fps
+                                };
+                                sendWs.onerror = () => term.writeln('\x1b[31m  Connection error\x1b[0m');
+                                sendWs.onclose = () => {
+                                    running = false;
+                                    if (sendTimer) clearInterval(sendTimer);
+                                    stream.getTracks().forEach(t => t.stop());
+                                    term.writeln(`\x1b[33m  Send ended — ${sendN} frames\x1b[0m`);
+                                    window._hexTermSend = null;
+                                    showPrompt();
+                                };
+
+                                window._hexTermSend = {
+                                    stop() {
+                                        running = false;
+                                        if (sendTimer) clearInterval(sendTimer);
+                                        sendWs.close();
+                                        stream.getTracks().forEach(t => t.stop());
+                                        window._hexTermSend = null;
+                                    },
+                                    get frameCount() { return sendN; }
+                                };
+                            } catch (e) {
+                                term.writeln(`\x1b[31m  Error: ${e.message}\x1b[0m`);
+                                showPrompt();
+                            }
+                        })();
+                        return; // don't show prompt — send takes over
+                    }
+                    // Source: camera (default), front, back, screen, test
+                    const source = (sub === 'screen') ? 'screen' : (sub === 'test') ? 'test' : 'camera';
+                    const facingMode = (sub === 'back' || sub === 'rear') ? 'environment' : 'user';
+                    const cols = term.cols || 80;
+                    const res = Math.floor(cols / 2); // 2 chars per pixel (half-blocks)
+                    const rows = Math.floor((term.rows || 24) - 3); // leave room for prompt
+                    const pixH = Math.floor(rows * 2); // 2 vertical pixels per row (upper/lower block)
+
+                    term.writeln(`\x1b[36m  hexcast — live ${source} → terminal\x1b[0m`);
+                    term.writeln(`\x1b[90m  ${res}×${pixH} pixels → ${res}×${rows} chars | 'hexcast stop' to end\x1b[0m`);
+
+                    (async function startHexTermFeed() {
+                        let stream = null, video = null, canvas = null, ctx = null, running = true, animId = null;
+
+                        try {
+                            video = document.createElement('video');
+                            video.setAttribute('playsinline', '');
+                            video.muted = true;
+                            canvas = document.createElement('canvas');
+                            canvas.width = res;
+                            canvas.height = pixH;
+                            ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+                            if (source === 'camera') {
+                                stream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: res }, height: { ideal: pixH }, facingMode: facingMode }, audio: false });
+                            } else if (source === 'screen') {
+                                stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
+                            }
+
+                            if (stream) {
+                                video.srcObject = stream;
+                                await video.play();
+                            }
+
+                            // Thermal palette: maps 0-255 to ANSI truecolor
+                            function thermalRGB(v) {
+                                if (v < 64)  return [0, Math.round(v * 2), Math.round(v * 4)];         // dark blue → cyan
+                                if (v < 128) return [0, Math.round((v-64)*4), 255-Math.round((v-64)*2)]; // cyan → green
+                                if (v < 192) return [Math.round((v-128)*4), 255-Math.round((v-128)*2), 0]; // green → red
+                                return [255, Math.round((v-192)*4), Math.round((v-192)*2)];               // red → white-hot
+                            }
+
+                            let frameN = 0;
+                            const fps = 12;
+                            const interval = 1000 / fps;
+                            let lastFrame = 0;
+
+                            function renderFrame(ts) {
+                                if (!running) return;
+                                if (ts - lastFrame < interval) { animId = requestAnimationFrame(renderFrame); return; }
+                                lastFrame = ts;
+                                frameN++;
+
+                                if (source === 'test') {
+                                    // Synthetic test pattern
+                                    for (let y = 0; y < pixH; y++) {
+                                        for (let x = 0; x < res; x++) {
+                                            const bar = Math.floor(x / (res / 8));
+                                            const colors = [[255,255,255],[255,255,0],[0,255,255],[0,255,0],[255,0,255],[255,0,0],[0,0,255],[0,0,0]];
+                                            const c = colors[bar % 8];
+                                            const scan = (y + frameN * 2) % pixH;
+                                            const fade = Math.abs(y - scan) < 3 ? 0.5 : 1;
+                                            ctx.fillStyle = `rgb(${Math.round(c[0]*fade)},${Math.round(c[1]*fade)},${Math.round(c[2]*fade)})`;
+                                            ctx.fillRect(x, y, 1, 1);
+                                        }
+                                    }
+                                } else {
+                                    ctx.drawImage(video, 0, 0, res, pixH);
+                                }
+
+                                const imgData = ctx.getImageData(0, 0, res, pixH);
+                                const px = imgData.data;
+
+                                // Build ANSI frame using half-block characters
+                                // ▀ (upper half block) with fg=top pixel, bg=bottom pixel
+                                let frame = `\x1b[H`; // cursor home (top of terminal)
+                                for (let row = 0; row < rows; row++) {
+                                    let line = '';
+                                    const y0 = row * 2;      // top pixel
+                                    const y1 = row * 2 + 1;  // bottom pixel
+                                    for (let x = 0; x < res; x++) {
+                                        const i0 = (y0 * res + x) * 4;
+                                        const i1 = (y1 * res + x) * 4;
+                                        const r0 = px[i0], g0 = px[i0+1], b0 = px[i0+2];
+                                        const r1 = px[i1], g1 = px[i1+1], b1 = px[i1+2];
+                                        // fg = top pixel (▀ upper half), bg = bottom pixel
+                                        line += `\x1b[38;2;${r0};${g0};${b0}m\x1b[48;2;${r1};${g1};${b1}m▀`;
+                                    }
+                                    line += '\x1b[0m';
+                                    frame += line + (row < rows - 1 ? '\r\n' : '');
+                                }
+                                // Status bar
+                                const luma = Math.round(Array.from(px).filter((_,i) => i%4===0).reduce((a,b) => a+b, 0) / (res*pixH));
+                                frame += `\r\n\x1b[36m hexcast\x1b[0m \x1b[90m${source} ${res}×${pixH} f:${frameN} luma:${luma}\x1b[0m`;
+
+                                term.write(frame);
+                                animId = requestAnimationFrame(renderFrame);
+                            }
+
+                            animId = requestAnimationFrame(renderFrame);
+
+                            window._hexTermFeed = {
+                                stop() {
+                                    running = false;
+                                    if (animId) cancelAnimationFrame(animId);
+                                    if (stream) stream.getTracks().forEach(t => t.stop());
+                                    video = null; canvas = null; ctx = null;
+                                    window._hexTermFeed = null;
+                                    term.write('\x1b[0m\x1b[2J\x1b[H'); // reset + clear
+                                    showPrompt();
+                                },
+                                get frameCount() { return frameN; },
+                                get source() { return source; },
+                            };
+
+                        } catch (e) {
+                            term.writeln(`\x1b[31m  Error: ${e.message}\x1b[0m`);
+                            term.writeln(`\x1b[90m  Tip: try 'hexcast test' for synthetic pattern\x1b[0m`);
+                            showPrompt();
+                            return;
+                        }
+                    })();
+                    return; // don't show prompt — feed takes over terminal
+                }
+
+                default:
+                    term.writeln(`\x1b[31m  Command not found: ${command}\x1b[0m`);
+                    term.writeln(`\x1b[90m  Type 'help' for available commands. Connect bridge for full shell.\x1b[0m`);
+            }
+            showPrompt();
+        }
+
+        function classifyLocal(line) {
+            const t = line.trim();
+            if (!t) return { symbol: '0', category: 'neutral' };
+            if (t.startsWith('//') || t.startsWith('#') || t.startsWith('/*')) return { symbol: '-0', category: 'comment' };
+            if (/^(import |from |use |require|#include)/.test(t)) return { symbol: 'n', category: 'import' };
+            if (/^(fn |function |def |class |struct |enum |const |let |var |type )/.test(t)) return { symbol: '+1', category: 'declaration' };
+            if (/^(if |else|for |while |match |switch |case )/.test(t)) return { symbol: '1', category: 'logic' };
+            if (/^(return |yield |break|continue)/.test(t)) return { symbol: '+n', category: 'modifier' };
+            if (/print|console\.|log\(|write\(|read\(|fetch\(/.test(t)) return { symbol: '-1', category: 'io' };
+            if (/ = | := | \+= | -= | \*= /.test(t)) return { symbol: '+0', category: 'assignment' };
+            return { symbol: '-n', category: 'unknown' };
+        }
+
+        function connectBridgeWS() {
+            if (ws && ws.readyState === WebSocket.OPEN) return;
+            statusEl.textContent = 'connecting...';
+            try {
+                ws = new WebSocket('ws://localhost:8086');
+                ws.onopen = () => {
+                    statusEl.textContent = 'bridge:8086';
+                    statusEl.style.color = '#3fb950';
+                    if (term) {
+                        term.writeln('\x1b[32m  Connected to bridge server (PTY mode)\x1b[0m');
+                        term.writeln('\x1b[90m  Full shell access via bridge WebSocket\x1b[0m');
+                    }
+                };
+                ws.onmessage = (e) => {
+                    try {
+                        const msg = JSON.parse(e.data);
+                        if (msg.type === 'output' && term) term.write(msg.data);
+                    } catch { if (term) term.write(e.data); }
+                };
+                ws.onclose = () => {
+                    statusEl.textContent = 'local';
+                    statusEl.style.color = '#8b949e';
+                    ws = null;
+                };
+                ws.onerror = () => {
+                    statusEl.textContent = 'local';
+                    statusEl.style.color = '#8b949e';
+                    ws = null;
+                };
+            } catch {
+                statusEl.textContent = 'local';
+                statusEl.style.color = '#8b949e';
+            }
+        }
+
+        // Toggle
+        function toggleTerminal() {
+            if (!initialized) initTerminal();
+            panel.classList.toggle('open');
+            if (panel.classList.contains('open') && fitAddon) {
+                setTimeout(() => fitAddon.fit(), 100);
+                term?.focus();
+            }
+        }
+
+        if (toggleBtn) toggleBtn.addEventListener('click', toggleTerminal);
+        if (closeBtn) closeBtn.addEventListener('click', () => panel.classList.remove('open'));
+
+        // Keyboard shortcut: Ctrl+` to toggle
+        document.addEventListener('keydown', e => {
+            if (e.ctrlKey && e.key === '`') { e.preventDefault(); toggleTerminal(); }
+        });
+
+        // Resize handle on header
+        const hdr = document.getElementById('terminal-panel-hdr');
+        let resizing = false, startY, startH;
+        hdr?.addEventListener('mousedown', e => {
+            if (e.target.tagName === 'BUTTON') return;
+            resizing = true; startY = e.clientY; startH = panel.offsetHeight;
+            document.body.style.cursor = 'row-resize'; document.body.style.userSelect = 'none';
+        });
+        document.addEventListener('mousemove', e => {
+            if (!resizing) return;
+            const h = startH + (startY - e.clientY);
+            panel.style.height = Math.max(80, Math.min(window.innerHeight * 0.7, h)) + 'px';
+            if (fitAddon) fitAddon.fit();
+        });
+        document.addEventListener('mouseup', () => {
+            if (resizing) { resizing = false; document.body.style.cursor = ''; document.body.style.userSelect = ''; }
+        });
+
+        console.log('💻 xterm.js terminal panel loaded (Ctrl+` to toggle)');
+    })();
+    </script>
+
+    <!-- ====== SUB-PAGE OVERLAY (iframe, preserves notepad state) ====== -->
+    <style>
+        #page-overlay{position:fixed;inset:0;z-index:90000;display:none;background:#0d1117;flex-direction:column}
+        #page-overlay.open{display:flex}
+        #page-overlay-bar{display:flex;align-items:center;gap:8px;padding:4px 10px;background:#161b22;border-bottom:1px solid #30363d;flex-shrink:0;height:36px}
+        #page-overlay-bar .overlay-title{flex:1;font-size:.8125rem;color:#8b949e;font-family:'SF Mono',monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        #page-overlay-bar button{background:#21262d;border:1px solid #30363d;color:#e6edf3;border-radius:4px;padding:3px 10px;font-size:.75rem;cursor:pointer}
+        #page-overlay-bar button:hover{background:#30363d}
+        #page-overlay-bar .close-btn{background:#da3633;border-color:#da3633;color:#fff;font-weight:700}
+        #page-overlay-bar .close-btn:hover{background:#f85149}
+        #page-overlay-frame{flex:1;border:none;width:100%;background:#0d1117}
+    </style>
+    <div id="page-overlay">
+        <div id="page-overlay-bar">
+            <button class="close-btn" onclick="closeOverlay()" title="Close and return to notepad">✕ Back to Notepad</button>
+            <span class="overlay-title" id="page-overlay-title"></span>
+            <button onclick="document.getElementById('page-overlay-frame').contentWindow.location.reload()" title="Reload page">↻</button>
+        </div>
+        <iframe id="page-overlay-frame" sandbox="allow-scripts allow-same-origin allow-popups allow-forms"></iframe>
+    </div>
+    <script>
+    function openOverlay(url, title) {
+        const overlay = document.getElementById('page-overlay');
+        const frame = document.getElementById('page-overlay-frame');
+        const titleEl = document.getElementById('page-overlay-title');
+        frame.src = url;
+        titleEl.textContent = title || url;
+        overlay.classList.add('open');
+    }
+    function closeOverlay() {
+        const overlay = document.getElementById('page-overlay');
+        const frame = document.getElementById('page-overlay-frame');
+        overlay.classList.remove('open');
+        frame.src = 'about:blank';
+    }
+    // Escape key closes overlay
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape' && document.getElementById('page-overlay').classList.contains('open')) {
+            closeOverlay();
+        }
+    });
+    </script>
+
+    <!-- ====== NUMSY HEADER COMPANION (logo position) ====== -->
+    <script>
+    (() => {
+        'use strict';
+        const logo = document.getElementById('numsy-logo');
+        const body = document.getElementById('numsy-body');
+        const bubble = document.getElementById('numsy-bubble');
+        const mouth = document.getElementById('numsy-mouth');
+        const tail = document.getElementById('numsy-tail');
+        if (!logo || !body) return;
+
+        let state = 'idle';
+        let mood = 100;
+        let energy = 100;
+        let bubbleTimer = null;
+        let idleCounter = 0;
+
+        const messages = {
+            easy: ['meow! ✨', 'easy peasy~', 'nyan~', '*purrs*', '💚 nice!'],
+            medium: ['hmm... 🤔', 'thinking...', '*concentrates*', 'working on it~'],
+            hard: ['complex! 🧠', '*sweats*', 'quantum thinking...', '⚡ power mode!'],
+            extreme: ['🌀 OVERLOAD', '*vibrating*', '⚛ beyond binary!', '🚀 OVERDRIVE'],
+            idle: ['zzz...', '*yawns*', 'pet me?', '*stretches*'],
+            greeting: ['hello! 🐱', 'nyan!', 'ready to code!', '⚛ quantum cat!'],
+            click: ['*purrr*', 'meow!', 'hi!', '*nuzzle*'],
+        };
+
+        function say(text, duration) {
+            clearTimeout(bubbleTimer);
+            bubble.textContent = text;
+            bubble.classList.add('show');
+            bubbleTimer = setTimeout(() => bubble.classList.remove('show'), duration || 2500);
+        }
+
+        function randomMsg(key) {
+            const arr = messages[key] || messages.idle;
+            return arr[Math.floor(Math.random() * arr.length)];
+        }
+
+        function setState(s) {
+            state = s;
+            body.className = 'numsy-logo-body ' + s;
+            switch (s) {
+                case 'happy': mouth.textContent = '▽'; break;
+                case 'thinking': mouth.textContent = '~'; break;
+                case 'dance': case 'fly': mouth.textContent = '▽'; break;
+                case 'sleepy': mouth.textContent = '-'; break;
+                default: mouth.textContent = 'w';
+            }
+            if (tail && (s === 'happy' || s === 'dance')) {
+                tail.style.animation = 'nl-wobble 0.3s ease infinite';
+            } else if (tail) {
+                tail.style.animation = 'nl-wobble 2s ease-in-out infinite';
+            }
+        }
+
+        window._numsyReact = function(difficulty) {
+            switch (difficulty) {
+                case 'easy': setState('happy'); say(randomMsg('easy')); break;
+                case 'medium': setState('thinking'); say(randomMsg('medium')); break;
+                case 'hard': setState('wiggle'); say(randomMsg('hard')); break;
+                case 'extreme': setState('fly'); say(randomMsg('extreme'), 4000); break;
+                default: setState('idle'); say(randomMsg('idle'));
+            }
+            setTimeout(() => setState('idle'), 4000);
+        };
+
+        logo.addEventListener('click', () => {
+            say(randomMsg('click'));
+            setState('dance');
+            mood = Math.min(100, mood + 10);
+            setTimeout(() => setState('idle'), 2000);
+        });
+
+        logo.addEventListener('dblclick', () => {
+            setState('fly');
+            say('🚀 wheeeee!', 3000);
+            setTimeout(() => setState('idle'), 3000);
+        });
+
+        // Eye tracking
+        document.addEventListener('mousemove', e => {
+            const eyeL = document.getElementById('numsy-eye-l');
+            const eyeR = document.getElementById('numsy-eye-r');
+            if (!eyeL || !eyeR) return;
+            const rect = logo.getBoundingClientRect();
+            const cx = rect.left + rect.width / 2;
+            const cy = rect.top + rect.height / 2;
+            const dx = Math.max(-1, Math.min(1, (e.clientX - cx) / 200));
+            const dy = Math.max(-1, Math.min(1, (e.clientY - cy) / 200));
+            [eyeL, eyeR].forEach(eye => {
+                eye.style.transform = `translate(${dx}px, ${dy}px)`;
+            });
+        });
+
+        // Idle tick
+        setInterval(() => {
+            if (state !== 'idle') return;
+            idleCounter++;
+            energy = Math.max(0, energy - 1);
+            mood = Math.max(0, mood - 0.5);
+            if (energy < 20) { setState('sleepy'); say('zzz...'); }
+            else if (idleCounter > 40 && Math.random() < 0.1) {
+                setState(Math.random() < 0.5 ? 'wiggle' : 'dance');
+                say(randomMsg('idle'));
+                idleCounter = 0;
+                setTimeout(() => setState('idle'), 3000);
+            }
+        }, 6000);
+
+        // Wake on typing
+        let lastKeyTime = 0;
+        document.addEventListener('keydown', () => {
+            const now = Date.now();
+            if (now - lastKeyTime > 10000 && state === 'sleepy') {
+                energy = Math.min(100, energy + 30);
+                setState('idle');
+                say('*wakes up* meow!');
+            }
+            lastKeyTime = now;
+            idleCounter = 0;
+        });
+
+        // Greeting
+        setTimeout(() => say(randomMsg('greeting'), 3000), 2000);
+
+        // Hook cell execution
+        const origExec = window.notebook?.executeCell;
+        if (origExec) {
+            window.notebook.executeCell = function(cellId) {
+                const cell = this.cells?.find(c => c.id === cellId);
+                if (cell) {
+                    const code = cell.code || '';
+                    const lines = code.split('\n').length;
+                    let diff = 'easy';
+                    if (lines > 50 || code.includes('async') || code.includes('quantum')) diff = 'extreme';
+                    else if (lines > 20 || code.includes('class') || code.includes('import')) diff = 'hard';
+                    else if (lines > 5) diff = 'medium';
+                    window._numsyReact(diff);
+                }
+                return origExec.apply(this, arguments);
+            };
+        }
+
+        // API
+        window.numsy = {
+            say, setState, react: window._numsyReact,
+            get mood() { return mood; },
+            get energy() { return energy; },
+            feed() { energy = Math.min(100, energy + 30); mood = Math.min(100, mood + 20); setState('happy'); say('yum! 🐟'); },
+            pet() { mood = Math.min(100, mood + 15); setState('happy'); say('*purrs loudly*'); },
+        };
+        console.log('🐱 Numsy logo companion loaded — click to interact, API: window.numsy');
+    })();
     </script>
 </body>
 </html>

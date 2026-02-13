@@ -1,7 +1,7 @@
 // beyondBINARY quantum-prefixed | uvspeed | {+1, 1, -1, +0, 0, -0, +n, n, -n}
 // UVspeed - Advanced Notes & Terminal Environment
 // Desktop app with quantum navigation, multi-instance windows, and AI integration
-// v3.2.0 — QubesOS-style isolated instances, MCP-ready
+// v3.5.0 — QubesOS-style isolated instances, MCP-ready, loads web/quantum-notepad.html
 
 const { app, BrowserWindow, Menu, ipcMain, dialog, shell } = require('electron');
 const path = require('path');
@@ -287,12 +287,12 @@ class UVspeedApp {
             show: false
         });
 
-        // Load the quantum terminal interface
+        // Load quantum-notepad.html (the current v3.5 web UI) via local Express server
+        // The old src/index.html is preserved as fallback but no longer the default
+        const mainURL = `http://localhost:${PORT}/web/quantum-notepad.html`;
+        mainWin.loadURL(mainURL);
         if (isDev) {
-            mainWin.loadFile(path.join(__dirname, 'src', 'index.html'));
             mainWin.webContents.openDevTools();
-        } else {
-            mainWin.loadFile(path.join(__dirname, 'src', 'index.html'));
         }
 
         mainWin.once('ready-to-show', () => {
@@ -490,6 +490,14 @@ class UVspeedApp {
                     {
                         label: 'New GitHub Dashboard',
                         click: () => self.registry.createInstance('github-dashboard.html')
+                    },
+                    {
+                        label: 'New Research Lab',
+                        click: () => self.registry.createInstance('research-lab.html')
+                    },
+                    {
+                        label: 'Numsy Tamagotchi',
+                        click: () => self.registry.createInstance('numsy.html', { width: 540, height: 540 })
                     },
                     { type: 'separator' },
                     {

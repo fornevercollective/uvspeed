@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>hexcast send — stream camera to terminal</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0d1117; color: #e6edf3; font-family: -apple-system, 'SF Pro', system-ui, sans-serif; min-height: 100dvh; display: flex; flex-direction: column; }
+    .header { padding: 12px 16px; background: #161b22; border-bottom: 1px solid #30363d; display: flex; align-items: center; gap: 10px; }
+    .header h1 { font-size: 1rem; font-weight: 600; flex: 1; }
+    .header .tag { font-size: .625rem; background: #238636; color: #fff; padding: 2px 6px; border-radius: 8px; }
+    .main { flex: 1; display: flex; flex-direction: column; padding: 16px; gap: 12px; }
+    .connect-bar { display: flex; gap: 8px; }
+    .connect-bar input { flex: 1; background: #161b22; border: 1px solid #30363d; border-radius: 6px; padding: 10px 12px; color: #e6edf3; font-size: .875rem; font-family: 'SF Mono', monospace; }
+    .connect-bar input:focus { outline: none; border-color: #58a6ff; }
+    .btn { background: #238636; border: none; color: #fff; padding: 10px 18px; border-radius: 6px; font-size: .875rem; font-weight: 600; cursor: pointer; }
+    .btn:active { transform: scale(0.97); }
+    .btn--stop { background: #da3633; }
+    .btn--swap { background: #1f6feb; }
+    .btn--sm { padding: 6px 12px; font-size: .75rem; }
+    .video-wrap { position: relative; flex: 1; min-height: 200px; background: #161b22; border-radius: 8px; overflow: hidden; border: 1px solid #30363d; }
+    .video-wrap video { width: 100%; height: 100%; object-fit: cover; }
+    .video-wrap canvas { display: none; }
+    .overlay-badge { position: absolute; top: 8px; left: 8px; background: rgba(0,0,0,.7); color: #e6edf3; font-size: .625rem; padding: 3px 8px; border-radius: 4px; font-family: 'SF Mono', monospace; backdrop-filter: blur(4px); }
+    .overlay-badge.live { color: #3fb950; }
+    .overlay-badge.live::before { content: ''; display: inline-block; width: 6px; height: 6px; background: #3fb950; border-radius: 50%; margin-right: 4px; animation: pulse 1s infinite; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .4; } }
+    .stats { display: flex; gap: 16px; padding: 8px 12px; background: #161b22; border-radius: 6px; border: 1px solid #30363d; font-size: .75rem; font-family: 'SF Mono', monospace; color: #8b949e; flex-wrap: wrap; }
+    .stats .val { color: #58a6ff; }
+    .controls { display: flex; gap: 8px; flex-wrap: wrap; }
+    .facing-label { font-size: .75rem; color: #8b949e; padding: 8px 0 4px; }
+    .instructions { background: #161b22; border: 1px solid #30363d; border-radius: 6px; padding: 12px; font-size: .75rem; color: #8b949e; line-height: 1.6; }
+    .instructions code { background: #21262d; padding: 1px 5px; border-radius: 3px; color: #79c0ff; }
+</style>
+</head>
+<body>
+<div style="display:flex;height:2px;width:100%;flex-shrink:0"><span style="flex:1;background:#ff3838"></span><span style="flex:1;background:#ff8c38"></span><span style="flex:1;background:#ffe138"></span><span style="flex:1;background:#3fb950"></span><span style="flex:1;background:#38a5ff"></span><span style="flex:1;background:#bc8cff"></span></div>
+    <div class="header">
+        <h1>📡 hexcast send</h1>
+        <span class="tag" id="status-tag">disconnected</span>
+    </div>
+    <div class="main">
+        <div class="connect-bar">
+            <input type="text" id="host-input" placeholder="Mac IP:port (e.g. 192.168.1.42:9876)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+            <button class="btn" id="connect-btn" onclick="toggleStream()">Send</button>
+        </div>
+
+        <div class="video-wrap">
+            <video id="video" playsinline autoplay muted></video>
+            <canvas id="canvas"></canvas>
+            <div class="overlay-badge" id="badge">camera off</div>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn--swap btn--sm" onclick="swapCamera()">↺ Swap Camera</button>
+            <button class="btn btn--sm" onclick="cycleQuality()" id="quality-btn">Quality: med</button>
+        </div>
+
+        <div class="stats">
+            <span>Frames: <span class="val" id="s-frames">0</span></span>
+            <span>FPS: <span class="val" id="s-fps">0</span></span>
+            <span>Size: <span class="val" id="s-size">0 KB</span></span>
+            <span>Latency: <span class="val" id="s-lat">—</span></span>
+            <span>Camera: <span class="val" id="s-cam">—</span></span>
+        </div>
+
+        <div class="instructions">
+            <strong>How to use:</strong><br>
+            1. On your Mac terminal, run: <code>hexcast --receive</code><br>
+            2. Enter the IP shown (e.g. <code>192.168.1.42:9876</code>) above<br>
+            3. Tap <strong>Send</strong> — your camera streams to the terminal<br>
+            4. Tap <strong>↺ Swap Camera</strong> to switch front/back
+        </div>
+    </div>
+
+<script>
+'use strict';
+
+const video = document.getElementById('video');
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const hostInput = document.getElementById('host-input');
+const badge = document.getElementById('badge');
+const statusTag = document.getElementById('status-tag');
+const connectBtn = document.getElementById('connect-btn');
+
+let ws = null;
+let stream = null;
+let animId = null;
+let frameCount = 0;
+let lastFpsTime = 0;
+let lastFpsCount = 0;
+let facingMode = 'user'; // 'user' = front, 'environment' = back
+let quality = 0.5; // JPEG quality
+const qualities = [
+    { label: 'low', q: 0.3, w: 240, h: 180 },
+    { label: 'med', q: 0.5, w: 480, h: 360 },
+    { label: 'high', q: 0.7, w: 640, h: 480 },
+    { label: 'max', q: 0.85, w: 1280, h: 720 },
+];
+let qualityIdx = 1;
+
+// Auto-fill from URL hash: hexcast-send.html#192.168.1.42:9876
+if (location.hash) {
+    hostInput.value = location.hash.slice(1);
+}
+
+async function startCamera() {
+    if (stream) {
+        stream.getTracks().forEach(t => t.stop());
+    }
+    const q = qualities[qualityIdx];
+    try {
+        stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode, width: { ideal: q.w }, height: { ideal: q.h } },
+            audio: false
+        });
+        video.srcObject = stream;
+        await video.play();
+        const track = stream.getVideoTracks()[0];
+        const settings = track.getSettings();
+        document.getElementById('s-cam').textContent =
+            `${facingMode === 'user' ? 'front' : 'back'} ${settings.width}×${settings.height}`;
+        badge.textContent = facingMode === 'user' ? 'front' : 'back';
+        badge.className = 'overlay-badge';
+    } catch (e) {
+        badge.textContent = 'camera error: ' + e.message;
+    }
+}
+
+function swapCamera() {
+    facingMode = facingMode === 'user' ? 'environment' : 'user';
+    startCamera();
+}
+
+function cycleQuality() {
+    qualityIdx = (qualityIdx + 1) % qualities.length;
+    quality = qualities[qualityIdx].q;
+    document.getElementById('quality-btn').textContent = `Quality: ${qualities[qualityIdx].label}`;
+    if (stream) startCamera(); // re-open at new resolution
+}
+
+function toggleStream() {
+    if (ws) {
+        stopStream();
+    } else {
+        startStream();
+    }
+}
+
+function startStream() {
+    let host = hostInput.value.trim();
+    if (!host) { hostInput.focus(); return; }
+    if (!host.includes(':')) host += ':9876';
+    if (!host.startsWith('ws://')) host = 'ws://' + host;
+
+    statusTag.textContent = 'connecting...';
+    statusTag.style.background = '#e3b341';
+
+    ws = new WebSocket(host);
+    ws.onopen = () => {
+        statusTag.textContent = 'streaming';
+        statusTag.style.background = '#238636';
+        badge.className = 'overlay-badge live';
+        badge.textContent = `${facingMode === 'user' ? 'front' : 'back'} → ${hostInput.value}`;
+        connectBtn.textContent = 'Stop';
+        connectBtn.className = 'btn btn--stop';
+        frameCount = 0;
+        lastFpsTime = performance.now();
+        lastFpsCount = 0;
+        sendLoop();
+    };
+    ws.onclose = () => stopStream();
+    ws.onerror = () => {
+        statusTag.textContent = 'error';
+        statusTag.style.background = '#da3633';
+        stopStream();
+    };
+}
+
+function stopStream() {
+    if (animId) cancelAnimationFrame(animId);
+    animId = null;
+    if (ws) { try { ws.close(); } catch(e) {} }
+    ws = null;
+    statusTag.textContent = 'disconnected';
+    statusTag.style.background = '#484f58';
+    badge.className = 'overlay-badge';
+    badge.textContent = facingMode === 'user' ? 'front' : 'back';
+    connectBtn.textContent = 'Send';
+    connectBtn.className = 'btn';
+}
+
+function sendLoop() {
+    if (!ws || ws.readyState !== WebSocket.OPEN) return;
+
+    const q = qualities[qualityIdx];
+    canvas.width = q.w;
+    canvas.height = q.h;
+    ctx.drawImage(video, 0, 0, q.w, q.h);
+
+    // Encode as JPEG base64
+    const dataUrl = canvas.toDataURL('image/jpeg', quality);
+    const b64 = dataUrl.split(',')[1];
+    const sz = Math.round(b64.length * 0.75); // approximate byte size
+
+    const packet = JSON.stringify({
+        type: 'frame',
+        v: '3.6.0',
+        src: `phone:${facingMode === 'user' ? 'front' : 'back'}`,
+        w: q.w,
+        h: q.h,
+        sz: sz,
+        t: Date.now() / 1000,
+    }) + '\n' + b64;
+
+    try {
+        ws.send(packet);
+    } catch (e) {
+        stopStream();
+        return;
+    }
+
+    frameCount++;
+    document.getElementById('s-frames').textContent = frameCount;
+    document.getElementById('s-size').textContent = (sz / 1024).toFixed(1) + ' KB';
+
+    // FPS calc
+    const now = performance.now();
+    if (now - lastFpsTime > 1000) {
+        const fps = Math.round((frameCount - lastFpsCount) / ((now - lastFpsTime) / 1000));
+        document.getElementById('s-fps').textContent = fps;
+        lastFpsCount = frameCount;
+        lastFpsTime = now;
+    }
+
+    // Target ~15 fps
+    animId = setTimeout(() => requestAnimationFrame(sendLoop), 50);
+}
+
+// Start camera on load
+startCamera();
+</script>
+</body>
+</html>

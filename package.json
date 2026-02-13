@@ -1,6 +1,6 @@
 {
   "name": "uvspeed-quantum",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "description": "beyondBINARY quantum-prefixed code architecture — notepad, game engine, keyboard analyzer, video broadcast, and desktop terminal",
   "homepage": "https://fornevercollective.github.io/uvspeed/web/quantum-notepad.html",
   "repository": {

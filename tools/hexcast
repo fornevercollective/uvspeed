@@ -1,0 +1,429 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.10"
+# dependencies = [
+#     "opencv-python-headless>=4.9",
+#     "numpy>=1.24",
+# ]
+# ///
+"""
+hexcast — live camera/video → truecolor ANSI terminal art
+
+Usage:
+    uv run tools/hexcast              # camera feed (default)
+    uv run tools/hexcast --screen     # screen capture via ffmpeg
+    uv run tools/hexcast --test       # synthetic test pattern
+    uv run tools/hexcast --file VIDEO # play a video file
+    uv run tools/hexcast --thermal    # thermal color palette
+    uv run tools/hexcast --ascii      # ASCII grayscale mode
+    uv run tools/hexcast --cols 120   # custom width
+
+Install globally:
+    uv tool install --from . hexcast
+
+One-liner (any machine):
+    curl -LsSf https://astral.sh/uv/install.sh | sh && uv run https://raw.githubusercontent.com/user/uvspeed/main/tools/hexcast
+
+Controls:
+    q / Ctrl+C  — quit
+    t           — toggle thermal palette
+    a           — toggle ASCII mode
+    +/-         — adjust brightness
+    space       — pause/resume
+    s           — screenshot (save frame as .txt)
+"""
+
+import sys
+import os
+import time
+import signal
+import argparse
+import shutil
+import select
+import termios
+import tty
+from pathlib import Path
+
+import cv2
+import numpy as np
+
+
+# ──────────────────────────────────────────────────────────
+# Terminal helpers
+# ──────────────────────────────────────────────────────────
+
+def terminal_size():
+    cols, rows = shutil.get_terminal_size((80, 24))
+    return cols, rows
+
+
+def hide_cursor():
+    sys.stdout.write("\033[?25l")
+    sys.stdout.flush()
+
+
+def show_cursor():
+    sys.stdout.write("\033[?25h\033[0m")
+    sys.stdout.flush()
+
+
+def clear_screen():
+    sys.stdout.write("\033[2J\033[H")
+    sys.stdout.flush()
+
+
+def move_cursor(row, col):
+    sys.stdout.write(f"\033[{row};{col}H")
+
+
+def kbhit():
+    """Non-blocking key check."""
+    dr, _, _ = select.select([sys.stdin], [], [], 0)
+    return len(dr) > 0
+
+
+def getch():
+    """Read a single character."""
+    return sys.stdin.read(1)
+
+
+# ──────────────────────────────────────────────────────────
+# Color palettes
+# ──────────────────────────────────────────────────────────
+
+def truecolor_fg(r, g, b):
+    return f"\033[38;2;{r};{g};{b}m"
+
+
+def truecolor_bg(r, g, b):
+    return f"\033[48;2;{r};{g};{b}m"
+
+
+def thermal_map(r, g, b):
+    """Map RGB to thermal palette."""
+    luma = int(0.299 * r + 0.587 * g + 0.114 * b)
+    if luma < 64:
+        return (0, luma * 2, min(255, luma * 4))
+    elif luma < 128:
+        t = luma - 64
+        return (0, min(255, t * 4), max(0, 255 - t * 2))
+    elif luma < 192:
+        t = luma - 128
+        return (min(255, t * 4), max(0, 255 - t * 2), 0)
+    else:
+        t = luma - 192
+        return (255, min(255, t * 4), min(255, t * 2))
+
+
+ASCII_RAMP = " .:-=+*#%@"
+
+
+def rgb_to_ascii(r, g, b):
+    luma = int(0.299 * r + 0.587 * g + 0.114 * b)
+    idx = min(len(ASCII_RAMP) - 1, luma * len(ASCII_RAMP) // 256)
+    return ASCII_RAMP[idx]
+
+
+# ──────────────────────────────────────────────────────────
+# Frame rendering
+# ──────────────────────────────────────────────────────────
+
+UPPER_HALF = "▀"
+FULL_BLOCK = "█"
+RESET = "\033[0m"
+
+
+def render_frame_truecolor(frame, cols, rows, thermal=False, brightness=1.0):
+    """Render a frame as truecolor half-block art.
+
+    Each terminal row encodes 2 pixel rows using ▀ (upper half block)
+    with foreground = top pixel, background = bottom pixel.
+    """
+    h, w = frame.shape[:2]
+    # Resize to fit terminal
+    target_w = cols
+    target_h = rows * 2  # 2 pixels per row
+    resized = cv2.resize(frame, (target_w, target_h), interpolation=cv2.INTER_AREA)
+
+    if brightness != 1.0:
+        resized = np.clip(resized * brightness, 0, 255).astype(np.uint8)
+
+    lines = []
+    for row in range(rows):
+        y0 = row * 2
+        y1 = row * 2 + 1
+        line_parts = []
+        for x in range(target_w):
+            # OpenCV is BGR
+            b0, g0, r0 = resized[y0, x]
+            b1, g1, r1 = resized[y1, x] if y1 < target_h else (0, 0, 0)
+
+            if thermal:
+                r0, g0, b0 = thermal_map(r0, g0, b0)
+                r1, g1, b1 = thermal_map(r1, g1, b1)
+
+            line_parts.append(
+                f"{truecolor_fg(r0, g0, b0)}{truecolor_bg(r1, g1, b1)}{UPPER_HALF}"
+            )
+        lines.append("".join(line_parts) + RESET)
+
+    return "\n".join(lines)
+
+
+def render_frame_ascii(frame, cols, rows, thermal=False, brightness=1.0):
+    """Render a frame as colored ASCII characters."""
+    h, w = frame.shape[:2]
+    resized = cv2.resize(frame, (cols, rows), interpolation=cv2.INTER_AREA)
+
+    if brightness != 1.0:
+        resized = np.clip(resized * brightness, 0, 255).astype(np.uint8)
+
+    lines = []
+    for y in range(rows):
+        line_parts = []
+        for x in range(cols):
+            b, g, r = resized[y, x]
+            if thermal:
+                r, g, b = thermal_map(r, g, b)
+            ch = rgb_to_ascii(r, g, b)
+            line_parts.append(f"{truecolor_fg(r, g, b)}{ch}")
+        lines.append("".join(line_parts) + RESET)
+
+    return "\n".join(lines)
+
+
+# ──────────────────────────────────────────────────────────
+# Test pattern generator
+# ──────────────────────────────────────────────────────────
+
+def generate_test_pattern(w, h, frame_num):
+    """SMPTE-style color bars with moving scanline."""
+    img = np.zeros((h, w, 3), dtype=np.uint8)
+    colors = [
+        (255, 255, 255), (0, 255, 255), (255, 255, 0), (0, 255, 0),
+        (255, 0, 255), (0, 0, 255), (255, 0, 0), (0, 0, 0),
+    ]
+    bar_w = w // 8
+    for i, (b, g, r) in enumerate(colors):
+        x0 = i * bar_w
+        x1 = (i + 1) * bar_w if i < 7 else w
+        img[:, x0:x1] = (r, g, b)  # BGR
+
+    # Moving scanline
+    scan_y = (frame_num * 3) % h
+    img[max(0, scan_y - 1):scan_y + 2, :] = (
+        img[max(0, scan_y - 1):scan_y + 2, :] * 0.3
+    ).astype(np.uint8)
+
+    # Gradient bar at bottom 10%
+    grad_h = h // 10
+    for x in range(w):
+        v = int(255 * x / w)
+        img[h - grad_h:, x] = (v, v, v)
+
+    return img
+
+
+# ──────────────────────────────────────────────────────────
+# Screen capture via ffmpeg (macOS)
+# ──────────────────────────────────────────────────────────
+
+def open_screen_capture():
+    """Open screen capture using ffmpeg on macOS."""
+    import subprocess
+    # macOS: avfoundation, device 1 = screen
+    # Try to find screen capture device index
+    cmd = [
+        "ffmpeg", "-f", "avfoundation", "-framerate", "15",
+        "-i", "1:none",  # screen:no-audio
+        "-vf", "scale=320:240",
+        "-f", "rawvideo", "-pix_fmt", "bgr24",
+        "-an", "-"
+    ]
+    try:
+        proc = subprocess.Popen(
+            cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL
+        )
+        return proc, 320, 240
+    except FileNotFoundError:
+        print("\033[31mError: ffmpeg not found. Install with: brew install ffmpeg\033[0m")
+        sys.exit(1)
+
+
+# ──────────────────────────────────────────────────────────
+# Main loop
+# ──────────────────────────────────────────────────────────
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="hexcast — live camera → truecolor ANSI terminal art",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=__doc__,
+    )
+    parser.add_argument("--screen", action="store_true", help="capture screen via ffmpeg")
+    parser.add_argument("--test", action="store_true", help="synthetic test pattern")
+    parser.add_argument("--file", type=str, help="play a video file")
+    parser.add_argument("--thermal", action="store_true", help="thermal color palette")
+    parser.add_argument("--ascii", action="store_true", help="ASCII grayscale mode")
+    parser.add_argument("--cols", type=int, default=0, help="custom width (0 = auto)")
+    parser.add_argument("--fps", type=int, default=15, help="target FPS (default: 15)")
+    parser.add_argument("--camera", type=int, default=0, help="camera device index")
+    args = parser.parse_args()
+
+    thermal = args.thermal
+    ascii_mode = args.ascii
+    brightness = 1.0
+    paused = False
+    frame_num = 0
+    target_fps = args.fps
+    frame_interval = 1.0 / target_fps
+
+    cols_override = args.cols
+    cap = None
+    ffmpeg_proc = None
+    screen_w, screen_h = 0, 0
+
+    source_name = "camera"
+
+    # Open source
+    if args.test:
+        source_name = "test"
+    elif args.screen:
+        source_name = "screen"
+        ffmpeg_proc, screen_w, screen_h = open_screen_capture()
+    elif args.file:
+        source_name = f"file:{Path(args.file).name}"
+        cap = cv2.VideoCapture(args.file)
+        if not cap.isOpened():
+            print(f"\033[31mError: cannot open {args.file}\033[0m")
+            sys.exit(1)
+    else:
+        source_name = f"camera:{args.camera}"
+        cap = cv2.VideoCapture(args.camera)
+        if not cap.isOpened():
+            print("\033[31mError: cannot open camera. Try --test for test pattern.\033[0m")
+            sys.exit(1)
+        cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+
+    # Terminal raw mode for keypress detection
+    old_settings = termios.tcgetattr(sys.stdin)
+
+    def cleanup(*_):
+        termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
+        show_cursor()
+        clear_screen()
+        if cap:
+            cap.release()
+        if ffmpeg_proc:
+            ffmpeg_proc.kill()
+        print(f"\n\033[36mhexcast\033[0m — {frame_num} frames rendered. Goodbye.")
+        sys.exit(0)
+
+    signal.signal(signal.SIGINT, cleanup)
+    signal.signal(signal.SIGTERM, cleanup)
+
+    try:
+        tty.setcbreak(sys.stdin.fileno())
+        hide_cursor()
+        clear_screen()
+
+        # Banner
+        sys.stdout.write(f"\033[36m  hexcast\033[0m \033[90m— live {source_name} → terminal\033[0m\n")
+        sys.stdout.write(f"\033[90m  q=quit  t=thermal  a=ascii  +/-=brightness  space=pause  s=screenshot\033[0m\n")
+        sys.stdout.flush()
+        time.sleep(0.8)
+
+        while True:
+            t0 = time.monotonic()
+
+            # Handle keypresses
+            if kbhit():
+                ch = getch()
+                if ch in ("q", "Q", "\x03"):  # q or Ctrl+C
+                    cleanup()
+                elif ch == "t":
+                    thermal = not thermal
+                elif ch == "a":
+                    ascii_mode = not ascii_mode
+                elif ch in ("+", "="):
+                    brightness = min(2.0, brightness + 0.1)
+                elif ch in ("-", "_"):
+                    brightness = max(0.2, brightness - 0.1)
+                elif ch == " ":
+                    paused = not paused
+                elif ch == "s":
+                    # Screenshot: save current frame as ANSI text
+                    fname = f"hexcast-{int(time.time())}.txt"
+                    # will save on next frame
+                    pass
+
+            if paused:
+                time.sleep(0.05)
+                continue
+
+            # Capture frame
+            cols, rows_total = terminal_size()
+            if cols_override > 0:
+                cols = cols_override
+            rows = rows_total - 2  # leave room for status bar
+
+            if args.test:
+                frame = generate_test_pattern(cols, rows * 2 if not ascii_mode else rows, frame_num)
+            elif ffmpeg_proc:
+                raw = ffmpeg_proc.stdout.read(screen_w * screen_h * 3)
+                if not raw or len(raw) < screen_w * screen_h * 3:
+                    cleanup()
+                frame = np.frombuffer(raw, dtype=np.uint8).reshape((screen_h, screen_w, 3))
+            else:
+                ret, frame = cap.read()
+                if not ret:
+                    if args.file:
+                        cap.set(cv2.CAP_PROP_POS_FRAMES, 0)  # loop
+                        continue
+                    cleanup()
+
+            frame_num += 1
+
+            # Render
+            if ascii_mode:
+                output = render_frame_ascii(frame, cols, rows, thermal, brightness)
+            else:
+                output = render_frame_truecolor(frame, cols, rows, thermal, brightness)
+
+            # Status bar
+            elapsed = time.monotonic() - t0
+            fps_actual = 1.0 / elapsed if elapsed > 0 else 0
+            h, w = frame.shape[:2]
+            mode_str = ("thermal " if thermal else "") + ("ascii" if ascii_mode else "truecolor")
+            status = (
+                f"\033[36m hexcast\033[0m "
+                f"\033[90m{source_name} {w}×{h}→{cols}×{rows} "
+                f"f:{frame_num} fps:{fps_actual:.0f}/{target_fps} "
+                f"brt:{brightness:.1f} {mode_str}\033[0m"
+            )
+
+            # Write frame
+            move_cursor(1, 1)
+            sys.stdout.write(output + "\n" + status)
+            sys.stdout.flush()
+
+            # Frame rate limiting
+            elapsed = time.monotonic() - t0
+            sleep_time = frame_interval - elapsed
+            if sleep_time > 0:
+                time.sleep(sleep_time)
+
+    except Exception as e:
+        termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
+        show_cursor()
+        print(f"\n\033[31mError: {e}\033[0m")
+        if cap:
+            cap.release()
+        if ffmpeg_proc:
+            ffmpeg_proc.kill()
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()

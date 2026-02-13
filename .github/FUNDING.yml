@@ -1,0 +1,16 @@
+# beyondBINARY quantum-prefixed | uvspeed | funding
+# This file displays a "Sponsor" button on the GitHub repo page
+
+# GitHub Sponsors (100% goes to you, no platform fees)
+github: [fornevercollective]
+
+# External platforms (backup/flexibility)
+patreon: fornevercollective
+open_collective: uvspeed
+ko_fi: fornevercollective
+buy_me_a_coffee: fornevercollective
+
+# Custom links (PayPal, crypto, etc.)
+custom:
+  - "https://paypal.me/fornevercollective"
+  - "https://fornevercollective.github.io/uvspeed/web/quantum-notepad.html"

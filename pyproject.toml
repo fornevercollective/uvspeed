@@ -2,8 +2,8 @@
 
 [project]
 name = "uvspeed-quantum"
-version = "3.0.0"
-description = "beyondBINARY quantum-prefixed code architecture — notepad, game engine, keyboard analyzer, video broadcast, desktop terminal"
+version = "4.0.0"
+description = "beyondBINARY quantum-prefixed development platform — terminal emulator, video streaming, keyboard heatmap, multi-stream grid, 20-language prefix system"
 readme = "README.md"
 license = {text = "MIT"}
 requires-python = ">=3.9"
@@ -31,14 +31,26 @@ classifiers = [
 ]
 dependencies = [
     "websockets>=12.0",
+    "opencv-python-headless>=4.9",
+    "numpy>=1.24",
+    "zeroconf>=0.131",
+    "Pillow>=9.0",
 ]
 
 [project.optional-dependencies]
+lite = [
+    "websockets>=12.0",
+    "Pillow>=9.0",
+    "zeroconf>=0.131",
+]
 full = [
     "websockets>=12.0",
     "psutil>=5.9",
     "numpy>=1.24",
+    "opencv-python-headless>=4.9",
+    "Pillow>=9.0",
     "aiohttp>=3.9",
+    "zeroconf>=0.131",
 ]
 dev = [
     "pytest>=7.0",
@@ -53,6 +65,7 @@ Issues = "https://github.com/fornevercollective/uvspeed/issues"
 
 [project.scripts]
 uvspeed-bridge = "uvspeed_cli:main"
+hexcast = "uvspeed_hexcast:main"
 
 [tool.uv]
 dev-dependencies = [
@@ -98,7 +111,7 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-py-modules = ["uvspeed_cli"]
+py-modules = ["uvspeed_cli", "uvspeed_hexcast"]
 
 [tool.setuptools.packages.find]
 where = ["."]

@@ -1,9 +1,6 @@
-<!-- beyondBINARY quantum-prefixed | uvspeed | {+1, 1, -1, +0, 0, -0, +n, n, -n} -->
 ---
-description: beyondBINARY quantum prefix system — add 9-symbol prefix gutter annotations to all code
 alwaysApply: true
 ---
-
 # Quantum beyondBINARY Prefix System
 
 All code in this project uses the **9-symbol quantum prefix system** for dimensional code addressing.

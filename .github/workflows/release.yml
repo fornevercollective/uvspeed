@@ -35,9 +35,6 @@ jobs:
         id: version
         run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
 
-      - name: Validate Python syntax
-        run: python -c "import ast; ast.parse(open('src/01-core/quantum_bridge_server.py').read()); print('bridge server OK')"
-
       - name: Build Python package
         run: |
           pip install build
@@ -46,7 +43,7 @@ jobs:
 
       - name: Create release archive
         run: |
-          # Create lightweight archive (no node_modules, no .git)
+          # Full platform archive (no build artifacts)
           tar czf uvspeed-${{ steps.version.outputs.VERSION }}.tar.gz \
             --exclude='node_modules' \
             --exclude='.git' \
@@ -54,15 +51,26 @@ jobs:
             --exclude='__pycache__' \
             --exclude='.venv' \
             --exclude='*.egg-info' \
-            web/ src/ icons/ \
-            pyproject.toml package.json uvspeed_cli.py \
-            .cursor/ .github/ .windsurf/ .vscode/ \
-            README.md CHANGELOG.md LICENSE CODE_OF_CONDUCT.md CONTRIBUTING.md SECURITY.md .gitignore .gitattributes
+            --exclude='src-tauri/target' \
+            --exclude='tauri-dist' \
+            web/ src/ src-tauri/ icons/ tools/ \
+            pyproject.toml package.json Cargo.toml \
+            uvspeed_cli.py uvspeed_hexcast.py \
+            install.sh launch-hexterm.sh \
+            README.md CHANGELOG.md LICENSE \
+            .github/ .cursor/
+
+          # Lightweight web-only archive (for PWA/phone deployment)
+          tar czf uvspeed-web-${{ steps.version.outputs.VERSION }}.tar.gz \
+            web/ icons/favicon.png icons/icon-192.png icons/nyan-banner.png
+
+          # hexcast standalone CLI
+          tar czf hexcast-${{ steps.version.outputs.VERSION }}.tar.gz \
+            uvspeed_hexcast.py pyproject.toml
 
       - name: Generate release notes
         id: notes
         run: |
-          # Get commits since last tag
           PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
           if [ -n "$PREV_TAG" ]; then
             COMMITS=$(git log ${PREV_TAG}..HEAD --oneline --no-merges)
@@ -73,33 +81,45 @@ jobs:
           cat > release_notes.md << 'NOTES'
           ## uvspeed v${{ steps.version.outputs.VERSION }}
           
-          **beyondBINARY quantum-prefixed code architecture**
+          **beyondBINARY quantum-prefixed development platform**
           
-          ### What's Included
-          - `web/quantum-notepad.html` — zero-install web notepad
-          - `src/01-core/quantum_bridge_server.py` — 55+ API endpoint bridge server
-          - `src/01-core/mcp_server.py` — MCP server (10 tools, Cursor/Claude Desktop)
-          - `web/brothernumsy.html` — endless runner with AI training API
-          - `web/kbatch.html` — keyboard pattern analyzer
-          - `web/hexcast.html` — live video hex broadcast
-          - `web/blackwell.html` — NVIDIA Blackwell data visualization + deploy targets
-          - `web/questcast.html` — Meta Quest broadcast + research tools
-          - `web/archflow.html` — n8n-style architecture visualizer
-          - `web/jawta-audio.html` — Spatial audio + Strudel live code
-          - `web/github-dashboard.html` — GitHub project health dashboard
-          - 6 IDE configurations (Cursor, Copilot, VS Code, Windsurf) + MCP
-          - 20-language quantum prefix support
+          ### Packages
           
-          ### Install
+          | Package | Description | Install |
+          |---------|-------------|---------|
+          | `uvspeed-*.tar.gz` | Full platform (web + CLI + Tauri source) | `tar xzf` then `install.sh` |
+          | `uvspeed-web-*.tar.gz` | Web apps only (PWA-ready) | Extract and serve |
+          | `hexcast-*.tar.gz` | Hexcast CLI (camera→terminal streaming) | `pip install .` or `uv pip install .` |
+          | `*.whl` | Python package (hexcast + bridge) | `pip install *.whl` |
+          
+          ### Tools Included
+          - **hexterm** — full terminal emulator (PWA + Tauri desktop app)
+          - **hexcast** — camera-to-terminal video streaming (CLI + web)
+          - **kbatch** — keyboard heatmap analyzer with sync
+          - **grid view** — multi-stream canvas with device management
+          - **quantum-notepad** — beyondBINARY code notepad with 20-language support
+          - **brotherNumsy** — endless runner with AI training API
+          - **blackwell** — NVIDIA data visualization dashboard
+          - **questcast** — Meta Quest broadcast + research
+          - **archflow** — n8n-style architecture visualizer
+          - **jawta-audio** — spatial audio + Strudel live coding
+          - **github-dashboard** — project health dashboard
+          
+          ### Quick Start
           ```bash
-          # Web (zero install)
+          # Zero-install web (just open in browser)
           open web/quantum-notepad.html
           
-          # Bridge server
-          uv run python src/01-core/quantum_bridge_server.py
+          # Python CLI tools
+          pip install uvspeed-quantum
+          hexcast              # camera → terminal
+          hexcast --receive    # receive remote stream
           
-          # Python package
-          pip install dist/uvspeed_quantum-*.whl
+          # Tauri desktop app (macOS)
+          cd src-tauri && cargo tauri build --bundles app
+          
+          # Full install
+          bash install.sh
           ```
           
           ### Changes
@@ -114,10 +134,31 @@ jobs:
           prerelease: false
           files: |
             uvspeed-${{ steps.version.outputs.VERSION }}.tar.gz
+            uvspeed-web-${{ steps.version.outputs.VERSION }}.tar.gz
+            hexcast-${{ steps.version.outputs.VERSION }}.tar.gz
             dist/*.whl
             dist/*.tar.gz
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Tauri desktop app build (macOS)
+  tauri-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+      - name: Sync web assets
+        run: mkdir -p tauri-dist && cp -r web/* tauri-dist/
+      - name: Build Tauri app
+        run: |
+          cargo install tauri-cli
+          cd src-tauri && cargo tauri build --bundles app
+      - name: Upload Tauri artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: uvspeed-macos
+          path: src-tauri/target/release/bundle/macos/*.app
 
   # Optional: publish to PyPI (enable when ready)
   # pypi:

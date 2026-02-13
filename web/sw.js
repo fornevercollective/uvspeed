@@ -2,18 +2,28 @@
 // Service Worker — Offline-first PWA cache for quantum notepad
 // Phase 3.4 · Caches all web assets for full offline operation
 
-const CACHE_NAME = 'uvspeed-v3.3';
+const CACHE_NAME = 'uvspeed-v4.0';
 const OFFLINE_URLS = [
     './',
     'quantum-notepad.html',
+    'terminal.html',
+    'terminal-manifest.json',
+    'feed.html',
+    'grid.html',
+    'launcher.html',
+    'sponsor.html',
     'brothernumsy.html',
     'hexcast.html',
+    'hexcast-send.html',
     'kbatch.html',
     'blackwell.html',
     'questcast.html',
     'archflow.html',
     'jawta-audio.html',
     'github-dashboard.html',
+    'research-lab.html',
+    'numsy.html',
+    'manifest.json',
     '../icons/nyan-banner.png',
     '../icons/favicon.png',
 ];

@@ -115,6 +115,13 @@ config/.initialized
 # Electron build output
 dist/
 
+# Tauri build artifacts
+src-tauri/target/
+tauri-dist/
+
+# uv lock (auto-generated)
+uv.lock
+
 # Node — ALWAYS ignore node_modules (install via npm ci)
 node_modules/
 package-lock.json

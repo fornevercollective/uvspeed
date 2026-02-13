@@ -1,0 +1,67 @@
+{
+    "$schema": "https://raw.githubusercontent.com/nickel-project/nickel/main/schema/tauri/2/config.schema.json",
+    "productName": "uvspeed",
+    "version": "4.0.0",
+    "identifier": "dev.uvspeed.app",
+    "build": {
+        "frontendDist": "../tauri-dist",
+        "devUrl": "http://localhost:1420",
+        "beforeBuildCommand": "",
+        "beforeDevCommand": ""
+    },
+    "app": {
+        "windows": [
+            {
+                "label": "launcher",
+                "title": "uvspeed",
+                "url": "launcher.html",
+                "width": 580,
+                "height": 560,
+                "minWidth": 400,
+                "minHeight": 420,
+                "resizable": true,
+                "fullscreen": false,
+                "decorations": true,
+                "transparent": false,
+                "center": true,
+                "titleBarStyle": "Overlay"
+            }
+        ],
+        "security": {
+            "csp": "default-src 'self' 'unsafe-inline' 'unsafe-eval' https: data: blob: ws: wss: http://localhost:* ws://localhost:* mediastream: http://*:8085 http://*:9876 ws://*:9876 ws://*:9877"
+        }
+    },
+    "bundle": {
+        "active": true,
+        "targets": "all",
+        "icon": [
+            "icons/32x32.png",
+            "icons/128x128.png",
+            "icons/128x128@2x.png",
+            "icons/icon.icns",
+            "icons/icon.ico"
+        ],
+        "category": "DeveloperTool",
+        "shortDescription": "uvspeed — beyondBINARY quantum-prefixed development platform",
+        "longDescription": "uvspeed is a development platform with hexterm terminal, hexcast streaming, kbatch keyboard analytics, grid multi-stream view, and the beyondBINARY quantum prefix system. Includes PWA apps for phone/tablet/desktop.",
+        "macOS": {
+            "minimumSystemVersion": "12.0",
+            "dmg": {
+                "background": "dmg-background.png",
+                "appPosition": { "x": 165, "y": 200 },
+                "applicationFolderPosition": { "x": 495, "y": 200 },
+                "windowSize": { "width": 660, "height": 400 }
+            }
+        },
+        "windows": {
+            "webviewInstallMode": {
+                "type": "downloadBootstrapper"
+            }
+        }
+    },
+    "plugins": {
+        "shell": {
+            "open": true
+        }
+    }
+}

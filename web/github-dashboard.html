@@ -260,6 +260,7 @@
     </style>
 </head>
 <body>
+<div style="display:flex;height:2px;width:100%;flex-shrink:0"><span style="flex:1;background:#ff3838"></span><span style="flex:1;background:#ff8c38"></span><span style="flex:1;background:#ffe138"></span><span style="flex:1;background:#3fb950"></span><span style="flex:1;background:#38a5ff"></span><span style="flex:1;background:#bc8cff"></span></div>
 
 <!-- ===== Header ===== -->
 <div class="header">
@@ -268,12 +269,13 @@
     <span class="badge">Dashboard</span>
     <nav>
         <a href="quantum-notepad.html">Notepad</a>
-        <a href="archflow.html">archflow</a>
-        <a href="blackwell.html">Blackwell</a>
-        <a href="questcast.html">questcast</a>
-        <a href="jawta-audio.html">jawta</a>
+        <a href="terminal.html">Terminal</a>
         <a href="hexcast.html">hexcast</a>
+        <a href="kbatch.html">kbatch</a>
+        <a href="blackwell.html">Blackwell</a>
+        <a href="archflow.html">archflow</a>
         <a href="brothernumsy.html">brotherNumsy</a>
+        <a href="sponsor.html" style="color:#ff69b4;">Sponsor</a>
     </nav>
 </div>
 
@@ -286,6 +288,8 @@
     <button data-tab="traffic">Traffic & Pulse</button>
     <button data-tab="codefreq">Code Frequency</button>
     <button data-tab="network">Network & Forks</button>
+    <button data-tab="funding">Funding</button>
+    <button data-tab="releases">Releases & Packages</button>
 </div>
 
 <!-- ===== Main Content ===== -->
@@ -298,7 +302,7 @@
             <div class="stat-card"><div class="value" style="color:var(--success)" id="stat-score">7/7</div><div class="label">Community Standards</div></div>
             <div class="stat-card"><div class="value" style="color:var(--accent)" id="stat-endpoints">55+</div><div class="label">API Endpoints</div></div>
             <div class="stat-card"><div class="value" style="color:var(--purple)" id="stat-files">179</div><div class="label">Source Files</div></div>
-            <div class="stat-card"><div class="value" style="color:var(--cyan)" id="stat-pages">9</div><div class="label">Web Apps</div></div>
+            <div class="stat-card"><div class="value" style="color:var(--cyan)" id="stat-pages">16</div><div class="label">Web Apps</div></div>
             <div class="stat-card"><div class="value" style="color:var(--warning)" id="stat-languages">20</div><div class="label">Languages</div></div>
             <div class="stat-card"><div class="value" style="color:var(--success)" id="stat-mcp">10</div><div class="label">MCP Tools</div></div>
         </div>
@@ -346,7 +350,7 @@
             <div class="panel">
                 <div class="panel-header">
                     <span class="icon">🎯</span> Phase Tracking
-                    <span class="status status-info">Phase 3.3</span>
+                    <span class="status status-pass">v4.0</span>
                 </div>
                 <div class="panel-body">
                     <ul class="checklist" id="phase-list"></ul>
@@ -362,11 +366,11 @@
                     <table class="data-table">
                         <tr><td>Language Mix</td><td class="mono">HTML 27% · JS 27% · CSS 19% · Py 16% · Sh 12%</td></tr>
                         <tr><td>Total Size</td><td class="mono">~7.3 MB (excl. node_modules)</td></tr>
-                        <tr><td>Version</td><td class="mono">3.3.0</td></tr>
+                        <tr><td>Version</td><td class="mono">4.0.0</td></tr>
                         <tr><td>License</td><td class="mono">MIT</td></tr>
                         <tr><td>Python</td><td class="mono">≥3.9</td></tr>
-                        <tr><td>Electron</td><td class="mono">40.4</td></tr>
-                        <tr><td>Node</td><td class="mono">LTS</td></tr>
+                        <tr><td>Tauri</td><td class="mono">v2.10</td></tr>
+                        <tr><td>Rust</td><td class="mono">1.93+</td></tr>
                     </table>
                 </div>
             </div>
@@ -439,7 +443,7 @@
                     <table class="data-table">
                         <tr><td>Trigger</td><td class="mono">push to main</td></tr>
                         <tr><td>Deploys</td><td class="mono">web/ → GitHub Pages</td></tr>
-                        <tr><td>Pages</td><td class="mono">9 web apps + legacy</td></tr>
+                        <tr><td>Pages</td><td class="mono">16 web apps (PWA-ready)</td></tr>
                         <tr><td>URL</td><td><a href="https://fornevercollective.github.io/uvspeed/" target="_blank">fornevercollective.github.io/uvspeed/</a></td></tr>
                     </table>
                 </div>
@@ -449,9 +453,9 @@
                 <div class="panel-body">
                     <table class="data-table">
                         <tr><td>Trigger</td><td class="mono">push tag v*</td></tr>
-                        <tr><td>Artifacts</td><td class="mono">tar.gz + wheel + sdist</td></tr>
-                        <tr><td>Latest</td><td class="mono">v3.3.0</td></tr>
-                        <tr><td>Registry</td><td class="mono">PyPI + npm (ready)</td></tr>
+                        <tr><td>Artifacts</td><td class="mono">3x tar.gz + wheel + Tauri .app</td></tr>
+                        <tr><td>Latest</td><td class="mono">v4.0.0</td></tr>
+                        <tr><td>Registry</td><td class="mono">PyPI + npm + GitHub Releases</td></tr>
                     </table>
                 </div>
             </div>
@@ -562,12 +566,215 @@
             </div>
         </div>
     </div>
+
+    <!-- ==================== FUNDING ==================== -->
+    <div class="tab-content" id="tab-funding">
+        <h2 style="margin-bottom:var(--space-md);font-size:18px;">Funding & Sponsorship</h2>
+        <p style="color:var(--muted);margin-bottom:var(--space-lg);">Track funding setup progress and sponsorship opportunities.</p>
+
+        <div class="panel-grid">
+            <!-- Setup Checklist -->
+            <div class="panel" style="grid-column: 1 / -1;">
+                <div class="panel-header">
+                    <span class="icon">&#x2714;</span> Funding Setup Checklist
+                    <span class="status status-info" id="funding-progress">0/0</span>
+                </div>
+                <div class="panel-body">
+                    <ul class="checklist" id="funding-checklist"></ul>
+                </div>
+            </div>
+
+            <!-- Sponsorship Tiers -->
+            <div class="panel">
+                <div class="panel-header">
+                    <span class="icon">&#x2764;</span> Sponsorship Tiers (Monthly)
+                </div>
+                <div class="panel-body">
+                    <table class="data-table">
+                        <thead><tr><th>Tier</th><th>Amount</th><th>Perks</th></tr></thead>
+                        <tbody>
+                            <tr><td>Contributor</td><td class="mono">$5/mo</td><td>Name in README, sponsor badge</td></tr>
+                            <tr><td>Builder</td><td class="mono">$15/mo</td><td>Priority issues, early access builds</td></tr>
+                            <tr><td>Studio</td><td class="mono">$50/mo</td><td>Roadmap input, custom prefix configs</td></tr>
+                            <tr><td>Agency</td><td class="mono">$200/mo</td><td>Logo in README, support channel, co-dev</td></tr>
+                            <tr><td>Enterprise</td><td class="mono">$500/mo</td><td>Custom integrations, white-label, direct access</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Funding Goals -->
+            <div class="panel">
+                <div class="panel-header">
+                    <span class="icon">&#x1F3AF;</span> Funding Goals
+                </div>
+                <div class="panel-body">
+                    <ul class="checklist" id="funding-goals"></ul>
+                </div>
+            </div>
+
+            <!-- Grant Opportunities -->
+            <div class="panel" style="grid-column: 1 / -1;">
+                <div class="panel-header">
+                    <span class="icon">&#x1F3DB;</span> Grants & Programs
+                    <span class="status status-info">High Priority</span>
+                </div>
+                <div class="panel-body">
+                    <table class="data-table" id="grants-table">
+                        <thead><tr><th>Program</th><th>Amount</th><th>Fit</th><th>Status</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- IDE / AI Partnerships -->
+            <div class="panel" style="grid-column: 1 / -1;">
+                <div class="panel-header">
+                    <span class="icon">&#x1F91D;</span> IDE & AI Partnership Targets
+                </div>
+                <div class="panel-body">
+                    <table class="data-table" id="partnerships-table">
+                        <thead><tr><th>Company</th><th>Program</th><th>Why uvspeed fits</th><th>Status</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Fund Allocation -->
+            <div class="panel">
+                <div class="panel-header">
+                    <span class="icon">&#x1F4B0;</span> Fund Allocation
+                </div>
+                <div class="panel-body">
+                    <table class="data-table">
+                        <tbody>
+                            <tr><td>Development time</td><td class="mono" style="color:var(--success)">60%</td></tr>
+                            <tr><td>Infrastructure (CI, hosting)</td><td class="mono" style="color:var(--accent)">15%</td></tr>
+                            <tr><td>Hardware (test devices)</td><td class="mono" style="color:var(--purple)">15%</td></tr>
+                            <tr><td>Community (docs, events)</td><td class="mono" style="color:var(--warning)">10%</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Quick Links -->
+            <div class="panel">
+                <div class="panel-header">
+                    <span class="icon">&#x1F517;</span> Funding Links
+                </div>
+                <div class="panel-body">
+                    <table class="data-table">
+                        <tbody>
+                            <tr><td><a href="https://github.com/sponsors/fornevercollective" target="_blank">GitHub Sponsors</a></td><td class="mono">0% fee</td></tr>
+                            <tr><td><a href="https://ko-fi.com/fornevercollective" target="_blank">Ko-fi</a></td><td class="mono">one-time</td></tr>
+                            <tr><td><a href="https://paypal.me/fornevercollective" target="_blank">PayPal</a></td><td class="mono">one-time</td></tr>
+                            <tr><td><a href="https://opencollective.com/uvspeed" target="_blank">Open Collective</a></td><td class="mono">transparent</td></tr>
+                            <tr><td><a href="https://patreon.com/fornevercollective" target="_blank">Patreon</a></td><td class="mono">monthly</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== RELEASES & PACKAGES ==================== -->
+    <div class="tab-content" id="tab-releases">
+        <h2 style="margin-bottom:var(--space-md);font-size:18px;">Releases & Packages</h2>
+        <p style="color:var(--muted);margin-bottom:var(--space-lg);">Distribution strategy for uvspeed tools via GitHub Releases, PyPI, and npm.</p>
+
+        <div class="panel-grid">
+            <!-- Release Packages -->
+            <div class="panel" style="grid-column: 1 / -1;">
+                <div class="panel-header">
+                    <span class="icon">&#x1F4E6;</span> GitHub Release Artifacts
+                    <span class="status status-pass">v4.0</span>
+                </div>
+                <div class="panel-body">
+                    <table class="data-table" id="release-artifacts">
+                        <thead><tr><th>Artifact</th><th>Contents</th><th>Install</th><th>Size (est.)</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Individual Tools -->
+            <div class="panel" style="grid-column: 1 / -1;">
+                <div class="panel-header">
+                    <span class="icon">&#x1F527;</span> Tool Distribution Map
+                    <span class="status status-info">6 tools</span>
+                </div>
+                <div class="panel-body">
+                    <table class="data-table" id="tool-dist-table">
+                        <thead><tr><th>Tool</th><th>Type</th><th>GitHub Release</th><th>PyPI</th><th>npm</th><th>PWA</th><th>Tauri</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Package Strategy -->
+            <div class="panel">
+                <div class="panel-header">
+                    <span class="icon">&#x1F4CB;</span> Packaging Checklist
+                </div>
+                <div class="panel-body">
+                    <ul class="checklist" id="packaging-checklist"></ul>
+                </div>
+            </div>
+
+            <!-- Registry Status -->
+            <div class="panel">
+                <div class="panel-header">
+                    <span class="icon">&#x1F310;</span> Registry Status
+                </div>
+                <div class="panel-body">
+                    <table class="data-table">
+                        <thead><tr><th>Registry</th><th>Package</th><th>Status</th></tr></thead>
+                        <tbody>
+                            <tr><td>PyPI</td><td class="mono">uvspeed-quantum</td><td><span class="dep-badge dep-current">published</span></td></tr>
+                            <tr><td>npm</td><td class="mono">uvspeed-quantum</td><td><span class="dep-badge dep-current">published</span></td></tr>
+                            <tr><td>GitHub Releases</td><td class="mono">uvspeed</td><td><span class="dep-badge dep-current">active</span></td></tr>
+                            <tr><td>GitHub Pages</td><td class="mono">web/*</td><td><span class="dep-badge dep-current">live</span></td></tr>
+                            <tr><td>Tauri (macOS)</td><td class="mono">uvspeed.app</td><td><span class="dep-badge dep-outdated">local only</span></td></tr>
+                            <tr><td>Homebrew</td><td class="mono">—</td><td><span class="dep-badge dep-outdated">planned</span></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Release Workflow -->
+            <div class="panel" style="grid-column: 1 / -1;">
+                <div class="panel-header">
+                    <span class="icon">&#x26A1;</span> Release Workflow (release.yml)
+                </div>
+                <div class="panel-body" style="font-family:var(--font-mono);font-size:12px;color:var(--muted);line-height:1.8;">
+                    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                        <span style="background:var(--gh-blue);color:#fff;padding:2px 8px;border-radius:12px;font-size:11px;">git tag v4.0.0</span>
+                        <span style="color:var(--muted);">&#x2192;</span>
+                        <span style="background:var(--bg3);padding:2px 8px;border-radius:4px;">Build Python .whl</span>
+                        <span style="color:var(--muted);">&#x2192;</span>
+                        <span style="background:var(--bg3);padding:2px 8px;border-radius:4px;">Create .tar.gz archives</span>
+                        <span style="color:var(--muted);">&#x2192;</span>
+                        <span style="background:var(--bg3);padding:2px 8px;border-radius:4px;">Generate release notes</span>
+                        <span style="color:var(--muted);">&#x2192;</span>
+                        <span style="background:var(--success);color:#fff;padding:2px 8px;border-radius:12px;font-size:11px;">GitHub Release</span>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px;">
+                        <span style="background:var(--gh-blue);color:#fff;padding:2px 8px;border-radius:12px;font-size:11px;">git tag v4.0.0</span>
+                        <span style="color:var(--muted);">&#x2192;</span>
+                        <span style="background:var(--bg3);padding:2px 8px;border-radius:4px;">Build Tauri (macOS)</span>
+                        <span style="color:var(--muted);">&#x2192;</span>
+                        <span style="background:var(--warning);color:#fff;padding:2px 8px;border-radius:12px;font-size:11px;">Upload artifact</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- ===== Footer ===== -->
 <div class="footer">
     <span class="prefix">{+1, 1, -1, +0, 0, -0, +n, n, -n}</span>
-    <span>uvspeed v3.3.0 — GitHub Project Health</span>
+    <span>uvspeed v4.0 — GitHub Project Health</span>
     <div class="actions">
         <button class="btn" onclick="window.open('https://github.com/fornevercollective/uvspeed','_blank')">GitHub Repo</button>
         <button class="btn" onclick="window.open('https://github.com/fornevercollective/uvspeed/settings','_blank')">Settings</button>
@@ -630,8 +837,10 @@ const phases = [
     { name: 'Phase 3.1 — Blackwell Live', done: true },
     { name: 'Phase 3.2 — Dev Pages', done: true },
     { name: 'Phase 3.3 — Multi-Instance', done: true },
-    { name: 'Phase 3.4 — Agent Orchestration', done: false },
-    { name: 'Phase 4 — Terminal/OS App', done: false },
+    { name: 'Phase 4.0 — Terminal/OS App (hexterm + Tauri)', done: true },
+    { name: 'Phase 4.1 — Multi-stream (feed, grid, launcher)', done: true },
+    { name: 'Phase 4.2 — Ecosystem cohesion + funding', done: true },
+    { name: 'Phase 5 — Agent orchestration + AI prefix classifier', done: false },
 ];
 
 const phaseList = document.getElementById('phase-list');
@@ -659,20 +868,22 @@ document.getElementById('actions-list').innerHTML = actions.map(a => `
 
 // ── Dependencies ──
 const npmDeps = [
-    { name: 'electron', version: '^40.4.0', type: 'dev', status: 'current' },
-    { name: 'electron-builder', version: '^25.1.0', type: 'dev', status: 'current' },
+    { name: 'electron', version: '^40.4.0', type: 'legacy', status: 'outdated' },
+    { name: 'electron-builder', version: '^25.1.0', type: 'legacy', status: 'outdated' },
     { name: 'express', version: '^4.21.0', type: 'prod', status: 'current' },
     { name: 'ws', version: '^8.18.0', type: 'prod', status: 'current' },
     { name: 'xterm', version: '^5.5.0', type: 'prod', status: 'current' },
     { name: 'xterm-addon-fit', version: '^0.10.0', type: 'prod', status: 'current' },
-    { name: 'node-pty', version: '^1.0.0', type: 'prod', status: 'current' },
 ];
 
 const pipDeps = [
     { name: 'websockets', version: '>=12.0', type: 'required', status: 'current' },
-    { name: 'aiohttp', version: '>=3.9', type: 'optional', status: 'current' },
-    { name: 'numpy', version: '>=1.24', type: 'optional', status: 'current' },
-    { name: 'psutil', version: '>=5.9', type: 'optional', status: 'current' },
+    { name: 'opencv-python-headless', version: '>=4.9', type: 'required', status: 'current' },
+    { name: 'numpy', version: '>=1.24', type: 'required', status: 'current' },
+    { name: 'Pillow', version: '>=9.0', type: 'required', status: 'current' },
+    { name: 'zeroconf', version: '>=0.131', type: 'required', status: 'current' },
+    { name: 'aiohttp', version: '>=3.9', type: 'optional (full)', status: 'current' },
+    { name: 'psutil', version: '>=5.9', type: 'optional (full)', status: 'current' },
 ];
 
 const devDeps = [
@@ -870,7 +1081,7 @@ function drawNetworkGraph(canvasId) {
     // Tag markers
     ctx.fillStyle = '#58a6ff';
     ctx.font = '10px var(--font-mono), monospace';
-    ['v3.0.0', 'v3.3.0'].forEach((tag, i) => {
+    ['v3.3.0', 'v4.0.0'].forEach((tag, i) => {
         const x = 40 + (w - 80) * (i === 0 ? 0.6 : 0.95);
         ctx.beginPath();
         ctx.arc(x, h / 2, 6, 0, Math.PI * 2);
@@ -978,7 +1189,7 @@ async function fetchLiveData() {
 function exportDashboard() {
     const data = {
         repo: REPO,
-        version: '3.3.0',
+        version: '4.0.0',
         exported: new Date().toISOString(),
         community: communityItems,
         phases: phases,
@@ -992,12 +1203,160 @@ function exportDashboard() {
     a.click();
 }
 
+// ── Funding Setup Checklist ──
+const fundingChecklist = [
+    { name: 'FUNDING.yml created', done: true, desc: 'Enables "Sponsor" button on repo' },
+    { name: 'SPONSORS.md with tiers', done: true, desc: '5 tiers ($5-$500/mo) + one-time options' },
+    { name: 'README sponsor section', done: true, desc: 'Badge, tier table, payment links' },
+    { name: 'Enroll in GitHub Sponsors', done: false, desc: 'Connect Stripe at github.com/sponsors/signup' },
+    { name: 'Create Ko-fi page', done: false, desc: 'Low-friction one-time donations' },
+    { name: 'Create Open Collective', done: false, desc: 'Transparent budget for orgs that need invoicing' },
+    { name: 'PayPal.me link', done: false, desc: 'Direct PayPal payment link' },
+    { name: 'Patreon page', done: false, desc: 'Monthly subscription with content perks' },
+    { name: 'Write GitHub Sponsors profile', done: false, desc: 'Background, project story, why sponsor' },
+    { name: 'Set sponsor tiers in GitHub', done: false, desc: '$5/$15/$50/$200/$500 monthly tiers' },
+    { name: 'Add one-time tier options', done: false, desc: '$5/$25/$100 one-time donations' },
+    { name: 'Post launch on Dev.to', done: false, desc: 'beyondBINARY concept article for visibility' },
+    { name: 'Post on Hacker News', done: false, desc: 'Show HN: 9-symbol prefix system for code' },
+    { name: 'Create 2-min demo video', done: false, desc: 'Short walkthrough for social + sponsors page' },
+    { name: 'Apply: GitHub Accelerator', done: false, desc: '$20K stipend + 10 weeks mentorship' },
+    { name: 'Apply: NLnet Foundation', done: false, desc: 'EU grant up to EUR 50K for dev tooling' },
+    { name: 'Apply: Sovereign Tech Fund', done: false, desc: 'German govt fund EUR 50-300K for open source' },
+    { name: 'Contact: Astral (uv team)', done: false, desc: 'uvspeed showcases uv workflows — partnership' },
+    { name: 'Contact: Cursor team', done: false, desc: 'MCP server + .cursor/rules showcase project' },
+    { name: 'Contact: Anthropic MCP', done: false, desc: 'uvspeed MCP server for ecosystem showcase' },
+];
+
+const fundingCheckEl = document.getElementById('funding-checklist');
+if (fundingCheckEl) {
+    // Load saved state
+    const savedFunding = JSON.parse(localStorage.getItem('uvspeed-funding-checks') || '{}');
+    fundingChecklist.forEach((item, i) => {
+        if (savedFunding[i] !== undefined) item.done = savedFunding[i];
+    });
+
+    fundingCheckEl.innerHTML = fundingChecklist.map((item, i) => `
+        <li style="cursor:pointer;" onclick="toggleFunding(${i})">
+            <span class="check ${item.done ? 'check-pass' : 'check-fail'}" id="fc-${i}">${item.done ? '\u2713' : '\u25CB'}</span>
+            <span class="label">${item.name}</span>
+            <span class="meta">${item.desc}</span>
+        </li>
+    `).join('');
+
+    const doneCount = fundingChecklist.filter(f => f.done).length;
+    document.getElementById('funding-progress').textContent = `${doneCount}/${fundingChecklist.length}`;
+}
+
+function toggleFunding(idx) {
+    fundingChecklist[idx].done = !fundingChecklist[idx].done;
+    const el = document.getElementById('fc-' + idx);
+    el.className = 'check ' + (fundingChecklist[idx].done ? 'check-pass' : 'check-fail');
+    el.textContent = fundingChecklist[idx].done ? '\u2713' : '\u25CB';
+    const doneCount = fundingChecklist.filter(f => f.done).length;
+    document.getElementById('funding-progress').textContent = `${doneCount}/${fundingChecklist.length}`;
+    // Save to localStorage
+    const state = {};
+    fundingChecklist.forEach((f, i) => state[i] = f.done);
+    localStorage.setItem('uvspeed-funding-checks', JSON.stringify(state));
+}
+
+// Funding goals
+const fundingGoals = [
+    { name: 'First 10 sponsors', done: false },
+    { name: '$500/mo — full-time open-source', done: false },
+    { name: '$2,000/mo — test lab + CI + conferences', done: false },
+    { name: '$5,000/mo — hire contributors + research', done: false },
+    { name: 'GitHub Accelerator acceptance', done: false },
+    { name: 'First grant (NLnet / STF)', done: false },
+    { name: 'IDE partnership (Cursor / Anthropic)', done: false },
+];
+const goalsEl = document.getElementById('funding-goals');
+if (goalsEl) {
+    goalsEl.innerHTML = fundingGoals.map(g => `
+        <li>
+            <span class="check ${g.done ? 'check-pass' : 'check-fail'}">${g.done ? '\u2713' : '\u25CB'}</span>
+            <span class="label">${g.name}</span>
+        </li>
+    `).join('');
+}
+
+// Grants table
+const grants = [
+    { program: 'GitHub Accelerator', amount: '$20,000', fit: 'High — novel prefix system + 16 tools', status: 'not applied' },
+    { program: 'NLnet Foundation (NGI)', amount: 'EUR 50,000', fit: 'High — innovative dev tooling', status: 'not applied' },
+    { program: 'Sovereign Tech Fund', amount: 'EUR 50-300K', fit: 'High — open-source infrastructure', status: 'not applied' },
+    { program: 'Mozilla Builders', amount: 'Varies', fit: 'Medium — code classification for AI', status: 'not applied' },
+    { program: 'Google Summer of Code', amount: '$3-6K/contrib', fit: 'Medium — needs org status', status: 'planned' },
+    { program: 'NVIDIA Inception', amount: 'Partnership', fit: 'Medium — Blackwell dashboard + GPU', status: 'not applied' },
+    { program: 'Meta Open Source', amount: 'Partnership', fit: 'Medium — questcast + Quest integration', status: 'not applied' },
+];
+renderTable('grants-table', grants, [
+    {key:'program'}, {key:'amount',mono:true}, {key:'fit'},
+    {key:'status',mono:true}
+]);
+
+// Partnerships table
+const partnerships = [
+    { company: 'Cursor', program: 'Community showcase', why: '.cursor/rules + MCP server integration', status: 'ready to pitch' },
+    { company: 'Anthropic', program: 'MCP ecosystem', why: 'Working MCP server (10 tools) for Claude', status: 'ready to pitch' },
+    { company: 'Astral (uv)', program: 'Community showcase', why: 'Project named "uvspeed" — uv-first workflows', status: 'ready to pitch' },
+    { company: 'Tauri', program: 'CrabNebula', why: 'Tauri v2 multi-window showcase app', status: 'ready to pitch' },
+    { company: 'Vercel', program: 'OSS program', why: 'Free hosting + amplification for PWA apps', status: 'planned' },
+    { company: 'GitHub', program: 'Sponsors + Accelerator', why: '16 web tools + novel prefix system', status: 'priority' },
+];
+renderTable('partnerships-table', partnerships, [
+    {key:'company',mono:true}, {key:'program'}, {key:'why'},
+    {key:'status',mono:true}
+]);
+
+// ── Releases & Packages ──
+const releaseArtifacts = [
+    { artifact: 'uvspeed-4.0.tar.gz', contents: 'Full platform (web + CLI + Tauri source)', install: 'tar xzf + ./install.sh', size: '~8 MB' },
+    { artifact: 'uvspeed-web-4.0.tar.gz', contents: 'Web apps only (16 HTML PWAs)', install: 'Extract and serve', size: '~3 MB' },
+    { artifact: 'hexcast-4.0.tar.gz', contents: 'Hexcast CLI standalone', install: 'pip install .', size: '~50 KB' },
+    { artifact: 'uvspeed_quantum-4.0.whl', contents: 'Python package (hexcast + bridge)', install: 'pip install *.whl', size: '~100 KB' },
+    { artifact: 'uvspeed-macos.app', contents: 'Tauri desktop app (macOS arm64)', install: 'Drag to Applications', size: '~15 MB' },
+];
+renderTable('release-artifacts', releaseArtifacts, [
+    {key:'artifact',mono:true}, {key:'contents'}, {key:'install',mono:true}, {key:'size',mono:true}
+]);
+
+const toolDist = [
+    { tool: 'hexcast', type: 'CLI + Web', gh: '\u2713', pypi: '\u2713', npm: '\u2014', pwa: '\u2713', tauri: '\u2713' },
+    { tool: 'kbatch', type: 'Web', gh: '\u2713', pypi: '\u2014', npm: '\u2014', pwa: '\u2713', tauri: '\u2713' },
+    { tool: 'hexterm', type: 'Web + Desktop', gh: '\u2713', pypi: '\u2014', npm: '\u2014', pwa: '\u2713', tauri: '\u2713' },
+    { tool: 'quantum-notepad', type: 'Web', gh: '\u2713', pypi: '\u2014', npm: '\u2014', pwa: '\u2713', tauri: '\u2713' },
+    { tool: 'brotherNumsy', type: 'Web', gh: '\u2713', pypi: '\u2014', npm: '\u2014', pwa: '\u2713', tauri: '\u2713' },
+    { tool: 'bridge server', type: 'CLI', gh: '\u2713', pypi: '\u2713', npm: '\u2014', pwa: '\u2014', tauri: '\u2014' },
+];
+renderTable('tool-dist-table', toolDist, [
+    {key:'tool',mono:true}, {key:'type'}, {key:'gh'}, {key:'pypi'}, {key:'npm'}, {key:'pwa'}, {key:'tauri'}
+]);
+
+const packagingChecklist = [
+    { name: 'FUNDING.yml + Sponsor button', present: true, file: '.github/FUNDING.yml' },
+    { name: 'release.yml with 3 archives', present: true, file: '.github/workflows/release.yml' },
+    { name: 'Tauri macOS build in CI', present: true, file: 'release.yml tauri-macos job' },
+    { name: 'PyPI publish (uvspeed-quantum)', present: true, file: 'pyproject.toml' },
+    { name: 'npm publish (uvspeed-quantum)', present: true, file: 'package.json' },
+    { name: 'Homebrew tap formula', present: false, file: 'planned' },
+    { name: 'Windows Tauri build in CI', present: false, file: 'planned' },
+    { name: 'Linux AppImage build in CI', present: false, file: 'planned' },
+    { name: 'Docker image for bridge server', present: false, file: 'planned' },
+];
+renderChecklist(packagingChecklist, 'packaging-checklist');
+
 // ── Public API ──
 window.dashboard = {
     community: communityItems,
     phases,
     dependencies: { npm: npmDeps, pip: pipDeps, dev: devDeps },
     actions,
+    funding: fundingChecklist,
+    grants,
+    partnerships,
+    releaseArtifacts,
+    toolDist,
     fetchLive: fetchLiveData,
     export: exportDashboard,
 };
