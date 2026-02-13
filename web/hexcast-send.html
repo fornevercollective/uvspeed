@@ -59,8 +59,19 @@
     @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
 
     /* ── Filter label (center tap indicator) ── */
-    .filter-label { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,.7); color: #fff; font-size: .75rem; font-weight: 600; padding: 4px 14px; border-radius: 12px; pointer-events: none; opacity: 0; transition: opacity .25s; }
+    .filter-label { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,.7); color: #fff; font-size: .75rem; font-weight: 600; padding: 4px 14px; border-radius: 12px; pointer-events: none; opacity: 0; transition: opacity .25s; z-index: 5; }
     .filter-label.show { opacity: 1; }
+
+    /* ── Adjustment HUD ── */
+    .adjust-hud { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); pointer-events: none; opacity: 0; transition: opacity .2s; z-index: 5; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .adjust-hud.show { opacity: 1; }
+    .adjust-hud-label { font-size: .625rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: rgba(255,255,255,.6); }
+    .adjust-hud-bar { width: 180px; height: 4px; background: rgba(255,255,255,.15); border-radius: 2px; overflow: hidden; position: relative; }
+    .adjust-hud-fill { height: 100%; border-radius: 2px; transition: width .05s; }
+    .adjust-hud-val { font-size: .8125rem; font-weight: 700; color: #fff; font-family: 'SF Mono', ui-monospace, monospace; text-shadow: 0 1px 4px rgba(0,0,0,.8); }
+    /* Swipe hint arrows */
+    .swipe-hint { position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%); pointer-events: none; opacity: 0; transition: opacity .3s; color: rgba(255,255,255,.25); font-size: .625rem; letter-spacing: 2px; }
+    .swipe-hint.show { opacity: 1; }
 
     /* ── Stats strip ── */
     .stats-strip { display: flex; gap: 12px; padding: 6px 12px; background: #161b22; border-top: 1px solid #21262d; font-size: .625rem; font-family: 'SF Mono', ui-monospace, monospace; color: #8b949e; flex-shrink: 0; flex-wrap: wrap; align-items: center; }
@@ -143,6 +154,12 @@
     <div class="badge-tl"><span class="badge" id="badge">camera off</span></div>
     <div class="badge-tr"><span class="badge" id="badge-filter"></span></div>
     <div class="filter-label" id="filter-label">Normal</div>
+    <div class="adjust-hud" id="adjust-hud">
+        <div class="adjust-hud-label" id="adjust-hud-label">brightness</div>
+        <div class="adjust-hud-bar"><div class="adjust-hud-fill" id="adjust-hud-fill"></div></div>
+        <div class="adjust-hud-val" id="adjust-hud-val">0</div>
+    </div>
+    <div class="swipe-hint" id="swipe-hint">◁ swipe to adjust ▷</div>
 </div>
 
 <!-- ━━━ Stats strip ━━━ -->
@@ -397,6 +414,7 @@ function takeSnapshot() {
     const q = qualities[qualityIdx];
     hiddenCanvas.width = q.w; hiddenCanvas.height = q.h;
     hCtx.drawImage(video, 0, 0, q.w, q.h);
+    if (hasAdjustments()) applyImageAdjustments(hCtx, q.w, q.h);
     if (filters[filterIdx].fn) filters[filterIdx].fn(hCtx, q.w, q.h);
     const a = document.createElement('a');
     a.href = hiddenCanvas.toDataURL('image/png');
@@ -404,11 +422,164 @@ function takeSnapshot() {
     a.click();
 }
 
-// ── Tap on video to cycle filter ──
-document.getElementById('video-area').addEventListener('click', e => {
-    if (e.target.closest('button') || e.target.closest('input')) return;
-    cycleFilter();
-});
+// ── Image adjustment state ──
+// Swipe vertically selects parameter, horizontally adjusts value
+const adjustParams = [
+    { key: 'brightness', min: -100, max: 100, val: 0, color: '#ffe138' },
+    { key: 'contrast',   min: -100, max: 100, val: 0, color: '#58a6ff' },
+    { key: 'saturation', min: -100, max: 100, val: 0, color: '#bc8cff' },
+    { key: 'exposure',   min: -100, max: 100, val: 0, color: '#3fb950' },
+];
+let currentParam = 0;
+let adjustHideTimer = null;
+
+const adjustHud = document.getElementById('adjust-hud');
+const adjustLabel = document.getElementById('adjust-hud-label');
+const adjustFill = document.getElementById('adjust-hud-fill');
+const adjustVal = document.getElementById('adjust-hud-val');
+const swipeHint = document.getElementById('swipe-hint');
+
+function showAdjustHud() {
+    const p = adjustParams[currentParam];
+    adjustLabel.textContent = p.key;
+    const pct = ((p.val - p.min) / (p.max - p.min)) * 100;
+    adjustFill.style.width = pct + '%';
+    adjustFill.style.background = p.color;
+    adjustVal.textContent = (p.val > 0 ? '+' : '') + Math.round(p.val);
+    adjustVal.style.color = p.color;
+    adjustHud.classList.add('show');
+    swipeHint.classList.remove('show');
+    clearTimeout(adjustHideTimer);
+    adjustHideTimer = setTimeout(() => adjustHud.classList.remove('show'), 1500);
+}
+
+function applyImageAdjustments(ctx, w, h) {
+    const br = adjustParams[0].val;  // brightness
+    const co = adjustParams[1].val;  // contrast
+    const sa = adjustParams[2].val;  // saturation
+    const ex = adjustParams[3].val;  // exposure
+    if (br === 0 && co === 0 && sa === 0 && ex === 0) return;
+
+    const img = ctx.getImageData(0, 0, w, h), d = img.data;
+    const cFactor = (259 * (co + 255)) / (255 * (259 - co));
+    const eFactor = 1 + ex / 100;
+
+    for (let i = 0; i < d.length; i += 4) {
+        let r = d[i], g = d[i+1], b = d[i+2];
+
+        // Exposure
+        if (ex !== 0) { r *= eFactor; g *= eFactor; b *= eFactor; }
+
+        // Brightness
+        if (br !== 0) { r += br; g += br; b += br; }
+
+        // Contrast
+        if (co !== 0) {
+            r = cFactor * (r - 128) + 128;
+            g = cFactor * (g - 128) + 128;
+            b = cFactor * (b - 128) + 128;
+        }
+
+        // Saturation
+        if (sa !== 0) {
+            const gray = 0.299 * r + 0.587 * g + 0.114 * b;
+            const s = 1 + sa / 100;
+            r = gray + s * (r - gray);
+            g = gray + s * (g - gray);
+            b = gray + s * (b - gray);
+        }
+
+        d[i]   = Math.max(0, Math.min(255, r));
+        d[i+1] = Math.max(0, Math.min(255, g));
+        d[i+2] = Math.max(0, Math.min(255, b));
+    }
+    ctx.putImageData(img, 0, 0);
+}
+
+// ── Touch gestures on video area ──
+// Tap = cycle filter | Horizontal swipe = adjust value | Vertical swipe = change param
+(function initGestures() {
+    const area = document.getElementById('video-area');
+    let touchStartX = 0, touchStartY = 0, touchStartTime = 0;
+    let isSwiping = false, swipeAxis = null; // 'h' or 'v'
+    let startParamVal = 0;
+
+    area.addEventListener('touchstart', e => {
+        if (e.target.closest('button') || e.target.closest('input')) return;
+        const t = e.touches[0];
+        touchStartX = t.clientX;
+        touchStartY = t.clientY;
+        touchStartTime = Date.now();
+        isSwiping = false;
+        swipeAxis = null;
+        startParamVal = adjustParams[currentParam].val;
+    }, { passive: true });
+
+    area.addEventListener('touchmove', e => {
+        if (e.target.closest('button') || e.target.closest('input')) return;
+        const t = e.touches[0];
+        const dx = t.clientX - touchStartX;
+        const dy = t.clientY - touchStartY;
+
+        // Determine axis on first significant movement
+        if (!swipeAxis && (Math.abs(dx) > 10 || Math.abs(dy) > 10)) {
+            swipeAxis = Math.abs(dx) > Math.abs(dy) ? 'h' : 'v';
+            isSwiping = true;
+        }
+
+        if (swipeAxis === 'h') {
+            // Horizontal: adjust current parameter value
+            // Full screen width = full range (-100 to +100)
+            const range = adjustParams[currentParam].max - adjustParams[currentParam].min;
+            const sensitivity = range / (area.offsetWidth * 0.7);
+            let newVal = startParamVal + dx * sensitivity;
+            newVal = Math.max(adjustParams[currentParam].min, Math.min(adjustParams[currentParam].max, newVal));
+            adjustParams[currentParam].val = Math.round(newVal);
+            showAdjustHud();
+            e.preventDefault();
+        } else if (swipeAxis === 'v') {
+            // Vertical: switch parameter (up/down through the list)
+            const steps = Math.floor(dy / 40);
+            if (steps !== 0) {
+                const newIdx = Math.max(0, Math.min(adjustParams.length - 1, currentParam + steps));
+                if (newIdx !== currentParam) {
+                    currentParam = newIdx;
+                    startParamVal = adjustParams[currentParam].val;
+                    touchStartY = t.clientY;
+                    showAdjustHud();
+                }
+            }
+            e.preventDefault();
+        }
+    }, { passive: false });
+
+    area.addEventListener('touchend', e => {
+        if (e.target.closest('button') || e.target.closest('input')) return;
+        const elapsed = Date.now() - touchStartTime;
+        // Tap detection: short touch, no significant movement
+        if (!isSwiping && elapsed < 300) {
+            cycleFilter();
+        }
+        isSwiping = false;
+        swipeAxis = null;
+    }, { passive: true });
+
+    // Double-tap to reset current parameter
+    let lastTapTime = 0;
+    area.addEventListener('click', e => {
+        if (e.target.closest('button') || e.target.closest('input')) return;
+        const now = Date.now();
+        if (now - lastTapTime < 350) {
+            // Double-tap: reset current adjustment
+            adjustParams[currentParam].val = 0;
+            showAdjustHud();
+        }
+        lastTapTime = now;
+    });
+
+    // Show swipe hint on first load
+    setTimeout(() => { swipeHint.classList.add('show'); setTimeout(() => swipeHint.classList.remove('show'), 3000); }, 2000);
+})();
 
 // ── Filter functions ──
 function applyThermal(ctx, w, h) {
@@ -490,13 +661,21 @@ function applyCyber(ctx, w, h) {
 
 // ── Render filter overlay in real-time ──
 let filterAnimId = null;
+const hasAdjustments = () => adjustParams.some(p => p.val !== 0);
 function filterLoop() {
     const f = filters[filterIdx];
-    if (f.fn && video.readyState >= 2) {
+    const adj = hasAdjustments();
+    if ((f.fn || adj) && video.readyState >= 2) {
         const vw = video.videoWidth || 480, vh = video.videoHeight || 360;
         if (filterCanvas.width !== vw) { filterCanvas.width = vw; filterCanvas.height = vh; }
         fCtx.drawImage(video, 0, 0, vw, vh);
-        f.fn(fCtx, vw, vh);
+        // Apply adjustments first (brightness/contrast/saturation/exposure)
+        if (adj) applyImageAdjustments(fCtx, vw, vh);
+        // Then apply artistic filter on top
+        if (f.fn) f.fn(fCtx, vw, vh);
+        filterCanvas.style.display = 'block';
+    } else if (!f.fn && !adj) {
+        filterCanvas.style.display = 'none';
     }
     filterAnimId = requestAnimationFrame(filterLoop);
 }
@@ -560,7 +739,8 @@ function sendLoop() {
     hiddenCanvas.width = q.w; hiddenCanvas.height = q.h;
     hCtx.drawImage(video, 0, 0, q.w, q.h);
 
-    // Apply filter to outgoing frame
+    // Apply adjustments + filter to outgoing frame
+    if (hasAdjustments()) applyImageAdjustments(hCtx, q.w, q.h);
     if (filters[filterIdx].fn) filters[filterIdx].fn(hCtx, q.w, q.h);
 
     const dataUrl = hiddenCanvas.toDataURL('image/jpeg', quality);
