@@ -6561,13 +6561,13 @@ print(f"  Norm:  {qs.normalize().norm().numpy():.6f}")`);
             static MAX_CELLS = 500;
 
             addCell(cellType = 'code', content = '') {
-                if (this.cells.length >= QuantumNotebook.MAX_CELLS) {
-                    this._logStream('warn', `Cell limit reached (${QuantumNotebook.MAX_CELLS}). Delete cells to add more.`, 'error');
-                    alert(`Cell limit: ${QuantumNotebook.MAX_CELLS} cells maximum.\nDelete unused cells to free space.`);
+                if (this.cells.length >= QuantumNotebookWeb.MAX_CELLS) {
+                    this._logStream('warn', `Cell limit reached (${QuantumNotebookWeb.MAX_CELLS}). Delete cells to add more.`, 'error');
+                    alert(`Cell limit: ${QuantumNotebookWeb.MAX_CELLS} cells maximum.\nDelete unused cells to free space.`);
                     return null;
                 }
-                if (this.cells.length === QuantumNotebook.MAX_CELLS - 50) {
-                    this._logStream('warn', `Approaching cell limit (${this.cells.length}/${QuantumNotebook.MAX_CELLS})`, 'warn');
+                if (this.cells.length === QuantumNotebookWeb.MAX_CELLS - 50) {
+                    this._logStream('warn', `Approaching cell limit (${this.cells.length}/${QuantumNotebookWeb.MAX_CELLS})`, 'warn');
                 }
 
                 const cellId = `cell_${this.cells.length}_${Date.now()}`;
