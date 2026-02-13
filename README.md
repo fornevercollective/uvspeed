@@ -101,6 +101,13 @@
 </p>
 <p align="center"><em>IDE integration — Cursor rules, VS Code, Copilot, Windsurf, MCP server</em></p>
 
+<p align="center">
+<img src="icons/28-visual-slice-2d.png" alt="Visual Slice — 2D prefix cross-section" width="32%">
+<img src="icons/29-visual-cube-3d.png" alt="Visual Cube — 3D Rubik's cube navigation" width="32%">
+<img src="icons/30-visual-orb-quantum.png" alt="Visual Orb — quantum orbital probability" width="32%">
+</p>
+<p align="center"><em>Visual Slice / 3D Rubik's Cube / Quantum Orbital — 3 modes of spatial code navigation</em></p>
+
 </details>
 
 ---
