@@ -1122,10 +1122,13 @@ if(window.Plotly) stackParts.push('Plotly');
 stackParts.push('11-gate quantum');
 document.getElementById('math-stack-status').textContent=stackParts.join(' · ');
 
+// ===== SERVICE WORKER =====
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+
 // ===== QUANTUM PREFIX LIVE SYNC =====
 const QP = window.QuantumPrefixes;
 if(QP){
-    QP.broadcastState('freya',{page:'freya',version:'4.3',quantumPosition:qPos});
+    QP.broadcastState('freya',{page:'freya',version:'4.4',quantumPosition:qPos});
     QP.onStateChange(s=>{ if(s.quantumPosition) { qPos=s.quantumPosition; updateQuantumDisplay(); }});
 }
 
