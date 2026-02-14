@@ -22,7 +22,7 @@
 ![CSS3](https://img.shields.io/badge/CSS3-1572B6?logo=css3&logoColor=white)
 ![Shell](https://img.shields.io/badge/Shell-4EAA25?logo=gnubash&logoColor=white)
 
-**[Prefix/QuantumGutter](https://fornevercollective.github.io/uvspeed/web/quantum-gutter.html)** · **[notePad](https://fornevercollective.github.io/uvspeed/web/quantum-notepad.html)** · **[hexTerm](https://fornevercollective.github.io/uvspeed/web/terminal.html)** · **[hexCast](https://fornevercollective.github.io/uvspeed/web/hexcast.html)** · **[FREYAunits](https://fornevercollective.github.io/uvspeed/web/quantum-notepad.html)** · **[brotherNumsy](https://fornevercollective.github.io/uvspeed/web/brothernumsy.html)** · **[kBatch](https://fornevercollective.github.io/uvspeed/web/kbatch.html)** · **[HexBench](https://fornevercollective.github.io/uvspeed/web/hexbench.html)** · **[ArchFlow](https://fornevercollective.github.io/uvspeed/web/archflow.html)** · **[gpu/cpu](https://fornevercollective.github.io/uvspeed/web/blackwell.html)** · **[Dashboard](https://fornevercollective.github.io/uvspeed/web/github-dashboard.html)** · **[Sponsor](https://fornevercollective.github.io/uvspeed/web/sponsor.html)**
+**[Prefix/QuantumGutter](https://fornevercollective.github.io/uvspeed/web/quantum-gutter.html)** · **[notePad](https://fornevercollective.github.io/uvspeed/web/quantum-notepad.html)** · **[hexTerm](https://fornevercollective.github.io/uvspeed/web/terminal.html)** · **[hexCast](https://fornevercollective.github.io/uvspeed/web/hexcast.html)** · **[FREYAunits](https://fornevercollective.github.io/uvspeed/web/freya.html)** · **[brotherNumsy](https://fornevercollective.github.io/uvspeed/web/brothernumsy.html)** · **[kBatch](https://fornevercollective.github.io/uvspeed/web/kbatch.html)** · **[HexBench](https://fornevercollective.github.io/uvspeed/web/hexbench.html)** · **[ArchFlow](https://fornevercollective.github.io/uvspeed/web/archflow.html)** · **[gpu/cpu](https://fornevercollective.github.io/uvspeed/web/blackwell.html)** · **[Dashboard](https://fornevercollective.github.io/uvspeed/web/github-dashboard.html)** · **[Sponsor](https://fornevercollective.github.io/uvspeed/web/sponsor.html)**
 
 ---
 
@@ -158,6 +158,7 @@ Plus a `{dev}` launch mode that opens the terminal with the dev console active.
 | **[jawta-audio](web/jawta-audio.html)** | Spatial audio + Strudel live coding |
 | **[hexbench](web/hexbench.html)** | Voltage lab — PSU monitor, Arduino code editor, node workbench, Pybricks builder |
 | **[research-lab](web/research-lab.html)** | Markdown research editor with node canvas, mermaid preview, console |
+| **[freya](web/freya.html)** | Galactic unit converter, scientific calculator, celestial charts, quantum geo navigation |
 | **[numsy](web/numsy.html)** | 1080x1080 Instagram visual generator |
 | **[sponsor](web/sponsor.html)** | Sponsor page with Rubik's cube, inverse starfield, Numsy sprites, tier cards |
 | **[github-dashboard](web/github-dashboard.html)** | Project health dashboard — phases, deps, community, actions |

@@ -294,6 +294,34 @@
     <div id="intro-rainbow" onclick="introSkip()" style="cursor:pointer;pointer-events:auto;z-index:300;position:relative"><span class="r1"></span><span class="r2"></span><span class="r3"></span><span class="r4"></span><span class="r5"></span><span class="r6"></span></div>
 </div>
 
+<!-- Early intro dismiss — runs before CDN scripts so clicks always work -->
+<script>
+(function(){
+    var el = document.getElementById('intro');
+    var dismissed = false;
+    function dismiss(){
+        if(dismissed) return;
+        dismissed = true;
+        sessionStorage.setItem('hexterm-intro-done','1');
+        el.classList.add('fade-out');
+        setTimeout(function(){ el.style.display='none'; }, 600);
+    }
+    // Expose globally so onclick="introSkip()" works even if main script hasn't loaded
+    window.introSkip = dismiss;
+    window.introDismiss = dismiss;
+    // Auto-dismiss after 3s regardless
+    if(!sessionStorage.getItem('hexterm-intro-done')){
+        setTimeout(dismiss, 3000);
+    } else {
+        el.style.display='none';
+        dismissed = true;
+    }
+    // Click anywhere on intro to dismiss
+    el.addEventListener('click', dismiss);
+    el.addEventListener('touchend', function(){ dismiss(); }, {passive:true});
+})();
+</script>
+
 <div id="app">
     <div id="titlebar">
         <canvas id="titlebar-stars"></canvas>
@@ -2664,9 +2692,10 @@ window.addEventListener('online', updateStatusBar);
 window.addEventListener('offline', updateStatusBar);
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// Animated intro
+// Animated intro (early dismiss script handles core logic;
+// this section adds starfield + mascot animations)
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-let introActive = true;
+let introActive = !sessionStorage.getItem('hexterm-intro-done');
 const introEl = document.getElementById('intro');
 const introVideo = document.getElementById('intro-video');
 const introPrompt = document.getElementById('intro-prompt');
@@ -2792,19 +2821,13 @@ const introPrompt = document.getElementById('intro-prompt');
     frame();
 })();
 
-// Check if camera was already granted (skip intro next time)
-const introDone = sessionStorage.getItem('hexterm-intro-done');
-
 function introAutoCamera() {
     // Camera launch removed — hexterm splash is branding-only
     // Camera streaming is handled by hexcast/hexcast-send when user chooses
     introDismiss();
 }
 
-function introSkip() {
-    introDismiss();
-}
-
+// Upgrade the early-dismiss functions to also focus the terminal once available
 function introDismiss() {
     if (!introActive) return;
     introActive = false;
@@ -2815,22 +2838,13 @@ function introDismiss() {
         if (term) term.focus();
     }, 600);
 }
+window.introSkip = introDismiss;
+window.introDismiss = introDismiss;
 
-// Touch fallback: tap anywhere on intro to dismiss (iOS PWA)
-introEl.addEventListener('touchend', e => {
-    if (!introActive) return;
-    introSkip();
-}, { passive: true });
-
-// Auto-dismiss splash after 2.5s (just enough to see branding + mascot)
-if (!introDone) {
-    setTimeout(() => { if (introActive) introDismiss(); }, 2500);
-}
-
-// Auto-skip on revisit within same session
-if (introDone) {
+// If early dismiss already fired, just make sure intro is hidden + focus term
+if (!introActive) {
     introEl.style.display = 'none';
-    introActive = false;
+    if (term) term.focus();
 }
 
 // Init terminal (behind intro)
