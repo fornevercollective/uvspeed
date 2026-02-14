@@ -8,7 +8,7 @@ alwaysApply: true
 Single-page PWA apps in `web/`, each a self-contained HTML file with inline CSS + JS.
 No build system — files serve directly. Shared module: `web/quantum-prefixes.js`.
 
-## All Apps (20 HTML files in web/)
+## All Apps (22 HTML files in web/)
 
 | App | File | Role |
 |-----|------|------|
@@ -28,14 +28,23 @@ No build system — files serve directly. Shared module: `web/quantum-prefixes.j
 | Jawta Audio | `jawta-audio.html` | Spatial audio + live code |
 | Numsy | `numsy.html` | 1080x1080 Instagram visual |
 | Brother Numsy | `brothernumsy.html` | Numsy game variant |
-| KBatch | `kbatch.html` | Keyboard batch tool |
+| KBatch | `kbatch.html` | World keyboard analyzer — 15 layouts, IBM Quantum bridge, dictionary, training drills |
 | Blackwell | `blackwell.html` | Blackwell GPU dashboard |
 | Quantum Gutter | `quantum-gutter.html` | Prefix system showcase — 3D cube, starfield, benchmarks |
 | FreyaUnits | `freya.html` | Galactic converter, calculator, celestial charts, quantum geo nav |
+| Freya Landing | `freya-landing.html` | FreyaUnits showcase — log-scale canvas, live converter, roadmap |
+| History | `history.html` | Universal timeline knowledge graph — ZPF to cosmic, block canvas, AI persona |
+| Search | `search.html` | Mobile-first universal search PWA — 14 connectors, timeline strip |
 
-## Shared Module: quantum-prefixes.js
+## Browser Extension: `extensions/history-search/`
 
-All 20 apps include `<script src="quantum-prefixes.js"></script>` and have a
+Chrome/Edge/Brave/Opera/Arc/Vivaldi/Firefox extension that injects 14-connector search above Google, Bing, DuckDuckGo, Brave Search, Ecosia, Yahoo results. Mobile devices use `search.html` PWA or HexTerm `search` command instead.
+
+## Shared Modules
+
+### quantum-prefixes.js
+
+All 22 apps include `<script src="quantum-prefixes.js"></script>` and have a
 `// ===== QUANTUM PREFIX LIVE SYNC =====` init block.
 
 **API** (`window.QuantumPrefixes`):
@@ -54,11 +63,26 @@ All 20 apps include `<script src="quantum-prefixes.js"></script>` and have a
 
 **Supported languages** (17): python, javascript, typescript, rust, go, shell, c, cpp, html, css, markdown, mermaid, sql, yaml, json, arduino
 
+### history-search-engine.js
+
+Shared search engine used by extension + PWAs + HexTerm.
+
+**API** (`window.HistorySearch`):
+- `search(query, opts)` → `{ query, results, latencyMs, connectorsUsed, totalResults }`
+- `getConnectors()` → array of `{ name, icon, enabled }`
+- `setConnectorEnabled(nameOrIndex, enabled)` — toggle a connector
+- `getScales()` → timeline scale definitions
+- `getSourceColor(source)` → hex color
+- `drawTimeline(canvas)` — render mini timeline on a canvas
+
+**14 Connectors**: Wikipedia, Open Library, Wayback Machine, Sacred Texts, Yale Archives, ARDA, arXiv, PubChem, GenBank, LGBTQ Archives, Meta Research, HathiTrust, Internet Archive
+
 ## Cross-App Communication
 
 - `BroadcastChannel('hexterm')` — main inter-app messaging (code, serial data, commands)
 - `BroadcastChannel('quantum-prefixes')` — quantum prefix state sync
 - `BroadcastChannel('hexcast-stream')` — video frame broadcast
+- `BroadcastChannel('history-search')` — search engine ready/state sync
 - `localStorage` — per-app persistence + `quantum-prefixes-state` for global prefix state
 
 ## Quantum Notepad Key Structure

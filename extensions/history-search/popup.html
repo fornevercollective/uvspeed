@@ -1,0 +1,150 @@
+<!-- beyondBINARY quantum-prefixed | uvspeed | {+1, 1, -1, +0, 0, -0, +n, n, -n} -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{width:340px;background:#050810;color:#e2e8f0;font-family:-apple-system,'SF Pro',system-ui,sans-serif;font-size:12px;}
+.header{display:flex;align-items:center;gap:8px;padding:12px 16px;background:#0a0f1a;border-bottom:1px solid #1e2d4a;}
+.header .logo{font-family:'SF Mono',monospace;font-size:14px;font-weight:800;background:linear-gradient(135deg,#7c3aed,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.header .ver{font-family:'SF Mono',monospace;font-size:9px;color:#64748b;}
+.rainbow{display:flex;height:2px;width:100%;}.rainbow span{flex:1;}
+.r1{background:#7c3aed;}.r2{background:#06b6d4;}.r3{background:#a78bfa;}.r4{background:#22d3ee;}.r5{background:#8b5cf6;}.r6{background:#34d399;}
+.section{padding:12px 16px;border-bottom:1px solid #1e2d4a;}
+.section h3{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#64748b;margin-bottom:8px;font-family:'SF Mono',monospace;}
+.connectors{display:flex;flex-wrap:wrap;gap:4px;}
+.conn{font-family:'SF Mono',monospace;font-size:9px;padding:4px 8px;border-radius:4px;border:1px solid #1e2d4a;color:#64748b;cursor:pointer;transition:all .15s;background:#050810;}
+.conn:hover{color:#e2e8f0;border-color:#334155;}
+.conn.active{color:#22d3ee;border-color:#06b6d440;}
+.toggle{display:flex;justify-content:space-between;align-items:center;padding:6px 0;}
+.toggle label{font-size:11px;color:#94a3b8;}
+.toggle input[type=checkbox]{accent-color:#7c3aed;}
+.btn{display:block;width:100%;padding:8px;border:none;border-radius:6px;font-family:'SF Mono',monospace;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;text-align:center;text-decoration:none;}
+.btn-primary{background:linear-gradient(135deg,#7c3aed,#06b6d4);color:#050810;}
+.btn-primary:hover{opacity:.9;}
+.btn-secondary{background:#0a0f1a;color:#e2e8f0;border:1px solid #1e2d4a;margin-top:6px;}
+.btn-secondary:hover{background:#101828;}
+.btn-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px;}
+.btn-grid .btn-secondary{margin-top:0;}
+.badge{display:inline-block;font-family:'SF Mono',monospace;font-size:8px;padding:2px 6px;border-radius:3px;background:#1e2d4a;color:#94a3b8;margin-left:6px;}
+.search-engines{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;}
+.se{font-family:'SF Mono',monospace;font-size:9px;padding:2px 6px;border-radius:3px;border:1px solid #1e2d4a;color:#64748b;}
+.footer{padding:8px 16px;font-family:'SF Mono',monospace;font-size:8px;color:#475569;text-align:center;}
+</style>
+</head>
+<body>
+<div class="header">
+    <span class="logo">HISTORY</span>
+    <span style="flex:1;"></span>
+    <span class="ver">v1.1.0 | Cross-browser</span>
+</div>
+<div class="rainbow"><span class="r1"></span><span class="r2"></span><span class="r3"></span><span class="r4"></span><span class="r5"></span><span class="r6"></span></div>
+
+<div class="section">
+    <h3>Search Connectors <span class="badge" id="conn-count">14</span></h3>
+    <div class="connectors" id="conn-grid"></div>
+</div>
+
+<div class="section">
+    <h3>Supported Search Engines</h3>
+    <div class="search-engines">
+        <span class="se">Google</span><span class="se">Bing</span><span class="se">DuckDuckGo</span>
+        <span class="se">Brave</span><span class="se">Ecosia</span><span class="se">Yahoo</span>
+    </div>
+</div>
+
+<div class="section">
+    <h3>Settings</h3>
+    <div class="toggle">
+        <label>Auto-expand on search</label>
+        <input type="checkbox" id="opt-expand" checked>
+    </div>
+    <div class="toggle">
+        <label>Show timeline strip</label>
+        <input type="checkbox" id="opt-timeline" checked>
+    </div>
+    <div class="toggle">
+        <label>Inject on every search page</label>
+        <input type="checkbox" id="opt-auto" checked>
+    </div>
+</div>
+
+<div class="section">
+    <a class="btn btn-primary" id="btn-open" href="https://fornevercollective.github.io/uvspeed/web/history.html" target="_blank">Open Full History App</a>
+    <div class="btn-grid">
+        <a class="btn btn-secondary" href="https://fornevercollective.github.io/uvspeed/web/search.html" target="_blank">Mobile PWA</a>
+        <a class="btn btn-secondary" href="https://fornevercollective.github.io/uvspeed/web/freya-landing.html" target="_blank">FreyaUnits</a>
+        <a class="btn btn-secondary" href="https://fornevercollective.github.io/uvspeed/web/terminal.html" target="_blank">HexTerm</a>
+        <a class="btn btn-secondary" href="https://fornevercollective.github.io/uvspeed/web/quantum-notepad.html" target="_blank">Notepad</a>
+    </div>
+</div>
+
+<div class="footer">
+    Chrome · Edge · Brave · Opera · Arc · Vivaldi · Firefox<br>
+    beyondBINARY · {+1, 1, -1, +0, 0, -0, +n, n, -n} · fornevercollective
+</div>
+
+<script>
+// Cross-browser API
+const _storage = (typeof browser !== 'undefined' && browser.storage) ? browser.storage : (typeof chrome !== 'undefined' && chrome.storage) ? chrome.storage : null;
+
+const NAMES = ['Wikipedia','Open Library','Wayback','Sacred Texts','Yale Archives','ARDA','arXiv','PubChem','GenBank','LGBTQ Archives','Meta Research','HathiTrust','Internet Archive'];
+const ICONS = ['W','OL','WB','ST','YA','AR','aX','PC','GB','LQ','MR','HT','IA'];
+
+const grid = document.getElementById('conn-grid');
+
+function updateCount(states) {
+    document.getElementById('conn-count').textContent = states.filter(Boolean).length + '/' + states.length;
+}
+
+// Load state
+if (_storage?.local) {
+    _storage.local.get(['connectors','settings'], data => {
+        const states = data?.connectors || new Array(NAMES.length).fill(true);
+        const settings = data?.settings || {};
+
+        updateCount(states);
+
+        NAMES.forEach((name, i) => {
+            const el = document.createElement('span');
+            el.className = 'conn' + (states[i] !== false ? ' active' : '');
+            el.textContent = ICONS[i];
+            el.title = name;
+            el.addEventListener('click', () => {
+                states[i] = !states[i];
+                el.classList.toggle('active');
+                _storage.local.set({ connectors: states });
+                updateCount(states);
+            });
+            grid.appendChild(el);
+        });
+
+        if (settings.autoExpand === false) document.getElementById('opt-expand').checked = false;
+        if (settings.showTimeline === false) document.getElementById('opt-timeline').checked = false;
+        if (settings.auto === false) document.getElementById('opt-auto').checked = false;
+    });
+} else {
+    // No storage — show pills as all active
+    NAMES.forEach((name, i) => {
+        const el = document.createElement('span');
+        el.className = 'conn active'; el.textContent = ICONS[i]; el.title = name;
+        grid.appendChild(el);
+    });
+}
+
+// Save settings on change
+['opt-expand','opt-timeline','opt-auto'].forEach(id => {
+    document.getElementById(id).addEventListener('change', () => {
+        if (_storage?.local) {
+            _storage.local.set({ settings: {
+                autoExpand: document.getElementById('opt-expand').checked,
+                showTimeline: document.getElementById('opt-timeline').checked,
+                auto: document.getElementById('opt-auto').checked,
+            }});
+        }
+    });
+});
+</script>
+</body>
+</html>

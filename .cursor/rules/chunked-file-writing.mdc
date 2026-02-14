@@ -1,0 +1,65 @@
+---
+alwaysApply: true
+description: "Strategy for writing large files without hitting resource_exhausted errors"
+globs: []
+---
+
+# Chunked File Writing — Prevent resource_exhausted Crashes
+
+When building or rewriting large files (>500 lines), the model MUST use a chunked approach.
+Attempting to write 2000+ lines in a single response will hit `resource_exhausted` and crash the session.
+
+## The Rule
+
+**NEVER** try to write a large file (>500 lines) in one shot. **ALWAYS** chunk it.
+
+## Strategy: Write Shell → Fill Sections
+
+### Step 1: Write the skeleton (HTML/CSS + placeholder)
+Write the structural shell first — DOCTYPE, head, CSS, HTML body structure, and a `/* PLACEHOLDER */` comment where the bulk JS/logic goes. This should be <500 lines.
+
+```
+Write → file.html (skeleton with placeholder)
+```
+
+### Step 2: Replace placeholder with content via StrReplace
+Use StrReplace to swap the placeholder with real code. Each StrReplace call should add <800 lines.
+
+```
+StrReplace → old: "/* PLACEHOLDER */" → new: (actual JS code)
+```
+
+### Step 3: If code is still too large, split into multiple StrReplace calls
+Add section markers like `/* SECTION_2 */` in Step 2, then fill those in subsequent calls.
+
+## Size Guidelines
+
+| Operation | Safe limit | Danger zone |
+|---|---|---|
+| Write (new file) | <500 lines | >800 lines |
+| StrReplace (new_string) | <800 lines | >1200 lines |
+| Total per response | <1500 lines of new content | >2000 lines |
+
+## Example: Building a 2500-line app
+
+```
+1. Write → file.html         (300 lines: HTML + CSS + body + "/* JS_PLACEHOLDER */")
+2. StrReplace → JS_PLACEHOLDER → (700 lines: data + classes + renderers + "/* SECTION_INTERACTIVE */")
+3. StrReplace → SECTION_INTERACTIVE → (600 lines: event handlers + terminal + API)
+4. StrReplace → any remaining sections
+```
+
+## Recovery: If a Write/StrReplace fails mid-stream
+
+1. Read the file to see what actually got written
+2. Find the last complete section
+3. Use StrReplace to fix/complete from that point
+4. Never re-write the entire file — patch what's missing
+
+## Why This Matters
+
+- Cursor has a response size limit tied to the model's output token budget
+- Large file writes exhaust this budget before the content finishes streaming
+- The session crashes with `resource_exhausted` and all progress is lost
+- Chunking keeps each response well within budget
+- This is especially critical for uvspeed single-file PWA apps (1000-3000 lines each)

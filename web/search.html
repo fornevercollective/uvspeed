@@ -1,0 +1,724 @@
+<!-- beyondBINARY quantum-prefixed | uvspeed | {+1, 1, -1, +0, 0, -0, +n, n, -n} -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+<meta name="theme-color" content="#050810">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="icon" type="image/png" sizes="32x32" href="../icons/favicon.png">
+<link rel="apple-touch-icon" sizes="192x192" href="../icons/icon-192.png">
+<title>Search — Universal Timeline Search + FreyaUnits</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{--bg:#050810;--bg2:#0a0f1a;--bg3:#101828;--border:#1e2d4a;--text:#e2e8f0;--muted:#64748b;--dim:#475569;--accent:#7c3aed;--cyan:#22d3ee;--green:#34d399;--orange:#f97316;--purple:#a78bfa;--mono:'SF Mono','JetBrains Mono','Fira Code',monospace;--sans:-apple-system,'SF Pro Display',system-ui,sans-serif;}
+html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-family:var(--sans);overflow-x:hidden;}
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:var(--bg);}::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+a{color:var(--accent);text-decoration:none;}a:hover{text-decoration:underline;}
+
+/* ── Rainbow ── */
+.rainbow{display:flex;height:2px;width:100%;flex-shrink:0;}.rainbow span{flex:1;}
+.r1{background:#7c3aed;}.r2{background:#06b6d4;}.r3{background:#a78bfa;}.r4{background:#22d3ee;}.r5{background:#8b5cf6;}.r6{background:#34d399;}
+
+/* ── Header ── */
+#header{padding:env(safe-area-inset-top,12px) 16px 0;background:var(--bg2);border-bottom:1px solid var(--border);}
+#header .logo-row{display:flex;align-items:center;gap:8px;padding:8px 0 6px;flex-wrap:wrap;}
+#header .logo{font-family:var(--mono);font-size:16px;font-weight:800;background:linear-gradient(135deg,#7c3aed,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+#header .ver{font-family:var(--mono);font-size:9px;color:var(--dim);}
+#header .spacer{flex:1;}
+#header .nav-btn{background:none;border:1px solid var(--border);color:var(--muted);padding:4px 10px;border-radius:6px;font-family:var(--mono);font-size:10px;cursor:pointer;text-decoration:none;}
+#header .nav-btn:hover{color:var(--text);border-color:var(--accent);text-decoration:none;}
+
+/* ── Tabs ── */
+#mode-tabs{display:flex;padding:6px 16px 0;gap:4px;background:var(--bg2);}
+.mode-tab{font-family:var(--mono);font-size:11px;padding:6px 16px;border-radius:6px 6px 0 0;border:1px solid var(--border);border-bottom:none;color:var(--muted);cursor:pointer;background:var(--bg);transition:all .15s;}
+.mode-tab:hover{color:var(--text);}
+.mode-tab.active{color:var(--cyan);border-color:var(--cyan);background:var(--bg);font-weight:600;}
+
+/* ── Search bar ── */
+#search-bar{display:flex;gap:8px;padding:8px 16px 10px;background:var(--bg2);}
+#search-input{flex:1;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:8px;font-family:var(--mono);font-size:14px;outline:none;-webkit-appearance:none;}
+#search-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(124,58,237,0.15);}
+#search-input::placeholder{color:var(--dim);}
+#search-btn{background:linear-gradient(135deg,#7c3aed,#06b6d4);color:var(--bg);border:none;padding:10px 20px;border-radius:8px;font-family:var(--mono);font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0;transition:all .15s;}
+#search-btn:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(124,58,237,.3);}
+#search-btn:active{transform:scale(.97);}
+
+/* ── Timeline ── */
+#timeline{height:44px;border-bottom:1px solid var(--border);background:var(--bg);}
+#tl-canvas{width:100%;height:100%;display:block;}
+
+/* ── Connectors ── */
+#connectors{display:flex;padding:6px 16px;gap:4px;overflow-x:auto;scrollbar-width:none;background:var(--bg2);border-bottom:1px solid rgba(30,45,74,.5);}
+#connectors::-webkit-scrollbar{display:none;}
+.cpill{font-family:var(--mono);font-size:10px;padding:4px 10px;border-radius:6px;border:1px solid var(--border);color:var(--muted);cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all .15s;background:var(--bg);}
+.cpill:hover{color:var(--text);border-color:#334155;}
+.cpill.active{color:var(--cyan);border-color:rgba(6,182,212,.3);}
+.cpill.loading{color:#fbbf24;border-color:rgba(251,191,36,.3);animation:pulse .8s ease infinite alternate;}
+.cpill .cnt{font-weight:700;color:var(--green);margin-left:3px;}
+@keyframes pulse{from{opacity:.7}to{opacity:1}}
+
+/* ── Stats ── */
+#stats{display:flex;padding:6px 16px;gap:16px;font-family:var(--mono);font-size:10px;color:var(--dim);background:var(--bg2);border-bottom:1px solid var(--border);}
+#stats .v{color:var(--green);}
+
+/* ── Results ── */
+#results{flex:1;overflow-y:auto;padding:12px 16px;display:flex;flex-direction:column;gap:8px;-webkit-overflow-scrolling:touch;}
+.result{display:flex;flex-direction:column;gap:4px;padding:12px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;cursor:pointer;transition:all .15s;text-decoration:none;color:inherit;}
+.result:hover{border-color:#334155;background:var(--bg3);text-decoration:none;transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,.3);}
+.result:active{transform:scale(.99);}
+.r-source{font-family:var(--mono);font-size:10px;color:var(--muted);display:flex;align-items:center;gap:6px;}
+.r-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.r-title{font-size:14px;font-weight:600;color:var(--text);line-height:1.3;}
+.r-snippet{font-size:12px;color:var(--muted);line-height:1.4;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
+
+/* ── Loading ── */
+.shimmer{background:linear-gradient(90deg,var(--bg2) 25%,var(--bg3) 50%,var(--bg2) 75%);background-size:200% 100%;animation:shimmer 1.5s ease infinite;border-radius:6px;height:60px;margin-bottom:8px;}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.empty{text-align:center;padding:40px 20px;color:var(--dim);font-size:13px;}
+.empty .big{font-size:48px;margin-bottom:12px;}
+
+/* ═══════════════════════════════════════════════════
+   FREYAUNITS PANEL
+   ═══════════════════════════════════════════════════ */
+#freya-panel{display:none;flex-direction:column;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+#freya-panel.active{display:flex;}
+#search-panel{display:none;flex-direction:column;flex:1;}
+#search-panel.active{display:flex;flex:1;}
+
+/* Category pills */
+#fu-cats{display:flex;padding:8px 16px;gap:4px;overflow-x:auto;scrollbar-width:none;background:var(--bg2);border-bottom:1px solid var(--border);}
+#fu-cats::-webkit-scrollbar{display:none;}
+.fu-cat{font-family:var(--mono);font-size:10px;padding:5px 12px;border-radius:6px;border:1px solid var(--border);color:var(--muted);cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all .15s;background:var(--bg);}
+.fu-cat:hover{color:var(--text);border-color:#334155;}
+.fu-cat.active{color:#fff;font-weight:600;border-color:transparent;}
+
+/* Converter */
+#fu-converter{padding:16px;background:var(--bg);}
+#fu-conv-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+#fu-conv-row select{flex:1;min-width:80px;background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:8px;border-radius:6px;font-family:var(--mono);font-size:12px;outline:none;}
+#fu-conv-row select:focus{border-color:var(--accent);}
+#fu-val{width:120px;background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:6px;font-family:var(--mono);font-size:14px;font-weight:700;text-align:right;outline:none;}
+#fu-val:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(124,58,237,.15);}
+#fu-swap{background:none;border:1px solid var(--border);color:var(--muted);padding:6px 10px;border-radius:6px;cursor:pointer;font-size:14px;transition:all .15s;}
+#fu-swap:hover{color:var(--cyan);border-color:var(--cyan);transform:rotate(180deg);}
+#fu-result{font-family:var(--mono);font-size:24px;font-weight:800;padding:12px 0 4px;background:linear-gradient(135deg,var(--accent),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;word-break:break-all;}
+
+/* Quick buttons */
+#fu-quick{display:flex;flex-wrap:wrap;gap:4px;padding:4px 0 8px;}
+.fu-qb{font-family:var(--mono);font-size:10px;padding:3px 8px;border-radius:4px;border:1px solid var(--border);background:var(--bg2);cursor:pointer;transition:all .15s;}
+.fu-qb:hover{border-color:#334155;color:var(--text);background:var(--bg3);}
+
+/* All-units table */
+#fu-table{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:4px;padding:0 16px 8px;}
+.fu-row{display:flex;justify-content:space-between;padding:4px 8px;border-radius:4px;font-family:var(--mono);font-size:11px;color:var(--muted);background:var(--bg2);}
+.fu-row.highlight{background:var(--bg3);color:var(--text);font-weight:600;border:1px solid var(--accent);}
+
+/* Quantum props */
+#fu-quantum{padding:8px 16px;font-family:var(--mono);font-size:11px;color:var(--muted);background:var(--bg2);border-top:1px solid var(--border);border-bottom:1px solid var(--border);}
+#fu-quantum b{font-weight:600;}
+
+/* Scale canvas */
+#fu-scale{height:56px;border-bottom:1px solid var(--border);}
+#fu-scale-canvas{width:100%;height:100%;display:block;}
+
+/* ── Footer ── */
+#footer{padding:8px 16px;padding-bottom:max(8px,env(safe-area-inset-bottom));text-align:center;border-top:1px solid var(--border);font-family:var(--mono);font-size:8px;color:var(--dim);background:var(--bg2);flex-shrink:0;}
+
+/* ── Layout ── */
+#app{display:flex;flex-direction:column;min-height:100vh;min-height:100dvh;}
+
+/* ── Responsive ── */
+@media(min-width:768px){
+    #results{padding:16px 24px;flex-direction:row;flex-wrap:wrap;gap:12px;align-content:flex-start;}
+    .result{width:calc(50% - 6px);}
+    #search-bar{max-width:700px;margin:0 auto;width:100%;}
+    #fu-converter{max-width:700px;margin:0 auto;width:100%;}
+    #fu-table{padding:0 24px 8px;}
+}
+@media(min-width:1100px){
+    .result{width:calc(33.33% - 8px);}
+}
+</style>
+</head>
+<body>
+<div id="app">
+    <div id="header">
+        <div class="logo-row">
+            <span class="logo">SEARCH</span>
+            <span class="ver">v1.1 | 14 connectors + FreyaUnits</span>
+            <span class="spacer"></span>
+            <a class="nav-btn" href="history.html">History</a>
+            <a class="nav-btn" href="freya.html">Freya</a>
+            <a class="nav-btn" href="terminal.html">HexTerm</a>
+        </div>
+    </div>
+    <div id="mode-tabs">
+        <span class="mode-tab active" data-mode="search">&#x1F50D; Search</span>
+        <span class="mode-tab" data-mode="freya">&#x1F4CF; FreyaUnits</span>
+    </div>
+    <div id="search-bar">
+        <input type="search" id="search-input" placeholder="Search everything..." autocomplete="off" autofocus>
+        <button id="search-btn">Search</button>
+    </div>
+    <div class="rainbow"><span class="r1"></span><span class="r2"></span><span class="r3"></span><span class="r4"></span><span class="r5"></span><span class="r6"></span></div>
+
+    <!-- ═══ SEARCH PANEL ═══ -->
+    <div id="search-panel" class="active">
+        <div id="timeline"><canvas id="tl-canvas"></canvas></div>
+        <div id="connectors"></div>
+        <div id="stats">
+            <span>connectors: <span class="v" id="st-conn">14</span></span>
+            <span>results: <span class="v" id="st-res">0</span></span>
+            <span>latency: <span class="v" id="st-lat">&mdash;</span></span>
+        </div>
+        <div id="results">
+            <div class="empty"><div class="big">&#x1F50D;</div>Search across Wikipedia, arXiv, Sacred Texts,<br>PubChem, Wayback Machine, Open Library & more.<br><br><span style="font-family:var(--mono);font-size:10px;color:var(--accent);">Works offline-first. No account needed.</span></div>
+        </div>
+    </div>
+
+    <!-- ═══ FREYAUNITS PANEL ═══ -->
+    <div id="freya-panel">
+        <div id="fu-cats"></div>
+        <div id="fu-scale"><canvas id="fu-scale-canvas"></canvas></div>
+        <div id="fu-converter">
+            <div id="fu-conv-row">
+                <input type="number" id="fu-val" value="1" step="any">
+                <select id="fu-from"></select>
+                <button id="fu-swap" title="Swap units">&#x21C4;</button>
+                <select id="fu-to"></select>
+            </div>
+            <div id="fu-result">—</div>
+            <div id="fu-quick"></div>
+        </div>
+        <div id="fu-quantum"></div>
+        <div id="fu-table"></div>
+    </div>
+
+    <div id="footer">
+        beyondBINARY &middot; {+1, 1, -1, +0, 0, -0, +n, n, -n} &middot; fornevercollective
+    </div>
+</div>
+
+<script src="quantum-prefixes.js"></script>
+<script src="history-search-engine.js"></script>
+<script>
+'use strict';
+(function(){
+const HS = window.HistorySearch;
+if (!HS) { console.error('HistorySearch engine not loaded'); return; }
+
+const $ = id => document.getElementById(id);
+const esc = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+/* ══════════════════════════════════════════════════════
+   MODE TABS (Search / FreyaUnits)
+   ══════════════════════════════════════════════════════ */
+let activeMode = 'search';
+document.querySelectorAll('.mode-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+        activeMode = tab.dataset.mode;
+        document.querySelectorAll('.mode-tab').forEach(t => t.classList.toggle('active', t === tab));
+        $('search-panel').classList.toggle('active', activeMode === 'search');
+        $('freya-panel').classList.toggle('active', activeMode === 'freya');
+        // Show/hide search-specific elements
+        $('timeline').style.display = activeMode === 'search' ? '' : 'none';
+        $('connectors').style.display = activeMode === 'search' ? '' : 'none';
+        $('stats').style.display = activeMode === 'search' ? '' : 'none';
+        // Adjust search bar placeholder
+        $('search-input').placeholder = activeMode === 'freya' ? 'Convert: "5 km to miles" or search...' : 'Search everything...';
+        if (activeMode === 'freya') { resizeFuScale(); fuConvert(); }
+    });
+});
+
+/* ══════════════════════════════════════════════════════
+   SEARCH — Timeline
+   ══════════════════════════════════════════════════════ */
+function initTimeline(){
+    const cv = $('tl-canvas'); if(!cv) return;
+    function resize(){ cv.width = cv.parentElement.offsetWidth; cv.height = cv.parentElement.offsetHeight; HS.drawTimeline(cv); }
+    resize(); window.addEventListener('resize', resize);
+}
+
+/* ── Connector Pills ── */
+function buildPills(){
+    const w = $('connectors'); w.innerHTML = '';
+    HS.getConnectors().forEach((c, i) => {
+        const p = document.createElement('span');
+        p.className = 'cpill' + (c.enabled ? ' active' : '');
+        p.textContent = c.icon; p.title = c.name; p.dataset.idx = i;
+        p.addEventListener('click', () => {
+            HS.setConnectorEnabled(i, !c.enabled); c.enabled = !c.enabled;
+            p.classList.toggle('active');
+            $('st-conn').textContent = HS.getConnectors().filter(x => x.enabled).length;
+        });
+        w.appendChild(p);
+    });
+}
+
+/* ── Search ── */
+async function doSearch(query){
+    if(!query.trim()) return;
+
+    // Check for unit conversion pattern first
+    const convMatch = query.match(/^([\d.eE+\-]+)\s*(\S+)\s+(?:to|in|=)\s+(\S+)$/i);
+    if (convMatch) {
+        const val = parseFloat(convMatch[1]);
+        const fromSym = convMatch[2];
+        const toSym = convMatch[3];
+        const fuResult = fuQuickConvert(val, fromSym, toSym);
+        if (fuResult !== null) {
+            // Switch to FreyaUnits and show result
+            document.querySelector('.mode-tab[data-mode="freya"]').click();
+            $('fu-val').value = val;
+            // Find and set the right category + units
+            const fromUnit = FU_UNITS.find(u => u.sym.toLowerCase() === fromSym.toLowerCase() || u.name.toLowerCase() === fromSym.toLowerCase());
+            if (fromUnit) {
+                fuSetCat(fromUnit.cat);
+                const units = fuUnitsForCat(fromUnit.cat);
+                const fi = units.indexOf(fromUnit);
+                const toUnit = units.find(u => u.sym.toLowerCase() === toSym.toLowerCase() || u.name.toLowerCase() === toSym.toLowerCase());
+                if (fi >= 0) $('fu-from').value = fi;
+                if (toUnit) $('fu-to').value = units.indexOf(toUnit);
+                fuConvert();
+            }
+            return;
+        }
+    }
+
+    // Normal search
+    if (activeMode !== 'search') document.querySelector('.mode-tab[data-mode="search"]').click();
+
+    const res = $('results');
+    res.innerHTML = '<div class="shimmer"></div><div class="shimmer"></div><div class="shimmer"></div>';
+    $('st-res').textContent = '...';
+    $('st-lat').textContent = '...';
+
+    document.querySelectorAll('.cpill').forEach(p => {
+        const c = HS.getConnectors()[+p.dataset.idx];
+        if(c && c.enabled) p.classList.add('loading');
+    });
+
+    const result = await HS.search(query, {
+        onProgress: p => {
+            const pill = document.querySelector(`.cpill[data-idx="${HS.CONNECTORS.indexOf(HS.CONNECTORS.find(c=>c.name===p.connector))}"]`);
+            if(pill){ pill.classList.remove('loading'); if(p.latestBatch.length) pill.innerHTML = HS.CONNECTORS.find(c=>c.name===p.connector).icon + '<span class="cnt">' + p.latestBatch.length + '</span>'; }
+            renderResults(p.results);
+            $('st-res').textContent = p.results.length;
+        }
+    });
+
+    $('st-res').textContent = result.totalResults;
+    $('st-lat').textContent = result.latencyMs + 'ms';
+    renderResults(result.results);
+
+    const url = new URL(window.location);
+    url.searchParams.set('q', query);
+    history.replaceState(null, '', url);
+}
+
+function renderResults(results){
+    const el = $('results');
+    el.innerHTML = '';
+    if(!results.length){ el.innerHTML = '<div class="empty">No results found.</div>'; return; }
+    results.forEach(item => {
+        const a = document.createElement('a');
+        a.className = 'result'; a.href = item.url || '#'; a.target = '_blank'; a.rel = 'noopener';
+        const col = HS.getSourceColor(item.source);
+        a.innerHTML = `<div class="r-source"><span class="r-dot" style="background:${col};"></span>${esc(item.source)}</div><div class="r-title">${esc(item.title)}</div>${item.snippet ? '<div class="r-snippet">'+esc(item.snippet)+'</div>' : ''}`;
+        el.appendChild(a);
+    });
+}
+
+/* ══════════════════════════════════════════════════════
+   FREYAUNITS — Full converter engine
+   ══════════════════════════════════════════════════════ */
+const FU_CATEGORIES = {
+    length:      {name:'Length',      icon:'\uD83D\uDCCF', color:'#a78bfa'},
+    mass:        {name:'Mass',        icon:'\u2696',       color:'#f97316'},
+    temperature: {name:'Temperature', icon:'\uD83C\uDF21', color:'#fb7185'},
+    speed:       {name:'Speed',       icon:'\uD83D\uDE80', color:'#22d3ee'},
+    energy:      {name:'Energy',      icon:'\u26A1',       color:'#fbbf24'},
+    pressure:    {name:'Pressure',    icon:'\uD83D\uDD35', color:'#3b82f6'},
+    time:        {name:'Time',        icon:'\u23F1',       color:'#34d399'},
+    data:        {name:'Data',        icon:'\uD83D\uDCBE', color:'#8b5cf6'},
+};
+
+const FU_UNITS = [
+    // Length
+    {sym:'\u2113p',name:'Planck Length',factor:1.616255e-35,cat:'length'},
+    {sym:'fm',name:'Femtometer',factor:1e-15,cat:'length'},
+    {sym:'pm',name:'Picometer',factor:1e-12,cat:'length'},
+    {sym:'\u00C5',name:'Angstrom',factor:1e-10,cat:'length'},
+    {sym:'nm',name:'Nanometer',factor:1e-9,cat:'length'},
+    {sym:'\u00B5m',name:'Micrometer',factor:1e-6,cat:'length'},
+    {sym:'mm',name:'Millimeter',factor:1e-3,cat:'length'},
+    {sym:'cm',name:'Centimeter',factor:1e-2,cat:'length'},
+    {sym:'in',name:'Inch',factor:0.0254,cat:'length'},
+    {sym:'ft',name:'Foot',factor:0.3048,cat:'length'},
+    {sym:'yd',name:'Yard',factor:0.9144,cat:'length'},
+    {sym:'m',name:'Meter',factor:1,cat:'length'},
+    {sym:'km',name:'Kilometer',factor:1e3,cat:'length'},
+    {sym:'mi',name:'Mile',factor:1609.34,cat:'length'},
+    {sym:'NM',name:'Nautical Mile',factor:1852,cat:'length'},
+    {sym:'AU',name:'Astronomical Unit',factor:1.496e11,cat:'length'},
+    {sym:'ly',name:'Light Year',factor:9.461e15,cat:'length'},
+    {sym:'pc',name:'Parsec',factor:3.086e16,cat:'length'},
+    // Mass
+    {sym:'me',name:'Electron Mass',factor:9.109e-31,cat:'mass'},
+    {sym:'u',name:'Atomic Mass Unit',factor:1.661e-27,cat:'mass'},
+    {sym:'\u00B5g',name:'Microgram',factor:1e-9,cat:'mass'},
+    {sym:'mg',name:'Milligram',factor:1e-6,cat:'mass'},
+    {sym:'g',name:'Gram',factor:1e-3,cat:'mass'},
+    {sym:'oz',name:'Ounce',factor:0.0283495,cat:'mass'},
+    {sym:'lb',name:'Pound',factor:0.453592,cat:'mass'},
+    {sym:'kg',name:'Kilogram',factor:1,cat:'mass'},
+    {sym:'st',name:'Stone',factor:6.35029,cat:'mass'},
+    {sym:'t',name:'Metric Ton',factor:1000,cat:'mass'},
+    {sym:'M\u2609',name:'Solar Mass',factor:1.989e30,cat:'mass'},
+    // Temperature (special)
+    {sym:'K',name:'Kelvin',factor:1,cat:'temperature',offset:0},
+    {sym:'\u00B0C',name:'Celsius',factor:1,cat:'temperature',offset:273.15},
+    {sym:'\u00B0F',name:'Fahrenheit',factor:5/9,cat:'temperature',offset:255.372},
+    {sym:'\u00B0R',name:'Rankine',factor:5/9,cat:'temperature',offset:0},
+    // Speed
+    {sym:'mm/s',name:'mm/sec',factor:0.001,cat:'speed'},
+    {sym:'m/s',name:'Meters/sec',factor:1,cat:'speed'},
+    {sym:'km/h',name:'km/hour',factor:1/3.6,cat:'speed'},
+    {sym:'mph',name:'Miles/hour',factor:0.44704,cat:'speed'},
+    {sym:'kn',name:'Knots',factor:0.514444,cat:'speed'},
+    {sym:'Ma',name:'Mach',factor:343,cat:'speed'},
+    {sym:'c',name:'Speed of Light',factor:299792458,cat:'speed'},
+    // Energy
+    {sym:'eV',name:'Electron Volt',factor:1.602e-19,cat:'energy'},
+    {sym:'J',name:'Joule',factor:1,cat:'energy'},
+    {sym:'cal',name:'Calorie',factor:4.184,cat:'energy'},
+    {sym:'kcal',name:'Kilocalorie',factor:4184,cat:'energy'},
+    {sym:'kWh',name:'Kilowatt-hour',factor:3.6e6,cat:'energy'},
+    {sym:'BTU',name:'BTU',factor:1055.06,cat:'energy'},
+    {sym:'MeV',name:'Mega eV',factor:1.602e-13,cat:'energy'},
+    {sym:'GeV',name:'Giga eV',factor:1.602e-10,cat:'energy'},
+    // Pressure
+    {sym:'Pa',name:'Pascal',factor:1,cat:'pressure'},
+    {sym:'hPa',name:'Hectopascal',factor:100,cat:'pressure'},
+    {sym:'kPa',name:'Kilopascal',factor:1000,cat:'pressure'},
+    {sym:'bar',name:'Bar',factor:1e5,cat:'pressure'},
+    {sym:'atm',name:'Atmosphere',factor:101325,cat:'pressure'},
+    {sym:'psi',name:'PSI',factor:6894.76,cat:'pressure'},
+    {sym:'mmHg',name:'mmHg (Torr)',factor:133.322,cat:'pressure'},
+    // Time
+    {sym:'ns',name:'Nanosecond',factor:1e-9,cat:'time'},
+    {sym:'\u00B5s',name:'Microsecond',factor:1e-6,cat:'time'},
+    {sym:'ms',name:'Millisecond',factor:1e-3,cat:'time'},
+    {sym:'s',name:'Second',factor:1,cat:'time'},
+    {sym:'min',name:'Minute',factor:60,cat:'time'},
+    {sym:'hr',name:'Hour',factor:3600,cat:'time'},
+    {sym:'d',name:'Day',factor:86400,cat:'time'},
+    {sym:'wk',name:'Week',factor:604800,cat:'time'},
+    {sym:'yr',name:'Year',factor:3.156e7,cat:'time'},
+    {sym:'My',name:'Megayear',factor:3.156e13,cat:'time'},
+    {sym:'Gy',name:'Gigayear',factor:3.156e16,cat:'time'},
+    // Data
+    {sym:'b',name:'Bit',factor:1,cat:'data'},
+    {sym:'B',name:'Byte',factor:8,cat:'data'},
+    {sym:'KB',name:'Kilobyte',factor:8e3,cat:'data'},
+    {sym:'MB',name:'Megabyte',factor:8e6,cat:'data'},
+    {sym:'GB',name:'Gigabyte',factor:8e9,cat:'data'},
+    {sym:'TB',name:'Terabyte',factor:8e12,cat:'data'},
+    {sym:'PB',name:'Petabyte',factor:8e15,cat:'data'},
+];
+
+let fuCat = 'length';
+function fuUnitsForCat(cat){ return FU_UNITS.filter(u=>u.cat===cat); }
+
+function fuFmt(val){
+    if(val===0) return '0';
+    const a=Math.abs(val);
+    if(a>=1e12||a<1e-4) return val.toExponential(6);
+    if(a>=1e6) return val.toLocaleString(undefined,{maximumFractionDigits:4});
+    if(a>=1) return val.toLocaleString(undefined,{maximumFractionDigits:8});
+    return val.toFixed(10).replace(/0+$/,'').replace(/\.$/,'');
+}
+
+/* Build category pills */
+function fuBuildCats(){
+    const w = $('fu-cats'); w.innerHTML = '';
+    Object.entries(FU_CATEGORIES).forEach(([key,cat])=>{
+        const p = document.createElement('span');
+        p.className = 'fu-cat' + (key===fuCat?' active':'');
+        p.textContent = cat.icon + ' ' + cat.name;
+        if(key===fuCat) p.style.background = cat.color + '30';
+        if(key===fuCat) p.style.borderColor = cat.color;
+        p.addEventListener('click', () => fuSetCat(key));
+        w.appendChild(p);
+    });
+}
+
+function fuSetCat(cat){
+    fuCat = cat;
+    fuBuildCats();
+    fuPopulateSelects();
+}
+
+function fuPopulateSelects(){
+    const units = fuUnitsForCat(fuCat);
+    const from = $('fu-from'), to = $('fu-to');
+    from.innerHTML = ''; to.innerHTML = '';
+    units.forEach((u,i)=>{
+        from.add(new Option(u.sym + ' \u2014 ' + u.name, i));
+        to.add(new Option(u.sym + ' \u2014 ' + u.name, i));
+    });
+    if(units.length > 1) to.value = 1;
+    fuBuildQuick();
+    fuConvert();
+}
+
+function fuBuildQuick(){
+    const w = $('fu-quick'); w.innerHTML = '';
+    const units = fuUnitsForCat(fuCat);
+    const catColor = FU_CATEGORIES[fuCat].color;
+    units.forEach((u,i) => {
+        const b = document.createElement('span');
+        b.className = 'fu-qb'; b.textContent = u.sym; b.title = u.name;
+        b.style.color = catColor;
+        b.addEventListener('click', () => { $('fu-to').value = i; fuConvert(); });
+        w.appendChild(b);
+    });
+}
+
+function fuConvert(){
+    const units = fuUnitsForCat(fuCat);
+    const val = parseFloat($('fu-val').value) || 0;
+    const fromU = units[$('fu-from').value];
+    const toU = units[$('fu-to').value];
+    if(!fromU || !toU) return;
+
+    let result;
+    if(fuCat === 'temperature'){
+        const k = val * fromU.factor + (fromU.offset||0);
+        result = (k - (toU.offset||0)) / toU.factor;
+    } else {
+        result = (val * fromU.factor) / toU.factor;
+    }
+    $('fu-result').textContent = fuFmt(result) + ' ' + toU.sym;
+
+    // All-units table
+    const tbl = $('fu-table'); tbl.innerHTML = '';
+    units.forEach(u => {
+        let v;
+        if(fuCat === 'temperature'){
+            const k = val * fromU.factor + (fromU.offset||0);
+            v = (k - (u.offset||0)) / u.factor;
+        } else {
+            v = (val * fromU.factor) / u.factor;
+        }
+        const isActive = u.sym === toU.sym;
+        const div = document.createElement('div');
+        div.className = 'fu-row' + (isActive ? ' highlight' : '');
+        div.innerHTML = `<span style="color:${FU_CATEGORIES[fuCat].color};">${isActive ? '\u25B6 ' : ''}${u.sym}</span><span>${fuFmt(v)}</span>`;
+        tbl.appendChild(div);
+    });
+
+    // Quantum properties
+    const qDiv = $('fu-quantum');
+    if(fuCat === 'length'){
+        const meters = val * fromU.factor;
+        if(meters > 0){
+            const C = 299792458, H = 6.62607015e-34;
+            const freq = C / meters;
+            const energy = H * freq;
+            const eV = energy / 1.602176634e-19;
+            const momentum = H / meters;
+            const lightTime = meters / C;
+            qDiv.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:6px;">
+                <div><b style="color:var(--orange);">Frequency:</b> ${freq.toExponential(4)} Hz</div>
+                <div><b style="color:var(--orange);">Energy:</b> ${energy.toExponential(4)} J (${eV.toExponential(4)} eV)</div>
+                <div><b style="color:var(--cyan);">Wavelength:</b> ${meters.toExponential(4)} m</div>
+                <div><b style="color:var(--cyan);">Period:</b> ${(1/freq).toExponential(4)} s</div>
+                <div><b style="color:var(--purple);">Momentum (h/\u03BB):</b> ${momentum.toExponential(4)} kg\u00B7m/s</div>
+                <div><b style="color:var(--purple);">Light travel:</b> ${lightTime.toExponential(4)} s</div>
+            </div>`;
+        } else { qDiv.innerHTML = '<span style="color:var(--dim);">Enter a positive value for quantum properties.</span>'; }
+    } else if(fuCat === 'time'){
+        const seconds = val * fromU.factor;
+        if(seconds > 0){
+            const C = 299792458, H = 6.62607015e-34;
+            const freq = 1 / seconds;
+            const energy = H * freq;
+            const lightDist = seconds * C;
+            qDiv.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:6px;">
+                <div><b style="color:var(--orange);">Frequency:</b> ${freq.toExponential(4)} Hz</div>
+                <div><b style="color:var(--orange);">Energy (E=hf):</b> ${energy.toExponential(4)} J</div>
+                <div><b style="color:var(--cyan);">Light distance:</b> ${lightDist.toExponential(4)} m</div>
+                <div><b style="color:var(--cyan);">Planck units:</b> ${(seconds / 5.391e-44).toExponential(4)} t\u209A</div>
+            </div>`;
+        } else { qDiv.innerHTML = '<span style="color:var(--dim);">Enter a positive value.</span>'; }
+    } else if(fuCat === 'energy'){
+        const joules = val * fromU.factor;
+        if(joules > 0){
+            const C = 299792458, H = 6.62607015e-34;
+            const freq = joules / H;
+            const wavelength = C / freq;
+            const mass = joules / (C * C);
+            const kelvin = joules / 1.380649e-23;
+            qDiv.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:6px;">
+                <div><b style="color:var(--orange);">Frequency (E/h):</b> ${freq.toExponential(4)} Hz</div>
+                <div><b style="color:var(--cyan);">Wavelength:</b> ${wavelength.toExponential(4)} m</div>
+                <div><b style="color:var(--purple);">Mass (E/c\u00B2):</b> ${mass.toExponential(4)} kg</div>
+                <div><b style="color:var(--green);">Temperature (E/k):</b> ${kelvin.toExponential(4)} K</div>
+            </div>`;
+        } else { qDiv.innerHTML = '<span style="color:var(--dim);">Enter a positive value.</span>'; }
+    } else if(fuCat === 'speed'){
+        const ms = val * fromU.factor;
+        const C = 299792458;
+        const beta = ms / C;
+        const gamma = beta < 1 ? 1 / Math.sqrt(1 - beta * beta) : Infinity;
+        qDiv.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:6px;">
+            <div><b style="color:var(--orange);">\u03B2 (v/c):</b> ${beta < 1e-4 ? beta.toExponential(4) : beta.toFixed(8)}</div>
+            <div><b style="color:var(--cyan);">Lorentz \u03B3:</b> ${gamma === Infinity ? '\u221E' : gamma < 100 ? gamma.toFixed(6) : gamma.toExponential(4)}</div>
+            <div><b style="color:var(--purple);">Time dilation:</b> ${gamma === Infinity ? '\u221E' : gamma < 100 ? gamma.toFixed(6) + '\u00D7' : gamma.toExponential(4) + '\u00D7'}</div>
+            <div><b style="color:var(--green);">Length contraction:</b> ${gamma === Infinity ? '0' : (1/gamma).toFixed(8) + '\u00D7'}</div>
+        </div>`;
+    } else if(fuCat === 'mass'){
+        const kg = val * fromU.factor;
+        if(kg > 0){
+            const C = 299792458;
+            const energy = kg * C * C;
+            const schwarzschild = 2 * 6.674e-11 * kg / (C * C);
+            qDiv.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:6px;">
+                <div><b style="color:var(--orange);">Rest energy (mc\u00B2):</b> ${energy.toExponential(4)} J</div>
+                <div><b style="color:var(--cyan);">Schwarzschild r:</b> ${schwarzschild.toExponential(4)} m</div>
+                <div><b style="color:var(--purple);">Compton \u03BB:</b> ${(6.626e-34/(kg*C)).toExponential(4)} m</div>
+                <div><b style="color:var(--green);">Planck masses:</b> ${(kg/2.176e-8).toExponential(4)} m\u209A</div>
+            </div>`;
+        } else { qDiv.innerHTML = '<span style="color:var(--dim);">Enter a positive value.</span>'; }
+    } else {
+        qDiv.innerHTML = '<span style="color:var(--dim);">Quantum properties: select Length, Time, Energy, Speed, or Mass.</span>';
+    }
+
+    fuDrawScale();
+}
+
+/* Scale canvas */
+function fuDrawScale(){
+    if(fuCat !== 'length') { $('fu-scale').style.display = 'none'; return; }
+    $('fu-scale').style.display = '';
+    const cv = $('fu-scale-canvas');
+    if(!cv.parentElement.offsetWidth) return;
+    cv.width = cv.parentElement.offsetWidth; cv.height = cv.parentElement.offsetHeight;
+    const ctx = cv.getContext('2d'), W = cv.width, H = cv.height;
+    const minLog = -35, maxLog = 17, range = maxLog - minLog;
+    ctx.fillStyle = '#050810'; ctx.fillRect(0, 0, W, H);
+
+    // Scale bands
+    const bands = [
+        {name:'Planck',min:-35,max:-15,color:'#8b5cf6'},
+        {name:'Atomic',min:-15,max:-9,color:'#6366f1'},
+        {name:'Nano',min:-9,max:-6,color:'#3b82f6'},
+        {name:'Micro',min:-6,max:-3,color:'#06b6d4'},
+        {name:'Human',min:-3,max:3,color:'#34d399'},
+        {name:'Geo',min:3,max:7,color:'#fbbf24'},
+        {name:'Stellar',min:7,max:12,color:'#f97316'},
+        {name:'Cosmic',min:12,max:17,color:'#ef4444'},
+    ];
+
+    bands.forEach(b => {
+        const x1 = ((b.min - minLog) / range) * W;
+        const x2 = ((b.max - minLog) / range) * W;
+        ctx.fillStyle = b.color + '15'; ctx.fillRect(x1, 0, x2 - x1, H);
+        ctx.strokeStyle = b.color + '40'; ctx.lineWidth = 0.5;
+        ctx.beginPath(); ctx.moveTo(x1, 0); ctx.lineTo(x1, H); ctx.stroke();
+        const lx = (x1 + x2) / 2;
+        if(lx > 10 && lx < W - 10){
+            ctx.fillStyle = b.color + 'cc'; ctx.font = 'bold 8px monospace';
+            ctx.textAlign = 'center'; ctx.fillText(b.name, lx, H / 2 - 4);
+        }
+    });
+
+    // Current value marker
+    const units = fuUnitsForCat('length');
+    const val = parseFloat($('fu-val').value) || 0;
+    const fromU = units[$('fu-from').value];
+    if(fromU && val > 0){
+        const meters = val * fromU.factor;
+        const log = Math.log10(meters);
+        const x = ((log - minLog) / range) * W;
+        ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(x, H / 2 + 8, 4, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#ffffffcc'; ctx.font = 'bold 9px monospace'; ctx.textAlign = 'center';
+        ctx.fillText(meters.toExponential(2) + ' m', x, H - 4);
+    }
+
+    // Unit markers
+    units.forEach(u => {
+        const log = Math.log10(u.factor);
+        const x = ((log - minLog) / range) * W;
+        ctx.fillStyle = '#ffffff30'; ctx.beginPath(); ctx.arc(x, H / 2 + 8, 2, 0, Math.PI * 2); ctx.fill();
+    });
+    ctx.textAlign = 'start';
+}
+
+function resizeFuScale(){
+    setTimeout(fuDrawScale, 50);
+}
+window.addEventListener('resize', resizeFuScale);
+
+/* Quick convert from search bar */
+function fuQuickConvert(val, fromSym, toSym){
+    const fromU = FU_UNITS.find(u => u.sym.toLowerCase() === fromSym.toLowerCase() || u.name.toLowerCase().includes(fromSym.toLowerCase()));
+    const toU = FU_UNITS.find(u => u.sym.toLowerCase() === toSym.toLowerCase() || u.name.toLowerCase().includes(toSym.toLowerCase()));
+    if(!fromU || !toU || fromU.cat !== toU.cat) return null;
+    if(fromU.cat === 'temperature'){
+        const k = val * fromU.factor + (fromU.offset||0);
+        return (k - (toU.offset||0)) / toU.factor;
+    }
+    return (val * fromU.factor) / toU.factor;
+}
+
+/* Swap button */
+$('fu-swap').addEventListener('click', () => {
+    const f = $('fu-from').value, t = $('fu-to').value;
+    $('fu-from').value = t; $('fu-to').value = f;
+    fuConvert();
+});
+
+/* Events */
+$('fu-val').addEventListener('input', fuConvert);
+$('fu-from').addEventListener('change', fuConvert);
+$('fu-to').addEventListener('change', fuConvert);
+
+/* ══════════════════════════════════════════════════════
+   EVENTS
+   ══════════════════════════════════════════════════════ */
+$('search-btn').addEventListener('click', () => doSearch($('search-input').value));
+$('search-input').addEventListener('keydown', e => { if(e.key === 'Enter') doSearch($('search-input').value); });
+
+/* ══════════════════════════════════════════════════════
+   INIT
+   ══════════════════════════════════════════════════════ */
+initTimeline();
+buildPills();
+fuBuildCats();
+fuPopulateSelects();
+
+// Auto-search or auto-convert from ?q= param
+const params = new URLSearchParams(window.location.search);
+const q = params.get('q');
+const mode = params.get('mode');
+if(mode === 'freya') document.querySelector('.mode-tab[data-mode="freya"]').click();
+if(q){ $('search-input').value = q; doSearch(q); }
+
+// ── PWA ──
+if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+// ===== QUANTUM PREFIX LIVE SYNC =====
+const QP = window.QuantumPrefixes;
+if(QP){
+    QP.onStateChange(function(src,state){if(src==='search'||!state)return;});
+    QP.broadcastState('search',{coverage:0,totalLines:0,classifiedLines:0,prefixCounts:{},role:'search'});
+    QP.requestStateSync();
+}
+})();
+</script>
+</body>
+</html>

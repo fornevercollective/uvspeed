@@ -505,6 +505,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@xterm/addon-fit@0/lib/addon-fit.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@xterm/addon-web-links@0/lib/addon-web-links.min.js"></script>
 <script src="quantum-prefixes.js"></script>
+<script src="history-search-engine.js"></script>
 <script>
 'use strict';
 
@@ -1183,6 +1184,12 @@ function processCommand(raw) {
             term.writeln('  gutter on/off    — toggle prefix gutter on cat/head/tail');
             term.writeln('  prefix <line>    — classify a single code line');
             term.writeln('');
+            term.writeln('\x1b[36m  Universal Search:\x1b[0m');
+            term.writeln('  search <query>   — search 14 connectors (Wikipedia, arXiv, etc.)');
+            term.writeln('  q <query>        — alias for search');
+            term.writeln('  open history     — full History timeline knowledge graph');
+            term.writeln('  open search      — mobile search PWA');
+            term.writeln('');
             term.writeln('\x1b[36m  Rich Output Tools:\x1b[0m');
             term.writeln('  chart [nums...]  — sparkline + bar chart (try: chart demo)');
             term.writeln('  bar [k=v ...]    — horizontal bar chart (try: bar demo)');
@@ -1793,7 +1800,9 @@ function processCommand(raw) {
                 jawta: 'jawta-audio.html', hexcast: 'hexcast.html',
                 game: 'brothernumsy.html', dashboard: 'github-dashboard.html',
                 lab: 'research-lab.html', send: 'hexcast-send.html',
-                terminal: 'terminal.html',
+                terminal: 'terminal.html', history: 'history.html',
+                freya: 'freya.html', search: 'search.html',
+                sponsor: 'sponsor.html', kbatch: 'kbatch.html',
             };
             const target = pages[args[0]];
             if (target) {
@@ -2555,6 +2564,42 @@ function processCommand(raw) {
                 }
                 break;
             }
+        }
+
+        case 'search':
+        case 'q': {
+            const query = args.join(' ');
+            if (!query) {
+                term.writeln('\x1b[33m  Usage: search <query>\x1b[0m');
+                term.writeln('\x1b[90m  Searches 14 connectors: Wikipedia, arXiv, Sacred Texts, PubChem, etc.\x1b[0m');
+                break;
+            }
+            term.writeln(`\x1b[36m  \u2315 Searching ${query}...\x1b[0m`);
+            if (window.HistorySearch) {
+                window.HistorySearch.search(query, {
+                    onProgress: p => {
+                        term.writeln(`\x1b[90m    [${p.completed}/${p.total}] ${p.connector}: ${p.latestBatch.length} results\x1b[0m`);
+                    }
+                }).then(r => {
+                    term.writeln('');
+                    term.writeln(`\x1b[32m  \u2714 ${r.totalResults} results from ${r.connectorsUsed} connectors in ${r.latencyMs}ms\x1b[0m`);
+                    term.writeln('');
+                    r.results.slice(0, 20).forEach((item, i) => {
+                        const src = (item.source || '').padEnd(16);
+                        term.writeln(`  \x1b[38;5;245m${src}\x1b[0m \x1b[38;5;81m${(item.title || '').substring(0, 60)}\x1b[0m`);
+                        if (item.snippet) term.writeln(`  \x1b[38;5;245m${''.padEnd(16)} ${item.snippet.substring(0, 70)}\x1b[0m`);
+                    });
+                    if (r.totalResults > 20) term.writeln(`\x1b[90m  ... and ${r.totalResults - 20} more. Open full results: open search\x1b[0m`);
+                    term.writeln('');
+                    term.writeln(`\x1b[90m  Open in History: \x1b[36mopen history\x1b[0m`);
+                    showPrompt();
+                });
+                return; // async — showPrompt called in .then()
+            } else {
+                term.writeln('\x1b[33m  Search engine loading... opening in browser.\x1b[0m');
+                window.open('search.html?q=' + encodeURIComponent(query), '_blank');
+            }
+            break;
         }
 
         default:

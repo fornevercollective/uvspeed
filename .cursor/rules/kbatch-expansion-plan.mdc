@@ -1,0 +1,101 @@
+---
+alwaysApply: false
+description: "Plan for expanding kbatch.html into a world keyboard/language platform"
+globs: ["web/kbatch.html"]
+---
+
+# kbatch Expansion Plan — World Keyboards + Language Engine
+
+## STATUS: PHASE 1 COMPLETE (steps 1-9 done)
+
+The current `web/kbatch.html` is 1,066 lines, QWERTY-only. Goal: expand into a world keyboard/language platform preserving ALL existing features.
+
+## Session Context (what was already done BEFORE kbatch work)
+
+### Completed: Extension + Search + HexTerm upgrades
+
+1. **Browser extension** (`extensions/history-search/`) — works on Chrome, Edge, Brave, Opera, Arc, Vivaldi, Firefox. Injects 14-connector search above Google, Bing, DuckDuckGo, Brave Search, Ecosia, Yahoo. Files: manifest.json (v3 + gecko), content.js, styles.css, background.js, popup.html
+
+2. **Shared search engine** (`web/history-search-engine.js`) — `window.HistorySearch` API with `.search(query, {onProgress})`, `.drawTimeline(canvas)`, `.getConnectors()`, `.setConnectorEnabled()`. 14 connectors: Wikipedia, Open Library, Wayback, Sacred Texts, Yale, ARDA, arXiv, PubChem, GenBank, LGBTQ Archives, Meta Research, HathiTrust, Internet Archive
+
+3. **Search PWA** (`web/search.html`) — mobile-first, 2 tabs: Search (14 connectors) + FreyaUnits (full 8-category 70+ unit converter with quantum properties for Length/Time/Energy/Speed/Mass). Smart search bar detects `5 km to miles` patterns and auto-converts. `?q=` and `?mode=freya` URL params.
+
+4. **HexTerm integration** — `terminal.html` now includes `<script src="history-search-engine.js"></script>`. New commands: `search <query>` / `q <query>` runs all 14 connectors inline, `open history/search/freya` pages added. Help updated with Universal Search section.
+
+5. **history.html** — added `?q=` auto-search from URL params
+
+6. **sw.js** bumped to v4.17, added search.html + history-search-engine.js to cache
+
+7. **launcher.html** — added search card
+
+8. **README.md** — added Search quicklink, search.html table entry, history-search-engine.js in shared modules, extension section with install instructions + mobile PWA fallback note
+
+9. **uvspeed-project-context.mdc** — updated to 22 apps, added extension docs, history-search-engine.js API, BroadcastChannel('history-search')
+
+## What Exists in kbatch.html (PRESERVE ALL)
+
+- 4-panel viz grid: Thermal Heatmap, Contrails, Geometric Pattern, 3D Language Model
+- Stats bar: WPM, Efficiency, Complexity, Strain, Keys, Distance, Words, Hapax
+- KBatchAnalyzer class (heatmap, transitions, word freq, hapax)
+- Code Cell panel (JS eval with kbatch API)
+- Terminal panel (kb> commands: help, status, heatmap, contrails, analyze, etc.)
+- Fullscreen mode, window.kbatch global API
+- quantum-prefixes.js + service worker
+
+## What To Build
+
+### 1. World Keyboard Layouts (25+)
+
+Refactor ROWS/KEY_POS/FINGER_MAP into `LAYOUTS` object. `activeLayout` variable drives all renderers.
+
+Layouts: QWERTY, AZERTY, QWERTZ, Dvorak, Colemak, JCUKEN (Russian), ЙЦУКЕН, Ukrainian, Korean Hangul, Chinese Pinyin, Japanese Romaji, Arabic, Hebrew, Persian, Hindi InScript, Tamil, Thai, Greek, Armenian, Georgian, Turkish-F, Vietnamese Telex, Serbian Cyrillic
+
+Each: `{ name, script, direction, rows[], keyPos{}, fingerMap{}, imeMode?, charMap? }`
+
+### 2. Language Engine (Dictionary/Thesaurus APIs)
+
+- Free Dictionary API: `https://api.dictionaryapi.dev/api/v2/entries/{lang}/{word}`
+- Datamuse: `https://api.datamuse.com/words?rel_syn={word}`
+- Wiktionary parse API
+- localStorage offline cache
+
+### 3. Language Capsules
+
+Demographic vocab sets: US English by age (0-18/18-40/40-70/70+), Chinese 3k newspaper, Japanese 2136 joyo kanji, Korean 1800 syllables, Arabic classical/modern, Spanish regional variants, Hindi core
+
+### 4. Symbol Lab (from Cisponju Figma)
+
+Multi-script input, pattern recognition, logogram workspace, rhythm analysis. Source: `/Volumes/NO NAME/macMINI/USERS/tref-2/Documents/figma/Cisponju/` (React, 1714-line App.tsx)
+
+### 5. Quantum Lattice (from Figma)
+
+3D lattice nodes = keys, quantum animations, tunnel viz. Source: `/Volumes/NO NAME/macMINI/USERS/tref-2/Documents/figma/Quantum Lattice Keyboard Application/`
+
+### 6. UI: Tab system
+
+`[Analyzer] [Layouts] [Dictionary] [Capsules] [Symbol Lab] [Lattice] [Training]`
+
+### 7. Integration
+
+- Add `<script src="history-search-engine.js"></script>` to kbatch
+- Terminal commands: `layout <name>`, `dict <word>`, `thesaurus <word>`, `capsule <name>`, `search <query>` (reuse HistorySearch), `compare <layout1> <layout2>`
+- BroadcastChannel to hexterm for keyboard data sharing
+- Update launcher, README, context rules
+
+## Reference Data
+
+- Figma: 5 projects in `/Volumes/NO NAME/macMINI/USERS/tref-2/Documents/figma/`
+- Training: `/Volumes/NO NAME/macMINI/offload/day/train/keyboard/` (6401 files, Gutenberg corpus, Shakespeare, multi-lang analyzers for EN/FR/ZH/JA/KO/AR)
+
+## Build Order
+
+1. Refactor to activeLayout pattern
+2. Add 25+ LAYOUTS data
+3. Tab UI
+4. Layouts tab (switcher + preview + comparison)
+5. Dictionary tab (API connectors)
+6. Capsules tab (demographic data + viz)
+7. Symbol Lab tab
+8. Lattice viz tab
+9. New terminal commands + search integration
+10. Update sw.js, launcher, README, context rules

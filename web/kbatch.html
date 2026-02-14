@@ -4,38 +4,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>kbatch — Keyboard Pattern Analyzer</title>
+    <title>kbatch — World Keyboard &amp; Quantum Analyzer</title>
     <link rel="icon" type="image/png" sizes="32x32" href="../icons/favicon.png">
     <link rel="icon" type="image/x-icon" href="../icons/favicon.ico">
     <style>
         /* ═══════════════════════════════════════════════
-           uvspeed TEMPLATE — reusable project page
-           Clone this file for new tools/projects
+           kbatch — World Keyboard + Quantum Analyzer
+           uvspeed PWA · IBM Quantum bridge · 15 layouts
            ═══════════════════════════════════════════════ */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             background: var(--qp-bg, #0d1117);
             color: var(--qp-text-secondary, #c9d1d9);
             font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, monospace;
-            overflow-y: auto;
-            overflow-x: hidden;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            user-select: none;
-            -webkit-user-select: none;
+            overflow-y: auto; overflow-x: hidden;
+            min-height: 100vh; display: flex; flex-direction: column;
+            user-select: none; -webkit-user-select: none;
         }
 
         /* ── Header ── */
         #header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 8px 16px;
-            background: #161b22;
-            border-bottom: 1px solid #30363d;
-            font-size: 0.8125rem;
-            z-index: 10;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 8px 16px; background: #161b22;
+            border-bottom: 1px solid #30363d; font-size: 0.8125rem; z-index: 10;
         }
         #header a { color: #58a6ff; text-decoration: none; margin-left: 12px; }
         #header a:hover { text-decoration: underline; }
@@ -49,7 +40,7 @@
             padding: 2px 8px; cursor: pointer; margin-left: 10px; transition: all 0.15s;
         }
         .fullscreen-btn:hover { background: #21262d; color: #c9d1d9; }
-        body.fullscreen #header, body.fullscreen #footer, body.fullscreen #bottom-panels { display: none; }
+        body.fullscreen #header, body.fullscreen #footer, body.fullscreen #bottom-panels, body.fullscreen #tab-bar { display: none; }
         body.fullscreen #main-area { height: 100vh; }
         body.fullscreen .fs-exit { display: block; }
         .fs-exit {
@@ -59,13 +50,32 @@
         }
         .fs-exit:hover { background: rgba(33,38,45,0.95); color: #c9d1d9; }
 
+        /* ── Tab Bar ── */
+        #tab-bar {
+            display: flex; gap: 0; background: #161b22;
+            border-bottom: 1px solid #30363d; overflow-x: auto; flex-shrink: 0;
+        }
+        .tab-btn {
+            padding: 8px 16px; background: none; border: none;
+            border-bottom: 2px solid transparent;
+            color: #8b949e; font-family: inherit; font-size: 0.75rem;
+            cursor: pointer; white-space: nowrap; transition: all 0.15s;
+        }
+        .tab-btn:hover { color: #c9d1d9; background: #1c2129; }
+        .tab-btn.active { color: #f0883e; border-bottom-color: #f0883e; }
+        .tab-btn .tab-badge {
+            font-size: 0.5625rem; padding: 1px 5px; border-radius: 8px;
+            background: #30363d; color: #8b949e; margin-left: 4px;
+        }
+
+        /* ── Tab Panels ── */
+        .tab-panel { display: none; flex: 1; flex-direction: column; overflow: hidden; min-height: 0; }
+        .tab-panel.active { display: flex; }
+
         /* ── Main Area ── */
         #main-area {
-            flex: 0 0 auto;
-            display: flex;
-            flex-direction: column;
-            min-height: min(65vh, 600px);
-            position: relative;
+            flex: 0 0 auto; display: flex; flex-direction: column;
+            min-height: min(65vh, 600px); position: relative;
         }
 
         /* ── Stats Bar ── */
@@ -76,18 +86,14 @@
         .stat { display: flex; align-items: center; gap: 4px; }
         .stat-label { color: #484f58; }
         .stat-val { font-weight: 700; }
-        .stat-eff { color: #7ee787; }
-        .stat-cpx { color: #f97583; }
-        .stat-wpm { color: #58a6ff; }
-        .stat-strain { color: #e6b422; }
-        .stat-keys { color: #d2a8ff; }
-        .stat-dist { color: #f0883e; }
+        .stat-eff { color: #7ee787; } .stat-cpx { color: #f97583; }
+        .stat-wpm { color: #58a6ff; } .stat-strain { color: #e6b422; }
+        .stat-keys { color: #d2a8ff; } .stat-dist { color: #f0883e; }
 
         /* ── Viz Panels ── */
         #viz-grid {
             flex: 1; display: grid;
-            grid-template-columns: 1fr 1fr;
-            grid-template-rows: 1fr 1fr;
+            grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr;
             gap: 1px; background: #21262d; min-height: 0;
         }
         .viz-panel { background: #0d1117; display: flex; flex-direction: column; overflow: hidden; }
@@ -100,8 +106,8 @@
 
         /* ── Typing Input ── */
         #typing-area {
-            padding: 8px 16px; background: #161b22; border-top: 1px solid #30363d;
-            border-bottom: 1px solid #30363d;
+            padding: 8px 16px; background: #161b22;
+            border-top: 1px solid #30363d; border-bottom: 1px solid #30363d;
         }
         #typing-input {
             width: 100%; padding: 10px 14px; background: #0d1117; border: 1px solid #30363d;
@@ -111,8 +117,130 @@
         #typing-input:focus { border-color: #f0883e; }
         #typing-input::placeholder { color: #484f58; }
         #typing-hint { font-size: 0.5625rem; color: #484f58; margin-top: 4px; }
+        .layout-badge {
+            display: inline-block; padding: 1px 6px; border-radius: 4px;
+            background: #f0883e22; color: #f0883e; font-size: 0.625rem; margin-left: 8px;
+        }
 
-        /* ── Footer ── */
+        /* ═══ Layouts Tab ═══ */
+        .layout-grid { display: grid; grid-template-columns: 220px 1fr; gap: 1px; background: #21262d; flex: 1; min-height: 0; }
+        .layout-sidebar { background: #0d1117; overflow-y: auto; padding: 8px; }
+        .layout-item {
+            padding: 6px 10px; border-radius: 4px; cursor: pointer;
+            font-size: 0.75rem; margin-bottom: 2px; display: flex; justify-content: space-between;
+        }
+        .layout-item:hover { background: #161b22; }
+        .layout-item.active { background: #f0883e22; color: #f0883e; }
+        .layout-item .region { color: #484f58; font-size: 0.625rem; }
+        .layout-preview { background: #0d1117; display: flex; flex-direction: column; }
+        .layout-info {
+            padding: 8px 12px; background: #161b22; border-bottom: 1px solid #21262d;
+            font-size: 0.6875rem; display: flex; gap: 16px; flex-wrap: wrap;
+        }
+        .layout-info .li-val { color: #58a6ff; font-weight: 700; }
+        .layout-canvas-wrap { flex: 1; position: relative; min-height: 0; }
+        .layout-canvas-wrap canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+        .layout-compare { padding: 8px 12px; background: #161b22; border-top: 1px solid #21262d; font-size: 0.6875rem; }
+        .layout-compare select {
+            background: #0d1117; border: 1px solid #30363d; border-radius: 4px;
+            color: #c9d1d9; font-family: inherit; font-size: 0.6875rem; padding: 3px 8px;
+        }
+
+        /* ═══ Dictionary Tab ═══ */
+        .dict-container { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+        .dict-search {
+            display: flex; gap: 8px; padding: 12px 16px;
+            background: #161b22; border-bottom: 1px solid #21262d;
+        }
+        .dict-search input {
+            flex: 1; padding: 8px 12px; background: #0d1117; border: 1px solid #30363d;
+            border-radius: 6px; color: #c9d1d9; font-family: inherit; font-size: 0.875rem; outline: none;
+            user-select: text; -webkit-user-select: text;
+        }
+        .dict-search input:focus { border-color: #58a6ff; }
+        .dict-search button {
+            padding: 8px 16px; background: #238636; border: none; border-radius: 6px;
+            color: #fff; font-family: inherit; font-size: 0.8125rem; cursor: pointer;
+        }
+        .dict-search button:hover { background: #2ea043; }
+        .dict-results { flex: 1; overflow-y: auto; padding: 16px; }
+        .dict-entry { margin-bottom: 16px; padding: 12px; background: #161b22; border-radius: 8px; border: 1px solid #21262d; }
+        .dict-word { font-size: 1.25rem; font-weight: 700; color: #f0883e; }
+        .dict-phonetic { color: #8b949e; font-size: 0.875rem; margin-left: 8px; }
+        .dict-pos { color: #d2a8ff; font-weight: 700; font-size: 0.8125rem; margin-top: 8px; }
+        .dict-def { color: #c9d1d9; font-size: 0.8125rem; margin: 4px 0 4px 12px; }
+        .dict-example { color: #8b949e; font-size: 0.75rem; font-style: italic; margin-left: 12px; }
+        .dict-syn { color: #7ee787; font-size: 0.75rem; margin-left: 12px; }
+
+        /* ═══ Quantum Tab ═══ */
+        .quantum-container { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: #21262d; flex: 1; min-height: 0; }
+        .quantum-panel { background: #0d1117; display: flex; flex-direction: column; overflow: hidden; }
+        .qp-section { padding: 10px 12px; border-bottom: 1px solid #21262d; }
+        .qp-section-title { font-size: 0.6875rem; font-weight: 700; color: #d2a8ff; margin-bottom: 6px; }
+        .qp-row { display: flex; gap: 8px; align-items: center; margin-bottom: 4px; font-size: 0.75rem; }
+        .qp-row label { color: #8b949e; min-width: 60px; }
+        .qp-row input, .qp-row select {
+            flex: 1; padding: 4px 8px; background: #161b22; border: 1px solid #30363d;
+            border-radius: 4px; color: #c9d1d9; font-family: inherit; font-size: 0.75rem;
+            user-select: text; -webkit-user-select: text;
+        }
+        .qp-row input:focus { border-color: #d2a8ff; outline: none; }
+        .qp-btn {
+            padding: 6px 14px; border: none; border-radius: 4px;
+            font-family: inherit; font-size: 0.75rem; cursor: pointer; transition: all 0.15s;
+        }
+        .qp-btn-primary { background: #8957e5; color: #fff; }
+        .qp-btn-primary:hover { background: #a371f7; }
+        .qp-btn-secondary { background: #21262d; color: #c9d1d9; border: 1px solid #30363d; }
+        .qp-btn-secondary:hover { background: #30363d; }
+        .qp-circuit {
+            flex: 1; overflow: auto; padding: 10px 12px; font-size: 0.6875rem;
+            line-height: 1.5; white-space: pre-wrap; color: #7ee787; background: #0d1117;
+        }
+        .qp-results-wrap { flex: 1; position: relative; min-height: 0; }
+        .qp-results-wrap canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+        .qp-status { padding: 6px 12px; background: #161b22; border-top: 1px solid #21262d; font-size: 0.625rem; color: #8b949e; }
+        .qp-gate-map {
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px;
+            font-size: 0.625rem; padding: 6px 0;
+        }
+        .qp-gate { padding: 2px 4px; background: #161b22; border-radius: 3px; text-align: center; }
+        .qp-gate .sym { color: #f0883e; font-weight: 700; }
+        .qp-gate .gname { color: #d2a8ff; }
+
+        /* ═══ Training Tab ═══ */
+        .training-container { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+        .training-header {
+            display: flex; gap: 12px; align-items: center; padding: 10px 16px;
+            background: #161b22; border-bottom: 1px solid #21262d; font-size: 0.75rem;
+        }
+        .training-header select {
+            padding: 4px 8px; background: #0d1117; border: 1px solid #30363d;
+            border-radius: 4px; color: #c9d1d9; font-family: inherit; font-size: 0.75rem;
+        }
+        .training-prompt {
+            padding: 24px 16px; font-size: 1.125rem; line-height: 2;
+            letter-spacing: 0.5px; text-align: center; background: #0d1117; flex: 1;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .training-prompt .char { display: inline-block; transition: color 0.1s; }
+        .training-prompt .char.done { color: #7ee787; }
+        .training-prompt .char.current { color: #f0883e; text-decoration: underline; }
+        .training-prompt .char.wrong { color: #f97583; background: #f9758322; }
+        .training-prompt .char.pending { color: #484f58; }
+        .training-input { padding: 12px 16px; background: #161b22; border-top: 1px solid #21262d; }
+        .training-input input {
+            width: 100%; padding: 10px 14px; background: #0d1117; border: 1px solid #30363d;
+            border-radius: 6px; color: #c9d1d9; font-family: inherit; font-size: 1rem;
+            outline: none; user-select: text; -webkit-user-select: text;
+        }
+        .training-input input:focus { border-color: #7ee787; }
+        .training-stats {
+            display: flex; gap: 16px; padding: 8px 16px;
+            background: #161b22; border-top: 1px solid #21262d; font-size: 0.75rem; flex-wrap: wrap;
+        }
+
+        /* ═══ Footer ═══ */
         #footer {
             display: flex; align-items: center; justify-content: center; gap: 16px;
             padding: 6px 16px; background: #161b22; border-top: 1px solid #30363d;
@@ -120,7 +248,7 @@
         }
         #footer a { color: #58a6ff; text-decoration: none; }
 
-        /* ═══ Reusable: Code Cell & Terminal (from brotherNumsy template) ═══ */
+        /* ═══ Bottom Panels ═══ */
         #bottom-panels { display: flex; flex-direction: column; border-top: 1px solid #30363d; }
         .panel-section { border-bottom: 1px solid #21262d; }
         .panel-header {
@@ -177,94 +305,244 @@
             font-family: inherit; font-size: 0.75rem; outline: none;
             user-select: text; -webkit-user-select: text;
         }
+
         @media (max-width: 700px) {
             #viz-grid { grid-template-columns: 1fr; }
             .code-cell-area { grid-template-columns: 1fr; }
+            .layout-grid { grid-template-columns: 1fr; }
+            .quantum-container { grid-template-columns: 1fr; }
+            .tab-btn { padding: 6px 10px; font-size: 0.6875rem; }
         }
     </style>
 </head>
 <body>
 <div style="display:flex;height:2px;width:100%;flex-shrink:0"><span style="flex:1;background:#ff3838"></span><span style="flex:1;background:#ff8c38"></span><span style="flex:1;background:#ffe138"></span><span style="flex:1;background:#3fb950"></span><span style="flex:1;background:#38a5ff"></span><span style="flex:1;background:#bc8cff"></span></div>
+
     <div id="header">
         <div>
             <span class="hdr-title">kbatch</span>
-            <span class="hdr-sub"> — keyboard contrail/pattern analyzer</span>
+            <span class="hdr-sub"> — world keyboard &amp; quantum analyzer</span>
         </div>
         <div>
             <button class="fullscreen-btn" id="btn-fullscreen">&#x26F6; Fullscreen</button>
+            <a href="search.html">search</a>
             <a href="hexcast.html">hexcast</a>
-            <a href="questcast.html">questcast</a>
-            <a href="jawta-audio.html">jawta</a>
             <a href="archflow.html">archflow</a>
             <a href="blackwell.html" style="color:#76b900">Blackwell</a>
-            <a href="brothernumsy.html">Game</a>
             <a href="quantum-notepad.html">Notepad</a>
         </div>
     </div>
 
-    <!-- ═══ Main Visualization Area ═══ -->
-    <div id="main-area">
-        <button class="fs-exit" id="btn-fs-exit">&#x2716; Exit</button>
+    <!-- ═══ Tab Bar ═══ -->
+    <div id="tab-bar">
+        <button class="tab-btn active" data-tab="analyzer">&#x1F525; Analyzer</button>
+        <button class="tab-btn" data-tab="layouts">&#x2328; Layouts <span class="tab-badge">15</span></button>
+        <button class="tab-btn" data-tab="dictionary">&#x1F4D6; Dictionary</button>
+        <button class="tab-btn" data-tab="quantum">&#x269B; Quantum <span class="tab-badge">IBM</span></button>
+        <button class="tab-btn" data-tab="training">&#x1F3AF; Training</button>
+    </div>
 
-        <!-- Stats Bar -->
-        <div id="stats-bar">
-            <div class="stat"><span class="stat-label">WPM</span> <span class="stat-val stat-wpm" id="s-wpm">0</span></div>
-            <div class="stat"><span class="stat-label">Efficiency</span> <span class="stat-val stat-eff" id="s-eff">0%</span></div>
-            <div class="stat"><span class="stat-label">Complexity</span> <span class="stat-val stat-cpx" id="s-cpx">0%</span></div>
-            <div class="stat"><span class="stat-label">Strain</span> <span class="stat-val stat-strain" id="s-strain">0%</span></div>
-            <div class="stat"><span class="stat-label">Keys</span> <span class="stat-val stat-keys" id="s-keys">0</span></div>
-            <div class="stat"><span class="stat-label">Distance</span> <span class="stat-val stat-dist" id="s-dist">0.0</span></div>
-            <div class="stat"><span class="stat-label">Words</span> <span class="stat-val" style="color:#c9d1d9;" id="s-words">0</span></div>
-            <div class="stat"><span class="stat-label">Hapax</span> <span class="stat-val" style="color:#d2a8ff;" id="s-hapax">0</span></div>
+    <!-- ═══════════ TAB: ANALYZER (existing) ═══════════ -->
+    <div class="tab-panel active" id="panel-analyzer">
+        <div id="main-area">
+            <button class="fs-exit" id="btn-fs-exit">&#x2716; Exit</button>
+            <div id="stats-bar">
+                <div class="stat"><span class="stat-label">WPM</span> <span class="stat-val stat-wpm" id="s-wpm">0</span></div>
+                <div class="stat"><span class="stat-label">Efficiency</span> <span class="stat-val stat-eff" id="s-eff">0%</span></div>
+                <div class="stat"><span class="stat-label">Complexity</span> <span class="stat-val stat-cpx" id="s-cpx">0%</span></div>
+                <div class="stat"><span class="stat-label">Strain</span> <span class="stat-val stat-strain" id="s-strain">0%</span></div>
+                <div class="stat"><span class="stat-label">Keys</span> <span class="stat-val stat-keys" id="s-keys">0</span></div>
+                <div class="stat"><span class="stat-label">Distance</span> <span class="stat-val stat-dist" id="s-dist">0.0</span></div>
+                <div class="stat"><span class="stat-label">Words</span> <span class="stat-val" style="color:#c9d1d9;" id="s-words">0</span></div>
+                <div class="stat"><span class="stat-label">Hapax</span> <span class="stat-val" style="color:#d2a8ff;" id="s-hapax">0</span></div>
+                <div class="stat"><span class="stat-label">Layout</span> <span class="stat-val" style="color:#f0883e;" id="s-layout">QWERTY</span></div>
+            </div>
+            <div id="viz-grid">
+                <div class="viz-panel">
+                    <div class="viz-title" style="color:#f0883e;">&#x1F525; Thermal Heatmap</div>
+                    <div class="viz-canvas-wrap"><canvas id="cv-thermal"></canvas></div>
+                </div>
+                <div class="viz-panel">
+                    <div class="viz-title" style="color:#58a6ff;">&#x2708; Contrails</div>
+                    <div class="viz-canvas-wrap"><canvas id="cv-contrails"></canvas></div>
+                </div>
+                <div class="viz-panel">
+                    <div class="viz-title" style="color:#d2a8ff;">&#x2B22; Geometric Pattern</div>
+                    <div class="viz-canvas-wrap"><canvas id="cv-geometric"></canvas></div>
+                </div>
+                <div class="viz-panel">
+                    <div class="viz-title" style="color:#7ee787;">&#x1F3B9; 3D Language Model</div>
+                    <div class="viz-canvas-wrap"><canvas id="cv-3d"></canvas></div>
+                </div>
+            </div>
+            <div id="typing-area">
+                <input type="text" id="typing-input" placeholder="Start typing to analyze keyboard patterns in real-time..." autocomplete="off" spellcheck="false">
+                <div id="typing-hint">All visualizations update live as you type. Press <b>Enter</b> to analyze. <span class="layout-badge" id="active-layout-badge">QWERTY</span></div>
+            </div>
         </div>
+    </div>
 
-        <!-- 4-panel visualization grid -->
-        <div id="viz-grid">
-            <div class="viz-panel">
-                <div class="viz-title" style="color:#f0883e;">&#x1F525; Thermal Heatmap</div>
-                <div class="viz-canvas-wrap"><canvas id="cv-thermal"></canvas></div>
-            </div>
-            <div class="viz-panel">
-                <div class="viz-title" style="color:#58a6ff;">&#x2708; Contrails</div>
-                <div class="viz-canvas-wrap"><canvas id="cv-contrails"></canvas></div>
-            </div>
-            <div class="viz-panel">
-                <div class="viz-title" style="color:#d2a8ff;">&#x2B22; Geometric Pattern</div>
-                <div class="viz-canvas-wrap"><canvas id="cv-geometric"></canvas></div>
-            </div>
-            <div class="viz-panel">
-                <div class="viz-title" style="color:#7ee787;">&#x1F3B9; 3D Language Model</div>
-                <div class="viz-canvas-wrap"><canvas id="cv-3d"></canvas></div>
+    <!-- ═══════════ TAB: LAYOUTS ═══════════ -->
+    <div class="tab-panel" id="panel-layouts">
+        <div class="layout-grid">
+            <div class="layout-sidebar" id="layout-list"></div>
+            <div class="layout-preview">
+                <div class="layout-info" id="layout-info">
+                    <span><span class="stat-label">Name:</span> <span class="li-val" id="li-name">QWERTY</span></span>
+                    <span><span class="stat-label">Script:</span> <span class="li-val" id="li-script">Latin</span></span>
+                    <span><span class="stat-label">Region:</span> <span class="li-val" id="li-region">US</span></span>
+                    <span><span class="stat-label">Direction:</span> <span class="li-val" id="li-dir">LTR</span></span>
+                </div>
+                <div class="layout-canvas-wrap"><canvas id="cv-layout"></canvas></div>
+                <div class="layout-compare">
+                    <span class="stat-label">Compare with:</span>
+                    <select id="layout-compare-select"><option value="">— select —</option></select>
+                    <span id="compare-result" style="margin-left:12px;color:#7ee787;"></span>
+                </div>
             </div>
         </div>
+    </div>
 
-        <!-- Typing input -->
-        <div id="typing-area">
-            <input type="text" id="typing-input" placeholder="Start typing to analyze keyboard patterns in real-time..." autocomplete="off" spellcheck="false">
-            <div id="typing-hint">All visualizations update live as you type. Press <b>Enter</b> to analyze the full text.</div>
+    <!-- ═══════════ TAB: DICTIONARY ═══════════ -->
+    <div class="tab-panel" id="panel-dictionary">
+        <div class="dict-container">
+            <div class="dict-search">
+                <input type="text" id="dict-input" placeholder="Look up any word — definitions, synonyms, etymology..." autocomplete="off" spellcheck="false">
+                <button id="dict-search-btn">Look Up</button>
+            </div>
+            <div class="dict-results" id="dict-results">
+                <div style="text-align:center;padding:40px;color:#484f58;">
+                    Type a word and press Enter or click Look Up.<br>
+                    Powered by Free Dictionary API + Datamuse synonyms.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════ TAB: QUANTUM ═══════════ -->
+    <div class="tab-panel" id="panel-quantum">
+        <div class="quantum-container">
+            <div class="quantum-panel">
+                <div class="qp-section">
+                    <div class="qp-section-title">&#x269B; IBM Quantum Bridge</div>
+                    <div class="qp-row">
+                        <label>Token</label>
+                        <input type="password" id="qp-token" placeholder="Paste IBM Quantum API token...">
+                    </div>
+                    <div class="qp-row">
+                        <label>Backend</label>
+                        <select id="qp-backend">
+                            <option value="local">Local Simulator (instant)</option>
+                            <option value="ibm_brisbane">ibm_brisbane (127q Eagle)</option>
+                            <option value="ibm_kyoto">ibm_kyoto (127q Eagle)</option>
+                            <option value="ibm_osaka">ibm_osaka (127q Eagle)</option>
+                        </select>
+                    </div>
+                    <div class="qp-row">
+                        <label>Source</label>
+                        <select id="qp-source">
+                            <option value="prefix">From Quantum Prefixes</option>
+                            <option value="typing">From Typing Pattern</option>
+                            <option value="custom">Custom QASM</option>
+                        </select>
+                    </div>
+                    <div class="qp-row">
+                        <label>Shots</label>
+                        <input type="number" id="qp-shots" value="1024" min="1" max="8192">
+                    </div>
+                    <div class="qp-row" style="gap:6px;">
+                        <button class="qp-btn qp-btn-primary" id="qp-build">Build Circuit</button>
+                        <button class="qp-btn qp-btn-primary" id="qp-run" style="background:#238636;">&#9654; Run</button>
+                        <button class="qp-btn qp-btn-secondary" id="qp-export">Export QASM</button>
+                    </div>
+                </div>
+                <div class="qp-section" style="padding:6px 12px;">
+                    <div class="qp-section-title">Prefix → Gate Mapping</div>
+                    <div class="qp-gate-map">
+                        <div class="qp-gate"><span class="sym">+1:</span><span class="gname">H</span></div>
+                        <div class="qp-gate"><span class="sym">1:</span><span class="gname">CNOT</span></div>
+                        <div class="qp-gate"><span class="sym">-1:</span><span class="gname">X</span></div>
+                        <div class="qp-gate"><span class="sym">+0:</span><span class="gname">Rz</span></div>
+                        <div class="qp-gate"><span class="sym">0:</span><span class="gname">I</span></div>
+                        <div class="qp-gate"><span class="sym">-0:</span><span class="gname">S</span></div>
+                        <div class="qp-gate"><span class="sym">+n:</span><span class="gname">T</span></div>
+                        <div class="qp-gate"><span class="sym">n:</span><span class="gname">SWAP</span></div>
+                        <div class="qp-gate"><span class="sym">-n:</span><span class="gname">M</span></div>
+                        <div class="qp-gate"><span class="sym">+2:</span><span class="gname">CZ</span></div>
+                        <div class="qp-gate"><span class="sym">+3:</span><span class="gname">Y</span></div>
+                    </div>
+                </div>
+                <div class="qp-circuit" id="qp-circuit">// Build a circuit from typing data or quantum prefixes
+// Select source above and click "Build Circuit"
+//
+// Free tier: 10 min/month on 127-qubit Eagle processors
+// Get token: https://quantum.ibm.com → API token
+//
+// Or use Local Simulator for instant results (up to 12 qubits)</div>
+            </div>
+            <div class="quantum-panel">
+                <div class="qp-section">
+                    <div class="qp-section-title">&#x1F4CA; Results — Measurement Histogram</div>
+                </div>
+                <div class="qp-results-wrap"><canvas id="cv-quantum"></canvas></div>
+                <div class="qp-status" id="qp-status">Ready — select source and build circuit</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════ TAB: TRAINING ═══════════ -->
+    <div class="tab-panel" id="panel-training">
+        <div class="training-container">
+            <div class="training-header">
+                <span class="stat-label">Layout:</span>
+                <select id="train-layout"></select>
+                <span class="stat-label">Drill:</span>
+                <select id="train-drill">
+                    <option value="home">Home Row</option>
+                    <option value="common">Common Words</option>
+                    <option value="pangram">Pangrams</option>
+                    <option value="code">Code Snippets</option>
+                </select>
+                <button class="qp-btn qp-btn-secondary" id="train-new">New Drill</button>
+                <span style="flex:1;"></span>
+                <span class="stat-label">Best WPM:</span>
+                <span style="color:#7ee787;font-weight:700;" id="train-best">0</span>
+            </div>
+            <div class="training-prompt" id="train-prompt">
+                <span style="color:#484f58;">Select a drill and press "New Drill" to begin</span>
+            </div>
+            <div class="training-input">
+                <input type="text" id="train-input" placeholder="Type here to practice..." autocomplete="off" spellcheck="false">
+            </div>
+            <div class="training-stats">
+                <div class="stat"><span class="stat-label">WPM</span> <span class="stat-val stat-wpm" id="train-wpm">0</span></div>
+                <div class="stat"><span class="stat-label">Accuracy</span> <span class="stat-val stat-eff" id="train-acc">100%</span></div>
+                <div class="stat"><span class="stat-label">Progress</span> <span class="stat-val stat-dist" id="train-prog">0%</span></div>
+                <div class="stat"><span class="stat-label">Errors</span> <span class="stat-val stat-cpx" id="train-err">0</span></div>
+            </div>
         </div>
     </div>
 
     <div id="footer">
         <span>{+1, 1, -1, +0, 0, -0, +n, n, -n}</span>
         <span>&middot;</span>
-        <span style="color:#f0883e;">kbatch: keyboard contrail analyzer</span>
+        <span style="color:#f0883e;">kbatch: world keyboard &amp; quantum analyzer</span>
         <span>&middot;</span>
         <a href="quantum-notepad.html">uvspeed notepad</a>
         <span>&middot;</span>
-        <a href="hexcast.html">hexcast</a>
+        <a href="search.html">search</a>
         <span>&middot;</span>
         <span>API: <code>window.kbatch</code></span>
     </div>
 
-    <!-- ═══ Bottom Panels: Code Cell + Terminal (template) ═══ -->
+    <!-- ═══ Bottom Panels: Code Cell + Terminal ═══ -->
     <div id="bottom-panels">
         <div class="panel-section">
             <div class="panel-header" id="code-panel-toggle">
                 <span style="color:#7ee787;">&#9889; Live Code Cell</span>
                 <span>
                     <span class="tag" style="background:#238636;color:#fff;">JS</span>
-                    <span class="tag" style="background:#21262d;color:#8b949e;">kbatch + FreyaUnits</span>
+                    <span class="tag" style="background:#21262d;color:#8b949e;">kbatch + Quantum</span>
                     <span style="color:#484f58;margin-left:6px;">&#9660;</span>
                 </span>
             </div>
@@ -279,23 +557,26 @@
                             <span style="flex:1;"></span>
                             <span style="color:#484f58;">Ctrl+Enter to run</span>
                         </div>
-                        <textarea id="code-input" placeholder="// Write JavaScript here&#10;// Access: kbatch, kbatch.state, kbatch.analyze()&#10;" spellcheck="false">// Get current analysis state
+                        <textarea id="code-input" placeholder="// Write JavaScript here&#10;// Access: kbatch, kbatch.quantum, kbatch.layouts&#10;" spellcheck="false">// Get current analysis state
 const state = kbatch.state;
+console.log('Layout:', kbatch.activeLayout);
 console.log('Words typed:', state.words);
 console.log('WPM:', state.wpm.toFixed(1));
 console.log('Efficiency:', state.efficiency.toFixed(1) + '%');
 
 // Analyze a specific word
 const analysis = kbatch.analyze('quantum');
-console.log('\\n"quantum" analysis:');
+console.log('\n"quantum" analysis:');
 console.log('  Efficiency:', analysis.efficiency.toFixed(1) + '%');
-console.log('  Complexity:', analysis.complexity.toFixed(1) + '%');
 console.log('  Path:', analysis.path);
-console.log('  Distance:', analysis.distance.toFixed(2));
 
-// Top 5 most-used keys
-const top = kbatch.topKeys(5);
-console.log('\\nTop keys:', top.map(k => k.key + ':' + k.count).join(', '));</textarea>
+// List available layouts
+console.log('\nLayouts:', Object.keys(kbatch.layouts).join(', '));
+
+// Build a quantum circuit from typing
+const qasm = kbatch.quantum.buildFromTyping();
+console.log('\nQuantum circuit (first 5 lines):');
+console.log(qasm.split('\n').slice(0,5).join('\n'));</textarea>
                     </div>
                     <div>
                         <div class="code-toolbar" style="justify-content:space-between;">
@@ -319,84 +600,197 @@ console.log('\\nTop keys:', top.map(k => k.key + ':' + k.count).join(', '));</te
             </div>
             <div class="panel-body collapsed" id="term-panel-body">
                 <div class="terminal-area" id="term-output">
-                    <div class="term-line info">Welcome to kbatch terminal — keyboard pattern analyzer</div>
-                    <div class="term-line">Type <b style="color:#f0883e;">help</b> for commands. Analyze text, view contrails, export data.</div>
+                    <div class="term-line info">Welcome to kbatch terminal — world keyboard &amp; quantum analyzer</div>
+                    <div class="term-line">Type <b style="color:#f0883e;">help</b> for commands. 15 layouts, dictionary, IBM Quantum bridge.</div>
                     <div class="term-line" style="color:#484f58;">───────────────────────────────────────────────</div>
                 </div>
                 <div class="term-input-row">
                     <span class="term-prompt">kb&gt;</span>
-                    <input type="text" id="term-input" placeholder="help, analyze, heatmap, contrails, efficiency, export ..." autocomplete="off" spellcheck="false">
+                    <input type="text" id="term-input" placeholder="help, layout, dict, quantum, analyze, train ..." autocomplete="off" spellcheck="false">
                 </div>
             </div>
         </div>
     </div>
 
     <script src="quantum-prefixes.js"></script>
+    <script src="history-search-engine.js"></script>
     <script>
     // ================================================================
-    //  kbatch — Keyboard Pattern Analyzer
-    //  Thermal heatmaps, contrails, geometric patterns, 3D language
-    //  analysis — all in one self-contained file.
+    //  kbatch — World Keyboard & Quantum Analyzer
+    //  15 layouts · IBM Quantum bridge · local simulator
+    //  Dictionary · Training drills · Thermal/Contrail viz
     // ================================================================
 
-    // ──────────────────── QWERTY LAYOUT ────────────────────
-    const ROWS = [
-        ['q','w','e','r','t','y','u','i','o','p'],
-        ['a','s','d','f','g','h','j','k','l',';'],
-        ['z','x','c','v','b','n','m',',','.','/'],
-    ];
+    // ══════════════════ WORLD KEYBOARD LAYOUTS ══════════════════
+    const LAYOUTS = {
+        qwerty: {
+            name:'QWERTY', region:'US/International', script:'Latin', dir:'ltr',
+            rows:[['q','w','e','r','t','y','u','i','o','p'],
+                  ['a','s','d','f','g','h','j','k','l',';'],
+                  ['z','x','c','v','b','n','m',',','.','/']],
+            homeRow:'asdfghjkl;'
+        },
+        dvorak: {
+            name:'Dvorak', region:'US', script:'Latin', dir:'ltr',
+            rows:[[`'`,',','.','p','y','f','g','c','r','l'],
+                  ['a','o','e','u','i','d','h','t','n','s'],
+                  [';','q','j','k','x','b','m','w','v','z']],
+            homeRow:'aoeuidhtns'
+        },
+        colemak: {
+            name:'Colemak', region:'US', script:'Latin', dir:'ltr',
+            rows:[['q','w','f','p','g','j','l','u','y',';'],
+                  ['a','r','s','t','d','h','n','e','i','o'],
+                  ['z','x','c','v','b','k','m',',','.','/']],
+            homeRow:'arstdhneio'
+        },
+        azerty: {
+            name:'AZERTY', region:'France', script:'Latin', dir:'ltr',
+            rows:[['a','z','e','r','t','y','u','i','o','p'],
+                  ['q','s','d','f','g','h','j','k','l','m'],
+                  ['w','x','c','v','b','n',',',';',':','!']],
+            homeRow:'qsdfghjklm'
+        },
+        qwertz: {
+            name:'QWERTZ', region:'Germany/Austria', script:'Latin', dir:'ltr',
+            rows:[['q','w','e','r','t','z','u','i','o','p'],
+                  ['a','s','d','f','g','h','j','k','l','\u00f6'],
+                  ['y','x','c','v','b','n','m',',','.','-']],
+            homeRow:'asdfghjkl\u00f6'
+        },
+        jcuken: {
+            name:'\u0419\u0426\u0423\u041a\u0415\u041d (JCUKEN)', region:'Russia', script:'Cyrillic', dir:'ltr',
+            rows:[['\u0439','\u0446','\u0443','\u043a','\u0435','\u043d','\u0433','\u0448','\u0449','\u0437'],
+                  ['\u0444','\u044b','\u0432','\u0430','\u043f','\u0440','\u043e','\u043b','\u0434','\u0436'],
+                  ['\u044f','\u0447','\u0441','\u043c','\u0438','\u0442','\u044c','\u0431','\u044e','.']],
+            homeRow:'\u0444\u044b\u0432\u0430\u043f\u0440\u043e\u043b\u0434\u0436'
+        },
+        korean: {
+            name:'2-Set Hangul', region:'Korea', script:'Hangul', dir:'ltr',
+            rows:[['\u3142','\u3148','\u3137','\u3131','\u3145','\u315b','\u3155','\u3151','\u3150','\u3154'],
+                  ['\u3141','\u3134','\u3147','\u3139','\u314e','\u3157','\u3153','\u314f','\u3163','\u3161'],
+                  ['\u314b','\u314c','\u314a','\u314d','\u3160','\u315c','\u3159','\u3158','\u315e','\u315d']],
+            homeRow:'\u3141\u3134\u3147\u3139\u314e\u3157\u3153\u314f\u3163\u3161'
+        },
+        japanese: {
+            name:'Romaji (JIS)', region:'Japan', script:'Latin/Kana', dir:'ltr',
+            rows:[['q','w','e','r','t','y','u','i','o','p'],
+                  ['a','s','d','f','g','h','j','k','l',';'],
+                  ['z','x','c','v','b','n','m',',','.','/']],
+            homeRow:'asdfghjkl;',
+            note:'Standard QWERTY for romaji input'
+        },
+        arabic: {
+            name:'Arabic', region:'Middle East/North Africa', script:'Arabic', dir:'rtl',
+            rows:[['\u0636','\u0635','\u062b','\u0642','\u0641','\u063a','\u0639','\u0647','\u062e','\u062d'],
+                  ['\u0634','\u0633','\u064a','\u0628','\u0644','\u0627','\u062a','\u0646','\u0645','\u0643'],
+                  ['\u0626','\u0621','\u0624','\u0631','\u0644','\u0649','\u0629','\u0648','\u0632','\u0638']],
+            homeRow:'\u0634\u0633\u064a\u0628\u0644\u0627\u062a\u0646\u0645\u0643'
+        },
+        hindi: {
+            name:'Hindi InScript', region:'India', script:'Devanagari', dir:'ltr',
+            rows:[['\u094c','\u0948','\u093e','\u0940','\u0942','\u092c','\u0939','\u0917','\u0926','\u091c'],
+                  ['\u094b','\u0947','\u094d','\u093f','\u0941','\u092a','\u0930','\u0915','\u0924','\u091a'],
+                  ['\u0949','\u0945','\u0943','\u0928','\u0935','\u0932','\u0938',',','.','?']],
+            homeRow:'\u094b\u0947\u094d\u093f\u0941\u092a\u0930\u0915\u0924\u091a'
+        },
+        hebrew: {
+            name:'Hebrew', region:'Israel', script:'Hebrew', dir:'rtl',
+            rows:[['\u002f','\u0027','\u05e7','\u05e8','\u05d0','\u05d8','\u05d5','\u05df','\u05dd','\u05e4'],
+                  ['\u05e9','\u05d3','\u05d2','\u05db','\u05e2','\u05d9','\u05d7','\u05dc','\u05da','\u05e3'],
+                  ['\u05d6','\u05e1','\u05d1','\u05d4','\u05e0','\u05de','\u05e6','\u05ea','\u05e5','.']],
+            homeRow:'\u05e9\u05d3\u05d2\u05db\u05e2\u05d9\u05d7\u05dc\u05da\u05e3'
+        },
+        greek: {
+            name:'Greek', region:'Greece/Cyprus', script:'Greek', dir:'ltr',
+            rows:[[';','\u03c2','\u03b5','\u03c1','\u03c4','\u03c5','\u03b8','\u03b9','\u03bf','\u03c0'],
+                  ['\u03b1','\u03c3','\u03b4','\u03c6','\u03b3','\u03b7','\u03be','\u03ba','\u03bb','\u0384'],
+                  ['\u03b6','\u03c7','\u03c8','\u03c9','\u03b2','\u03bd','\u03bc',',','.','/']],
+            homeRow:'\u03b1\u03c3\u03b4\u03c6\u03b3\u03b7\u03be\u03ba\u03bb\u0384'
+        },
+        thai: {
+            name:'Kedmanee', region:'Thailand', script:'Thai', dir:'ltr',
+            rows:[['\u0e46','\u0e44','\u0e33','\u0e1e','\u0e30','\u0e31','\u0e35','\u0e23','\u0e19','\u0e22'],
+                  ['\u0e1f','\u0e2b','\u0e01','\u0e14','\u0e40','\u0e49','\u0e48','\u0e32','\u0e2a','\u0e27'],
+                  ['\u0e1c','\u0e1b','\u0e41','\u0e2d','\u0e34','\u0e37','\u0e17','\u0e21','\u0e43','\u0e1d']],
+            homeRow:'\u0e1f\u0e2b\u0e01\u0e14\u0e40\u0e49\u0e48\u0e32\u0e2a\u0e27'
+        },
+        turkish_f: {
+            name:'Turkish F', region:'Turkey', script:'Latin', dir:'ltr',
+            rows:[['f','g','\u011f','\u0131','o','d','r','n','h','p'],
+                  ['u','i','e','a','\u00fc','t','k','m','l','y'],
+                  ['j','\u00f6','v','c','\u00e7','z','s','b','.',',']],
+            homeRow:'uiea\u00fctkmly'
+        },
+        vietnamese: {
+            name:'Vietnamese Telex', region:'Vietnam', script:'Latin', dir:'ltr',
+            rows:[['q','w','e','r','t','y','u','i','o','p'],
+                  ['a','s','d','f','g','h','j','k','l',';'],
+                  ['z','x','c','v','b','n','m',',','.','/']],
+            homeRow:'asdfghjkl;',
+            note:'QWERTY base + Telex diacritics (aa=\u00e2, ee=\u00ea, oo=\u00f4, dd=\u0111)'
+        }
+    };
 
-    // Key positions (col, row) for distance calculation
-    const KEY_POS = {};
-    ROWS.forEach((row, r) => {
-        row.forEach((key, c) => {
-            KEY_POS[key] = { x: c + r * 0.25, y: r }; // staggered offset
-        });
-    });
-    // Space bar
-    KEY_POS[' '] = { x: 4.5, y: 3.2 };
+    // ──────────────────── LAYOUT UTILITIES ────────────────────
+    let activeLayoutId = 'qwerty';
 
-    // Finger assignments (0=left pinky ... 4=left thumb, 5=right thumb ... 9=right pinky)
-    const FINGER_MAP = {};
-    const fingerCols = [[0],[1],[2],[3,4],[],[],[5,6],[7],[8],[9]];
-    ROWS.forEach((row, r) => {
-        row.forEach((key, c) => {
-            if (c <= 1) FINGER_MAP[key] = c;
-            else if (c <= 3) FINGER_MAP[key] = 2 + (c - 2);
-            else if (c <= 4) FINGER_MAP[key] = 3;
-            else if (c <= 5) FINGER_MAP[key] = 5;
-            else if (c <= 7) FINGER_MAP[key] = 5 + (c - 5);
-            else FINGER_MAP[key] = 7 + (c - 8);
+    function getLayout(id) { return LAYOUTS[id || activeLayoutId]; }
+
+    function buildKeyPos(layout) {
+        const pos = {};
+        layout.rows.forEach((row, r) => {
+            row.forEach((key, c) => {
+                pos[key] = { x: c + r * 0.25, y: r };
+            });
         });
-    });
+        pos[' '] = { x: 4.5, y: 3.2 };
+        return pos;
+    }
+
+    function buildFingerMap(layout) {
+        const fm = {};
+        layout.rows.forEach((row) => {
+            row.forEach((key, c) => {
+                if (c <= 1) fm[key] = c;
+                else if (c <= 3) fm[key] = 2 + (c - 2);
+                else if (c <= 4) fm[key] = 3;
+                else if (c <= 5) fm[key] = 5;
+                else if (c <= 7) fm[key] = 5 + (c - 5);
+                else fm[key] = 7 + (c - 8);
+            });
+        });
+        return fm;
+    }
+
+    function getActiveRows() { return getLayout().rows; }
+    function getActiveKeyPos() { return buildKeyPos(getLayout()); }
+
+    function setActiveLayout(id) {
+        if (!LAYOUTS[id]) return;
+        activeLayoutId = id;
+        document.getElementById('s-layout').textContent = LAYOUTS[id].name;
+        document.getElementById('active-layout-badge').textContent = LAYOUTS[id].name;
+        renderAll();
+        renderLayoutPreview();
+    }
 
     // Direction symbols
     function dirSymbol(dx, dy) {
-        if (dx > 0.3 && dy < -0.3) return '↗';
-        if (dx > 0.3 && dy > 0.3) return '↘';
-        if (dx < -0.3 && dy < -0.3) return '↖';
-        if (dx < -0.3 && dy > 0.3) return '↙';
-        if (dx > 0.3) return '→';
-        if (dx < -0.3) return '←';
-        if (dy < -0.3) return '↑';
-        if (dy > 0.3) return '↓';
-        return '·';
+        if (dx > 0.3 && dy < -0.3) return '\u2197';
+        if (dx > 0.3 && dy > 0.3) return '\u2198';
+        if (dx < -0.3 && dy < -0.3) return '\u2196';
+        if (dx < -0.3 && dy > 0.3) return '\u2199';
+        if (dx > 0.3) return '\u2192';
+        if (dx < -0.3) return '\u2190';
+        if (dy < -0.3) return '\u2191';
+        if (dy > 0.3) return '\u2193';
+        return '\u00b7';
     }
 
-    // ──────────────────── ANALYSIS ENGINE ────────────────────
+    // ══════════════════ ANALYSIS ENGINE ══════════════════
     class KBatchAnalyzer {
-        constructor() {
-            this.heatmap = {};       // key -> count
-            this.transitions = [];   // [{from, to, dx, dy, dist}]
-            this.words = 0;
-            this.totalDist = 0;
-            this.totalKeys = 0;
-            this.startTime = Date.now();
-            this.lastKey = null;
-            this.wordFreq = {};
-            this.buffer = '';        // current typed text
-            this.history = [];       // analysis history
-        }
+        constructor() { this.reset(); }
 
         reset() {
             this.heatmap = {};
@@ -413,6 +807,7 @@ console.log('\\nTop keys:', top.map(k => k.key + ':' + k.count).join(', '));</te
 
         processKey(key) {
             const k = key.toLowerCase();
+            const KEY_POS = getActiveKeyPos();
             if (!KEY_POS[k] && k !== ' ') return;
 
             this.totalKeys++;
@@ -426,7 +821,6 @@ console.log('\\nTop keys:', top.map(k => k.key + ':' + k.count).join(', '));</te
                 const dist = Math.sqrt(dx * dx + dy * dy);
                 this.totalDist += dist;
                 this.transitions.push({ from: this.lastKey, to: k, dx, dy, dist });
-                // Keep last 500 transitions
                 if (this.transitions.length > 500) this.transitions.shift();
             }
             this.lastKey = k;
@@ -446,6 +840,7 @@ console.log('\\nTop keys:', top.map(k => k.key + ':' + k.count).join(', '));</te
         analyzeWord(word) {
             let dist = 0, path = '', complexity = 0;
             const chars = word.toLowerCase().split('');
+            const KEY_POS = getActiveKeyPos();
             for (let i = 1; i < chars.length; i++) {
                 const a = KEY_POS[chars[i-1]], b = KEY_POS[chars[i]];
                 if (a && b) {
@@ -453,13 +848,11 @@ console.log('\\nTop keys:', top.map(k => k.key + ':' + k.count).join(', '));</te
                     const d = Math.sqrt(dx * dx + dy * dy);
                     dist += d;
                     path += dirSymbol(dx, dy);
-                    // Row changes add complexity
                     if (Math.abs(dy) > 0.3) complexity += 15;
-                    // Long horizontal moves
                     if (Math.abs(dx) > 2) complexity += 10;
                 }
             }
-            const maxDist = (chars.length - 1) * 3; // worst case
+            const maxDist = (chars.length - 1) * 3;
             const efficiency = maxDist > 0 ? Math.max(0, 100 - (dist / maxDist) * 100) : 100;
             complexity = Math.min(100, complexity);
             return { word, efficiency, complexity, distance: dist, path, length: word.length };
@@ -471,20 +864,15 @@ console.log('\\nTop keys:', top.map(k => k.key + ':' + k.count).join(', '));</te
             const avgDist = this.totalKeys > 1 ? this.totalDist / (this.totalKeys - 1) : 0;
             const efficiency = avgDist > 0 ? Math.max(0, 100 - avgDist * 30) : 100;
             const strain = Math.min(100, avgDist * 25);
-
-            // Hapax legomena (words appearing exactly once)
             const hapax = Object.values(this.wordFreq).filter(c => c === 1).length;
-
-            // Complexity from row transitions
             const rowChanges = this.transitions.filter(t => Math.abs(t.dy) > 0.3).length;
             const complexity = this.transitions.length > 0
                 ? Math.min(100, (rowChanges / this.transitions.length) * 100 * 1.5) : 0;
-
             return {
                 wpm, efficiency, complexity, strain,
                 totalKeys: this.totalKeys, totalDist: this.totalDist,
-                words: this.words, hapax,
-                avgDist, elapsed,
+                words: this.words, hapax, avgDist, elapsed,
+                layout: activeLayoutId,
                 heatmap: { ...this.heatmap },
                 transitions: [...this.transitions],
                 wordFreq: { ...this.wordFreq },
@@ -499,10 +887,9 @@ console.log('\\nTop keys:', top.map(k => k.key + ':' + k.count).join(', '));</te
         }
     }
 
-    // ──────────────────── RENDERERS ────────────────────
     const analyzer = new KBatchAnalyzer();
 
-    // Thermal colors: cold blue → green → yellow → orange → red → white
+    // ══════════════════ VIZ RENDERERS ══════════════════
     function thermalColor(intensity) {
         const i = Math.min(1, Math.max(0, intensity));
         if (i < 0.2) return `rgb(${Math.floor(i*5*80)},${Math.floor(i*5*120)},${Math.floor(180+i*5*75)})`;
@@ -517,7 +904,7 @@ console.log('\\nTop keys:', top.map(k => k.key + ':' + k.count).join(', '));</te
         const W = canvas.width = canvas.parentElement.clientWidth;
         const H = canvas.height = canvas.parentElement.clientHeight;
         ctx.fillStyle = '#0d1117'; ctx.fillRect(0, 0, W, H);
-
+        const ROWS = getActiveRows();
         const hm = analyzer.heatmap;
         const maxCount = Math.max(1, ...Object.values(hm));
         const keyW = W / 11.5, keyH = H / 4.5;
@@ -530,10 +917,7 @@ console.log('\\nTop keys:', top.map(k => k.key + ':' + k.count).join(', '));</te
                 const y = 10 + r * (keyH + 4);
                 const count = hm[key] || 0;
                 const intensity = count / maxCount;
-
-                // Key background (thermal)
                 if (count > 0) {
-                    // Glow
                     ctx.fillStyle = thermalColor(intensity);
                     ctx.globalAlpha = 0.15 + intensity * 0.4;
                     ctx.beginPath();
@@ -541,22 +925,15 @@ console.log('\\nTop keys:', top.map(k => k.key + ':' + k.count).join(', '));</te
                     ctx.fill();
                     ctx.globalAlpha = 1;
                 }
-
                 ctx.fillStyle = count > 0 ? thermalColor(intensity) : '#21262d';
                 ctx.fillRect(x + 2, y + 2, keyW - 4, keyH - 4);
-
-                // Border
                 ctx.strokeStyle = count > 0 ? thermalColor(Math.min(1, intensity + 0.2)) : '#30363d';
                 ctx.lineWidth = count > 0 ? 1.5 : 0.5;
                 ctx.strokeRect(x + 2, y + 2, keyW - 4, keyH - 4);
-
-                // Label
                 ctx.fillStyle = intensity > 0.5 ? '#0d1117' : '#8b949e';
                 ctx.font = `${Math.max(9, keyH * 0.35)}px monospace`;
                 ctx.textAlign = 'center';
                 ctx.fillText(key.toUpperCase(), x + keyW/2, y + keyH * 0.55);
-
-                // Count
                 if (count > 0) {
                     ctx.fillStyle = intensity > 0.5 ? '#0d1117' : '#58a6ff';
                     ctx.font = `${Math.max(7, keyH * 0.22)}px monospace`;
@@ -572,20 +949,15 @@ console.log('\\nTop keys:', top.map(k => k.key + ':' + k.count).join(', '));</te
         const W = canvas.width = canvas.parentElement.clientWidth;
         const H = canvas.height = canvas.parentElement.clientHeight;
         ctx.fillStyle = '#0d1117'; ctx.fillRect(0, 0, W, H);
-
+        const KEY_POS = getActiveKeyPos();
         const trans = analyzer.transitions;
         if (trans.length < 2) {
             ctx.fillStyle = '#484f58'; ctx.font = '12px monospace'; ctx.textAlign = 'center';
             ctx.fillText('Type to see contrails...', W/2, H/2);
-            ctx.textAlign = 'start';
-            return;
+            ctx.textAlign = 'start'; return;
         }
-
-        // Map key positions to canvas
         function kx(key) { const p = KEY_POS[key]; return p ? (p.x / 10) * (W - 40) + 20 : W/2; }
         function ky(key) { const p = KEY_POS[key]; return p ? (p.y / 3.5) * (H - 40) + 20 : H/2; }
-
-        // Draw trails with fading
         const len = trans.length;
         for (let i = Math.max(0, len - 200); i < len; i++) {
             const t = trans[i];
@@ -593,20 +965,14 @@ console.log('\\nTop keys:', top.map(k => k.key + ':' + k.count).join(', '));</te
             const alpha = 0.05 + (1 - age) * 0.6;
             const fx = kx(t.from), fy = ky(t.from);
             const tx = kx(t.to), ty = ky(t.to);
-
-            // Trail line
             ctx.strokeStyle = `rgba(240,136,62,${alpha})`;
             ctx.lineWidth = 1 + (1 - age) * 2;
             ctx.beginPath(); ctx.moveTo(fx, fy); ctx.lineTo(tx, ty); ctx.stroke();
-
-            // Endpoint glow
             if (i > len - 20) {
                 ctx.fillStyle = `rgba(240,136,62,${alpha * 0.4})`;
                 ctx.beginPath(); ctx.arc(tx, ty, 4 + (1 - age) * 6, 0, Math.PI * 2); ctx.fill();
             }
         }
-
-        // Current position marker
         if (analyzer.lastKey && KEY_POS[analyzer.lastKey]) {
             const cx = kx(analyzer.lastKey), cy = ky(analyzer.lastKey);
             ctx.fillStyle = '#f0883e';
@@ -614,8 +980,6 @@ console.log('\\nTop keys:', top.map(k => k.key + ':' + k.count).join(', '));</te
             ctx.fillStyle = 'rgba(240,136,62,0.2)';
             ctx.beginPath(); ctx.arc(cx, cy, 15, 0, Math.PI * 2); ctx.fill();
         }
-
-        // Key position dots
         for (const key in KEY_POS) {
             if (key === ' ') continue;
             const x = kx(key), y = ky(key);
@@ -629,14 +993,11 @@ console.log('\\nTop keys:', top.map(k => k.key + ':' + k.count).join(', '));</te
         const W = canvas.width = canvas.parentElement.clientWidth;
         const H = canvas.height = canvas.parentElement.clientHeight;
         ctx.fillStyle = '#0d1117'; ctx.fillRect(0, 0, W, H);
-
         const cx = W / 2, cy = H / 2;
         const radius = Math.min(W, H) * 0.4;
         const hm = analyzer.heatmap;
         const maxCount = Math.max(1, ...Object.values(hm));
-        const allKeys = ROWS.flat();
-
-        // Draw hexagonal grid
+        const allKeys = getActiveRows().flat();
         const n = allKeys.length;
         allKeys.forEach((key, i) => {
             const angle = (i / n) * Math.PI * 2 - Math.PI / 2;
@@ -645,8 +1006,6 @@ console.log('\\nTop keys:', top.map(k => k.key + ':' + k.count).join(', '));</te
             const r = radius * (0.6 + intensity * 0.4);
             const x = cx + Math.cos(angle) * r;
             const y = cy + Math.sin(angle) * r;
-
-            // Connection lines to neighbors
             if (i > 0) {
                 const prevAngle = ((i - 1) / n) * Math.PI * 2 - Math.PI / 2;
                 const prevCount = hm[allKeys[i-1]] || 0;
@@ -658,13 +1017,9 @@ console.log('\\nTop keys:', top.map(k => k.key + ':' + k.count).join(', '));</te
                 ctx.lineWidth = 0.5 + intensity * 1.5;
                 ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(x, y); ctx.stroke();
             }
-
-            // Connection to center
             ctx.strokeStyle = `rgba(210,168,255,${0.03 + intensity * 0.1})`;
             ctx.lineWidth = 0.3;
             ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(x, y); ctx.stroke();
-
-            // Key node
             const nodeR = 3 + intensity * 8;
             if (count > 0) {
                 ctx.fillStyle = `rgba(210,168,255,${0.1 + intensity * 0.3})`;
@@ -672,28 +1027,20 @@ console.log('\\nTop keys:', top.map(k => k.key + ':' + k.count).join(', '));</te
             }
             ctx.fillStyle = count > 0 ? thermalColor(intensity) : '#30363d';
             ctx.beginPath(); ctx.arc(x, y, nodeR, 0, Math.PI * 2); ctx.fill();
-
-            // Label
-            ctx.fillStyle = '#c9d1d9';
-            ctx.font = `${Math.max(8, nodeR)}px monospace`;
-            ctx.textAlign = 'center';
-            ctx.fillText(key.toUpperCase(), x, y + nodeR + 12);
+            ctx.fillStyle = '#c9d1d9'; ctx.font = `${Math.max(8, nodeR)}px monospace`;
+            ctx.textAlign = 'center'; ctx.fillText(key.toUpperCase(), x, y + nodeR + 12);
             ctx.textAlign = 'start';
         });
-
-        // Close the ring
         if (allKeys.length > 1) {
-            const first = 0, last = allKeys.length - 1;
-            const a1 = (first / n) * Math.PI * 2 - Math.PI / 2;
-            const a2 = (last / n) * Math.PI * 2 - Math.PI / 2;
-            const c1 = hm[allKeys[first]] || 0, c2 = hm[allKeys[last]] || 0;
-            const r1 = radius * (0.6 + (c1/maxCount) * 0.4);
-            const r2 = radius * (0.6 + (c2/maxCount) * 0.4);
-            ctx.strokeStyle = 'rgba(210,168,255,0.1)';
-            ctx.lineWidth = 0.5;
+            const a1 = 0, a2 = (allKeys.length - 1) / n * Math.PI * 2 - Math.PI / 2;
+            const a1a = -Math.PI / 2;
+            const c1 = hm[allKeys[0]] || 0, c2 = hm[allKeys[allKeys.length-1]] || 0;
+            const r1 = radius * (0.6 + (c1/maxCount)*0.4);
+            const r2 = radius * (0.6 + (c2/maxCount)*0.4);
+            ctx.strokeStyle = 'rgba(210,168,255,0.1)'; ctx.lineWidth = 0.5;
             ctx.beginPath();
             ctx.moveTo(cx + Math.cos(a2) * r2, cy + Math.sin(a2) * r2);
-            ctx.lineTo(cx + Math.cos(a1) * r1, cy + Math.sin(a1) * r1);
+            ctx.lineTo(cx + Math.cos(a1a) * r1, cy + Math.sin(a1a) * r1);
             ctx.stroke();
         }
     }
@@ -703,53 +1050,33 @@ console.log('\\nTop keys:', top.map(k => k.key + ':' + k.count).join(', '));</te
         const W = canvas.width = canvas.parentElement.clientWidth;
         const H = canvas.height = canvas.parentElement.clientHeight;
         ctx.fillStyle = '#0d1117'; ctx.fillRect(0, 0, W, H);
-
-        const trans = analyzer.transitions;
         const wf = analyzer.wordFreq;
         const words = Object.entries(wf).sort((a, b) => b[1] - a[1]);
-
         if (words.length === 0) {
             ctx.fillStyle = '#484f58'; ctx.font = '12px monospace'; ctx.textAlign = 'center';
             ctx.fillText('Type words to see 3D language model...', W/2, H/2);
-            ctx.textAlign = 'start';
-            return;
+            ctx.textAlign = 'start'; return;
         }
-
-        // Simple 3D isometric word cloud with efficiency coloring
         const maxFreq = Math.max(1, words[0][1]);
         const cols = Math.ceil(Math.sqrt(words.length));
         const cellW = W / (cols + 1), cellH = H / (Math.ceil(words.length / cols) + 1);
-
         words.forEach(([word, freq], i) => {
             const col = i % cols, row = Math.floor(i / cols);
-            const x = cellW * (col + 0.5);
-            const y = cellH * (row + 0.5);
+            const x = cellW * (col + 0.5), y = cellH * (row + 0.5);
             const analysis = analyzer.analyzeWord(word);
             const eff = analysis.efficiency / 100;
             const size = Math.max(8, 10 + (freq / maxFreq) * 14);
-
-            // 3D shadow
-            ctx.fillStyle = `rgba(${Math.floor(120 - eff * 120)},${Math.floor(eff * 200)},${Math.floor(100 + eff * 100)},0.15)`;
+            ctx.fillStyle = `rgba(${Math.floor(120-eff*120)},${Math.floor(eff*200)},${Math.floor(100+eff*100)},0.15)`;
             ctx.fillRect(x - size * word.length * 0.15, y + 2, size * word.length * 0.35, size * 0.6);
-
-            // Efficiency bar
             const barW = Math.min(cellW * 0.8, size * word.length * 0.35);
-            ctx.fillStyle = '#21262d';
-            ctx.fillRect(x - barW/2, y + size * 0.6, barW, 3);
+            ctx.fillStyle = '#21262d'; ctx.fillRect(x - barW/2, y + size * 0.6, barW, 3);
             ctx.fillStyle = eff > 0.6 ? '#7ee787' : eff > 0.3 ? '#e6b422' : '#f97583';
             ctx.fillRect(x - barW/2, y + size * 0.6, barW * eff, 3);
-
-            // Word
-            ctx.fillStyle = eff > 0.6 ? '#7ee787' : eff > 0.3 ? '#e6b422' : '#f97583';
-            ctx.font = `${size}px monospace`;
-            ctx.textAlign = 'center';
+            ctx.font = `${size}px monospace`; ctx.textAlign = 'center';
             ctx.fillText(word, x, y);
-
-            // Frequency badge
             if (freq > 1) {
-                ctx.fillStyle = '#484f58';
-                ctx.font = `${Math.max(7, size * 0.5)}px monospace`;
-                ctx.fillText('×' + freq, x, y - size * 0.5);
+                ctx.fillStyle = '#484f58'; ctx.font = `${Math.max(7, size * 0.5)}px monospace`;
+                ctx.fillText('\u00d7' + freq, x, y - size * 0.5);
             }
             ctx.textAlign = 'start';
         });
@@ -774,26 +1101,568 @@ console.log('\\nTop keys:', top.map(k => k.key + ':' + k.count).join(', '));</te
         document.getElementById('s-hapax').textContent = s.hapax;
     }
 
-    // ──────────────────── INPUT HANDLING ────────────────────
+    // ══════════════════ LAYOUT PREVIEW RENDERER ══════════════════
+    function renderLayoutPreview(compareId) {
+        const canvas = document.getElementById('cv-layout');
+        if (!canvas || !canvas.parentElement) return;
+        const ctx = canvas.getContext('2d');
+        const W = canvas.width = canvas.parentElement.clientWidth;
+        const H = canvas.height = canvas.parentElement.clientHeight;
+        ctx.fillStyle = '#0d1117'; ctx.fillRect(0, 0, W, H);
+        const layout = getLayout();
+        const compare = compareId ? LAYOUTS[compareId] : null;
+
+        function drawKeyboard(rows, homeRow, offsetX, totalW, label, color) {
+            const keyW = totalW / 11.5, keyH = (H - 80) / 4;
+            const padL = offsetX + (totalW - 10 * keyW) / 2;
+            // Label
+            ctx.fillStyle = color; ctx.font = 'bold 11px monospace'; ctx.textAlign = 'center';
+            ctx.fillText(label, offsetX + totalW / 2, 18); ctx.textAlign = 'start';
+            rows.forEach((row, r) => {
+                const off = r * 0.4 * keyW;
+                row.forEach((key, c) => {
+                    const x = padL + off + c * keyW;
+                    const y = 28 + r * (keyH + 4);
+                    const isHome = homeRow && homeRow.includes(key);
+                    ctx.fillStyle = isHome ? '#1c3a2a' : '#161b22';
+                    ctx.fillRect(x + 2, y + 2, keyW - 4, keyH - 4);
+                    ctx.strokeStyle = isHome ? '#2ea043' : '#30363d';
+                    ctx.lineWidth = isHome ? 1.5 : 0.5;
+                    ctx.strokeRect(x + 2, y + 2, keyW - 4, keyH - 4);
+                    ctx.fillStyle = isHome ? '#7ee787' : '#c9d1d9';
+                    ctx.font = `${Math.max(10, keyH * 0.4)}px monospace`;
+                    ctx.textAlign = 'center';
+                    ctx.fillText(key.toUpperCase(), x + keyW / 2, y + keyH * 0.6);
+                    ctx.textAlign = 'start';
+                });
+            });
+        }
+
+        if (compare) {
+            drawKeyboard(layout.rows, layout.homeRow, 0, W / 2 - 2, layout.name, '#f0883e');
+            drawKeyboard(compare.rows, compare.homeRow, W / 2 + 2, W / 2 - 2, compare.name, '#58a6ff');
+            // Comparison stats
+            const words = ['the','and','that','have','with','this','from','they','been','said'];
+            let totalA = 0, totalB = 0;
+            const posA = buildKeyPos(layout), posB = buildKeyPos(compare);
+            words.forEach(w => {
+                let dA = 0, dB = 0;
+                for (let i = 1; i < w.length; i++) {
+                    const a1 = posA[w[i-1]], a2 = posA[w[i]];
+                    const b1 = posB[w[i-1]], b2 = posB[w[i]];
+                    if (a1 && a2) dA += Math.sqrt((a2.x-a1.x)**2 + (a2.y-a1.y)**2);
+                    if (b1 && b2) dB += Math.sqrt((b2.x-b1.x)**2 + (b2.y-b1.y)**2);
+                }
+                totalA += dA; totalB += dB;
+            });
+            const pct = totalA > 0 ? ((totalA - totalB) / totalA * 100) : 0;
+            const resultEl = document.getElementById('compare-result');
+            if (resultEl) {
+                if (Math.abs(pct) < 1) resultEl.textContent = 'Similar efficiency for common English words';
+                else if (pct > 0) resultEl.textContent = `${compare.name} is ${pct.toFixed(1)}% shorter travel for common words`;
+                else resultEl.textContent = `${layout.name} is ${(-pct).toFixed(1)}% shorter travel for common words`;
+                resultEl.style.color = pct > 0 ? '#58a6ff' : '#f0883e';
+            }
+        } else {
+            drawKeyboard(layout.rows, layout.homeRow, 0, W, layout.name, '#f0883e');
+        }
+    }
+
+    // ══════════════════ DICTIONARY ENGINE ══════════════════
+    const DictEngine = {
+        cache: {},
+
+        async lookup(word) {
+            if (this.cache[word]) return this.cache[word];
+            const results = { word, entries: [], synonyms: [], error: null };
+            try {
+                const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    results.entries = data;
+                }
+            } catch (e) { /* offline fallback */ }
+            try {
+                const res = await fetch(`https://api.datamuse.com/words?rel_syn=${encodeURIComponent(word)}&max=12`);
+                if (res.ok) {
+                    const data = await res.json();
+                    results.synonyms = data.map(d => d.word);
+                }
+            } catch (e) { /* offline fallback */ }
+            if (results.entries.length === 0 && results.synonyms.length === 0) {
+                results.error = 'No results found. Try a different word.';
+            }
+            this.cache[word] = results;
+            return results;
+        },
+
+        renderResults(data, container) {
+            container.innerHTML = '';
+            if (data.error) {
+                container.innerHTML = `<div style="text-align:center;padding:40px;color:#f97583;">${data.error}</div>`;
+                return;
+            }
+            if (data.entries && data.entries.length) {
+                data.entries.forEach(entry => {
+                    const div = document.createElement('div');
+                    div.className = 'dict-entry';
+                    let html = `<span class="dict-word">${entry.word || data.word}</span>`;
+                    if (entry.phonetic) html += `<span class="dict-phonetic">${entry.phonetic}</span>`;
+                    if (entry.meanings) {
+                        entry.meanings.forEach(m => {
+                            html += `<div class="dict-pos">${m.partOfSpeech}</div>`;
+                            m.definitions.slice(0, 3).forEach(d => {
+                                html += `<div class="dict-def">\u2022 ${d.definition}</div>`;
+                                if (d.example) html += `<div class="dict-example">"${d.example}"</div>`;
+                            });
+                        });
+                    }
+                    div.innerHTML = html;
+                    container.appendChild(div);
+                });
+            }
+            if (data.synonyms && data.synonyms.length) {
+                const div = document.createElement('div');
+                div.className = 'dict-entry';
+                div.innerHTML = `<div class="dict-pos">Synonyms</div><div class="dict-syn">${data.synonyms.join(', ')}</div>`;
+                container.appendChild(div);
+            }
+            // Keyboard analysis
+            const analysis = analyzer.analyzeWord(data.word);
+            const aDiv = document.createElement('div');
+            aDiv.className = 'dict-entry';
+            aDiv.innerHTML = `<div class="dict-pos">Keyboard Analysis (${LAYOUTS[activeLayoutId].name})</div>
+                <div class="dict-def">\u2022 Efficiency: <span style="color:#7ee787;">${analysis.efficiency.toFixed(1)}%</span></div>
+                <div class="dict-def">\u2022 Complexity: <span style="color:#f97583;">${analysis.complexity.toFixed(1)}%</span></div>
+                <div class="dict-def">\u2022 Path: ${analysis.path || '(single char)'}</div>
+                <div class="dict-def">\u2022 Distance: ${analysis.distance.toFixed(2)} units</div>`;
+            container.appendChild(aDiv);
+        }
+    };
+
+    // ══════════════════ QUANTUM SIMULATOR (local) ══════════════════
+    function cmul(ar, ai, br, bi) { return [ar*br - ai*bi, ar*bi + ai*br]; }
+
+    class QSim {
+        constructor(n) {
+            this.n = n;
+            this.N = 1 << n;
+            this.re = new Float64Array(this.N);
+            this.im = new Float64Array(this.N);
+            this.re[0] = 1;
+        }
+
+        gate1(q, m) {
+            const bit = 1 << q;
+            for (let i = 0; i < this.N; i++) {
+                if (i & bit) continue;
+                const j = i | bit;
+                const jr = this.re[i], ji = this.im[i];
+                const kr = this.re[j], ki = this.im[j];
+                const [a, b] = cmul(m[0][0], m[0][1], jr, ji);
+                const [c, d] = cmul(m[1][0], m[1][1], kr, ki);
+                const [e, f] = cmul(m[2][0], m[2][1], jr, ji);
+                const [g, h] = cmul(m[3][0], m[3][1], kr, ki);
+                this.re[i] = a + c; this.im[i] = b + d;
+                this.re[j] = e + g; this.im[j] = f + h;
+            }
+        }
+
+        cnot(ctrl, tgt) {
+            const cmask = 1 << ctrl, tmask = 1 << tgt;
+            for (let i = 0; i < this.N; i++) {
+                if ((i & cmask) && !(i & tmask)) {
+                    const j = i | tmask;
+                    const tr = this.re[i]; const ti = this.im[i];
+                    this.re[i] = this.re[j]; this.im[i] = this.im[j];
+                    this.re[j] = tr; this.im[j] = ti;
+                }
+            }
+        }
+
+        cz(ctrl, tgt) {
+            const cmask = 1 << ctrl, tmask = 1 << tgt;
+            for (let i = 0; i < this.N; i++) {
+                if ((i & cmask) && (i & tmask)) {
+                    this.re[i] = -this.re[i]; this.im[i] = -this.im[i];
+                }
+            }
+        }
+
+        swap(q1, q2) {
+            const m1 = 1 << q1, m2 = 1 << q2;
+            for (let i = 0; i < this.N; i++) {
+                if ((i & m1) && !(i & m2)) {
+                    const j = (i ^ m1) | m2;
+                    const tr = this.re[i]; const ti = this.im[i];
+                    this.re[i] = this.re[j]; this.im[i] = this.im[j];
+                    this.re[j] = tr; this.im[j] = ti;
+                }
+            }
+        }
+
+        measure(shots) {
+            const probs = new Float64Array(this.N);
+            for (let i = 0; i < this.N; i++) probs[i] = this.re[i]**2 + this.im[i]**2;
+            const counts = {};
+            for (let s = 0; s < shots; s++) {
+                let r = Math.random(), acc = 0;
+                for (let i = 0; i < this.N; i++) {
+                    acc += probs[i];
+                    if (r < acc) {
+                        const bits = i.toString(2).padStart(this.n, '0');
+                        counts[bits] = (counts[bits] || 0) + 1;
+                        break;
+                    }
+                }
+            }
+            return counts;
+        }
+    }
+
+    // Gate matrices: each is [[a_re, a_im], [b_re, b_im], [c_re, c_im], [d_re, d_im]]
+    const S2 = 1 / Math.sqrt(2);
+    const QGATES = {
+        h:  [[S2,0],[S2,0],[S2,0],[-S2,0]],
+        x:  [[0,0],[1,0],[1,0],[0,0]],
+        y:  [[0,0],[0,-1],[0,1],[0,0]],
+        z:  [[1,0],[0,0],[0,0],[-1,0]],
+        s:  [[1,0],[0,0],[0,0],[0,1]],
+        t:  [[1,0],[0,0],[0,0],[S2,S2]],
+        id: [[1,0],[0,0],[0,0],[1,0]],
+    };
+    function rxGate(t) { const c=Math.cos(t/2),s=Math.sin(t/2); return [[c,0],[0,-s],[0,-s],[c,0]]; }
+    function ryGate(t) { const c=Math.cos(t/2),s=Math.sin(t/2); return [[c,0],[-s,0],[s,0],[c,0]]; }
+    function rzGate(t) { const c=Math.cos(t/2),s=Math.sin(t/2); return [[c,-s],[0,0],[0,0],[c,s]]; }
+
+    // Prefix → Gate mapping (from quantum-prefix-gutter.mdc)
+    const PREFIX_GATE = {
+        '+1':'h', '1':'cnot', '-1':'x', '+0':'rz', '0':'id',
+        '-0':'s', '+n':'t', 'n':'swap', '-n':'id', '+2':'cz', '+3':'y'
+    };
+
+    // ══════════════════ QUANTUM BRIDGE ══════════════════
+    const QuantumBridge = {
+        lastCircuit: null,
+        lastResult: null,
+
+        buildFromPrefix(text) {
+            const QP = window.QuantumPrefixes;
+            if (!QP) return this.buildFromTyping();
+            const lang = QP.detectLanguage ? QP.detectLanguage(text, 'javascript') : 'javascript';
+            const meta = QP.prefixMetadata(text, lang);
+            if (!meta || !meta.lines || meta.lines.length === 0) return this.buildFromTyping();
+            const numQ = Math.min(meta.lines.filter(l => l.sym && l.sym !== ' ').length, 12);
+            if (numQ < 2) return this.buildFromTyping();
+            const ops = [];
+            let qi = 0;
+            meta.lines.forEach(line => {
+                if (qi >= numQ || !line.sym || line.sym === ' ') return;
+                const gate = PREFIX_GATE[line.sym];
+                if (!gate) { qi++; return; }
+                if (gate === 'cnot' && qi < numQ - 1) ops.push({ type: 'cnot', q1: qi, q2: qi + 1 });
+                else if (gate === 'cz' && qi < numQ - 1) ops.push({ type: 'cz', q1: qi, q2: qi + 1 });
+                else if (gate === 'swap' && qi < numQ - 1) ops.push({ type: 'swap', q1: qi, q2: qi + 1 });
+                else if (gate === 'rz') ops.push({ type: 'rz', q: qi, param: Math.PI / 4 });
+                else ops.push({ type: gate, q: qi });
+                qi++;
+            });
+            return this.toQASM(numQ, ops);
+        },
+
+        buildFromTyping() {
+            const trans = analyzer.transitions.slice(-30);
+            const numQ = Math.min(Math.max(trans.length, 2), 10);
+            const ops = [];
+            // Initial superposition
+            for (let i = 0; i < numQ; i++) ops.push({ type: 'h', q: i });
+            trans.forEach((t, idx) => {
+                const qi = idx % numQ;
+                const angle = (t.dist / 5) * Math.PI;
+                if (Math.abs(t.dy) > 0.3) ops.push({ type: 'ry', q: qi, param: angle });
+                else if (Math.abs(t.dx) > 1) ops.push({ type: 'rx', q: qi, param: angle });
+                else ops.push({ type: 'rz', q: qi, param: angle });
+                if (qi < numQ - 1) ops.push({ type: 'cnot', q1: qi, q2: qi + 1 });
+            });
+            return this.toQASM(numQ, ops);
+        },
+
+        toQASM(n, ops) {
+            let q = `OPENQASM 2.0;\ninclude "qelib1.inc";\n\n// kbatch quantum circuit — ${n} qubits\n// Layout: ${LAYOUTS[activeLayoutId].name}\n// Generated: ${new Date().toISOString()}\n\nqreg q[${n}];\ncreg c[${n}];\n\n`;
+            ops.forEach(op => {
+                if (op.type === 'cnot') q += `cx q[${op.q1}],q[${op.q2}];\n`;
+                else if (op.type === 'cz') q += `cz q[${op.q1}],q[${op.q2}];\n`;
+                else if (op.type === 'swap') q += `swap q[${op.q1}],q[${op.q2}];\n`;
+                else if (op.param !== undefined) q += `${op.type}(${op.param.toFixed(4)}) q[${op.q}];\n`;
+                else if (op.type !== 'id') q += `${op.type} q[${op.q}];\n`;
+            });
+            q += `\nmeasure q -> c;\n`;
+            this.lastCircuit = { qasm: q, numQubits: n, ops };
+            return q;
+        },
+
+        simulateLocal(shots) {
+            if (!this.lastCircuit) return null;
+            const { numQubits: n, ops } = this.lastCircuit;
+            const sim = new QSim(n);
+            ops.forEach(op => {
+                if (op.type === 'cnot') sim.cnot(op.q1, op.q2);
+                else if (op.type === 'cz') sim.cz(op.q1, op.q2);
+                else if (op.type === 'swap') sim.swap(op.q1, op.q2);
+                else if (op.type === 'rx') sim.gate1(op.q, rxGate(op.param));
+                else if (op.type === 'ry') sim.gate1(op.q, ryGate(op.param));
+                else if (op.type === 'rz') sim.gate1(op.q, rzGate(op.param));
+                else if (QGATES[op.type]) sim.gate1(op.q, QGATES[op.type]);
+            });
+            this.lastResult = sim.measure(shots);
+            return this.lastResult;
+        },
+
+        async submitIBM(shots) {
+            const token = document.getElementById('qp-token').value.trim();
+            if (!token) throw new Error('No IBM Quantum API token. Get one at quantum.ibm.com');
+            if (!this.lastCircuit) throw new Error('Build a circuit first');
+            localStorage.setItem('ibm-quantum-token', token);
+            const backend = document.getElementById('qp-backend').value;
+            if (backend === 'local') return this.simulateLocal(shots);
+
+            const status = document.getElementById('qp-status');
+            status.textContent = 'Authenticating with IBM Quantum...';
+
+            // Step 1: Create session / submit job via Qiskit Runtime REST API
+            const baseUrl = 'https://api.quantum-computing.ibm.com';
+            const headers = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
+
+            status.textContent = `Submitting to ${backend}...`;
+            const jobRes = await fetch(`${baseUrl}/api/v1/jobs`, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({
+                    program_id: 'sampler',
+                    backend: backend,
+                    params: { circuits: [this.lastCircuit.qasm], shots }
+                })
+            });
+            if (!jobRes.ok) {
+                const err = await jobRes.text();
+                throw new Error(`IBM Quantum API error: ${jobRes.status} — ${err}`);
+            }
+            const job = await jobRes.json();
+            const jobId = job.id || job.job_id;
+            status.textContent = `Job ${jobId} queued on ${backend}...`;
+
+            // Step 2: Poll for results (max 10 min for free tier)
+            for (let i = 0; i < 120; i++) {
+                await new Promise(r => setTimeout(r, 5000));
+                const pollRes = await fetch(`${baseUrl}/api/v1/jobs/${jobId}`, { headers });
+                if (!pollRes.ok) continue;
+                const pollData = await pollRes.json();
+                const st = pollData.status || pollData.state;
+                status.textContent = `Job ${jobId}: ${st}`;
+                if (st === 'COMPLETED' || st === 'completed') {
+                    const resultRes = await fetch(`${baseUrl}/api/v1/jobs/${jobId}/results`, { headers });
+                    if (resultRes.ok) {
+                        const resultData = await resultRes.json();
+                        this.lastResult = resultData.results?.[0]?.data?.counts || resultData;
+                        return this.lastResult;
+                    }
+                }
+                if (st === 'FAILED' || st === 'failed' || st === 'CANCELLED') {
+                    throw new Error(`Job ${st}: ${pollData.error || 'unknown error'}`);
+                }
+            }
+            throw new Error('Job timed out after 10 minutes');
+        },
+
+        renderHistogram(canvas, counts) {
+            if (!canvas || !canvas.parentElement) return;
+            const ctx = canvas.getContext('2d');
+            const W = canvas.width = canvas.parentElement.clientWidth;
+            const H = canvas.height = canvas.parentElement.clientHeight;
+            ctx.fillStyle = '#0d1117'; ctx.fillRect(0, 0, W, H);
+
+            if (!counts || Object.keys(counts).length === 0) {
+                ctx.fillStyle = '#484f58'; ctx.font = '12px monospace'; ctx.textAlign = 'center';
+                ctx.fillText('Run a circuit to see measurement histogram', W/2, H/2);
+                ctx.textAlign = 'start'; return;
+            }
+
+            const sorted = Object.entries(counts).sort((a,b) => b[1] - a[1]);
+            const top = sorted.slice(0, Math.min(sorted.length, 32));
+            const maxVal = Math.max(1, top[0][1]);
+            const totalShots = Object.values(counts).reduce((a,b) => a+b, 0);
+            const barW = Math.max(8, (W - 60) / top.length - 4);
+            const maxH = H - 60;
+            const startX = 40;
+
+            // Bars
+            top.forEach(([state, count], i) => {
+                const x = startX + i * (barW + 4);
+                const h = (count / maxVal) * maxH;
+                const y = H - 30 - h;
+                const prob = (count / totalShots);
+                const hue = 270 - prob * 200; // purple → green
+                ctx.fillStyle = `hsl(${hue}, 70%, 55%)`;
+                ctx.fillRect(x, y, barW, h);
+                // Probability label
+                ctx.fillStyle = '#c9d1d9'; ctx.font = '8px monospace'; ctx.textAlign = 'center';
+                ctx.fillText((prob * 100).toFixed(1) + '%', x + barW/2, y - 4);
+                // State label (rotated)
+                ctx.save(); ctx.translate(x + barW/2, H - 26);
+                ctx.rotate(-Math.PI / 4);
+                ctx.fillStyle = '#8b949e'; ctx.font = `${Math.min(10, barW)}px monospace`;
+                ctx.textAlign = 'right';
+                ctx.fillText('|' + state + '\u27E9', 0, 0);
+                ctx.restore();
+            });
+
+            // Title
+            ctx.fillStyle = '#d2a8ff'; ctx.font = 'bold 10px monospace'; ctx.textAlign = 'left';
+            ctx.fillText(`${Object.keys(counts).length} states | ${totalShots} shots`, 8, 14);
+        }
+    };
+
+    // ══════════════════ TRAINING ENGINE ══════════════════
+    const Training = {
+        prompt: '', pos: 0, errors: 0, startTime: 0, bestWpm: 0, active: false,
+
+        drills: {
+            home: { qwerty:'asdf jkl; asdf jkl; fjdk slfa', dvorak:'aoeu htns aoeu htns', colemak:'arst neio arst neio', _default:'asdf jkl; asdf jkl;' },
+            common: { _default:'the quick brown fox jumps over the lazy dog and types every letter known to humankind with great efficiency' },
+            pangram: { _default:'pack my box with five dozen liquor jugs the five boxing wizards jump quickly how vexingly quick daft zebras jump' },
+            code: { _default:'function init() { const data = []; for (let i = 0; i < n; i++) { data.push(process(i)); } return data; }' },
+        },
+
+        newDrill() {
+            const drill = document.getElementById('train-drill').value;
+            const drillSet = this.drills[drill] || this.drills.home;
+            this.prompt = drillSet[activeLayoutId] || drillSet._default || drillSet[Object.keys(drillSet)[0]];
+            this.pos = 0; this.errors = 0; this.startTime = 0; this.active = true;
+            document.getElementById('train-input').value = '';
+            document.getElementById('train-input').focus();
+            this.render();
+            this.updateStats();
+        },
+
+        render() {
+            const el = document.getElementById('train-prompt');
+            let html = '';
+            for (let i = 0; i < this.prompt.length; i++) {
+                const ch = this.prompt[i] === ' ' ? '&nbsp;' : this.prompt[i];
+                if (i < this.pos) html += `<span class="char done">${ch}</span>`;
+                else if (i === this.pos) html += `<span class="char current">${ch}</span>`;
+                else html += `<span class="char pending">${ch}</span>`;
+            }
+            el.innerHTML = html || '<span style="color:#484f58;">Select a drill and press "New Drill"</span>';
+        },
+
+        processInput(val) {
+            if (!this.active) return;
+            if (this.pos === 0 && val.length === 1) this.startTime = Date.now();
+            const expected = this.prompt[this.pos];
+            const typed = val[val.length - 1];
+            if (typed === expected) {
+                this.pos++;
+                if (this.pos >= this.prompt.length) {
+                    this.active = false;
+                    const elapsed = (Date.now() - this.startTime) / 1000;
+                    const words = this.prompt.split(' ').length;
+                    const wpm = elapsed > 0 ? (words / elapsed) * 60 : 0;
+                    if (wpm > this.bestWpm) this.bestWpm = wpm;
+                    document.getElementById('train-best').textContent = this.bestWpm.toFixed(0);
+                }
+            } else {
+                this.errors++;
+            }
+            this.render();
+            this.updateStats();
+            document.getElementById('train-input').value = '';
+        },
+
+        updateStats() {
+            const elapsed = this.startTime > 0 ? (Date.now() - this.startTime) / 1000 : 0;
+            const words = this.prompt.substring(0, this.pos).split(' ').filter(w => w).length;
+            const wpm = elapsed > 0 ? (words / elapsed) * 60 : 0;
+            const acc = this.pos + this.errors > 0 ? (this.pos / (this.pos + this.errors)) * 100 : 100;
+            const prog = this.prompt.length > 0 ? (this.pos / this.prompt.length) * 100 : 0;
+            document.getElementById('train-wpm').textContent = wpm.toFixed(0);
+            document.getElementById('train-acc').textContent = acc.toFixed(0) + '%';
+            document.getElementById('train-prog').textContent = prog.toFixed(0) + '%';
+            document.getElementById('train-err').textContent = this.errors;
+        }
+    };
+
+    // ══════════════════ TAB SYSTEM ══════════════════
+    (function() {
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+                btn.classList.add('active');
+                const panel = document.getElementById('panel-' + btn.dataset.tab);
+                if (panel) panel.classList.add('active');
+                if (btn.dataset.tab === 'layouts') renderLayoutPreview();
+                if (btn.dataset.tab === 'analyzer') renderAll();
+                if (btn.dataset.tab === 'quantum') QuantumBridge.renderHistogram(document.getElementById('cv-quantum'), QuantumBridge.lastResult);
+            });
+        });
+    })();
+
+    // ══════════════════ INIT LAYOUTS TAB ══════════════════
+    (function() {
+        const list = document.getElementById('layout-list');
+        const compareSelect = document.getElementById('layout-compare-select');
+        const trainSelect = document.getElementById('train-layout');
+        Object.entries(LAYOUTS).forEach(([id, lay]) => {
+            // Sidebar item
+            const div = document.createElement('div');
+            div.className = 'layout-item' + (id === activeLayoutId ? ' active' : '');
+            div.dataset.id = id;
+            div.innerHTML = `<span>${lay.name}</span><span class="region">${lay.script}</span>`;
+            div.addEventListener('click', () => {
+                list.querySelectorAll('.layout-item').forEach(el => el.classList.remove('active'));
+                div.classList.add('active');
+                setActiveLayout(id);
+                document.getElementById('li-name').textContent = lay.name;
+                document.getElementById('li-script').textContent = lay.script;
+                document.getElementById('li-region').textContent = lay.region;
+                document.getElementById('li-dir').textContent = lay.dir.toUpperCase();
+            });
+            list.appendChild(div);
+            // Compare dropdown
+            const opt = document.createElement('option');
+            opt.value = id; opt.textContent = lay.name;
+            compareSelect.appendChild(opt);
+            // Training layout dropdown
+            const topt = document.createElement('option');
+            topt.value = id; topt.textContent = lay.name;
+            if (id === activeLayoutId) topt.selected = true;
+            trainSelect.appendChild(topt);
+        });
+
+        compareSelect.addEventListener('change', () => {
+            renderLayoutPreview(compareSelect.value || null);
+        });
+
+        trainSelect.addEventListener('change', () => {
+            setActiveLayout(trainSelect.value);
+        });
+    })();
+
+    // ══════════════════ INPUT HANDLING ══════════════════
     const typingInput = document.getElementById('typing-input');
     let renderTimer = null;
 
-    typingInput.addEventListener('input', e => {
+    typingInput.addEventListener('input', () => {
         const val = typingInput.value;
-        // Process new characters
-        if (val.length > 0) {
-            const lastChar = val[val.length - 1];
-            analyzer.processKey(lastChar);
-        }
-        // Debounced render
+        if (val.length > 0) analyzer.processKey(val[val.length - 1]);
         clearTimeout(renderTimer);
         renderTimer = setTimeout(() => { renderAll(); updateStats(); }, 30);
     });
 
     typingInput.addEventListener('keydown', e => {
-        e.stopPropagation(); // don't trigger game/fullscreen keys
+        e.stopPropagation();
         if (e.key === 'Enter') {
-            // Process remaining buffer as a word
             if (analyzer.buffer.trim()) {
                 analyzer.words++;
                 const word = analyzer.buffer.trim();
@@ -804,42 +1673,112 @@ console.log('\\nTop keys:', top.map(k => k.key + ':' + k.count).join(', '));</te
         }
     });
 
-    // ──────────────────── GLOBAL API ────────────────────
+    // Dictionary input
+    document.getElementById('dict-input').addEventListener('keydown', e => {
+        e.stopPropagation();
+        if (e.key === 'Enter') document.getElementById('dict-search-btn').click();
+    });
+    document.getElementById('dict-search-btn').addEventListener('click', async () => {
+        const word = document.getElementById('dict-input').value.trim();
+        if (!word) return;
+        const results = document.getElementById('dict-results');
+        results.innerHTML = '<div style="text-align:center;padding:40px;color:#484f58;">Looking up...</div>';
+        const data = await DictEngine.lookup(word);
+        DictEngine.renderResults(data, results);
+    });
+
+    // Quantum controls
+    document.getElementById('qp-build').addEventListener('click', () => {
+        const source = document.getElementById('qp-source').value;
+        const circuitEl = document.getElementById('qp-circuit');
+        const text = typingInput.value || '// Sample code for quantum prefix analysis\nconst x = 42;\nif (x > 0) {\n  console.log("positive");\n}\nreturn x;';
+        let qasm;
+        if (source === 'prefix') qasm = QuantumBridge.buildFromPrefix(text);
+        else if (source === 'typing') qasm = QuantumBridge.buildFromTyping();
+        else qasm = circuitEl.textContent;
+        circuitEl.textContent = qasm;
+        document.getElementById('qp-status').textContent = `Circuit built: ${QuantumBridge.lastCircuit?.numQubits || '?'} qubits, ${QuantumBridge.lastCircuit?.ops?.length || '?'} gates`;
+    });
+
+    document.getElementById('qp-run').addEventListener('click', async () => {
+        const status = document.getElementById('qp-status');
+        const shots = parseInt(document.getElementById('qp-shots').value) || 1024;
+        const backend = document.getElementById('qp-backend').value;
+        if (!QuantumBridge.lastCircuit) {
+            document.getElementById('qp-build').click();
+        }
+        try {
+            status.textContent = 'Running...';
+            let result;
+            if (backend === 'local') {
+                result = QuantumBridge.simulateLocal(shots);
+                status.textContent = `Local simulation complete: ${Object.keys(result).length} states, ${shots} shots`;
+            } else {
+                result = await QuantumBridge.submitIBM(shots);
+                status.textContent = `IBM ${backend} complete: ${Object.keys(result).length} states`;
+            }
+            QuantumBridge.renderHistogram(document.getElementById('cv-quantum'), result);
+        } catch (e) {
+            status.textContent = 'Error: ' + e.message;
+        }
+    });
+
+    document.getElementById('qp-export').addEventListener('click', () => {
+        if (!QuantumBridge.lastCircuit) return;
+        const blob = new Blob([QuantumBridge.lastCircuit.qasm], { type: 'text/plain' });
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+        a.download = `kbatch-circuit-${Date.now()}.qasm`; a.click();
+    });
+
+    // Load saved IBM token
+    const savedToken = localStorage.getItem('ibm-quantum-token');
+    if (savedToken) document.getElementById('qp-token').value = savedToken;
+
+    // Training controls
+    document.getElementById('train-new').addEventListener('click', () => Training.newDrill());
+    document.getElementById('train-input').addEventListener('input', e => {
+        Training.processInput(e.target.value);
+    });
+    document.getElementById('train-input').addEventListener('keydown', e => e.stopPropagation());
+
+    // ══════════════════ GLOBAL API ══════════════════
     window.kbatch = {
         get state() { return analyzer.state; },
+        get activeLayout() { return activeLayoutId; },
+        get layouts() { return LAYOUTS; },
         analyze: (word) => analyzer.analyzeWord(word),
         topKeys: (n) => analyzer.topKeys(n),
         reset: () => { analyzer.reset(); renderAll(); updateStats(); },
-        processText: (text) => {
-            for (const ch of text) analyzer.processKey(ch);
-            renderAll(); updateStats();
-        },
+        setLayout: (id) => setActiveLayout(id),
+        processText: (text) => { for (const ch of text) analyzer.processKey(ch); renderAll(); updateStats(); },
         heatmap: () => ({ ...analyzer.heatmap }),
         transitions: () => [...analyzer.transitions],
         wordFreq: () => ({ ...analyzer.wordFreq }),
         exportJSON: () => JSON.stringify(analyzer.state, null, 2),
+        quantum: {
+            buildFromPrefix: (text) => QuantumBridge.buildFromPrefix(text),
+            buildFromTyping: () => QuantumBridge.buildFromTyping(),
+            simulate: (shots) => QuantumBridge.simulateLocal(shots || 1024),
+            submitIBM: (shots) => QuantumBridge.submitIBM(shots || 4096),
+            get lastCircuit() { return QuantumBridge.lastCircuit; },
+            get lastResult() { return QuantumBridge.lastResult; },
+        },
+        dict: { lookup: (w) => DictEngine.lookup(w) },
     };
 
-    // ──────────────────── RESIZE ────────────────────
-    window.addEventListener('resize', () => renderAll());
-    renderAll();
-
-    // ──────────────────── CODE CELL (template) ────────────────────
+    // ══════════════════ CODE CELL ══════════════════
     (function(){
         const codeInput = document.getElementById('code-input');
         const codeOutput = document.getElementById('code-output');
-
         function appendOutput(text, cls = 'out-line') {
             const div = document.createElement('div');
             div.className = cls; div.textContent = text;
-            codeOutput.appendChild(div);
-            codeOutput.scrollTop = codeOutput.scrollHeight;
+            codeOutput.appendChild(div); codeOutput.scrollTop = codeOutput.scrollHeight;
         }
-
         function runCode() {
             const code = codeInput.value;
             if (!code.trim()) return;
-            appendOutput('▶ Running...', 'out-info');
+            appendOutput('\u25b6 Running...', 'out-info');
             const origLog = console.log, origWarn = console.warn, origError = console.error;
             const logs = [];
             console.log = (...a) => { logs.push({t:'log',m:a.map(String).join(' ')}); origLog(...a); };
@@ -848,14 +1787,13 @@ console.log('\\nTop keys:', top.map(k => k.key + ':' + k.count).join(', '));</te
             try {
                 const result = eval(code);
                 logs.forEach(l => appendOutput(l.m, l.t==='error'?'out-error':l.t==='warn'?'out-info':'out-line'));
-                if (result !== undefined) appendOutput('→ ' + String(result), 'out-result');
+                if (result !== undefined) appendOutput('\u2192 ' + String(result), 'out-result');
             } catch (e) {
                 logs.forEach(l => appendOutput(l.m, 'out-line'));
                 appendOutput('Error: ' + e.message, 'out-error');
             }
             console.log = origLog; console.warn = origWarn; console.error = origError;
         }
-
         document.getElementById('code-run').addEventListener('click', runCode);
         document.getElementById('code-clear').addEventListener('click', () => { codeInput.value = ''; });
         document.getElementById('output-clear').addEventListener('click', () => { codeOutput.innerHTML = ''; });
@@ -864,27 +1802,32 @@ console.log('\\nTop keys:', top.map(k => k.key + ':' + k.count).join(', '));</te
             e.stopPropagation();
         });
         document.getElementById('code-example').addEventListener('click', () => {
-            codeInput.value = `// Analyze a sentence
+            codeInput.value = `// Analyze with quantum circuit
 kbatch.processText('the quick brown fox jumps over the lazy dog');
+console.log('Layout:', kbatch.activeLayout);
+console.log('WPM:', kbatch.state.wpm.toFixed(1));
 
-// Show analysis
-const state = kbatch.state;
-console.log('Words:', state.words);
-console.log('WPM:', state.wpm.toFixed(1));
-console.log('Efficiency:', state.efficiency.toFixed(1) + '%');
-console.log('Total distance:', state.totalDist.toFixed(2));
+// Build quantum circuit from typing pattern
+const qasm = kbatch.quantum.buildFromTyping();
+console.log('\\nCircuit preview:');
+console.log(qasm.split('\\n').slice(0, 8).join('\\n'));
 
-// Analyze individual words
-['quantum', 'binary', 'freya', 'kbatch'].forEach(w => {
-    const a = kbatch.analyze(w);
-    console.log(w + ': eff=' + a.efficiency.toFixed(0) + '% path=' + a.path);
+// Run local quantum simulation
+const result = kbatch.quantum.simulate(1024);
+const top3 = Object.entries(result).sort((a,b) => b[1]-a[1]).slice(0,3);
+console.log('\\nTop 3 quantum states:');
+top3.forEach(([s,c]) => console.log('  |' + s + '⟩: ' + (c/1024*100).toFixed(1) + '%'));
+
+// Compare layouts
+['qwerty','dvorak','colemak'].forEach(id => {
+    kbatch.setLayout(id);
+    const a = kbatch.analyze('quantum');
+    console.log(id + ': eff=' + a.efficiency.toFixed(0) + '% dist=' + a.distance.toFixed(2));
 });
-
-// Top keys
-console.log('\\nTop keys:', kbatch.topKeys(5).map(k => k.key + ':' + k.count).join(', '));`;
+kbatch.setLayout('qwerty');`;
         });
         document.getElementById('code-sync').addEventListener('click', () => {
-            appendOutput('── kbatch State ──', 'out-info');
+            appendOutput('\u2500\u2500 kbatch State \u2500\u2500', 'out-info');
             appendOutput(kbatch.exportJSON(), 'out-result');
         });
         document.getElementById('code-panel-toggle').addEventListener('click', () => {
@@ -892,7 +1835,7 @@ console.log('\\nTop keys:', kbatch.topKeys(5).map(k => k.key + ':' + k.count).jo
         });
     })();
 
-    // ──────────────────── TERMINAL (template) ────────────────────
+    // ══════════════════ TERMINAL ══════════════════
     (function(){
         const termOutput = document.getElementById('term-output');
         const termInput = document.getElementById('term-input');
@@ -903,81 +1846,95 @@ console.log('\\nTop keys:', kbatch.topKeys(5).map(k => k.key + ':' + k.count).jo
             const div = document.createElement('div');
             div.className = 'term-line ' + cls;
             div.innerHTML = text;
-            termOutput.appendChild(div);
-            termOutput.scrollTop = termOutput.scrollHeight;
+            termOutput.appendChild(div); termOutput.scrollTop = termOutput.scrollHeight;
         }
 
         const CMDS = {
             help: () => {
-                termPrint('─── kbatch Commands ───', 'info');
-                termPrint('<b>status</b>      — current analysis summary');
-                termPrint('<b>heatmap</b>     — key usage counts');
-                termPrint('<b>contrails</b>   — recent movement paths');
-                termPrint('<b>analyze &lt;word&gt;</b> — analyze a specific word');
-                termPrint('<b>efficiency</b>  — current efficiency breakdown');
-                termPrint('<b>process &lt;text&gt;</b> — process text for analysis');
-                termPrint('<b>topkeys</b>     — top 10 most-used keys');
-                termPrint('<b>words</b>       — word frequency list');
-                termPrint('<b>hapax</b>       — words appearing only once');
-                termPrint('<b>export</b>      — export full JSON state');
-                termPrint('<b>reset</b>       — reset all analysis');
-                termPrint('<b>eval &lt;js&gt;</b>   — evaluate JavaScript');
-                termPrint('<b>clear</b>       — clear terminal');
+                termPrint('\u2500\u2500\u2500 kbatch Commands \u2500\u2500\u2500', 'info');
+                termPrint('<b>status</b>        \u2014 current analysis summary');
+                termPrint('<b>heatmap</b>       \u2014 key usage counts');
+                termPrint('<b>contrails</b>     \u2014 recent movement paths');
+                termPrint('<b>analyze &lt;word&gt;</b> \u2014 analyze a specific word');
+                termPrint('<b>efficiency</b>    \u2014 efficiency breakdown');
+                termPrint('<b>process &lt;text&gt;</b> \u2014 process text for analysis');
+                termPrint('<b>topkeys</b>       \u2014 top 10 most-used keys');
+                termPrint('<b>words</b>         \u2014 word frequency list');
+                termPrint('<b>hapax</b>         \u2014 words appearing once');
+                termPrint('<b>layout [name]</b> \u2014 switch/list keyboard layouts');
+                termPrint('<b>compare &lt;a&gt; &lt;b&gt;</b> \u2014 compare two layouts');
+                termPrint('<b>dict &lt;word&gt;</b>   \u2014 dictionary lookup');
+                termPrint('<b>quantum</b>       \u2014 build + run quantum circuit');
+                termPrint('<b>qasm</b>          \u2014 show current QASM');
+                termPrint('<b>search &lt;q&gt;</b>    \u2014 universal search (14 connectors)');
+                termPrint('<b>export</b>        \u2014 export JSON state');
+                termPrint('<b>reset</b>         \u2014 reset analysis');
+                termPrint('<b>eval &lt;js&gt;</b>     \u2014 evaluate JavaScript');
+                termPrint('<b>clear</b>         \u2014 clear terminal');
             },
             status: () => {
                 const s = kbatch.state;
+                termPrint(`Layout: <b style="color:#f0883e;">${LAYOUTS[activeLayoutId].name}</b> (${LAYOUTS[activeLayoutId].script})`)
                 termPrint(`WPM: <b style="color:#58a6ff;">${s.wpm.toFixed(1)}</b> | Efficiency: <b style="color:#7ee787;">${s.efficiency.toFixed(1)}%</b> | Complexity: <b style="color:#f97583;">${s.complexity.toFixed(1)}%</b>`);
                 termPrint(`Keys: ${s.totalKeys} | Distance: ${s.totalDist.toFixed(2)} | Words: ${s.words} | Hapax: ${s.hapax}`);
             },
             heatmap: () => {
                 const hm = kbatch.heatmap();
                 const sorted = Object.entries(hm).sort((a,b) => b[1]-a[1]);
-                termPrint('─── Key Heatmap ───', 'info');
+                termPrint('\u2500\u2500\u2500 Key Heatmap \u2500\u2500\u2500', 'info');
                 sorted.forEach(([k,v]) => {
-                    const bar = '█'.repeat(Math.min(30, v));
+                    const bar = '\u2588'.repeat(Math.min(30, v));
                     termPrint(`<span style="color:#f0883e;">${k === ' ' ? 'SPC' : k}</span> ${bar} ${v}`);
                 });
             },
             contrails: () => {
                 const trans = kbatch.transitions().slice(-20);
-                termPrint('─── Recent Contrails ───', 'info');
-                trans.forEach(t => {
-                    const dir = dirSymbol(t.dx, t.dy);
-                    termPrint(`${t.from} ${dir} ${t.to} (dist: ${t.dist.toFixed(2)})`);
-                });
+                termPrint('\u2500\u2500\u2500 Recent Contrails \u2500\u2500\u2500', 'info');
+                trans.forEach(t => termPrint(`${t.from} ${dirSymbol(t.dx, t.dy)} ${t.to} (dist: ${t.dist.toFixed(2)})`));
             },
             efficiency: () => {
                 const s = kbatch.state;
-                termPrint('─── Efficiency Breakdown ───', 'info');
+                termPrint('\u2500\u2500\u2500 Efficiency Breakdown \u2500\u2500\u2500', 'info');
                 termPrint(`Overall: <b style="color:#7ee787;">${s.efficiency.toFixed(1)}%</b>`);
                 termPrint(`Avg key distance: ${s.avgDist.toFixed(3)} units`);
                 termPrint(`Finger strain: <b style="color:#e6b422;">${s.strain.toFixed(1)}%</b>`);
                 termPrint(`Row-change complexity: <b style="color:#f97583;">${s.complexity.toFixed(1)}%</b>`);
             },
             topkeys: () => {
-                termPrint('─── Top 10 Keys ───', 'info');
-                kbatch.topKeys(10).forEach((k,i) => {
-                    termPrint(`${i+1}. <b style="color:#f0883e;">${k.key}</b> — ${k.count} presses`);
-                });
+                termPrint('\u2500\u2500\u2500 Top 10 Keys \u2500\u2500\u2500', 'info');
+                kbatch.topKeys(10).forEach((k,i) => termPrint(`${i+1}. <b style="color:#f0883e;">${k.key}</b> \u2014 ${k.count} presses`));
             },
             words: () => {
-                const wf = kbatch.wordFreq();
-                const sorted = Object.entries(wf).sort((a,b) => b[1]-a[1]).slice(0, 20);
-                termPrint('─── Word Frequency (top 20) ───', 'info');
-                sorted.forEach(([w,c]) => termPrint(`<b>${w}</b> ×${c}`));
+                const sorted = Object.entries(kbatch.wordFreq()).sort((a,b) => b[1]-a[1]).slice(0, 20);
+                termPrint('\u2500\u2500\u2500 Word Frequency (top 20) \u2500\u2500\u2500', 'info');
+                sorted.forEach(([w,c]) => termPrint(`<b>${w}</b> \u00d7${c}`));
             },
             hapax: () => {
-                const wf = kbatch.wordFreq();
-                const hapax = Object.entries(wf).filter(([,c]) => c === 1).map(([w]) => w);
-                termPrint(`─── Hapax Legomena (${hapax.length}) ───`, 'info');
+                const hapax = Object.entries(kbatch.wordFreq()).filter(([,c]) => c === 1).map(([w]) => w);
+                termPrint(`\u2500\u2500\u2500 Hapax Legomena (${hapax.length}) \u2500\u2500\u2500`, 'info');
                 termPrint(hapax.join(', ') || '(none yet)');
             },
-            export: () => {
-                termPrint('─── JSON Export ───', 'info');
-                termPrint(kbatch.exportJSON(), 'result');
-            },
-            reset: () => { kbatch.reset(); termPrint('🔄 Analysis reset', 'info'); },
+            export: () => { termPrint('\u2500\u2500\u2500 JSON Export \u2500\u2500\u2500', 'info'); termPrint(kbatch.exportJSON(), 'result'); },
+            reset: () => { kbatch.reset(); termPrint('Analysis reset', 'info'); },
             clear: () => { termOutput.innerHTML = ''; },
+            quantum: () => {
+                termPrint('\u2500\u2500\u2500 Quantum Circuit \u2500\u2500\u2500', 'info');
+                const qasm = QuantumBridge.buildFromTyping();
+                termPrint(`Built ${QuantumBridge.lastCircuit.numQubits}-qubit circuit with ${QuantumBridge.lastCircuit.ops.length} gates`);
+                const result = QuantumBridge.simulateLocal(1024);
+                const top5 = Object.entries(result).sort((a,b) => b[1]-a[1]).slice(0,5);
+                termPrint('Top 5 measurement outcomes (1024 shots):', 'info');
+                top5.forEach(([s,c]) => {
+                    const pct = (c/1024*100).toFixed(1);
+                    const bar = '\u2588'.repeat(Math.floor(c/1024*30));
+                    termPrint(`|${s}\u27E9 ${bar} ${pct}%`);
+                });
+                QuantumBridge.renderHistogram(document.getElementById('cv-quantum'), result);
+            },
+            qasm: () => {
+                if (QuantumBridge.lastCircuit) termPrint(QuantumBridge.lastCircuit.qasm, 'result');
+                else termPrint('No circuit built yet. Run: quantum', 'warn');
+            },
         };
 
         function processCommand(input) {
@@ -992,22 +1949,85 @@ console.log('\\nTop keys:', kbatch.topKeys(5).map(k => k.key + ':' + k.count).jo
             if (cmd === 'analyze' && parts.length >= 2) {
                 const word = parts.slice(1).join(' ');
                 const a = kbatch.analyze(word);
-                termPrint(`"${word}" — Eff: <b style="color:#7ee787;">${a.efficiency.toFixed(1)}%</b> | Cpx: <b style="color:#f97583;">${a.complexity.toFixed(1)}%</b> | Dist: ${a.distance.toFixed(2)} | Path: ${a.path}`);
+                termPrint(`"${word}" \u2014 Eff: <b style="color:#7ee787;">${a.efficiency.toFixed(1)}%</b> | Cpx: <b style="color:#f97583;">${a.complexity.toFixed(1)}%</b> | Dist: ${a.distance.toFixed(2)} | Path: ${a.path}`);
             } else if (cmd === 'process' && parts.length >= 2) {
-                const text = parts.slice(1).join(' ');
-                kbatch.processText(text);
-                termPrint(`Processed ${text.length} characters`, 'result');
+                kbatch.processText(parts.slice(1).join(' '));
+                termPrint(`Processed ${parts.slice(1).join(' ').length} characters`, 'result');
+            } else if (cmd === 'layout') {
+                if (parts.length >= 2) {
+                    const id = parts[1].toLowerCase();
+                    if (LAYOUTS[id]) { setActiveLayout(id); termPrint(`Switched to ${LAYOUTS[id].name}`, 'result'); }
+                    else termPrint(`Unknown layout: ${id}. Use: layout list`, 'error');
+                } else {
+                    termPrint('\u2500\u2500\u2500 Available Layouts \u2500\u2500\u2500', 'info');
+                    Object.entries(LAYOUTS).forEach(([id, l]) => {
+                        const active = id === activeLayoutId ? ' <b style="color:#7ee787;">\u2713 active</b>' : '';
+                        termPrint(`<b style="color:#f0883e;">${id}</b> \u2014 ${l.name} (${l.script}, ${l.region})${active}`);
+                    });
+                }
+            } else if (cmd === 'compare' && parts.length >= 3) {
+                const a = parts[1].toLowerCase(), b = parts[2].toLowerCase();
+                if (!LAYOUTS[a] || !LAYOUTS[b]) { termPrint('Unknown layout(s). Use: layout list', 'error'); return; }
+                const posA = buildKeyPos(LAYOUTS[a]), posB = buildKeyPos(LAYOUTS[b]);
+                const testWords = ['the','and','that','have','with','this','from','they','been','said','quantum','keyboard'];
+                termPrint(`\u2500\u2500\u2500 ${LAYOUTS[a].name} vs ${LAYOUTS[b].name} \u2500\u2500\u2500`, 'info');
+                let tA = 0, tB = 0;
+                testWords.forEach(w => {
+                    let dA = 0, dB = 0;
+                    for (let i = 1; i < w.length; i++) {
+                        const a1 = posA[w[i-1]], a2 = posA[w[i]];
+                        const b1 = posB[w[i-1]], b2 = posB[w[i]];
+                        if (a1 && a2) dA += Math.sqrt((a2.x-a1.x)**2 + (a2.y-a1.y)**2);
+                        if (b1 && b2) dB += Math.sqrt((b2.x-b1.x)**2 + (b2.y-b1.y)**2);
+                    }
+                    tA += dA; tB += dB;
+                    const winner = dA < dB ? a : b;
+                    termPrint(`${w}: ${LAYOUTS[a].name}=${dA.toFixed(2)} ${LAYOUTS[b].name}=${dB.toFixed(2)} \u2192 <b style="color:#7ee787;">${LAYOUTS[winner].name}</b>`);
+                });
+                const pct = tA > 0 ? ((tA - tB) / tA * 100).toFixed(1) : '0';
+                termPrint(`Total: ${LAYOUTS[a].name}=${tA.toFixed(1)} ${LAYOUTS[b].name}=${tB.toFixed(1)}`, 'result');
+            } else if (cmd === 'dict' && parts.length >= 2) {
+                const word = parts.slice(1).join(' ');
+                termPrint(`Looking up "${word}"...`, 'info');
+                DictEngine.lookup(word).then(data => {
+                    if (data.error) { termPrint(data.error, 'error'); return; }
+                    if (data.entries) {
+                        data.entries.forEach(e => {
+                            termPrint(`<b style="color:#f0883e;">${e.word}</b> ${e.phonetic || ''}`, 'result');
+                            (e.meanings || []).forEach(m => {
+                                termPrint(`  <span style="color:#d2a8ff;">${m.partOfSpeech}</span>`);
+                                m.definitions.slice(0, 2).forEach(d => termPrint(`    \u2022 ${d.definition}`));
+                            });
+                        });
+                    }
+                    if (data.synonyms.length) termPrint(`Synonyms: ${data.synonyms.join(', ')}`, 'result');
+                });
+            } else if (cmd === 'search' && parts.length >= 2) {
+                const query = parts.slice(1).join(' ');
+                const HS = window.HistorySearch;
+                if (!HS) { termPrint('HistorySearch not loaded', 'error'); return; }
+                termPrint(`Searching: "${query}"...`, 'info');
+                HS.search(query, { onProgress: (r) => {
+                    if (r.results && r.results.length) {
+                        r.results.slice(0, 5).forEach(res => {
+                            termPrint(`<b style="color:#58a6ff;">${res.title}</b> <span style="color:#484f58;">[${res.source}]</span>`);
+                            if (res.snippet) termPrint(`  ${res.snippet.substring(0, 120)}`);
+                        });
+                    }
+                }}).then(r => {
+                    termPrint(`${r.totalResults} results from ${r.connectorsUsed.length} connectors in ${r.latencyMs}ms`, 'result');
+                });
             } else if ((cmd === 'eval' || cmd === 'js') && parts.length >= 2) {
                 try {
                     const result = eval(trimmed.slice(cmd.length).trim());
-                    if (result !== undefined) termPrint('→ ' + String(result), 'result');
+                    if (result !== undefined) termPrint('\u2192 ' + String(result), 'result');
                 } catch (e) { termPrint('Error: ' + e.message, 'error'); }
             } else if (CMDS[cmd]) {
                 CMDS[cmd]();
             } else {
                 try {
                     const result = eval(trimmed);
-                    if (result !== undefined) termPrint('→ ' + String(result), 'result');
+                    if (result !== undefined) termPrint('\u2192 ' + String(result), 'result');
                 } catch (e) { termPrint(`Unknown: <b>${cmd}</b>. Type <b>help</b>.`, 'error'); }
             }
         }
@@ -1024,16 +2044,14 @@ console.log('\\nTop keys:', kbatch.topKeys(5).map(k => k.key + ':' + k.count).jo
         });
     })();
 
-    // ──────────────────── FULLSCREEN (template) ────────────────────
+    // ══════════════════ FULLSCREEN ══════════════════
     (function(){
         function enter() {
-            document.body.classList.add('fullscreen');
-            renderAll();
+            document.body.classList.add('fullscreen'); renderAll();
             if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(()=>{});
         }
         function exit() {
-            document.body.classList.remove('fullscreen');
-            renderAll();
+            document.body.classList.remove('fullscreen'); renderAll();
             if (document.fullscreenElement) document.exitFullscreen().catch(()=>{});
         }
         document.getElementById('btn-fullscreen').addEventListener('click', enter);
@@ -1046,18 +2064,38 @@ console.log('\\nTop keys:', kbatch.topKeys(5).map(k => k.key + ':' + k.count).jo
         });
     })();
 
-    // ===== PWA SERVICE WORKER =====
+    // ══════════════════ RESIZE + INIT ══════════════════
+    window.addEventListener('resize', () => { renderAll(); renderLayoutPreview(); });
+    renderAll();
+
+    // ═══ PWA SERVICE WORKER ═══
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('sw.js').catch(() => {});
     }
 
-    // ===== QUANTUM PREFIX LIVE SYNC =====
+    // ═══ QUANTUM PREFIX LIVE SYNC ═══
     (function() {
         const QP = window.QuantumPrefixes;
         if (!QP) return;
         QP.onStateChange(function(source, state) { if (source === 'kbatch' || !state) return; });
-        QP.broadcastState('kbatch', { coverage: 0, totalLines: 0, classifiedLines: 0, prefixCounts: {}, role: 'keyboard-batch' });
+        QP.broadcastState('kbatch', {
+            coverage: 0, totalLines: 0, classifiedLines: 0, prefixCounts: {},
+            role: 'keyboard-quantum-analyzer',
+            layouts: Object.keys(LAYOUTS).length,
+            activeLayout: activeLayoutId
+        });
         QP.requestStateSync();
+    })();
+
+    // ═══ BROADCAST CHANNEL (cross-app) ═══
+    (function() {
+        const ch = new BroadcastChannel('hexterm');
+        ch.onmessage = (e) => {
+            if (e.data && e.data.type === 'keyboard-data' && e.data.text) {
+                kbatch.processText(e.data.text);
+            }
+        };
+        window.kbatch.broadcast = (data) => ch.postMessage({ source: 'kbatch', ...data });
     })();
 
     </script>

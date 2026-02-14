@@ -22,7 +22,7 @@
 ![CSS3](https://img.shields.io/badge/CSS3-1572B6?logo=css3&logoColor=white)
 ![Shell](https://img.shields.io/badge/Shell-4EAA25?logo=gnubash&logoColor=white)
 
-**[Prefix/QuantumGutter](https://fornevercollective.github.io/uvspeed/web/quantum-gutter.html)** · **[notePad](https://fornevercollective.github.io/uvspeed/web/quantum-notepad.html)** · **[hexTerm](https://fornevercollective.github.io/uvspeed/web/terminal.html)** · **[hexCast](https://fornevercollective.github.io/uvspeed/web/hexcast.html)** · **[FREYAunits](https://fornevercollective.github.io/uvspeed/web/freya.html)** · **[brotherNumsy](https://fornevercollective.github.io/uvspeed/web/brothernumsy.html)** · **[kBatch](https://fornevercollective.github.io/uvspeed/web/kbatch.html)** · **[HexBench](https://fornevercollective.github.io/uvspeed/web/hexbench.html)** · **[ArchFlow](https://fornevercollective.github.io/uvspeed/web/archflow.html)** · **[gpu/cpu](https://fornevercollective.github.io/uvspeed/web/blackwell.html)** · **[Dashboard](https://fornevercollective.github.io/uvspeed/web/github-dashboard.html)** · **[Sponsor](https://fornevercollective.github.io/uvspeed/web/sponsor.html)**
+**[Prefix/QuantumGutter](https://fornevercollective.github.io/uvspeed/web/quantum-gutter.html)** · **[notePad](https://fornevercollective.github.io/uvspeed/web/quantum-notepad.html)** · **[hexTerm](https://fornevercollective.github.io/uvspeed/web/terminal.html)** · **[hexCast](https://fornevercollective.github.io/uvspeed/web/hexcast.html)** · **[ResearchLab](https://fornevercollective.github.io/uvspeed/web/research-lab.html)** · **[FREYAunits](https://fornevercollective.github.io/uvspeed/web/freya-landing.html)** · **[History](https://fornevercollective.github.io/uvspeed/web/history.html)** · **[Search](https://fornevercollective.github.io/uvspeed/web/search.html)** · **[brotherNumsy](https://fornevercollective.github.io/uvspeed/web/brothernumsy.html)** · **[kBatch](https://fornevercollective.github.io/uvspeed/web/kbatch.html)** · **[HexBench](https://fornevercollective.github.io/uvspeed/web/hexbench.html)** · **[ArchFlow](https://fornevercollective.github.io/uvspeed/web/archflow.html)** · **[gpu/cpu](https://fornevercollective.github.io/uvspeed/web/blackwell.html)** · **[Dashboard](https://fornevercollective.github.io/uvspeed/web/github-dashboard.html)** · **[Sponsor](https://fornevercollective.github.io/uvspeed/web/sponsor.html)**
 
 ---
 
@@ -159,6 +159,9 @@ Plus a `{dev}` launch mode that opens the terminal with the dev console active.
 | **[hexbench](web/hexbench.html)** | Voltage lab — PSU monitor, Arduino code editor, node workbench, Pybricks builder |
 | **[research-lab](web/research-lab.html)** | Markdown research editor with node canvas, mermaid preview, console |
 | **[freya](web/freya.html)** | Galactic unit converter, scientific calculator, celestial charts, quantum geo navigation |
+| **[freya-landing](web/freya-landing.html)** | FreyaUnits showcase — interactive log-scale canvas, live converter demo, roadmap |
+| **[history](web/history.html)** | Universal timeline knowledge graph — ZPF to cosmic scale, block canvas, research viewer, AI persona builder, mass search connectors |
+| **[search](web/search.html)** | Mobile-first universal search PWA — 14 connectors (Wikipedia, arXiv, PubChem, Sacred Texts, Wayback, etc.) |
 | **[numsy](web/numsy.html)** | 1080x1080 Instagram visual generator |
 | **[sponsor](web/sponsor.html)** | Sponsor page with Rubik's cube, inverse starfield, Numsy sprites, tier cards |
 | **[github-dashboard](web/github-dashboard.html)** | Project health dashboard — phases, deps, community, actions |
@@ -168,7 +171,18 @@ Plus a `{dev}` launch mode that opens the terminal with the dev console active.
 | Module | Description |
 |--------|-------------|
 | **[quantum-prefixes.js](web/quantum-prefixes.js)** | Shared prefix API — `classifyLine()`, `prefixContent()`, cross-app `BroadcastChannel` sync, IoT WebSocket bridge, global light/dark theme engine |
+| **[history-search-engine.js](web/history-search-engine.js)** | Shared search engine — 14 connectors (Wikipedia, arXiv, PubChem, Sacred Texts, Wayback, etc.), timeline renderer, used by extension + PWA + HexTerm |
 | **[sw.js](web/sw.js)** | Service worker — offline-first cache for all 20 apps + shared assets |
+
+### Browser Extension
+
+| File | Description |
+|------|-------------|
+| **[extensions/history-search/](extensions/history-search/)** | Chrome/Edge/Brave/Opera/Arc/Vivaldi/Firefox extension — injects 14-connector search above Google, Bing, DuckDuckGo, Brave Search, Ecosia, Yahoo results |
+
+**Install**: `chrome://extensions` → Developer Mode → Load Unpacked → select `extensions/history-search/`
+
+**Mobile**: Extensions can't run on iOS Safari or Android Chrome. Use the **[Search PWA](https://fornevercollective.github.io/uvspeed/web/search.html)** instead, or the `search` command in **[HexTerm](https://fornevercollective.github.io/uvspeed/web/terminal.html)**.
 
 ### CLI Tools
 

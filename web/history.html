@@ -1,0 +1,1248 @@
+<!-- beyondBINARY quantum-prefixed | uvspeed | {+1, 1, -1, +0, 0, -0, +n, n, -n} -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#050810">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="icon" type="image/png" sizes="32x32" href="../icons/favicon.png">
+<link rel="apple-touch-icon" sizes="192x192" href="../icons/icon-192.png">
+<title>History — Universal Timeline Knowledge Graph</title>
+<style>
+/* ===== RESET & VARS ===== */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+    --bg:#050810;--bg2:#0a0f1a;--bg3:#101828;--bg4:#1a2340;
+    --border:#1e2d4a;--border-hl:#334155;
+    --text:#e2e8f0;--text-muted:#64748b;--text-dim:#475569;
+    --accent:#7c3aed;--accent2:#06b6d4;--purple:#a78bfa;--cyan:#22d3ee;
+    --green:#34d399;--red:#f87171;--orange:#f97316;--yellow:#fbbf24;--rose:#fb7185;
+    --mono:'SF Mono','JetBrains Mono','Fira Code',monospace;
+    --sans:-apple-system,'SF Pro Display',BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;}
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+a{color:var(--accent);text-decoration:none;}a:hover{text-decoration:underline;}
+
+/* ===== APP LAYOUT ===== */
+#app{display:flex;flex-direction:column;width:100%;height:100%;}
+#top-bar{display:flex;align-items:center;height:32px;background:var(--bg2);border-bottom:1px solid var(--border);padding:0 12px;font-size:.6875rem;font-family:var(--mono);flex-shrink:0;gap:8px;}
+#top-bar .title{color:var(--purple);font-weight:700;letter-spacing:.5px;}
+#top-bar .sep{color:var(--border);}
+#top-bar .info{color:var(--text-muted);}
+#top-bar .spacer{flex:1;}
+#top-bar .tbtn{background:none;border:1px solid var(--border);color:var(--text-muted);padding:2px 8px;border-radius:4px;cursor:pointer;font-family:var(--mono);font-size:.625rem;transition:all .15s;}
+#top-bar .tbtn:hover{color:var(--text);border-color:var(--border-hl);background:var(--bg3);}
+#top-bar .tbtn.active{color:var(--cyan);border-color:var(--accent2);}
+.rainbow{display:flex;height:2px;width:100%;flex-shrink:0;}
+.rainbow span{flex:1;}
+.r1{background:#7c3aed;}.r2{background:#06b6d4;}.r3{background:#a78bfa;}.r4{background:#22d3ee;}.r5{background:#8b5cf6;}.r6{background:#34d399;}
+
+/* ===== TIMELINE STRIP ===== */
+#timeline-strip{height:100px;flex-shrink:0;background:var(--bg2);border-bottom:1px solid var(--border);position:relative;overflow:hidden;cursor:grab;}
+#timeline-strip:active{cursor:grabbing;}
+#timeline-canvas{width:100%;height:100%;display:block;}
+#tl-info{position:absolute;top:4px;left:8px;font-size:.5625rem;font-family:var(--mono);color:var(--text-dim);pointer-events:none;z-index:2;}
+#tl-zoom{position:absolute;top:4px;right:8px;display:flex;gap:4px;z-index:2;}
+#tl-zoom button{background:var(--bg3);border:1px solid var(--border);color:var(--text-muted);width:22px;height:22px;border-radius:4px;cursor:pointer;font-size:.75rem;font-family:var(--mono);display:flex;align-items:center;justify-content:center;}
+#tl-zoom button:hover{color:var(--text);border-color:var(--border-hl);}
+#tl-hover{position:absolute;bottom:4px;left:50%;transform:translateX(-50%);font-size:.5625rem;font-family:var(--mono);color:var(--cyan);pointer-events:none;z-index:2;white-space:nowrap;background:rgba(5,8,16,.8);padding:2px 8px;border-radius:4px;display:none;}
+
+/* ===== MAIN AREA: canvas + inspector ===== */
+#main-area{flex:1;display:flex;overflow:hidden;position:relative;}
+
+/* Block Canvas */
+#canvas-panel{flex:1;position:relative;overflow:hidden;background:var(--bg);}
+#block-canvas{position:absolute;inset:0;}
+#block-svg{position:absolute;inset:0;pointer-events:none;z-index:1;}
+#canvas-info{position:absolute;bottom:6px;left:8px;font-size:.5625rem;font-family:var(--mono);color:var(--text-dim);z-index:3;pointer-events:none;}
+#canvas-tools{position:absolute;top:8px;left:8px;display:flex;gap:4px;z-index:3;}
+#canvas-tools button{background:var(--bg3);border:1px solid var(--border);color:var(--text-muted);padding:4px 8px;border-radius:4px;cursor:pointer;font-size:.625rem;font-family:var(--mono);transition:all .15s;}
+#canvas-tools button:hover{color:var(--text);border-color:var(--border-hl);background:var(--bg4);}
+#canvas-tools button.active{color:var(--cyan);border-color:var(--accent2);}
+
+/* Viz overlay */
+#viz-overlay{position:absolute;inset:0;z-index:5;display:none;background:var(--bg);}
+#viz-overlay canvas{width:100%;height:100%;display:block;}
+#viz-close{position:absolute;top:8px;right:8px;background:var(--bg3);border:1px solid var(--border);color:var(--text-muted);padding:4px 10px;border-radius:4px;cursor:pointer;font-family:var(--mono);font-size:.625rem;z-index:6;}
+
+/* Inspector Sidebar */
+#inspector{width:360px;flex-shrink:0;display:flex;flex-direction:column;background:var(--bg2);border-left:1px solid var(--border);overflow:hidden;transition:width .2s;}
+#inspector.collapsed{width:0;border-left:none;}
+#insp-tabs{display:flex;background:var(--bg3);border-bottom:1px solid var(--border);flex-shrink:0;}
+#insp-tabs button{flex:1;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);padding:6px 4px;cursor:pointer;font-family:var(--mono);font-size:.625rem;transition:all .15s;}
+#insp-tabs button:hover{color:var(--text);}
+#insp-tabs button.active{color:var(--cyan);border-bottom-color:var(--cyan);}
+#insp-content{flex:1;overflow-y:auto;padding:12px;}
+.insp-section{margin-bottom:16px;}
+.insp-section h4{font-size:.6875rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;font-family:var(--mono);}
+.insp-section p,.insp-section .val{font-size:.75rem;color:var(--text);line-height:1.5;}
+.insp-kv{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid rgba(30,45,74,.3);}
+.insp-kv .k{color:var(--text-muted);font-size:.6875rem;}.insp-kv .v{color:var(--text);font-size:.6875rem;font-family:var(--mono);}
+#insp-search{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:8px 10px;border-radius:6px;font-family:var(--mono);font-size:.75rem;outline:none;margin-bottom:8px;}
+#insp-search:focus{border-color:var(--accent);}
+#insp-search-results{max-height:300px;overflow-y:auto;}
+.search-result{padding:6px 8px;border-radius:4px;cursor:pointer;margin-bottom:2px;font-size:.6875rem;border:1px solid transparent;}
+.search-result:hover{background:var(--bg3);border-color:var(--border);}
+.search-result .sr-title{color:var(--text);font-weight:600;}.search-result .sr-src{color:var(--text-dim);font-family:var(--mono);font-size:.5625rem;}
+/* Split-column doc viewer */
+#doc-viewer{display:none;flex:1;overflow-y:auto;padding:12px;font-size:.75rem;line-height:1.6;white-space:pre-wrap;font-family:var(--mono);color:var(--text-muted);}
+/* Ask panel */
+#ask-input{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:8px 10px;border-radius:6px;font-family:var(--mono);font-size:.75rem;outline:none;margin-bottom:4px;resize:none;height:60px;}
+#ask-input:focus{border-color:var(--accent);}
+#ask-result{font-size:.6875rem;color:var(--text-muted);line-height:1.5;max-height:200px;overflow-y:auto;}
+
+/* ===== DEV TERMINAL ===== */
+#terminal-panel{height:140px;flex-shrink:0;display:flex;flex-direction:column;background:var(--bg2);border-top:1px solid var(--border);overflow:hidden;}
+#term-header{display:flex;align-items:center;padding:3px 10px;font-size:.5625rem;font-family:var(--mono);color:var(--text-dim);border-bottom:1px solid rgba(30,45,74,.3);gap:8px;cursor:pointer;flex-shrink:0;}
+#term-header:hover{background:var(--bg3);}
+#term-log{flex:1;overflow-y:auto;padding:4px 10px;font-size:.625rem;font-family:var(--mono);color:var(--text-muted);line-height:1.5;}
+#term-log .ts{color:var(--text-dim);}.term-ok{color:var(--green);}.term-err{color:var(--red);}.term-cmd{color:var(--cyan);}
+#term-cmd{display:flex;border-top:1px solid rgba(30,45,74,.3);flex-shrink:0;}
+#term-cmd .prompt{color:var(--cyan);padding:4px 6px;font-size:.625rem;font-family:var(--mono);}
+#term-cmd input{flex:1;background:var(--bg2);border:none;color:var(--text);padding:4px 6px;font-size:.625rem;font-family:var(--mono);outline:none;}
+#term-cmd input::placeholder{color:var(--text-dim);}
+
+/* ===== BLOCKS ===== */
+.block{position:absolute;min-width:160px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;cursor:grab;z-index:2;user-select:none;transition:box-shadow .15s;}
+.block:hover{box-shadow:0 4px 20px rgba(0,0,0,.4);border-color:var(--border-hl);}
+.block.selected{border-color:var(--accent);box-shadow:0 0 0 2px rgba(124,58,237,.3);}
+.block-header{display:flex;align-items:center;gap:6px;padding:6px 10px;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:.625rem;}
+.block-header .prefix{font-weight:800;}.block-header .type{color:var(--text-muted);}.block-header .spacer{flex:1;}
+.block-header .close{color:var(--text-dim);cursor:pointer;font-size:.75rem;}
+.block-header .close:hover{color:var(--red);}
+.block-body{padding:8px 10px;font-size:.6875rem;color:var(--text-muted);max-height:120px;overflow:hidden;text-overflow:ellipsis;}
+.block-footer{display:flex;align-items:center;gap:4px;padding:4px 10px;border-top:1px solid var(--border);font-size:.5625rem;font-family:var(--mono);color:var(--text-dim);}
+.block-footer .train-badge{color:var(--green);cursor:pointer;}.block-footer .train-badge:hover{text-decoration:underline;}
+.connector{width:10px;height:10px;border-radius:50%;border:2px solid var(--border);background:var(--bg);position:absolute;cursor:crosshair;z-index:3;}
+.connector.in{left:-6px;top:50%;transform:translateY(-50%);}
+.connector.out{right:-6px;top:50%;transform:translateY(-50%);}
+.connector:hover{border-color:var(--accent);background:var(--accent);}
+
+/* ===== STATUS BAR ===== */
+#status-bar{display:flex;align-items:center;height:22px;background:var(--bg2);border-top:1px solid var(--border);padding:0 10px;gap:12px;font-size:.5625rem;font-family:var(--mono);color:var(--text-dim);flex-shrink:0;}
+#status-bar .val{color:var(--green);}
+#status-bar .spacer{flex:1;}
+</style>
+</head>
+<body>
+<div id="app">
+    <!-- Top Bar -->
+    <div id="top-bar">
+        <span class="title">HISTORY</span>
+        <span class="sep">|</span>
+        <span class="info" id="tb-scale">cosmic</span>
+        <span class="sep">|</span>
+        <span class="info" id="tb-zoom">1x</span>
+        <span class="spacer"></span>
+        <button class="tbtn" onclick="addBlock('source')" title="Add source block">+ Source</button>
+        <button class="tbtn" onclick="addBlock('event')" title="Add event block">+ Event</button>
+        <button class="tbtn" onclick="addBlock('entity')" title="Add entity block">+ Entity</button>
+        <button class="tbtn" onclick="fileIngest()" title="Import file">Import</button>
+        <button class="tbtn" id="tb-viz" onclick="toggleViz()" title="Visualization modes">Viz</button>
+        <button class="tbtn" id="tb-insp" onclick="toggleInspector()" title="Toggle inspector">Inspector</button>
+    </div>
+    <div class="rainbow"><span class="r1"></span><span class="r2"></span><span class="r3"></span><span class="r4"></span><span class="r5"></span><span class="r6"></span></div>
+
+    <!-- Timeline Strip -->
+    <div id="timeline-strip">
+        <canvas id="timeline-canvas"></canvas>
+        <div id="tl-info">ZPF &larr; 61 orders of magnitude &rarr; Observable Universe</div>
+        <div id="tl-zoom">
+            <button onclick="tlZoom(1.5)" title="Zoom in">+</button>
+            <button onclick="tlZoom(1/1.5)" title="Zoom out">&minus;</button>
+            <button onclick="tlReset()" title="Reset">R</button>
+        </div>
+        <div id="tl-hover"></div>
+    </div>
+
+    <!-- Main Area -->
+    <div id="main-area">
+        <!-- Block Canvas -->
+        <div id="canvas-panel">
+            <canvas id="block-canvas"></canvas>
+            <svg id="block-svg"></svg>
+            <div id="canvas-tools">
+                <button class="active" data-viz="blocks" onclick="setVizMode('blocks',this)">Blocks</button>
+                <button data-viz="flame" onclick="setVizMode('flame',this)">Flame</button>
+                <button data-viz="tree" onclick="setVizMode('tree',this)">Tree</button>
+                <button data-viz="dna" onclick="setVizMode('dna',this)">DNA</button>
+                <button data-viz="network" onclick="setVizMode('network',this)">Network</button>
+                <button data-viz="heatmap" onclick="setVizMode('heatmap',this)">Heatmap</button>
+            </div>
+            <div id="canvas-info">blocks: 0 | connections: 0 | click canvas to place</div>
+            <!-- Viz overlay for full-screen viz modes -->
+            <div id="viz-overlay">
+                <canvas id="viz-canvas"></canvas>
+                <button id="viz-close" onclick="closeViz()">Close</button>
+            </div>
+        </div>
+
+        <!-- Inspector Sidebar -->
+        <div id="inspector">
+            <div id="insp-tabs">
+                <button class="active" onclick="setInspTab('inspect',this)">Inspect</button>
+                <button onclick="setInspTab('search',this)">Search</button>
+                <button onclick="setInspTab('ask',this)">Ask</button>
+                <button onclick="setInspTab('doc',this)">Doc</button>
+            </div>
+            <div id="insp-content">
+                <!-- Inspect tab -->
+                <div id="insp-inspect">
+                    <div class="insp-section">
+                        <h4>Selection</h4>
+                        <p id="insp-sel-info">Click a block or timeline point to inspect</p>
+                    </div>
+                    <div class="insp-section">
+                        <h4>Metadata</h4>
+                        <div id="insp-meta"></div>
+                    </div>
+                    <div class="insp-section">
+                        <h4>Quantum Prefix</h4>
+                        <div id="insp-prefix"></div>
+                    </div>
+                    <div class="insp-section">
+                        <h4>Linked Blocks</h4>
+                        <div id="insp-links"></div>
+                    </div>
+                    <div class="insp-section">
+                        <h4>Training</h4>
+                        <div id="insp-training">No block selected</div>
+                    </div>
+                </div>
+                <!-- Search tab -->
+                <div id="insp-search-tab" style="display:none;">
+                    <input type="text" id="insp-search" placeholder="Search all sources..." onkeydown="if(event.key==='Enter')runSearch()">
+                    <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;" id="search-connectors"></div>
+                    <div id="insp-search-results"></div>
+                </div>
+                <!-- Ask tab -->
+                <div id="insp-ask-tab" style="display:none;">
+                    <textarea id="ask-input" placeholder="Ask about the selected document or timeline point..."></textarea>
+                    <button class="tbtn" style="width:100%;margin-bottom:8px;padding:6px;" onclick="runAsk()">Ask</button>
+                    <div id="ask-result"></div>
+                </div>
+                <!-- Doc viewer tab -->
+                <div id="insp-doc-tab" style="display:none;">
+                    <div id="doc-viewer" style="display:block;">
+                        <p style="color:var(--text-dim);">Select a block or search result to view its document here.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dev Terminal -->
+    <div id="terminal-panel">
+        <div id="term-header" onclick="toggleTerminal()">
+            <span>&#9662;</span>
+            <span>dev terminal</span>
+            <span style="flex:1;"></span>
+            <span id="term-count" style="color:var(--green);">0</span>
+        </div>
+        <div id="term-log"></div>
+        <div id="term-cmd">
+            <span class="prompt">&#9656;</span>
+            <input type="text" id="cmd-input" placeholder="search <query> | ingest <url> | train | blocks | connectors | help" onkeydown="if(event.key==='Enter')runCmd()">
+        </div>
+    </div>
+
+    <!-- Status Bar -->
+    <div id="status-bar">
+        <span>history</span>
+        <span class="sep">|</span>
+        <span>blocks: <span class="val" id="sb-blocks">0</span></span>
+        <span>connections: <span class="val" id="sb-conns">0</span></span>
+        <span>indexed: <span class="val" id="sb-indexed">0</span></span>
+        <span class="spacer"></span>
+        <span id="sb-net">offline</span>
+        <span class="sep">|</span>
+        <span>v4.4</span>
+    </div>
+</div>
+
+<script src="quantum-prefixes.js"></script>
+<script>
+'use strict';
+(function(){
+const QP = window.QuantumPrefixes;
+const $ = id => document.getElementById(id);
+
+/* ══════════════════════════════════════════════════════
+   DATA MODEL
+   ══════════════════════════════════════════════════════ */
+const STATE = {
+    blocks: [],
+    connections: [],
+    selectedBlock: null,
+    searchIndex: {},       // inverted index: term -> [blockId]
+    indexedCount: 0,
+    vizMode: 'blocks',
+    inspTab: 'inspect',
+    // Timeline state
+    tl: { center: 0, zoom: 1, dragging: false, dragX: 0 },
+    // Canvas state
+    cv: { panX: 0, panY: 0, zoom: 1, dragging: false, dragStartX: 0, dragStartY: 0 },
+    // Block dragging
+    blockDrag: null,
+    nextBlockId: 1,
+    termLines: 0,
+};
+
+/* ══════════════════════════════════════════════════════
+   BLOCK TYPES — 11 quantum prefix categories
+   ══════════════════════════════════════════════════════ */
+const BLOCK_TYPES = {
+    source:     { prefix: 'n:',  color: '#ef4444', label: 'Source',     desc: 'Data source (book, transcript, DNA file, URL)' },
+    chapter:    { prefix: '+1:', color: '#3fb950', label: 'Chapter',    desc: 'Section/chapter/segment of a source' },
+    entity:     { prefix: '+0:', color: '#f0883e', label: 'Entity',     desc: 'Person, place, concept, gene, character' },
+    event:      { prefix: '0:',  color: '#58a6ff', label: 'Event',      desc: 'Timeline event with date/time' },
+    relation:   { prefix: '+n:', color: '#d2a8ff', label: 'Relation',   desc: 'Connection between entities' },
+    analysis:   { prefix: '1:',  color: '#79c0ff', label: 'Analysis',   desc: 'NLP/statistical analysis result' },
+    pattern:    { prefix: '+2:', color: '#58d1f0', label: 'Pattern',    desc: 'Detected pattern (phrase, motif, typing)' },
+    ai_persona: { prefix: '-n:', color: '#da3633', label: 'AI Persona', desc: 'AI-generated persona/summary' },
+    query:      { prefix: '-1:', color: '#f85149', label: 'Query',      desc: 'Search query or filter node' },
+    output:     { prefix: '-0:', color: '#8b949e', label: 'Output',     desc: 'Export/visualization output' },
+    collection: { prefix: '+3:', color: '#f9c74f', label: 'Collection', desc: 'Group of related items' },
+};
+
+/* ══════════════════════════════════════════════════════
+   TIMELINE ENGINE — 61 orders of magnitude
+   ══════════════════════════════════════════════════════ */
+const TL_SCALES = [
+    { name: 'Sub-quantum', minLog: -44, maxLog: -24, color: '#8b5cf6',
+      landmarks: [{t:-43.27,l:'Planck time'},{t:-35,l:'ZPF fluctuation'},{t:-30,l:'Virtual pair'},{t:-25,l:'Quark lifetime'}] },
+    { name: 'Quantum', minLog: -24, maxLog: -15, color: '#6366f1',
+      landmarks: [{t:-24,l:'Gluon exchange'},{t:-21,l:'Proton cage flip (CERN)'},{t:-17,l:'Atomic transition'},{t:-15,l:'Nuclear decay'}] },
+    { name: 'Atomic', minLog: -15, maxLog: -9, color: '#3b82f6',
+      landmarks: [{t:-13.5,l:'Carbon-14 decay event'},{t:-12,l:'Electron orbital period'},{t:-10,l:'Molecular vibration'},{t:-9,l:'Resting state'}] },
+    { name: 'Photonic', minLog: -9, maxLog: -6, color: '#06b6d4',
+      landmarks: [{t:-8.5,l:'Light: 1m travel'},{t:-7.8,l:'Fiber optic bit'},{t:-7,l:'BEC slow light (30mph)'},{t:-6.5,l:'Freq color split'}] },
+    { name: 'Signal', minLog: -6, maxLog: -2, color: '#22d3ee',
+      landmarks: [{t:-5,l:'Early Morse pulse'},{t:-4,l:'Radio wave cycle'},{t:-3,l:'First computer clock'},{t:-2,l:'NIST atomic sync'}] },
+    { name: 'Digital', minLog: -2, maxLog: 2, color: '#34d399',
+      landmarks: [{t:-1,l:'CDN propagation'},{t:0,l:'1 second (Unix tick)'},{t:0.78,l:'NTP round-trip'},{t:1,l:'SMPTE frame (10s)'}] },
+    { name: 'Human', minLog: 2, maxLog: 8, color: '#fbbf24',
+      landmarks: [{t:2,l:'Minute'},{t:3.56,l:'Hour'},{t:4.94,l:'Day'},{t:7.5,l:'Year'},{t:7.8,l:'Carbon dating window start'}] },
+    { name: 'Historical', minLog: 8, maxLog: 12, color: '#f97316',
+      landmarks: [{t:8.5,l:'Decade'},{t:9.5,l:'Century'},{t:10.15,l:'Cave paintings (~40k BCE)'},{t:10.5,l:'Codexes/Scrolls'},{t:11,l:'First Nation oral traditions'},{t:11.3,l:'Pre-Dawes index'}] },
+    { name: 'Geological', minLog: 12, maxLog: 16, color: '#ef4444',
+      landmarks: [{t:12,l:'Ice age cycle'},{t:13.1,l:'Tectonic event'},{t:14.8,l:'Mass extinction (K-Pg)'}] },
+    { name: 'Cosmic', minLog: 16, maxLog: 18, color: '#84cc16',
+      landmarks: [{t:16,l:'Stellar lifecycle'},{t:17,l:'Galactic rotation'},{t:17.14,l:'Big Bang (13.8B yr)'},{t:17.64,l:'Observable universe age'}] },
+];
+const TL_MIN_LOG = -44, TL_MAX_LOG = 18, TL_RANGE = TL_MAX_LOG - TL_MIN_LOG;
+
+function tlResize(){
+    const cv = $('timeline-canvas'); const p = cv.parentElement;
+    cv.width = p.offsetWidth; cv.height = p.offsetHeight;
+    drawTimeline();
+}
+
+function drawTimeline(){
+    const cv = $('timeline-canvas'); const ctx = cv.getContext('2d');
+    const W = cv.width, H = cv.height;
+    const { center, zoom } = STATE.tl;
+    const visRange = TL_RANGE / zoom;
+    const visMin = center - visRange / 2, visMax = center + visRange / 2;
+
+    ctx.fillStyle = '#050810'; ctx.fillRect(0, 0, W, H);
+
+    // Draw scale bands
+    TL_SCALES.forEach(s => {
+        const x1 = ((s.minLog - visMin) / visRange) * W;
+        const x2 = ((s.maxLog - visMin) / visRange) * W;
+        if (x2 < 0 || x1 > W) return;
+        const cx1 = Math.max(0, x1), cx2 = Math.min(W, x2);
+        ctx.fillStyle = s.color + '12';
+        ctx.fillRect(cx1, 0, cx2 - cx1, H);
+        ctx.strokeStyle = s.color + '30';
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(cx1, 0); ctx.lineTo(cx1, H); ctx.stroke();
+        // Label
+        const lx = (cx1 + cx2) / 2;
+        if (lx > 20 && lx < W - 20) {
+            ctx.fillStyle = s.color; ctx.font = 'bold 9px monospace'; ctx.textAlign = 'center';
+            ctx.fillText(s.name, lx, 12);
+        }
+        // Landmarks
+        s.landmarks.forEach(lm => {
+            const lmx = ((lm.t - visMin) / visRange) * W;
+            if (lmx < 0 || lmx > W) return;
+            ctx.strokeStyle = s.color + '60'; ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.moveTo(lmx, 16); ctx.lineTo(lmx, H - 16); ctx.stroke();
+            ctx.fillStyle = s.color + 'cc'; ctx.font = '8px monospace'; ctx.textAlign = 'center';
+            ctx.fillText(lm.l, lmx, H - 6);
+            // Dot
+            ctx.beginPath(); ctx.arc(lmx, H / 2, 3, 0, Math.PI * 2);
+            ctx.fillStyle = s.color; ctx.fill();
+        });
+    });
+
+    // Grid lines (every 5 orders of magnitude)
+    ctx.strokeStyle = 'rgba(30,45,74,0.4)'; ctx.lineWidth = 0.5;
+    for (let lg = Math.ceil(visMin); lg <= Math.floor(visMax); lg += 1) {
+        if (lg % 5 !== 0 && zoom < 3) continue;
+        const x = ((lg - visMin) / visRange) * W;
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+        ctx.fillStyle = '#475569'; ctx.font = '7px monospace'; ctx.textAlign = 'center';
+        ctx.fillText('10^' + lg + 's', x, H - 18);
+    }
+
+    // Center marker
+    const cx = W / 2;
+    ctx.strokeStyle = 'rgba(124,58,237,0.5)'; ctx.lineWidth = 1; ctx.setLineDash([4, 4]);
+    ctx.beginPath(); ctx.moveTo(cx, 0); ctx.lineTo(cx, H); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Draw blocks on timeline
+    STATE.blocks.forEach(b => {
+        if (b.timestamp === undefined) return;
+        const x = ((b.timestamp - visMin) / visRange) * W;
+        if (x < -10 || x > W + 10) return;
+        const bt = BLOCK_TYPES[b.type] || BLOCK_TYPES.event;
+        ctx.beginPath(); ctx.arc(x, H / 2, 5, 0, Math.PI * 2);
+        ctx.fillStyle = bt.color; ctx.fill();
+        ctx.strokeStyle = b === STATE.selectedBlock ? '#fff' : bt.color + '60';
+        ctx.lineWidth = b === STATE.selectedBlock ? 2 : 1; ctx.stroke();
+    });
+
+    // Update info
+    const scaleName = TL_SCALES.find(s => center >= s.minLog && center < s.maxLog);
+    $('tb-scale').textContent = scaleName ? scaleName.name : 'cosmic';
+    $('tb-zoom').textContent = zoom.toFixed(1) + 'x';
+}
+
+function tlZoom(factor){
+    STATE.tl.zoom = Math.max(0.5, Math.min(1000, STATE.tl.zoom * factor));
+    drawTimeline();
+}
+function tlReset(){ STATE.tl.center = 0; STATE.tl.zoom = 1; drawTimeline(); }
+
+// Timeline interaction
+(function initTimelineInteraction(){
+    const cv = $('timeline-canvas');
+    const hover = $('tl-hover');
+    let dragStart = 0, dragCenter = 0;
+    cv.addEventListener('mousedown', e => { STATE.tl.dragging = true; dragStart = e.clientX; dragCenter = STATE.tl.center; cv.style.cursor = 'grabbing'; });
+    window.addEventListener('mousemove', e => {
+        if (STATE.tl.dragging) {
+            const dx = e.clientX - dragStart;
+            const visRange = TL_RANGE / STATE.tl.zoom;
+            STATE.tl.center = dragCenter - (dx / cv.width) * visRange;
+            drawTimeline();
+        }
+        // Hover info
+        const r = cv.getBoundingClientRect();
+        if (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom) {
+            const mx = (e.clientX - r.left) / r.width;
+            const visRange = TL_RANGE / STATE.tl.zoom;
+            const visMin = STATE.tl.center - visRange / 2;
+            const logVal = visMin + mx * visRange;
+            const seconds = Math.pow(10, logVal);
+            // Format
+            let label = '';
+            if (logVal < -24) label = seconds.toExponential(2) + ' s (sub-quantum)';
+            else if (logVal < -9) label = seconds.toExponential(2) + ' s (atomic)';
+            else if (logVal < 0) label = (seconds * 1000).toFixed(4) + ' ms';
+            else if (logVal < 2) label = seconds.toFixed(2) + ' s';
+            else if (logVal < 4) label = (seconds / 60).toFixed(1) + ' min';
+            else if (logVal < 5) label = (seconds / 3600).toFixed(1) + ' hr';
+            else if (logVal < 7.5) label = (seconds / 86400).toFixed(1) + ' days';
+            else if (logVal < 10) label = (seconds / 3.156e7).toFixed(1) + ' years';
+            else label = seconds.toExponential(2) + ' s (' + (seconds / 3.156e7).toExponential(2) + ' yr)';
+            hover.textContent = '10^' + logVal.toFixed(2) + 's = ' + label;
+            hover.style.display = 'block';
+        } else {
+            hover.style.display = 'none';
+        }
+    });
+    window.addEventListener('mouseup', () => { STATE.tl.dragging = false; cv.style.cursor = 'grab'; });
+    cv.addEventListener('wheel', e => {
+        e.preventDefault();
+        const factor = e.deltaY > 0 ? 0.8 : 1.25;
+        // Zoom toward mouse position
+        const r = cv.getBoundingClientRect();
+        const mx = (e.clientX - r.left) / r.width;
+        const visRange = TL_RANGE / STATE.tl.zoom;
+        const visMin = STATE.tl.center - visRange / 2;
+        const mouseLog = visMin + mx * visRange;
+        STATE.tl.zoom = Math.max(0.5, Math.min(1000, STATE.tl.zoom * factor));
+        const newVisRange = TL_RANGE / STATE.tl.zoom;
+        STATE.tl.center = mouseLog - (mx - 0.5) * newVisRange;
+        drawTimeline();
+    }, { passive: false });
+})();
+
+
+/* ══════════════════════════════════════════════════════
+   BLOCK SYSTEM
+   ══════════════════════════════════════════════════════ */
+function createBlock(type, title, content, opts = {}) {
+    const bt = BLOCK_TYPES[type] || BLOCK_TYPES.event;
+    const id = 'block-' + STATE.nextBlockId++;
+    const block = {
+        id, type, title: title || bt.label,
+        content: content || '',
+        timestamp: opts.timestamp,
+        endTimestamp: opts.endTimestamp,
+        metadata: opts.metadata || {},
+        children: [],
+        training: { eligible: false, injectedInto: [], tags: [] },
+        // Position on canvas
+        x: opts.x || 100 + Math.random() * 400,
+        y: opts.y || 100 + Math.random() * 300,
+    };
+    STATE.blocks.push(block);
+    renderBlock(block);
+    indexBlock(block);
+    updateStats();
+    tlog('block added', block.type + ': ' + block.title, 'ok');
+    return block;
+}
+
+function renderBlock(block) {
+    const bt = BLOCK_TYPES[block.type] || BLOCK_TYPES.event;
+    const el = document.createElement('div');
+    el.className = 'block'; el.id = block.id;
+    el.style.left = block.x + 'px'; el.style.top = block.y + 'px';
+    el.style.borderLeftColor = bt.color; el.style.borderLeftWidth = '3px';
+    el.innerHTML = `<div class="connector in" data-id="${block.id}" data-dir="in"></div>
+        <div class="block-header">
+            <span class="prefix" style="color:${bt.color};">${bt.prefix}</span>
+            <span class="type">${bt.label}</span>
+            <span class="spacer"></span>
+            <span class="close" onclick="removeBlock('${block.id}')">&times;</span>
+        </div>
+        <div class="block-body">${escHtml((block.title || '').substring(0, 80))}</div>
+        <div class="block-footer">
+            ${block.timestamp !== undefined ? '<span>t:10^' + block.timestamp.toFixed(1) + 's</span>' : ''}
+            <span class="spacer" style="flex:1;"></span>
+            <span class="train-badge" onclick="toggleTraining('${block.id}')">${block.training.eligible ? 'TRAIN' : 'train'}</span>
+        </div>
+        <div class="connector out" data-id="${block.id}" data-dir="out"></div>`;
+    $('canvas-panel').appendChild(el);
+
+    // Drag
+    let dx = 0, dy = 0, startX = 0, startY = 0;
+    const header = el.querySelector('.block-header');
+    header.addEventListener('mousedown', e => {
+        if (e.target.classList.contains('close')) return;
+        e.preventDefault();
+        STATE.blockDrag = block;
+        startX = e.clientX; startY = e.clientY;
+        dx = block.x; dy = block.y;
+        selectBlock(block);
+    });
+    window.addEventListener('mousemove', e => {
+        if (STATE.blockDrag !== block) return;
+        block.x = dx + (e.clientX - startX);
+        block.y = dy + (e.clientY - startY);
+        el.style.left = block.x + 'px'; el.style.top = block.y + 'px';
+        drawConnections();
+    });
+    window.addEventListener('mouseup', () => { if (STATE.blockDrag === block) STATE.blockDrag = null; });
+
+    // Select on click
+    el.addEventListener('click', () => selectBlock(block));
+
+    // Connector logic
+    el.querySelectorAll('.connector').forEach(conn => {
+        conn.addEventListener('mousedown', e => {
+            e.stopPropagation();
+            STATE._connStart = { id: block.id, dir: conn.dataset.dir, el: conn };
+        });
+        conn.addEventListener('mouseup', e => {
+            e.stopPropagation();
+            if (STATE._connStart && STATE._connStart.id !== block.id) {
+                addConnection(STATE._connStart.id, block.id);
+                STATE._connStart = null;
+            }
+        });
+    });
+}
+
+function removeBlock(id) {
+    const el = $(id); if (el) el.remove();
+    STATE.blocks = STATE.blocks.filter(b => b.id !== id);
+    STATE.connections = STATE.connections.filter(c => c.from !== id && c.to !== id);
+    if (STATE.selectedBlock && STATE.selectedBlock.id === id) STATE.selectedBlock = null;
+    drawConnections(); updateStats();
+}
+
+function selectBlock(block) {
+    document.querySelectorAll('.block.selected').forEach(b => b.classList.remove('selected'));
+    const el = $(block.id); if (el) el.classList.add('selected');
+    STATE.selectedBlock = block;
+    updateInspector();
+}
+
+function addConnection(fromId, toId) {
+    if (STATE.connections.find(c => c.from === fromId && c.to === toId)) return;
+    STATE.connections.push({ from: fromId, to: toId });
+    drawConnections(); updateStats();
+    tlog('connected', fromId + ' -> ' + toId, 'ok');
+}
+
+function drawConnections() {
+    const svg = $('block-svg');
+    svg.innerHTML = '';
+    STATE.connections.forEach(conn => {
+        const fromEl = $(conn.from), toEl = $(conn.to);
+        if (!fromEl || !toEl) return;
+        const fromB = STATE.blocks.find(b => b.id === conn.from);
+        const toB = STATE.blocks.find(b => b.id === conn.to);
+        const bt = BLOCK_TYPES[fromB?.type] || BLOCK_TYPES.event;
+        const x1 = (fromB?.x || 0) + fromEl.offsetWidth;
+        const y1 = (fromB?.y || 0) + fromEl.offsetHeight / 2;
+        const x2 = toB?.x || 0;
+        const y2 = (toB?.y || 0) + toEl.offsetHeight / 2;
+        const mx = (x1 + x2) / 2;
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', `M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}`);
+        path.setAttribute('fill', 'none');
+        path.setAttribute('stroke', bt.color + '60');
+        path.setAttribute('stroke-width', '2');
+        svg.appendChild(path);
+    });
+}
+
+function toggleTraining(id) {
+    const block = STATE.blocks.find(b => b.id === id); if (!block) return;
+    block.training.eligible = !block.training.eligible;
+    const badge = document.querySelector('#' + id + ' .train-badge');
+    if (badge) badge.textContent = block.training.eligible ? 'TRAIN' : 'train';
+    tlog('training', id + ' = ' + (block.training.eligible ? 'eligible' : 'disabled'), block.training.eligible ? 'ok' : '');
+    updateInspector();
+}
+
+function addBlock(type) { createBlock(type); }
+
+/* ══════════════════════════════════════════════════════
+   SEARCH INDEX (client-side inverted index)
+   ══════════════════════════════════════════════════════ */
+function indexBlock(block) {
+    const text = (block.title + ' ' + block.content).toLowerCase();
+    const words = text.split(/\W+/).filter(w => w.length > 2);
+    words.forEach(w => {
+        if (!STATE.searchIndex[w]) STATE.searchIndex[w] = [];
+        if (!STATE.searchIndex[w].includes(block.id)) STATE.searchIndex[w].push(block.id);
+    });
+    STATE.indexedCount++;
+}
+
+function searchLocal(query) {
+    const terms = query.toLowerCase().split(/\W+/).filter(w => w.length > 2);
+    const scores = {};
+    terms.forEach(t => {
+        // Exact
+        (STATE.searchIndex[t] || []).forEach(id => { scores[id] = (scores[id] || 0) + 10; });
+        // Fuzzy (prefix match)
+        Object.keys(STATE.searchIndex).forEach(key => {
+            if (key.startsWith(t) || t.startsWith(key)) {
+                STATE.searchIndex[key].forEach(id => { scores[id] = (scores[id] || 0) + 3; });
+            }
+        });
+    });
+    return Object.entries(scores).sort((a, b) => b[1] - a[1]).map(([id, score]) => {
+        const block = STATE.blocks.find(b => b.id === id);
+        return block ? { block, score } : null;
+    }).filter(Boolean);
+}
+
+/* ══════════════════════════════════════════════════════
+   SEARCH CONNECTORS — pluggable external sources
+   ══════════════════════════════════════════════════════ */
+const CONNECTORS = [
+    { name: 'Local', icon: 'L', enabled: true, search: q => Promise.resolve(searchLocal(q).map(r => ({ title: r.block.title, source: 'local', id: r.block.id, score: r.score }))) },
+    { name: 'Wikipedia', icon: 'W', enabled: true, search: q => fetch('https://en.wikipedia.org/w/api.php?action=opensearch&search=' + encodeURIComponent(q) + '&limit=8&format=json&origin=*').then(r => r.json()).then(d => (d[1] || []).map((t, i) => ({ title: t, source: 'wikipedia', url: d[3][i], snippet: d[2][i] }))).catch(() => []) },
+    { name: 'Open Library', icon: 'OL', enabled: true, search: q => fetch('https://openlibrary.org/search.json?q=' + encodeURIComponent(q) + '&limit=6').then(r => r.json()).then(d => (d.docs || []).slice(0, 6).map(doc => ({ title: doc.title, source: 'openlibrary', author: (doc.author_name || [])[0] || '', year: doc.first_publish_year, url: 'https://openlibrary.org' + doc.key }))).catch(() => []) },
+    { name: 'Wayback', icon: 'WB', enabled: true, search: q => fetch('https://web.archive.org/cdx/search/cdx?url=*' + encodeURIComponent(q) + '*&output=json&limit=6&fl=original,timestamp').then(r => r.json()).then(d => d.slice(1).map(r => ({ title: r[0], source: 'wayback', timestamp: r[1], url: 'https://web.archive.org/web/' + r[1] + '/' + r[0] }))).catch(() => []) },
+    { name: 'Sacred Texts', icon: 'ST', enabled: true, search: q => Promise.resolve([{ title: 'Search sacred-texts.com for: ' + q, source: 'sacred-texts', url: 'https://www.sacred-texts.com/search.htm?q=' + encodeURIComponent(q) }]) },
+    { name: 'Yale Archives', icon: 'YA', enabled: true, search: q => Promise.resolve([{ title: 'Yale Beinecke: ' + q, source: 'yale', url: 'https://search.library.yale.edu/catalog?search_field=all_fields&q=' + encodeURIComponent(q) }]) },
+    { name: 'ARDA', icon: 'AR', enabled: true, search: q => Promise.resolve([{ title: 'ARDA Religion Data: ' + q, source: 'arda', url: 'https://www.thearda.com/data-archive' }]) },
+    { name: 'arXiv', icon: 'aX', enabled: true, search: q => fetch('https://export.arxiv.org/api/query?search_query=all:' + encodeURIComponent(q) + '&max_results=5').then(r => r.text()).then(xml => { const entries = []; const re = /<entry>[\s\S]*?<title>([\s\S]*?)<\/title>[\s\S]*?<id>([\s\S]*?)<\/id>[\s\S]*?<\/entry>/g; let m; while ((m = re.exec(xml)) !== null) entries.push({ title: m[1].trim(), source: 'arxiv', url: m[2].trim() }); return entries; }).catch(() => []) },
+    { name: 'PubChem', icon: 'PC', enabled: true, search: q => fetch('https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/' + encodeURIComponent(q) + '/property/MolecularFormula,MolecularWeight/JSON').then(r => r.json()).then(d => (d.PropertyTable?.Properties || []).map(p => ({ title: q + ' — ' + p.MolecularFormula + ' (' + p.MolecularWeight + ' g/mol)', source: 'pubchem', url: 'https://pubchem.ncbi.nlm.nih.gov/compound/' + p.CID }))).catch(() => []) },
+    { name: 'GenBank', icon: 'GB', enabled: true, search: q => Promise.resolve([{ title: 'NCBI GenBank: ' + q, source: 'genbank', url: 'https://www.ncbi.nlm.nih.gov/nuccore/?term=' + encodeURIComponent(q) }]) },
+    { name: 'LGBTQ Archives', icon: 'LQ', enabled: true, search: q => Promise.resolve([{ title: 'LGBTQ Religious Archives: ' + q, source: 'lgbtq-archives', url: 'https://lgbtqreligiousarchives.org/resources' }]) },
+    { name: 'Meta Research', icon: 'MR', enabled: true, search: q => Promise.resolve([{ title: 'Meta FAIR: ' + q, source: 'meta-research', url: 'https://ai.meta.com/research/?q=' + encodeURIComponent(q) }]) },
+    { name: 'HathiTrust', icon: 'HT', enabled: true, search: q => Promise.resolve([{ title: 'HathiTrust Digital Library: ' + q, source: 'hathitrust', url: 'https://catalog.hathitrust.org/Search/Home?lookfor=' + encodeURIComponent(q) }]) },
+    { name: 'Internet Archive', icon: 'IA', enabled: true, search: q => fetch('https://archive.org/advancedsearch.php?q=' + encodeURIComponent(q) + '&fl[]=identifier,title&rows=6&output=json').then(r => r.json()).then(d => (d.response?.docs || []).map(doc => ({ title: doc.title, source: 'internet-archive', url: 'https://archive.org/details/' + doc.identifier }))).catch(() => []) },
+    // FUTURE: X.com/Grok, ICANN WHOIS, UniProt, GBIF
+];
+
+function buildConnectorPills() {
+    const el = $('search-connectors'); if (!el) return;
+    el.innerHTML = '';
+    CONNECTORS.forEach((c, i) => {
+        const pill = document.createElement('button');
+        pill.className = 'tbtn' + (c.enabled ? ' active' : '');
+        pill.textContent = c.icon;
+        pill.title = c.name + (c.enabled ? ' (active)' : ' (disabled)');
+        pill.style.fontSize = '.5rem'; pill.style.padding = '2px 5px';
+        pill.onclick = () => { c.enabled = !c.enabled; pill.classList.toggle('active'); pill.title = c.name + (c.enabled ? ' (active)' : ' (disabled)'); };
+        el.appendChild(pill);
+    });
+}
+
+async function runSearch() {
+    const query = $('insp-search').value.trim(); if (!query) return;
+    const results = $('insp-search-results'); results.innerHTML = '<div style="color:var(--text-dim);font-size:.625rem;">Searching...</div>';
+    tlog('search', query, 'cmd');
+    const enabled = CONNECTORS.filter(c => c.enabled);
+    const allResults = [];
+    await Promise.allSettled(enabled.map(async conn => {
+        try {
+            const r = await conn.search(query);
+            r.forEach(item => allResults.push(item));
+        } catch(e) { /* skip failed connectors */ }
+    }));
+    results.innerHTML = '';
+    if (allResults.length === 0) { results.innerHTML = '<div style="color:var(--text-dim);font-size:.625rem;">No results</div>'; return; }
+    allResults.forEach(item => {
+        const div = document.createElement('div'); div.className = 'search-result';
+        div.innerHTML = '<div class="sr-title">' + escHtml(item.title || '') + '</div><div class="sr-src">' + escHtml(item.source || '') + (item.author ? ' | ' + escHtml(item.author) : '') + (item.year ? ' | ' + item.year : '') + '</div>';
+        div.onclick = () => {
+            if (item.url) window.open(item.url, '_blank');
+            if (item.id) { const b = STATE.blocks.find(b => b.id === item.id); if (b) selectBlock(b); }
+            // Show in doc viewer
+            $('doc-viewer').textContent = JSON.stringify(item, null, 2);
+        };
+        results.appendChild(div);
+    });
+    tlog('results', allResults.length + ' from ' + enabled.length + ' connectors', 'ok');
+}
+
+
+/* ══════════════════════════════════════════════════════
+   VISUALIZATION MODES
+   ══════════════════════════════════════════════════════ */
+let vizAnim = null;
+function setVizMode(mode, btn) {
+    STATE.vizMode = mode;
+    document.querySelectorAll('#canvas-tools button').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    if (mode === 'blocks') {
+        $('viz-overlay').style.display = 'none';
+        if (vizAnim) { cancelAnimationFrame(vizAnim); vizAnim = null; }
+        document.querySelectorAll('.block').forEach(b => b.style.display = '');
+        $('block-svg').style.display = '';
+    } else {
+        $('viz-overlay').style.display = 'block';
+        document.querySelectorAll('.block').forEach(b => b.style.display = 'none');
+        $('block-svg').style.display = 'none';
+        startViz(mode);
+    }
+}
+
+function startViz(mode) {
+    const cv = $('viz-canvas'); cv.width = cv.parentElement.offsetWidth; cv.height = cv.parentElement.offsetHeight;
+    const ctx = cv.getContext('2d');
+    const W = cv.width, H = cv.height;
+    let frame = 0;
+
+    function draw() {
+        frame++;
+        ctx.fillStyle = '#050810'; ctx.fillRect(0, 0, W, H);
+
+        if (mode === 'flame') drawFlame(ctx, W, H, frame);
+        else if (mode === 'tree') drawTree(ctx, W, H, frame);
+        else if (mode === 'dna') drawDNA(ctx, W, H, frame);
+        else if (mode === 'network') drawNetwork(ctx, W, H, frame);
+        else if (mode === 'heatmap') drawHeatmap(ctx, W, H, frame);
+
+        vizAnim = requestAnimationFrame(draw);
+    }
+    if (vizAnim) cancelAnimationFrame(vizAnim);
+    draw();
+}
+
+function closeViz() { setVizMode('blocks', document.querySelector('#canvas-tools button[data-viz="blocks"]')); }
+function toggleViz() {
+    const modes = ['blocks', 'flame', 'tree', 'dna', 'network', 'heatmap'];
+    const idx = modes.indexOf(STATE.vizMode);
+    const next = modes[(idx + 1) % modes.length];
+    const btn = document.querySelector('#canvas-tools button[data-viz="' + next + '"]');
+    setVizMode(next, btn);
+}
+
+// ── Flame Graph (Speedscope style) ──
+function drawFlame(ctx, W, H, t) {
+    ctx.fillStyle = '#0a0f1a'; ctx.fillRect(0, 0, W, H);
+    const levels = ['Corpus', 'Work', 'Chapter', 'Paragraph', 'Sentence', 'Word', 'Letter', 'Stroke'];
+    const colors = ['#7c3aed', '#6366f1', '#3b82f6', '#06b6d4', '#22d3ee', '#34d399', '#fbbf24', '#f97316'];
+    const barH = Math.min(40, H / levels.length - 4);
+    levels.forEach((lv, i) => {
+        const y = i * (barH + 4) + 20;
+        const segments = 3 + i * 2;
+        for (let s = 0; s < segments; s++) {
+            const x = (W / segments) * s + 2;
+            const w = (W / segments) - 4;
+            const heat = Math.sin(t * 0.02 + s * 0.5 + i) * 0.3 + 0.7;
+            ctx.fillStyle = colors[i] + Math.floor(heat * 200).toString(16).padStart(2, '0');
+            ctx.fillRect(x, y, w, barH);
+            ctx.strokeStyle = colors[i] + '40'; ctx.lineWidth = 0.5; ctx.strokeRect(x, y, w, barH);
+            if (barH > 16) {
+                ctx.fillStyle = '#fff'; ctx.font = '9px monospace'; ctx.textAlign = 'center';
+                ctx.fillText(lv + ' ' + (s + 1), x + w / 2, y + barH / 2 + 3);
+            }
+        }
+        ctx.fillStyle = colors[i]; ctx.font = 'bold 8px monospace'; ctx.textAlign = 'left';
+        ctx.fillText(lv, 4, y - 2);
+    });
+    ctx.fillStyle = '#475569'; ctx.font = '9px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('Speedscope / Flame Graph | corpus > work > chapter > ... > font stroke', W / 2, H - 6);
+}
+
+// ── Ancestry Fan/Tree ──
+function drawTree(ctx, W, H, t) {
+    const cx = W / 2, cy = H - 40;
+    const maxR = Math.min(W, H) * 0.45;
+    const depth = 5, branchAngle = Math.PI * 0.7;
+    function branch(x, y, angle, len, d) {
+        if (d <= 0 || len < 3) return;
+        const nx = x + Math.cos(angle) * len, ny = y + Math.sin(angle) * len;
+        const hue = (d / depth) * 200 + 180;
+        const alpha = 0.3 + (d / depth) * 0.5;
+        ctx.strokeStyle = 'hsla(' + hue + ',70%,60%,' + alpha + ')';
+        ctx.lineWidth = d * 1.2;
+        ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(nx, ny); ctx.stroke();
+        // Node
+        ctx.beginPath(); ctx.arc(nx, ny, d * 2, 0, Math.PI * 2);
+        ctx.fillStyle = 'hsla(' + hue + ',70%,60%,' + (alpha * 0.6) + ')'; ctx.fill();
+        const spread = branchAngle / (depth - d + 1);
+        branch(nx, ny, angle - spread + Math.sin(t * 0.01 + d) * 0.05, len * 0.72, d - 1);
+        branch(nx, ny, angle + spread + Math.cos(t * 0.01 + d) * 0.05, len * 0.72, d - 1);
+    }
+    branch(cx, cy, -Math.PI / 2, maxR * 0.4, depth);
+    ctx.fillStyle = '#475569'; ctx.font = '9px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('Ancestry Fan / Tree | genealogy, citation, religious lineage', W / 2, H - 6);
+}
+
+// ── DNA Helix + CRISPR stub ──
+function drawDNA(ctx, W, H, t) {
+    const bases = ['A', 'T', 'G', 'C'];
+    const baseColors = { A: '#ef4444', T: '#3b82f6', G: '#34d399', C: '#fbbf24' };
+    const cx = W / 2, amp = W * 0.15, period = H / 4;
+    for (let y = 0; y < H; y += 4) {
+        const phase = (y + t * 2) / period * Math.PI * 2;
+        const x1 = cx + Math.sin(phase) * amp;
+        const x2 = cx - Math.sin(phase) * amp;
+        const depth = Math.cos(phase);
+        // Backbone
+        ctx.strokeStyle = depth > 0 ? 'rgba(124,58,237,0.6)' : 'rgba(124,58,237,0.2)';
+        ctx.lineWidth = depth > 0 ? 2 : 1;
+        ctx.beginPath(); ctx.moveTo(x1, y); ctx.lineTo(x2, y); ctx.stroke();
+        // Base pair
+        if (y % 20 < 4) {
+            const b1 = bases[Math.floor((y / 20 + t * 0.1) % 4)];
+            const b2 = b1 === 'A' ? 'T' : b1 === 'T' ? 'A' : b1 === 'G' ? 'C' : 'G';
+            ctx.fillStyle = baseColors[b1]; ctx.beginPath(); ctx.arc(x1, y, 4, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = baseColors[b2]; ctx.beginPath(); ctx.arc(x2, y, 4, 0, Math.PI * 2); ctx.fill();
+            if (depth > 0) {
+                ctx.fillStyle = '#fff'; ctx.font = 'bold 7px monospace'; ctx.textAlign = 'center';
+                ctx.fillText(b1, x1, y + 2.5); ctx.fillText(b2, x2, y + 2.5);
+            }
+        }
+    }
+    // CRISPR search overlay stub
+    ctx.fillStyle = 'rgba(239,68,68,0.15)'; ctx.fillRect(W * 0.1, H * 0.3, W * 0.8, 60);
+    ctx.strokeStyle = '#ef4444'; ctx.setLineDash([4, 4]); ctx.strokeRect(W * 0.1, H * 0.3, W * 0.8, 60); ctx.setLineDash([]);
+    ctx.fillStyle = '#ef4444'; ctx.font = 'bold 10px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('CRISPR target region (guide RNA binding site)', W / 2, H * 0.3 + 35);
+    ctx.fillStyle = '#475569'; ctx.font = '9px monospace';
+    ctx.fillText('DNA Helix | CRISPR search + research lab injection points', W / 2, H - 6);
+}
+
+// ── Network Graph (force-directed) ──
+function drawNetwork(ctx, W, H, t) {
+    const nodes = [];
+    const labels = ['Wikipedia', 'ICANN', 'CDN', 'Yale', 'ARDA', 'arXiv', 'GenBank', 'sacred-texts', 'HathiTrust', 'Meta AI', 'WorldCat', 'Wayback'];
+    const colors = ['#3b82f6', '#ef4444', '#34d399', '#f97316', '#fbbf24', '#8b5cf6', '#06b6d4', '#a78bfa', '#22d3ee', '#6366f1', '#84cc16', '#fb7185'];
+    labels.forEach((l, i) => {
+        const angle = (i / labels.length) * Math.PI * 2 + t * 0.003;
+        const r = Math.min(W, H) * 0.3 + Math.sin(t * 0.01 + i * 2) * 30;
+        nodes.push({ x: W / 2 + Math.cos(angle) * r, y: H / 2 + Math.sin(angle) * r, label: l, color: colors[i] });
+    });
+    // Edges
+    nodes.forEach((n, i) => {
+        const targets = [nodes[(i + 1) % nodes.length], nodes[(i + 3) % nodes.length]];
+        targets.forEach(tgt => {
+            ctx.strokeStyle = n.color + '30'; ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.moveTo(n.x, n.y); ctx.lineTo(tgt.x, tgt.y); ctx.stroke();
+        });
+    });
+    // Central hub
+    ctx.beginPath(); ctx.arc(W / 2, H / 2, 12, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(124,58,237,0.5)'; ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 8px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('HUB', W / 2, H / 2 + 3);
+    // Nodes
+    nodes.forEach(n => {
+        ctx.beginPath(); ctx.arc(n.x, n.y, 8, 0, Math.PI * 2);
+        ctx.fillStyle = n.color + '80'; ctx.fill();
+        ctx.strokeStyle = n.color; ctx.lineWidth = 1.5; ctx.stroke();
+        ctx.fillStyle = '#e2e8f0'; ctx.font = '8px monospace'; ctx.textAlign = 'center';
+        ctx.fillText(n.label, n.x, n.y - 12);
+    });
+    ctx.fillStyle = '#475569'; ctx.font = '9px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('Network Graph | CDN, ICANN, data banks, institutional flow', W / 2, H - 6);
+}
+
+// ── Heatmap (prefix-colored grid) ──
+function drawHeatmap(ctx, W, H, t) {
+    const prefixes = ['+1', '1', '-1', '+0', '0', '-0', '+n', 'n', '-n', '+2', '+3'];
+    const colors = ['#3fb950', '#58a6ff', '#bc8cff', '#f0883e', '#8b949e', '#f85149', '#d2a8ff', '#79c0ff', '#e3b341', '#58d1f0', '#f9c74f'];
+    const cols = prefixes.length, rows = 20;
+    const cellW = W / cols, cellH = (H - 20) / rows;
+    for (let c = 0; c < cols; c++) {
+        for (let r = 0; r < rows; r++) {
+            const heat = Math.sin(t * 0.03 + c * 1.2 + r * 0.25) * 0.5 + 0.5;
+            const alpha = Math.floor((0.1 + heat * 0.6) * 255).toString(16).padStart(2, '0');
+            ctx.fillStyle = colors[c] + alpha;
+            ctx.fillRect(c * cellW, r * cellH, cellW - 1, cellH - 1);
+        }
+        ctx.fillStyle = colors[c]; ctx.font = 'bold 9px monospace'; ctx.textAlign = 'center';
+        ctx.fillText(prefixes[c], c * cellW + cellW / 2, H - 4);
+    }
+    ctx.fillStyle = '#475569'; ctx.font = '9px monospace'; ctx.textAlign = 'left';
+    ctx.fillText('Heatmap | prefix-colored data flow', 6, 12);
+}
+
+
+/* ══════════════════════════════════════════════════════
+   AI BLOCKS — PERSONA BUILDER
+   ══════════════════════════════════════════════════════ */
+const AI = {
+    buildPersona(blockIds) {
+        const blocks = blockIds.map(id => STATE.blocks.find(b => b.id === id)).filter(Boolean);
+        if (blocks.length === 0) return { error: 'No blocks selected' };
+        const allText = blocks.map(b => b.content || b.title).join(' ');
+        const words = allText.toLowerCase().split(/\W+/).filter(w => w.length > 2);
+        const freq = {}; words.forEach(w => freq[w] = (freq[w] || 0) + 1);
+        const sorted = Object.entries(freq).sort((a, b) => b[1] - a[1]);
+        const vocabSize = sorted.length;
+        const totalWords = words.length;
+        const avgWordLen = words.length > 0 ? (words.reduce((s, w) => s + w.length, 0) / words.length).toFixed(1) : 0;
+        const hapax = sorted.filter(([, c]) => c === 1).length;
+        const topWords = sorted.slice(0, 20);
+        // Sentiment stub (simple positive/negative word lists)
+        const posWords = ['good', 'great', 'love', 'beautiful', 'sacred', 'divine', 'holy', 'peace', 'wisdom', 'truth', 'light', 'grace', 'hope'];
+        const negWords = ['evil', 'bad', 'hate', 'dark', 'death', 'sin', 'war', 'curse', 'fear', 'pain'];
+        let posCount = 0, negCount = 0;
+        words.forEach(w => { if (posWords.includes(w)) posCount++; if (negWords.includes(w)) negCount++; });
+        const sentiment = posCount > negCount ? 'positive' : posCount < negCount ? 'negative' : 'neutral';
+        return {
+            name: 'Persona from ' + blocks.length + ' blocks',
+            vocabFingerprint: { size: vocabSize, totalWords, avgWordLen: +avgWordLen, hapaxRatio: (hapax / vocabSize * 100).toFixed(1) + '%' },
+            topWords,
+            sentiment,
+            sourceBlocks: blockIds,
+            // FUTURE: injection points
+            futureCapabilities: {
+                eyeTracking: '// FUTURE: WebGazer.js integration',
+                breathingRhythm: '// FUTURE: Audio input analysis for breathing patterns',
+                muscleEMG: '// FUTURE: WebSerial stub for EMG biosensors',
+                ikSkeletal: '// FUTURE: MediaPipe Pose for motion capture',
+                handGesture: '// FUTURE: MediaPipe Hands for gesture recognition',
+                movementCycles: '// FUTURE: animal/human/protozoa biomimicry motion data',
+                quantumParticle: '// FUTURE: Quantum particle behavior simulation',
+                robotics: '// FUTURE: Liquid muscle / soft robotics research data format',
+            }
+        };
+    },
+    // Training injection API
+    injectTraining(blockId, model, config) {
+        const block = STATE.blocks.find(b => b.id === blockId);
+        if (!block) return { error: 'Block not found' };
+        block.training.eligible = true;
+        block.training.injectedInto.push({ model, config, timestamp: Date.now() });
+        tlog('inject', blockId + ' -> ' + model, 'ok');
+        return { success: true, block: block.id, model };
+    }
+};
+// Expose globally
+window.history_ai = AI;
+
+
+/* ══════════════════════════════════════════════════════
+   INSPECTOR
+   ══════════════════════════════════════════════════════ */
+function setInspTab(tab, btn) {
+    STATE.inspTab = tab;
+    document.querySelectorAll('#insp-tabs button').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    ['inspect', 'search-tab', 'ask-tab', 'doc-tab'].forEach(id => {
+        const el = $('insp-' + id); if (el) el.style.display = 'none';
+    });
+    const target = $('insp-' + (tab === 'search' ? 'search-tab' : tab === 'ask' ? 'ask-tab' : tab === 'doc' ? 'doc-tab' : 'inspect'));
+    if (target) target.style.display = '';
+}
+
+function toggleInspector() {
+    $('inspector').classList.toggle('collapsed');
+}
+
+function updateInspector() {
+    const block = STATE.selectedBlock;
+    if (!block) {
+        $('insp-sel-info').textContent = 'Click a block or timeline point to inspect';
+        $('insp-meta').innerHTML = ''; $('insp-prefix').innerHTML = '';
+        $('insp-links').innerHTML = ''; $('insp-training').textContent = 'No block selected';
+        return;
+    }
+    const bt = BLOCK_TYPES[block.type] || BLOCK_TYPES.event;
+    $('insp-sel-info').innerHTML = '<span style="color:' + bt.color + ';">' + bt.prefix + '</span> ' + escHtml(block.title) + ' <span style="color:var(--text-dim);">(' + bt.label + ')</span>';
+
+    // Metadata
+    const meta = [
+        { k: 'ID', v: block.id },
+        { k: 'Type', v: block.type },
+        { k: 'Timestamp', v: block.timestamp !== undefined ? '10^' + block.timestamp.toFixed(2) + 's' : '—' },
+    ];
+    Object.entries(block.metadata || {}).forEach(([k, v]) => meta.push({ k, v: String(v) }));
+    $('insp-meta').innerHTML = meta.map(m => '<div class="insp-kv"><span class="k">' + escHtml(m.k) + '</span><span class="v">' + escHtml(m.v) + '</span></div>').join('');
+
+    // Prefix analysis
+    if (QP && block.content) {
+        const pm = QP.prefixMetadata(block.content, 'auto');
+        $('insp-prefix').innerHTML = '<div class="insp-kv"><span class="k">Coverage</span><span class="v">' + pm.coverage + '%</span></div>' +
+            '<div class="insp-kv"><span class="k">Lines</span><span class="v">' + pm.totalLines + '</span></div>' +
+            '<div class="insp-kv"><span class="k">Language</span><span class="v">' + (pm.language || 'auto') + '</span></div>' +
+            Object.entries(pm.prefixCounts || {}).map(([k, v]) => '<div class="insp-kv"><span class="k">' + k + '</span><span class="v">' + v + '</span></div>').join('');
+    } else {
+        $('insp-prefix').innerHTML = '<div style="color:var(--text-dim);font-size:.625rem;">No content to analyze</div>';
+    }
+
+    // Linked blocks
+    const linked = STATE.connections.filter(c => c.from === block.id || c.to === block.id);
+    $('insp-links').innerHTML = linked.length > 0 ? linked.map(c => {
+        const otherId = c.from === block.id ? c.to : c.from;
+        const other = STATE.blocks.find(b => b.id === otherId);
+        return '<div class="search-result" onclick="selectBlock(STATE.blocks.find(b=>b.id===\'' + otherId + '\'))"><div class="sr-title">' + escHtml(other?.title || otherId) + '</div><div class="sr-src">' + (c.from === block.id ? 'outgoing' : 'incoming') + '</div></div>';
+    }).join('') : '<div style="color:var(--text-dim);font-size:.625rem;">No connections</div>';
+
+    // Training
+    $('insp-training').innerHTML = '<div class="insp-kv"><span class="k">Eligible</span><span class="v" style="color:' + (block.training.eligible ? 'var(--green)' : 'var(--text-dim)') + ';">' + (block.training.eligible ? 'YES' : 'no') + '</span></div>' +
+        '<div class="insp-kv"><span class="k">Injected into</span><span class="v">' + (block.training.injectedInto.length || '0') + ' models</span></div>' +
+        '<button class="tbtn" style="width:100%;margin-top:4px;padding:4px;" onclick="toggleTraining(\'' + block.id + '\');updateInspector();">' + (block.training.eligible ? 'Disable Training' : 'Enable Training') + '</button>' +
+        '<button class="tbtn" style="width:100%;margin-top:4px;padding:4px;" onclick="buildPersonaFromSelected()">Build Persona</button>';
+
+    // Show content in doc viewer
+    $('doc-viewer').textContent = block.content || '(empty)';
+}
+
+function buildPersonaFromSelected() {
+    const eligible = STATE.blocks.filter(b => b.training.eligible);
+    if (eligible.length === 0) {
+        tlog('persona', 'No training-eligible blocks', 'err'); return;
+    }
+    const persona = AI.buildPersona(eligible.map(b => b.id));
+    const block = createBlock('ai_persona', persona.name, JSON.stringify(persona, null, 2));
+    tlog('persona', persona.name + ' (' + persona.vocabFingerprint.totalWords + ' words)', 'ok');
+    selectBlock(block);
+}
+
+function runAsk() {
+    const q = $('ask-input').value.trim(); if (!q) return;
+    const result = $('ask-result');
+    tlog('ask', q, 'cmd');
+    // Client-side keyword extraction from selected block
+    const block = STATE.selectedBlock;
+    if (block && block.content) {
+        const words = block.content.toLowerCase().split(/\W+/).filter(w => w.length > 3);
+        const freq = {}; words.forEach(w => freq[w] = (freq[w] || 0) + 1);
+        const top = Object.entries(freq).sort((a, b) => b[1] - a[1]).slice(0, 10);
+        result.innerHTML = '<div style="margin-bottom:8px;"><strong>Keywords:</strong> ' + top.map(([w, c]) => w + '(' + c + ')').join(', ') + '</div>' +
+            '<div style="color:var(--text-dim);">Full AI analysis requires bridge connection (quantum_bridge_server.py)</div>';
+    } else {
+        result.innerHTML = '<div style="color:var(--text-dim);">Select a block first, or connect the quantum bridge for AI inference.</div>';
+    }
+}
+
+
+/* ══════════════════════════════════════════════════════
+   DATA INGESTION
+   ══════════════════════════════════════════════════════ */
+function fileIngest() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.txt,.md,.json,.csv,.html,.xml,.epub,.pdf';
+    input.multiple = true;
+    input.onchange = e => {
+        Array.from(e.target.files).forEach(file => {
+            const reader = new FileReader();
+            reader.onload = ev => {
+                const text = ev.target.result;
+                const lines = text.split('\n');
+                // Create source block
+                const source = createBlock('source', file.name, text.substring(0, 2000), {
+                    metadata: { filename: file.name, size: file.size, lines: lines.length, type: file.type || 'text/plain' }
+                });
+                // Auto-chunk by headers or paragraphs
+                let chunkStart = 0;
+                const chunks = [];
+                lines.forEach((line, i) => {
+                    if ((line.startsWith('#') || (line.trim() === '' && i - chunkStart > 20)) && i > chunkStart + 3) {
+                        chunks.push({ title: lines[chunkStart].substring(0, 60), content: lines.slice(chunkStart, i).join('\n'), lineStart: chunkStart });
+                        chunkStart = i;
+                    }
+                });
+                if (chunkStart < lines.length) chunks.push({ title: lines[chunkStart].substring(0, 60), content: lines.slice(chunkStart).join('\n'), lineStart: chunkStart });
+                chunks.forEach((ch, i) => {
+                    const chapter = createBlock('chapter', ch.title || 'Section ' + (i + 1), ch.content, {
+                        x: source.x + 200 + i * 30, y: source.y + 40 + i * 60,
+                        metadata: { lineStart: ch.lineStart, parent: source.id }
+                    });
+                    addConnection(source.id, chapter.id);
+                });
+                tlog('ingest', file.name + ' -> ' + chunks.length + ' chunks', 'ok');
+            };
+            reader.readAsText(file);
+        });
+    };
+    input.click();
+}
+
+
+/* ══════════════════════════════════════════════════════
+   DEV TERMINAL
+   ══════════════════════════════════════════════════════ */
+function tlog(action, detail, type) {
+    const log = $('term-log');
+    const ts = new Date().toLocaleTimeString('en-US', { hour12: false });
+    const cls = type === 'ok' ? 'term-ok' : type === 'err' ? 'term-err' : type === 'cmd' ? 'term-cmd' : '';
+    log.innerHTML += '<div><span class="ts">' + ts + '</span> <span class="' + cls + '">' + escHtml(action) + '</span> ' + escHtml(detail || '') + '</div>';
+    log.scrollTop = log.scrollHeight;
+    STATE.termLines++;
+    $('term-count').textContent = STATE.termLines;
+}
+
+function toggleTerminal() {
+    const panel = $('terminal-panel');
+    panel.style.height = panel.style.height === '24px' ? '140px' : '24px';
+}
+
+function runCmd() {
+    const input = $('cmd-input');
+    const cmd = input.value.trim(); input.value = '';
+    if (!cmd) return;
+    tlog('> ' + cmd, '', 'cmd');
+
+    const parts = cmd.split(/\s+/);
+    const verb = parts[0].toLowerCase();
+
+    if (verb === 'help') {
+        tlog('help', 'Commands: search <q> | ingest | blocks | connectors | persona | train <id> | inject <id> <model> | clear | status', 'ok');
+    } else if (verb === 'search' && parts.length > 1) {
+        $('insp-search').value = parts.slice(1).join(' ');
+        setInspTab('search', document.querySelector('#insp-tabs button:nth-child(2)'));
+        runSearch();
+    } else if (verb === 'ingest') {
+        fileIngest();
+    } else if (verb === 'blocks') {
+        STATE.blocks.forEach(b => tlog('  ' + b.id, b.type + ': ' + (b.title || '').substring(0, 40)));
+    } else if (verb === 'connectors') {
+        CONNECTORS.forEach(c => tlog('  ' + c.icon, c.name + ' [' + (c.enabled ? 'ON' : 'off') + ']'));
+    } else if (verb === 'persona') {
+        buildPersonaFromSelected();
+    } else if (verb === 'train' && parts[1]) {
+        const b = STATE.blocks.find(b => b.id === parts[1]);
+        if (b) { b.training.eligible = true; tlog('train', b.id + ' enabled', 'ok'); }
+        else tlog('train', 'block not found: ' + parts[1], 'err');
+    } else if (verb === 'inject' && parts[1] && parts[2]) {
+        const result = AI.injectTraining(parts[1], parts[2], {});
+        tlog('inject', JSON.stringify(result), result.error ? 'err' : 'ok');
+    } else if (verb === 'clear') {
+        $('term-log').innerHTML = ''; STATE.termLines = 0; $('term-count').textContent = '0';
+    } else if (verb === 'status') {
+        tlog('status', 'blocks: ' + STATE.blocks.length + ' | connections: ' + STATE.connections.length + ' | indexed: ' + STATE.indexedCount + ' | viz: ' + STATE.vizMode, 'ok');
+    } else {
+        tlog('unknown', 'command: ' + verb + ' — type help', 'err');
+    }
+}
+
+
+/* ══════════════════════════════════════════════════════
+   UTILITIES
+   ══════════════════════════════════════════════════════ */
+function escHtml(s) { return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+function updateStats() {
+    $('sb-blocks').textContent = STATE.blocks.length;
+    $('sb-conns').textContent = STATE.connections.length;
+    $('sb-indexed').textContent = STATE.indexedCount;
+    $('canvas-info').textContent = 'blocks: ' + STATE.blocks.length + ' | connections: ' + STATE.connections.length + ' | click canvas to place';
+}
+
+// Expose for inline onclick handlers
+window.addBlock = addBlock;
+window.removeBlock = removeBlock;
+window.selectBlock = selectBlock;
+window.toggleTraining = toggleTraining;
+window.buildPersonaFromSelected = buildPersonaFromSelected;
+window.fileIngest = fileIngest;
+window.toggleViz = toggleViz;
+window.setVizMode = setVizMode;
+window.closeViz = closeViz;
+window.toggleInspector = toggleInspector;
+window.setInspTab = setInspTab;
+window.runSearch = runSearch;
+window.runAsk = runAsk;
+window.runCmd = runCmd;
+window.toggleTerminal = toggleTerminal;
+window.tlZoom = tlZoom;
+window.tlReset = tlReset;
+window.STATE = STATE;
+
+
+/* ══════════════════════════════════════════════════════
+   INIT
+   ══════════════════════════════════════════════════════ */
+window.addEventListener('resize', () => { tlResize(); });
+tlResize();
+buildConnectorPills();
+updateStats();
+
+// Welcome
+tlog('init', 'History — Universal Timeline Knowledge Graph v4.4', 'ok');
+tlog('init', '61 orders of magnitude: Planck time (5.39e-44s) to observable universe (4.35e17s)', 'ok');
+tlog('init', CONNECTORS.length + ' search connectors loaded', 'ok');
+tlog('init', Object.keys(BLOCK_TYPES).length + ' block types available', 'ok');
+tlog('tip', 'try: search shakespeare | ingest | blocks | persona | help', '');
+
+// Seed some demo blocks
+createBlock('source', 'Voynich Manuscript (Beinecke MS 408)', 'An illustrated codex hand-written in an unknown script. Vellum carbon-dated to 1404-1438. Held at Yale Beinecke Library.', { timestamp: 10.3, metadata: { location: 'Yale University', dating: '1404-1438', script: 'Voynichese' } });
+createBlock('source', 'Sacred Texts Archive', 'Internet Sacred Text Archive — comprehensive collection of sacred texts from all world traditions.', { timestamp: 11, x: 350, y: 180, metadata: { url: 'https://sacred-texts.com' } });
+createBlock('entity', 'CERN LHC — 70 Proton Transfer Cage', 'Large Hadron Collider proton cage with polarity inversion capability. Can flip to inverse based on polarity.', { timestamp: -21, x: 200, y: 300, metadata: { facility: 'CERN', particles: 'protons', count: 70 } });
+addConnection('block-1', 'block-2');
+
+// ── ?q= auto-search from extension or direct link ──
+(function autoSearch(){
+    const params = new URLSearchParams(window.location.search);
+    const q = params.get('q');
+    if (q) {
+        $('insp-search').value = q;
+        setInspTab('search', document.querySelector('#insp-tabs button:nth-child(2)'));
+        setTimeout(() => runSearch(), 300);
+        tlog('auto-search', 'query from URL: ' + q, 'cmd');
+    }
+})();
+
+// ── PWA + Quantum Sync ──
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+// ===== QUANTUM PREFIX LIVE SYNC =====
+if (QP) {
+    QP.onStateChange(function(source, state) { if (source === 'history' || !state) return; });
+    QP.broadcastState('history', { coverage: 0, totalLines: 0, classifiedLines: 0, prefixCounts: {}, role: 'timeline' });
+    QP.requestStateSync();
+}
+
+})();
+</script>
+</body>
+</html>

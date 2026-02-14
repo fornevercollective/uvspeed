@@ -1,0 +1,58 @@
+{
+  "manifest_version": 3,
+  "name": "History — Universal Timeline Search",
+  "description": "Injects uvspeed History timeline + 14 search connectors above Google/Bing/DuckDuckGo results. Wikipedia, Wayback, Sacred Texts, arXiv, PubChem, GenBank, Open Library & more.",
+  "version": "1.1.0",
+  "icons": {
+    "16": "icons/icon-16.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "permissions": ["activeTab", "storage"],
+  "host_permissions": [
+    "https://en.wikipedia.org/*",
+    "https://web.archive.org/*",
+    "https://openlibrary.org/*",
+    "https://export.arxiv.org/*",
+    "https://pubchem.ncbi.nlm.nih.gov/*",
+    "https://archive.org/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.google.com/search*",
+        "https://www.google.co.uk/search*",
+        "https://www.google.ca/search*",
+        "https://www.google.com.au/search*",
+        "https://www.google.de/search*",
+        "https://www.google.fr/search*",
+        "https://www.google.co.jp/search*",
+        "https://www.google.co.in/search*",
+        "https://www.bing.com/search*",
+        "https://duckduckgo.com/*",
+        "https://search.brave.com/search*",
+        "https://www.ecosia.org/search*",
+        "https://search.yahoo.com/search*"
+      ],
+      "js": ["content.js"],
+      "css": ["styles.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "48": "icons/icon-48.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "history-search@fornevercollective.com",
+      "strict_min_version": "109.0"
+    }
+  }
+}
