@@ -124,6 +124,36 @@ a{color:var(--accent);text-decoration:none;}a:hover{text-decoration:underline;}
 #fu-scale{height:56px;border-bottom:1px solid var(--border);}
 #fu-scale-canvas{width:100%;height:100%;display:block;}
 
+/* ── Document Viewer Panel ── */
+#doc-viewer{position:fixed;top:0;right:-100%;width:min(480px,90vw);height:100vh;height:100dvh;background:var(--bg);border-left:1px solid var(--border);display:flex;flex-direction:column;transition:right .25s ease;z-index:100;box-shadow:-4px 0 24px rgba(0,0,0,.5);}
+#doc-viewer.open{right:0;}
+#doc-viewer-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99;display:none;}
+#doc-viewer-overlay.open{display:block;}
+.dv-header{display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--bg2);border-bottom:1px solid var(--border);flex-shrink:0;}
+.dv-close{background:none;border:1px solid var(--border);color:var(--muted);width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.dv-close:hover{color:var(--text);border-color:#475569;}
+.dv-title{flex:1;font-family:var(--mono);font-size:12px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.dv-source{font-family:var(--mono);font-size:9px;padding:2px 8px;border-radius:4px;color:var(--muted);border:1px solid var(--border);}
+.dv-tabs{display:flex;background:var(--bg2);border-bottom:1px solid var(--border);flex-shrink:0;}
+.dv-tab{flex:1;padding:7px 4px;text-align:center;font-family:var(--mono);font-size:10px;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;}
+.dv-tab:hover{color:var(--text);}
+.dv-tab.active{color:var(--cyan);border-color:var(--cyan);}
+.dv-body{flex:1;overflow-y:auto;padding:14px;font-size:13px;line-height:1.6;-webkit-overflow-scrolling:touch;}
+.dv-section{margin-bottom:16px;}
+.dv-section-title{font-family:var(--mono);font-size:10px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;}
+.dv-tone-bar{display:flex;height:6px;border-radius:3px;overflow:hidden;margin:4px 0 8px;}
+.dv-tone-seg{transition:width .3s;}
+.dv-metric{display:flex;justify-content:space-between;padding:3px 0;font-family:var(--mono);font-size:11px;color:var(--muted);}
+.dv-metric .val{color:var(--text);font-weight:600;}
+.dv-ref{font-family:var(--mono);font-size:11px;padding:4px 8px;border-left:2px solid var(--border);color:var(--muted);margin:4px 0;cursor:pointer;transition:all .15s;}
+.dv-ref:hover{border-color:var(--cyan);color:var(--text);}
+.dv-heartbeat{display:flex;align-items:center;gap:10px;padding:10px;background:var(--bg2);border-radius:8px;margin:8px 0;}
+.dv-hb-bar{flex:1;height:8px;border-radius:4px;overflow:hidden;display:flex;}
+.dv-hb-humanity{background:linear-gradient(90deg,#3b82f6,#8b5cf6);transition:width .3s;}
+.dv-hb-profit{background:linear-gradient(90deg,#f97316,#ef4444);transition:width .3s;}
+.dv-hb-label{font-family:var(--mono);font-size:10px;font-weight:700;min-width:40px;text-align:right;}
+.dv-ai{padding:10px;background:var(--bg2);border-radius:8px;font-family:var(--mono);font-size:10px;color:var(--dim);line-height:1.5;margin-top:8px;border:1px solid var(--border);}
+
 /* ── Footer ── */
 #footer{padding:8px 16px;padding-bottom:max(8px,env(safe-area-inset-bottom));text-align:center;border-top:1px solid var(--border);font-family:var(--mono);font-size:8px;color:var(--dim);background:var(--bg2);flex-shrink:0;}
 
@@ -148,7 +178,7 @@ a{color:var(--accent);text-decoration:none;}a:hover{text-decoration:underline;}
     <div id="header">
         <div class="logo-row">
             <span class="logo">SEARCH</span>
-            <span class="ver">v1.1 | 14 connectors + FreyaUnits</span>
+            <span class="ver">v2.0 | 17 connectors + Document Viewer + FreyaUnits</span>
             <span class="spacer"></span>
             <a class="nav-btn" href="history.html">History</a>
             <a class="nav-btn" href="freya.html">Freya</a>
@@ -195,6 +225,25 @@ a{color:var(--accent);text-decoration:none;}a:hover{text-decoration:underline;}
         </div>
         <div id="fu-quantum"></div>
         <div id="fu-table"></div>
+    </div>
+
+    <!-- ═══ DOCUMENT VIEWER ═══ -->
+    <div id="doc-viewer-overlay"></div>
+    <div id="doc-viewer">
+        <div class="dv-header">
+            <button class="dv-close" id="dv-close">&times;</button>
+            <div class="dv-title" id="dv-title">Document</div>
+            <span class="dv-source" id="dv-source"></span>
+        </div>
+        <div class="dv-tabs">
+            <div class="dv-tab active" data-dv="content">Content</div>
+            <div class="dv-tab" data-dv="analysis">Analysis</div>
+            <div class="dv-tab" data-dv="refs">References</div>
+            <div class="dv-tab" data-dv="patterns">Patterns</div>
+        </div>
+        <div class="dv-body" id="dv-body">
+            <div style="text-align:center;padding:40px;color:var(--dim);">Click a search result to view document analysis.</div>
+        </div>
     </div>
 
     <div id="footer">
@@ -319,17 +368,182 @@ async function doSearch(query){
     history.replaceState(null, '', url);
 }
 
+let _lastResults = [];
 function renderResults(results){
+    _lastResults = results;
     const el = $('results');
     el.innerHTML = '';
     if(!results.length){ el.innerHTML = '<div class="empty">No results found.</div>'; return; }
-    results.forEach(item => {
+    results.forEach((item, idx) => {
         const a = document.createElement('a');
-        a.className = 'result'; a.href = item.url || '#'; a.target = '_blank'; a.rel = 'noopener';
+        a.className = 'result'; a.href = item.url || '#'; a.rel = 'noopener';
+        a.dataset.ridx = idx;
         const col = HS.getSourceColor(item.source);
         a.innerHTML = `<div class="r-source"><span class="r-dot" style="background:${col};"></span>${esc(item.source)}</div><div class="r-title">${esc(item.title)}</div>${item.snippet ? '<div class="r-snippet">'+esc(item.snippet)+'</div>' : ''}`;
+        a.addEventListener('click', e => {
+            e.preventDefault();
+            openDocViewer(item, idx);
+        });
         el.appendChild(a);
     });
+}
+
+/* ══════════════════════════════════════════════════════
+   DOCUMENT VIEWER
+   ══════════════════════════════════════════════════════ */
+let _dvDoc = null;
+let _dvAnalysis = null;
+let _dvTab = 'content';
+const TONE_COLORS = { academic:'#3b82f6', marketing:'#f97316', educational:'#34d399', narrative:'#a78bfa', legal:'#fbbf24', crisis:'#ef4444' };
+
+function openDocViewer(item, idx) {
+    $('doc-viewer').classList.add('open');
+    $('doc-viewer-overlay').classList.add('open');
+    $('dv-title').textContent = item.title || 'Loading...';
+    $('dv-source').textContent = item.source || '';
+    $('dv-source').style.color = HS.getSourceColor(item.source);
+    _dvTab = 'content';
+    document.querySelectorAll('.dv-tab').forEach(t => t.classList.toggle('active', t.dataset.dv === 'content'));
+    $('dv-body').innerHTML = '<div style="text-align:center;padding:40px;color:var(--dim);">Fetching document...</div>';
+    _dvDoc = null; _dvAnalysis = null;
+
+    HS.fetchDocument(item.url, item.source).then(doc => {
+        _dvDoc = doc;
+        _dvDoc.title = _dvDoc.title || item.title;
+        _dvDoc.snippet = item.snippet;
+        $('dv-title').textContent = _dvDoc.title;
+        _dvAnalysis = HS.analyzeContext(_dvDoc);
+        _dvDoc._analysis = _dvAnalysis;
+        renderDvTab();
+    }).catch(() => {
+        $('dv-body').innerHTML = '<div style="text-align:center;padding:40px;color:#f85149;">Failed to fetch document. <a href="' + esc(item.url) + '" target="_blank" style="color:var(--cyan);">Open in new tab</a></div>';
+    });
+}
+
+function closeDocViewer() {
+    $('doc-viewer').classList.remove('open');
+    $('doc-viewer-overlay').classList.remove('open');
+}
+
+$('dv-close').addEventListener('click', closeDocViewer);
+$('doc-viewer-overlay').addEventListener('click', closeDocViewer);
+document.querySelectorAll('.dv-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+        _dvTab = tab.dataset.dv;
+        document.querySelectorAll('.dv-tab').forEach(t => t.classList.toggle('active', t === tab));
+        renderDvTab();
+    });
+});
+
+function renderDvTab() {
+    if (!_dvDoc) return;
+    const body = $('dv-body');
+    const a = _dvAnalysis || {};
+
+    if (_dvTab === 'content') {
+        const content = _dvDoc.content || 'No content available.';
+        const preview = content.length > 3000 ? content.substring(0, 3000) + '...' : content;
+        body.innerHTML = '<div class="dv-section">' +
+            '<div class="dv-section-title">Content (' + (_dvDoc.wordCount || 0) + ' words)</div>' +
+            '<div style="font-size:12px;line-height:1.7;color:var(--text);white-space:pre-wrap;word-break:break-word;">' + esc(preview) + '</div>' +
+            '</div>' +
+            (_dvDoc.authors ? '<div class="dv-section"><div class="dv-section-title">Authors</div><div style="font-size:11px;color:var(--muted);">' + _dvDoc.authors.map(esc).join(', ') + '</div></div>' : '') +
+            (_dvDoc.categories ? '<div class="dv-section"><div class="dv-section-title">Categories</div><div style="font-size:11px;color:var(--muted);">' + _dvDoc.categories.map(c => '<span style="display:inline-block;padding:2px 6px;margin:2px;border-radius:4px;border:1px solid var(--border);font-family:var(--mono);font-size:10px;">' + esc(c) + '</span>').join('') + '</div></div>' : '') +
+            (_dvDoc.subjects ? '<div class="dv-section"><div class="dv-section-title">Subjects</div><div style="font-size:11px;color:var(--muted);">' + _dvDoc.subjects.map(s => '<span style="display:inline-block;padding:2px 6px;margin:2px;border-radius:4px;border:1px solid var(--border);font-family:var(--mono);font-size:10px;">' + esc(s) + '</span>').join('') + '</div></div>' : '') +
+            '<div style="text-align:center;margin-top:12px;"><a href="' + esc(_dvDoc.url) + '" target="_blank" style="font-family:var(--mono);font-size:10px;color:var(--cyan);">Open original &rarr;</a></div>';
+    }
+
+    else if (_dvTab === 'analysis') {
+        if (!a.tone) { body.innerHTML = '<div style="padding:40px;text-align:center;color:var(--dim);">No analysis available.</div>'; return; }
+        var toneBar = '<div class="dv-tone-bar">';
+        for (var t in TONE_COLORS) {
+            if (a.tone[t] > 0) toneBar += '<div class="dv-tone-seg" style="width:' + a.tone[t] + '%;background:' + TONE_COLORS[t] + ';" title="' + t + ': ' + a.tone[t] + '%"></div>';
+        }
+        toneBar += '</div>';
+        var toneLegend = Object.keys(TONE_COLORS).map(t => '<span style="font-family:var(--mono);font-size:10px;color:' + TONE_COLORS[t] + ';">' + t + ' ' + (a.tone[t] || 0) + '%</span>').join(' &middot; ');
+
+        body.innerHTML = '<div class="dv-section">' +
+            '<div class="dv-section-title">Writing Tone</div>' + toneBar +
+            '<div style="margin-bottom:6px;">' + toneLegend + '</div>' +
+            '<div class="dv-metric"><span>Dominant tone</span><span class="val" style="color:' + (TONE_COLORS[a.tone.dominant] || 'var(--text)') + ';">' + (a.tone.dominant || 'neutral') + '</span></div>' +
+            '</div>' +
+
+            '<div class="dv-section"><div class="dv-section-title">Heartbeat: Humanity vs Profit</div>' +
+            '<div class="dv-heartbeat">' +
+            '<span style="font-family:var(--mono);font-size:9px;color:#8b5cf6;">humanity</span>' +
+            '<div class="dv-hb-bar"><div class="dv-hb-humanity" style="width:' + Math.round((a.heartbeat || 0.5) * 100) + '%;"></div><div class="dv-hb-profit" style="width:' + Math.round((1 - (a.heartbeat || 0.5)) * 100) + '%;"></div></div>' +
+            '<span class="dv-hb-label" style="color:' + ((a.heartbeat || 0.5) >= 0.5 ? '#8b5cf6' : '#f97316') + ';">' + Math.round((a.heartbeat || 0.5) * 100) + '%</span>' +
+            '</div></div>' +
+
+            '<div class="dv-section"><div class="dv-section-title">Vocabulary</div>' +
+            '<div class="dv-metric"><span>Total words</span><span class="val">' + (a.vocabulary ? a.vocabulary.totalWords : 0) + '</span></div>' +
+            '<div class="dv-metric"><span>Unique words</span><span class="val">' + (a.vocabulary ? a.vocabulary.uniqueWords : 0) + '</span></div>' +
+            '<div class="dv-metric"><span>Type-token ratio</span><span class="val">' + (a.vocabulary ? (a.vocabulary.typeTokenRatio * 100).toFixed(1) + '%' : '—') + '</span></div>' +
+            '<div class="dv-metric"><span>Avg word length</span><span class="val">' + (a.vocabulary ? a.vocabulary.avgWordLength : '—') + '</span></div>' +
+            '<div class="dv-metric"><span>Hapax ratio</span><span class="val">' + (a.vocabulary ? (a.vocabulary.hapaxRatio * 100).toFixed(1) + '%' : '—') + '</span></div>' +
+            '</div>' +
+
+            '<div class="dv-section"><div class="dv-section-title">Metrics</div>' +
+            '<div class="dv-metric"><span>Readability (Flesch)</span><span class="val">' + (a.readabilityScore || 0) + '/100</span></div>' +
+            '<div class="dv-metric"><span>Sentiment</span><span class="val" style="color:' + (a.sentiment > 0 ? 'var(--green)' : a.sentiment < 0 ? '#f85149' : 'var(--muted)') + ';">' + (a.sentiment > 0 ? '+' : '') + a.sentiment + '</span></div>' +
+            '<div class="dv-metric"><span>Monetary signals</span><span class="val">' + (a.monetarySignals ? a.monetarySignals.length : 0) + '</span></div>' +
+            '</div>' +
+
+            '<div class="dv-ai">' + esc(a.aiPerspective || '') + '</div>';
+    }
+
+    else if (_dvTab === 'refs') {
+        if (!a.subReferences) { body.innerHTML = '<div style="padding:40px;text-align:center;color:var(--dim);">No references extracted.</div>'; return; }
+        var html = '';
+        for (var key in a.subReferences) {
+            var refs = a.subReferences[key];
+            if (refs.length === 0) continue;
+            html += '<div class="dv-section"><div class="dv-section-title">' + esc(key) + ' (' + refs.length + ')</div>';
+            refs.forEach(function(r) {
+                if (key === 'urls') {
+                    html += '<div class="dv-ref"><a href="' + esc(r) + '" target="_blank" style="color:var(--cyan);font-size:11px;word-break:break-all;">' + esc(r) + '</a></div>';
+                } else if (key === 'quotes') {
+                    html += '<div class="dv-ref" style="font-style:italic;">&ldquo;' + esc(r) + '&rdquo;</div>';
+                } else {
+                    html += '<div class="dv-ref">' + esc(r) + '</div>';
+                }
+            });
+            html += '</div>';
+        }
+        if (a.monetarySignals && a.monetarySignals.length > 0) {
+            html += '<div class="dv-section"><div class="dv-section-title">Monetary Signals (' + a.monetarySignals.length + ')</div>';
+            a.monetarySignals.forEach(function(m) { html += '<div class="dv-ref" style="border-color:#f97316;">' + esc(m) + '</div>'; });
+            html += '</div>';
+        }
+        body.innerHTML = html || '<div style="padding:40px;text-align:center;color:var(--dim);">No references found in document.</div>';
+    }
+
+    else if (_dvTab === 'patterns') {
+        // Cross-result pattern analysis using all fetched docs
+        var docs = _lastResults.filter(function(r) { return r._fetchedDoc; }).map(function(r) { return r._fetchedDoc; });
+        if (_dvDoc._analysis) { if (!docs.find(function(d) { return d.url === _dvDoc.url; })) docs.push(_dvDoc); }
+        var patterns = HS.detectPatterns(_lastResults, docs);
+
+        body.innerHTML = '<div class="dv-section"><div class="dv-section-title">Cross-Result Patterns (' + patterns.documentsAnalyzed + ' docs analyzed)</div>' +
+            '<div class="dv-metric"><span>Economic density</span><span class="val">' + patterns.economicDensity + ' signals/1k words</span></div>' +
+            '<div class="dv-metric"><span>Attention ratio</span><span class="val" style="color:#f97316;">' + patterns.attentionRatio + '% attention</span></div>' +
+            '<div class="dv-metric"><span>Heartbeat ratio</span><span class="val" style="color:#8b5cf6;">' + patterns.heartbeatRatio + '% humanity</span></div>' +
+            '</div>' +
+            (patterns.shockwaves.length > 0 ? '<div class="dv-section"><div class="dv-section-title" style="color:#ef4444;">Shockwaves Detected (' + patterns.shockwaves.length + ')</div>' +
+                patterns.shockwaves.map(function(sw) { return '<div class="dv-ref" style="border-color:#ef4444;"><strong>' + esc(sw.title) + '</strong> — crisis ' + sw.crisisScore + '%, ' + sw.monetaryTerms + ' monetary terms, sentiment ' + sw.sentiment + '</div>'; }).join('') +
+            '</div>' : '') +
+            '<div class="dv-section"><div class="dv-section-title">Prediction</div>' +
+            '<div style="font-family:var(--mono);font-size:11px;padding:10px;background:var(--bg2);border-radius:6px;border:1px solid var(--border);color:var(--muted);line-height:1.5;">' + esc(patterns.prediction) + '</div>' +
+            '</div>' +
+            '<div class="dv-section"><div class="dv-section-title">Tone Clusters</div>' +
+            Object.keys(patterns.clusters).map(function(c) {
+                var items = patterns.clusters[c];
+                if (items.length === 0) return '';
+                return '<div style="margin-bottom:4px;"><span style="font-family:var(--mono);font-size:10px;color:' + (TONE_COLORS[c] || 'var(--muted)') + ';font-weight:700;">' + c + '</span> (' + items.length + '): ' +
+                    items.map(function(i) { return '<span style="font-family:var(--mono);font-size:10px;">' + esc(i.title || '').substring(0, 40) + '</span>'; }).join(', ') + '</div>';
+            }).join('') +
+            '</div>';
+    }
 }
 
 /* ══════════════════════════════════════════════════════

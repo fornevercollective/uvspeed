@@ -1220,6 +1220,72 @@
     }
 
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // 3D Quantum Coordinate Mapping
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    /**
+     * Map document/context analysis to 3D quantum coordinates [x, y, z].
+     * x = sub-reference density (0-1) → deps dimension
+     * y = word complexity / vocabulary richness (0-1) → lines dimension
+     * z = tone complexity / multi-dimensionality (0-1) → complexity dimension
+     *
+     * @param {Object} analysis - Output from HistorySearch.analyzeContext() or similar
+     * @returns {Object} { coordinates: [x, y, z], label, color, gate }
+     */
+    function contextToCoordinates(analysis) {
+        if (!analysis) return { coordinates: [0, 0, 0], label: 'origin', color: '#64748b', gate: 'id' };
+
+        // x: sub-reference density (links, dates, quotes, monetary signals)
+        var refCount = 0;
+        if (analysis.subReferences) {
+            for (var key in analysis.subReferences) {
+                refCount += (analysis.subReferences[key] || []).length;
+            }
+        }
+        refCount += (analysis.monetarySignals || []).length;
+        var x = Math.min(1, refCount / 50); // normalized 0-1
+
+        // y: vocabulary richness (type-token ratio + hapax ratio + avg word length)
+        var ttr = analysis.vocabulary ? analysis.vocabulary.typeTokenRatio : 0;
+        var hapax = analysis.vocabulary ? analysis.vocabulary.hapaxRatio : 0;
+        var avgLen = analysis.vocabulary ? (analysis.vocabulary.avgWordLength || 5) / 12 : 0;
+        var y = Math.min(1, (ttr * 0.4 + hapax * 0.3 + avgLen * 0.3));
+
+        // z: tone complexity (how many tones are active + entropy)
+        var activeTones = 0;
+        var toneEntropy = 0;
+        if (analysis.tone) {
+            var toneVals = ['academic', 'marketing', 'educational', 'narrative', 'legal', 'crisis'];
+            var toneSum = 0;
+            toneVals.forEach(function(t) { if (analysis.tone[t] > 5) activeTones++; toneSum += (analysis.tone[t] || 0); });
+            if (toneSum > 0) {
+                toneVals.forEach(function(t) {
+                    var p = (analysis.tone[t] || 0) / toneSum;
+                    if (p > 0) toneEntropy -= p * Math.log2(p);
+                });
+            }
+        }
+        var z = Math.min(1, (activeTones / 6) * 0.5 + (toneEntropy / 2.585) * 0.5); // max entropy for 6 = 2.585
+
+        // Map to quantum prefix based on dominant quadrant
+        var label, color, gate;
+        if (x > 0.6 && z > 0.6) { label = 'complex-referenced'; color = '#8b5cf6'; gate = 'h'; }
+        else if (x > 0.6) { label = 'reference-heavy'; color = '#3b82f6'; gate = 'cnot'; }
+        else if (z > 0.6) { label = 'tone-complex'; color = '#f97316'; gate = 'rz'; }
+        else if (y > 0.6) { label = 'vocabulary-rich'; color = '#34d399'; gate = 't'; }
+        else if (analysis.heartbeat !== undefined && analysis.heartbeat > 0.7) { label = 'humanity-centered'; color = '#a78bfa'; gate = 's'; }
+        else if (analysis.heartbeat !== undefined && analysis.heartbeat < 0.3) { label = 'profit-oriented'; color = '#ef4444'; gate = 'x'; }
+        else { label = 'balanced'; color = '#22d3ee'; gate = 'id'; }
+
+        return {
+            coordinates: [Math.round(x * 1000) / 1000, Math.round(y * 1000) / 1000, Math.round(z * 1000) / 1000],
+            label: label,
+            color: color,
+            gate: gate,
+            raw: { refDensity: x, vocabRichness: y, toneComplexity: z, activeTones: activeTones, toneEntropy: Math.round(toneEntropy * 100) / 100 },
+        };
+    }
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     // Public API
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     var API = {
@@ -1268,6 +1334,9 @@
         simulateCircuit: simulateCircuit,
         submitToIBM: submitToIBM,
         hellingerFidelity: hellingerFidelity,
+
+        // 3D context mapping
+        contextToCoordinates: contextToCoordinates,
 
         // Theme
         toggleTheme: toggleTheme,

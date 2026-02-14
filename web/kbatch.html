@@ -356,6 +356,8 @@
                 <div class="stat"><span class="stat-label">Words</span> <span class="stat-val" style="color:#c9d1d9;" id="s-words">0</span></div>
                 <div class="stat"><span class="stat-label">Hapax</span> <span class="stat-val" style="color:#d2a8ff;" id="s-hapax">0</span></div>
                 <div class="stat"><span class="stat-label">Layout</span> <span class="stat-val" style="color:#f0883e;" id="s-layout">QWERTY</span></div>
+                <div class="stat"><span class="stat-label">Tone</span> <span class="stat-val" style="color:#34d399;" id="s-tone">—</span></div>
+                <div class="stat"><span class="stat-label">&hearts;</span> <span class="stat-val" style="color:#8b5cf6;" id="s-heartbeat">—</span></div>
             </div>
             <div id="viz-grid">
                 <div class="viz-panel">
@@ -1680,6 +1682,52 @@ console.log(qasm.split('\n').slice(0,5).join('\n'));</textarea>
         dict: { lookup: (w) => DictEngine.lookup(w) },
     };
 
+    // ══════════════════ SESSION VOCABULARY + TONE METER ══════════════════
+    (function(){
+        const HS = window.HistorySearch;
+        if (!HS || !HS.analyzeContext) return;
+        let sessionText = '';
+        let toneTimer = null;
+        const toneEl = document.getElementById('s-tone');
+        const hbEl = document.getElementById('s-heartbeat');
+        const TC = { academic:'#3b82f6', marketing:'#f97316', educational:'#34d399', narrative:'#a78bfa', legal:'#fbbf24', crisis:'#ef4444' };
+
+        function updateLiveTone() {
+            if (sessionText.length < 20) return;
+            const a = HS.analyzeContext({ content: sessionText });
+            if (a.tone && a.tone.dominant) {
+                toneEl.textContent = a.tone.dominant;
+                toneEl.style.color = TC[a.tone.dominant] || '#c9d1d9';
+            }
+            const hb = Math.round((a.heartbeat || 0.5) * 100);
+            hbEl.textContent = hb + '%';
+            hbEl.style.color = hb >= 50 ? '#8b5cf6' : '#f97316';
+        }
+
+        // Hook into typing input
+        const typInput = document.getElementById('typing-input');
+        if (typInput) {
+            typInput.addEventListener('input', () => {
+                sessionText = typInput.value;
+                clearTimeout(toneTimer);
+                toneTimer = setTimeout(updateLiveTone, 500);
+            });
+        }
+
+        // Also track processText calls
+        const origProcess = window.kbatch.processText;
+        window.kbatch.processText = (text) => {
+            sessionText += ' ' + text;
+            origProcess(text);
+            clearTimeout(toneTimer);
+            toneTimer = setTimeout(updateLiveTone, 500);
+        };
+
+        // Expose session analysis
+        window.kbatch.sessionAnalysis = () => HS.analyzeContext({ content: sessionText });
+        window.kbatch.sessionText = () => sessionText;
+    })();
+
     // ══════════════════ CODE CELL ══════════════════
     (function(){
         const codeInput = document.getElementById('code-input');
@@ -1915,12 +1963,29 @@ kbatch.setLayout('qwerty');`;
                         });
                     }
                     if (data.synonyms.length) termPrint(`Synonyms: ${data.synonyms.join(', ')}`, 'result');
+                    // Bridge: cross-connector search for deeper context
+                    const HS = window.HistorySearch;
+                    if (HS) {
+                        termPrint(`\u2500\u2500\u2500 Cross-connector context \u2500\u2500\u2500`, 'info');
+                        HS.search(word, { onProgress: () => {} }).then(r => {
+                            const bySource = {};
+                            r.results.forEach(res => { if (!bySource[res.source]) bySource[res.source] = res; });
+                            const sources = Object.values(bySource).slice(0, 6);
+                            if (sources.length === 0) { termPrint('No cross-references found', 'warn'); return; }
+                            sources.forEach(res => {
+                                termPrint(`<span style="color:${HS.getSourceColor(res.source)};">[${res.source}]</span> ${res.title}${res.snippet ? ' \u2014 ' + res.snippet.substring(0, 80) : ''}`);
+                            });
+                            window._kbLastSearch = r.results;
+                            termPrint(`${r.totalResults} results. Use <b style="color:#f0883e;">view [n]</b> to analyze.`, 'info');
+                        });
+                    }
                 });
             } else if (cmd === 'search' && parts.length >= 2) {
                 const query = parts.slice(1).join(' ');
                 const HS = window.HistorySearch;
                 if (!HS) { termPrint('HistorySearch not loaded', 'error'); return; }
                 termPrint(`Searching: "${query}"...`, 'info');
+                let searchResults = [];
                 HS.search(query, { onProgress: (r) => {
                     if (r.results && r.results.length) {
                         r.results.slice(0, 5).forEach(res => {
@@ -1929,8 +1994,36 @@ kbatch.setLayout('qwerty');`;
                         });
                     }
                 }}).then(r => {
-                    termPrint(`${r.totalResults} results from ${r.connectorsUsed.length} connectors in ${r.latencyMs}ms`, 'result');
+                    searchResults = r.results;
+                    window._kbLastSearch = searchResults;
+                    termPrint(`${r.totalResults} results from ${r.connectorsUsed} connectors in ${r.latencyMs}ms`, 'result');
+                    termPrint(`Use <b style="color:#f0883e;">view [n]</b> to fetch and analyze result #n`, 'info');
                 });
+            } else if (cmd === 'view') {
+                const HS = window.HistorySearch;
+                if (!HS || !HS.fetchDocument) { termPrint('HistorySearch v2 not loaded', 'error'); return; }
+                const lastSearch = window._kbLastSearch || [];
+                if (lastSearch.length === 0) { termPrint('No search results. Run: search <query>', 'warn'); return; }
+                const idx = parts.length >= 2 ? parseInt(parts[1]) - 1 : 0;
+                if (idx < 0 || idx >= lastSearch.length) { termPrint(`Invalid index. Range: 1-${lastSearch.length}`, 'error'); return; }
+                const item = lastSearch[idx];
+                termPrint(`Fetching: "${item.title}"...`, 'info');
+                HS.fetchDocument(item.url, item.source).then(doc => {
+                    termPrint(`\u2500\u2500\u2500 ${doc.title || item.title} (${doc.wordCount} words) \u2500\u2500\u2500`, 'info');
+                    const preview = (doc.content || '').substring(0, 300);
+                    if (preview) termPrint(preview + (doc.content.length > 300 ? '...' : ''));
+                    const a = HS.analyzeContext(doc);
+                    termPrint(`\u2500\u2500\u2500 ANALYSIS \u2500\u2500\u2500`, 'info');
+                    termPrint(`Tone: <b style="color:${a.tone.dominant === 'academic' ? '#3b82f6' : a.tone.dominant === 'educational' ? '#34d399' : '#a78bfa'};">${a.tone.dominant || 'neutral'}</b> (acad:${a.tone.academic||0}% edu:${a.tone.educational||0}% narr:${a.tone.narrative||0}% mkt:${a.tone.marketing||0}% crisis:${a.tone.crisis||0}%)`);
+                    const hb = Math.round((a.heartbeat || 0.5) * 100);
+                    const hbColor = hb >= 50 ? '#8b5cf6' : '#f97316';
+                    termPrint(`Heartbeat: <b style="color:${hbColor};">${hb}%</b> humanity | ${100 - hb}% profit-attention`);
+                    termPrint(`Vocabulary: ${a.vocabulary.totalWords} total, ${a.vocabulary.uniqueWords} unique, TTR ${(a.vocabulary.typeTokenRatio*100).toFixed(1)}%`);
+                    termPrint(`Readability: ${a.readabilityScore}/100 | Sentiment: ${a.sentiment > 0 ? '+' : ''}${a.sentiment}`);
+                    if (a.monetarySignals.length) termPrint(`Monetary signals (${a.monetarySignals.length}): ${a.monetarySignals.slice(0, 8).join(', ')}`, 'result');
+                    if (a.subReferences.dates && a.subReferences.dates.length) termPrint(`Dates found: ${a.subReferences.dates.slice(0, 5).join(', ')}`);
+                    termPrint(`<span style="color:#484f58;font-size:.6rem;">${a.aiPerspective}</span>`);
+                }).catch(e => { termPrint('Fetch error: ' + e.message, 'error'); });
             } else if ((cmd === 'eval' || cmd === 'js') && parts.length >= 2) {
                 try {
                     const result = eval(trimmed.slice(cmd.length).trim());

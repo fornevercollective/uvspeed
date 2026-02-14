@@ -143,6 +143,7 @@ a{color:var(--accent);text-decoration:none;}a:hover{text-decoration:underline;}
         <button class="tbtn" onclick="addBlock('event')" title="Add event block">+ Event</button>
         <button class="tbtn" onclick="addBlock('entity')" title="Add entity block">+ Entity</button>
         <button class="tbtn" onclick="fileIngest()" title="Import file">Import</button>
+        <button class="tbtn" id="tb-econ" onclick="toggleEconOverlay()" title="Economic heatmap overlay">Econ</button>
         <button class="tbtn" id="tb-viz" onclick="toggleViz()" title="Visualization modes">Viz</button>
         <button class="tbtn" id="tb-insp" onclick="toggleInspector()" title="Toggle inspector">Inspector</button>
     </div>
@@ -228,8 +229,17 @@ a{color:var(--accent);text-decoration:none;}a:hover{text-decoration:underline;}
                 </div>
                 <!-- Doc viewer tab -->
                 <div id="insp-doc-tab" style="display:none;">
-                    <div id="doc-viewer" style="display:block;">
-                        <p style="color:var(--text-dim);">Select a block or search result to view its document here.</p>
+                    <div id="hist-doc-viewer">
+                        <div id="hdv-title" style="font-weight:700;font-size:.7rem;margin-bottom:4px;color:var(--text);word-break:break-word;">Select a block or search result to view document analysis.</div>
+                        <div id="hdv-source" style="font-size:.5rem;color:var(--text-dim);margin-bottom:8px;"></div>
+                        <div id="hdv-tabs" style="display:flex;gap:4px;margin-bottom:8px;">
+                            <button class="tbtn active" data-hdv="content" onclick="setHdvTab('content',this)">Content</button>
+                            <button class="tbtn" data-hdv="analysis" onclick="setHdvTab('analysis',this)">Analysis</button>
+                            <button class="tbtn" data-hdv="refs" onclick="setHdvTab('refs',this)">Refs</button>
+                        </div>
+                        <div id="hdv-body" style="font-size:.6rem;line-height:1.5;color:var(--text-dim);overflow-y:auto;max-height:300px;">
+                            <p>Click a search result or block to analyze.</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -266,6 +276,7 @@ a{color:var(--accent);text-decoration:none;}a:hover{text-decoration:underline;}
 </div>
 
 <script src="quantum-prefixes.js"></script>
+<script src="history-search-engine.js"></script>
 <script>
 'use strict';
 (function(){
@@ -411,10 +422,73 @@ function drawTimeline(){
         ctx.lineWidth = b === STATE.selectedBlock ? 2 : 1; ctx.stroke();
     });
 
+    // Economic heatmap overlay
+    drawEconHeatmap(ctx, W, H, visMin, visRange);
+
     // Update info
     const scaleName = TL_SCALES.find(s => center >= s.minLog && center < s.maxLog);
     $('tb-scale').textContent = scaleName ? scaleName.name : 'cosmic';
     $('tb-zoom').textContent = zoom.toFixed(1) + 'x';
+}
+
+// ── Economic Heatmap Overlay ──
+let econOverlay = false;
+const ECON_EPOCHS = [
+    { t: -0.3, label: 'Barter', color: '#34d399', heat: 0.2 },
+    { t: 3.7, label: 'Coin ~600BC', color: '#fbbf24', heat: 0.3 },
+    { t: 4.0, label: 'Silk Road', color: '#f97316', heat: 0.4 },
+    { t: 7.7, label: 'Banking 1300s', color: '#fb7185', heat: 0.5 },
+    { t: 9.0, label: 'Colonialism', color: '#ef4444', heat: 0.7 },
+    { t: 9.7, label: 'Industrialization', color: '#f97316', heat: 0.6 },
+    { t: 10.2, label: 'Federal Reserve', color: '#e11d48', heat: 0.8 },
+    { t: 10.4, label: 'Bretton Woods', color: '#8b5cf6', heat: 0.7 },
+    { t: 10.6, label: 'Nixon Shock', color: '#ef4444', heat: 0.85 },
+    { t: 10.8, label: 'Derivatives Boom', color: '#f97316', heat: 0.9 },
+    { t: 11.0, label: '2008 Crisis', color: '#e11d48', heat: 0.95 },
+    { t: 11.1, label: 'Bitcoin', color: '#22d3ee', heat: 0.5 },
+    { t: 11.2, label: 'QE/MMT Era', color: '#ef4444', heat: 0.85 },
+    { t: 11.3, label: 'COVID Debt', color: '#e11d48', heat: 0.9 },
+    { t: 11.4, label: 'AI/Quantum', color: '#8b5cf6', heat: 0.6 },
+];
+
+function toggleEconOverlay() {
+    econOverlay = !econOverlay;
+    const btn = $('tb-econ');
+    if (btn) btn.classList.toggle('active', econOverlay);
+    drawTimeline();
+}
+window.toggleEconOverlay = toggleEconOverlay;
+
+function drawEconHeatmap(ctx, W, H, visMin, visRange) {
+    if (!econOverlay) return;
+    // Gradient heatmap bar at bottom
+    const barH = 24;
+    const barY = H - barH;
+    ctx.globalAlpha = 0.6;
+    ECON_EPOCHS.forEach((ep, i) => {
+        const x = ((ep.t - visMin) / visRange) * W;
+        if (x < -50 || x > W + 50) return;
+        const next = ECON_EPOCHS[i + 1];
+        const x2 = next ? ((next.t - visMin) / visRange) * W : x + 30;
+        // Heat bar
+        ctx.fillStyle = ep.color;
+        ctx.globalAlpha = ep.heat * 0.5;
+        ctx.fillRect(x, barY, Math.max(x2 - x, 4), barH);
+        // Vertical shockwave line
+        if (ep.heat > 0.7) {
+            ctx.strokeStyle = ep.color; ctx.lineWidth = 1; ctx.globalAlpha = ep.heat * 0.3;
+            ctx.beginPath(); ctx.moveTo(x, 20); ctx.lineTo(x, barY); ctx.stroke();
+        }
+        // Label
+        ctx.globalAlpha = 0.9;
+        ctx.fillStyle = ep.color; ctx.font = '7px monospace'; ctx.textAlign = 'center';
+        ctx.fillText(ep.label, x + (x2 - x) / 2, barY + 10);
+        // Heat indicator
+        ctx.fillStyle = ep.heat > 0.8 ? '#ef4444' : ep.heat > 0.5 ? '#fbbf24' : '#34d399';
+        ctx.font = '8px monospace';
+        ctx.fillText(Math.round(ep.heat * 100) + '%', x + (x2 - x) / 2, barY + 20);
+    });
+    ctx.globalAlpha = 1.0;
 }
 
 function tlZoom(factor){
@@ -707,16 +781,122 @@ async function runSearch() {
         const div = document.createElement('div'); div.className = 'search-result';
         div.innerHTML = '<div class="sr-title">' + escHtml(item.title || '') + '</div><div class="sr-src">' + escHtml(item.source || '') + (item.author ? ' | ' + escHtml(item.author) : '') + (item.year ? ' | ' + item.year : '') + '</div>';
         div.onclick = () => {
-            if (item.url) window.open(item.url, '_blank');
             if (item.id) { const b = STATE.blocks.find(b => b.id === item.id); if (b) selectBlock(b); }
-            // Show in doc viewer
-            $('doc-viewer').textContent = JSON.stringify(item, null, 2);
+            // Fetch and analyze in Doc tab
+            loadDocViewer(item);
         };
         results.appendChild(div);
     });
     tlog('results', allResults.length + ' from ' + enabled.length + ' connectors', 'ok');
 }
 
+/* ══════════════════════════════════════════════════════
+   DOC VIEWER (Inspector Doc tab)
+   ══════════════════════════════════════════════════════ */
+const HS = window.HistorySearch;
+let _hdvDoc = null, _hdvAnalysis = null, _hdvTab = 'content';
+const _TC = { academic:'#3b82f6', marketing:'#f97316', educational:'#34d399', narrative:'#a78bfa', legal:'#fbbf24', crisis:'#ef4444' };
+
+function setHdvTab(tab, btn) {
+    _hdvTab = tab;
+    document.querySelectorAll('#hdv-tabs button').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    renderHdvBody();
+}
+
+async function loadDocViewer(item) {
+    setInspTab('doc', document.querySelector('#insp-tabs button:last-child'));
+    $('hdv-title').textContent = item.title || 'Loading...';
+    $('hdv-source').textContent = item.source || '';
+    $('hdv-body').innerHTML = '<div style="color:var(--text-dim);">Fetching document...</div>';
+    _hdvDoc = null; _hdvAnalysis = null;
+    try {
+        if (HS && HS.fetchDocument) {
+            _hdvDoc = await HS.fetchDocument(item.url, item.source);
+        } else {
+            _hdvDoc = { title: item.title || '', content: item.snippet || 'Preview not available.', source: item.source, url: item.url, wordCount: 0 };
+        }
+        _hdvDoc.title = _hdvDoc.title || item.title;
+        $('hdv-title').textContent = _hdvDoc.title;
+        if (HS && HS.analyzeContext) {
+            _hdvAnalysis = HS.analyzeContext(_hdvDoc);
+            _hdvDoc._analysis = _hdvAnalysis;
+        }
+        renderHdvBody();
+        tlog('doc', 'fetched ' + (_hdvDoc.wordCount || 0) + ' words from ' + (_hdvDoc.source || 'unknown'), 'ok');
+    } catch(e) {
+        $('hdv-body').innerHTML = '<div style="color:#f85149;">Error: ' + escHtml(e.message) + '</div><a href="' + escHtml(item.url || '') + '" target="_blank" style="font-size:.5rem;color:var(--cyan);">Open original</a>';
+    }
+}
+
+function renderHdvBody() {
+    if (!_hdvDoc) return;
+    const body = $('hdv-body');
+    const a = _hdvAnalysis || {};
+
+    if (_hdvTab === 'content') {
+        const txt = _hdvDoc.content || 'No content available.';
+        const preview = txt.length > 2000 ? txt.substring(0, 2000) + '...' : txt;
+        body.innerHTML = '<div style="font-size:.55rem;font-weight:700;color:var(--accent);margin-bottom:4px;">CONTENT (' + (_hdvDoc.wordCount || 0) + ' words)</div>' +
+            '<div style="white-space:pre-wrap;word-break:break-word;font-size:.55rem;line-height:1.5;color:var(--text);">' + escHtml(preview) + '</div>' +
+            (_hdvDoc.categories ? '<div style="margin-top:6px;font-size:.5rem;color:var(--text-dim);">' + _hdvDoc.categories.map(c => '<span style="display:inline-block;padding:1px 4px;margin:1px;border-radius:3px;border:1px solid var(--border);font-size:.45rem;">' + escHtml(c) + '</span>').join('') + '</div>' : '') +
+            '<div style="margin-top:8px;text-align:center;"><a href="' + escHtml(_hdvDoc.url || '') + '" target="_blank" style="font-size:.5rem;color:var(--cyan);">Open original &rarr;</a></div>';
+    }
+    else if (_hdvTab === 'analysis') {
+        if (!a.tone) { body.innerHTML = '<div style="color:var(--text-dim);">No analysis available.</div>'; return; }
+        let toneBar = '<div style="display:flex;height:4px;border-radius:2px;overflow:hidden;margin:4px 0;">';
+        for (const t in _TC) { if (a.tone[t] > 0) toneBar += '<div style="width:' + a.tone[t] + '%;background:' + _TC[t] + ';"></div>'; }
+        toneBar += '</div>';
+        const legend = Object.keys(_TC).map(t => '<span style="color:' + _TC[t] + ';">' + t + ' ' + (a.tone[t] || 0) + '%</span>').join(' \u00b7 ');
+
+        const hb = a.heartbeat !== undefined ? a.heartbeat : 0.5;
+        body.innerHTML = '<div style="font-size:.55rem;font-weight:700;color:var(--accent);margin-bottom:4px;">TONE</div>' + toneBar +
+            '<div style="font-size:.45rem;margin-bottom:8px;">' + legend + '</div>' +
+            '<div style="font-size:.5rem;color:var(--text);">Dominant: <b style="color:' + (_TC[a.tone.dominant] || 'var(--text)') + ';">' + (a.tone.dominant || 'neutral') + '</b></div>' +
+
+            '<div style="font-size:.55rem;font-weight:700;color:var(--accent);margin:8px 0 4px;">HEARTBEAT</div>' +
+            '<div style="display:flex;align-items:center;gap:6px;padding:6px;background:var(--bg);border-radius:4px;">' +
+            '<span style="font-size:.45rem;color:#8b5cf6;">humanity</span>' +
+            '<div style="flex:1;height:6px;border-radius:3px;overflow:hidden;display:flex;">' +
+            '<div style="width:' + Math.round(hb * 100) + '%;background:linear-gradient(90deg,#3b82f6,#8b5cf6);"></div>' +
+            '<div style="width:' + Math.round((1 - hb) * 100) + '%;background:linear-gradient(90deg,#f97316,#ef4444);"></div>' +
+            '</div>' +
+            '<span style="font-size:.5rem;font-weight:700;color:' + (hb >= 0.5 ? '#8b5cf6' : '#f97316') + ';">' + Math.round(hb * 100) + '%</span></div>' +
+
+            '<div style="font-size:.55rem;font-weight:700;color:var(--accent);margin:8px 0 4px;">VOCABULARY</div>' +
+            '<div style="font-size:.5rem;">' +
+            '<div style="display:flex;justify-content:space-between;"><span>Words</span><b>' + (a.vocabulary ? a.vocabulary.totalWords : 0) + '</b></div>' +
+            '<div style="display:flex;justify-content:space-between;"><span>Unique</span><b>' + (a.vocabulary ? a.vocabulary.uniqueWords : 0) + '</b></div>' +
+            '<div style="display:flex;justify-content:space-between;"><span>TTR</span><b>' + (a.vocabulary ? (a.vocabulary.typeTokenRatio * 100).toFixed(1) + '%' : '—') + '</b></div>' +
+            '<div style="display:flex;justify-content:space-between;"><span>Readability</span><b>' + (a.readabilityScore || 0) + '/100</b></div>' +
+            '<div style="display:flex;justify-content:space-between;"><span>Sentiment</span><b style="color:' + (a.sentiment > 0 ? 'var(--green)' : a.sentiment < 0 ? '#f85149' : 'var(--text-dim)') + ';">' + (a.sentiment > 0 ? '+' : '') + a.sentiment + '</b></div>' +
+            '<div style="display:flex;justify-content:space-between;"><span>Monetary signals</span><b>' + (a.monetarySignals ? a.monetarySignals.length : 0) + '</b></div>' +
+            '</div>' +
+
+            '<div style="font-size:.4rem;color:var(--text-dim);margin-top:8px;padding:6px;background:var(--bg);border-radius:4px;border:1px solid var(--border);line-height:1.4;">' + escHtml(a.aiPerspective || '') + '</div>';
+    }
+    else if (_hdvTab === 'refs') {
+        if (!a.subReferences) { body.innerHTML = '<div style="color:var(--text-dim);">No references extracted.</div>'; return; }
+        let html = '';
+        for (const key in a.subReferences) {
+            const refs = a.subReferences[key];
+            if (!refs.length) continue;
+            html += '<div style="font-size:.55rem;font-weight:700;color:var(--accent);margin:6px 0 2px;">' + escHtml(key.toUpperCase()) + ' (' + refs.length + ')</div>';
+            refs.forEach(r => {
+                if (key === 'urls') html += '<div style="font-size:.45rem;padding:2px 0;"><a href="' + escHtml(r) + '" target="_blank" style="color:var(--cyan);word-break:break-all;">' + escHtml(r) + '</a></div>';
+                else if (key === 'quotes') html += '<div style="font-size:.45rem;padding:2px 0;font-style:italic;color:var(--text);">&ldquo;' + escHtml(r) + '&rdquo;</div>';
+                else html += '<div style="font-size:.45rem;padding:2px 0;color:var(--text-dim);">' + escHtml(r) + '</div>';
+            });
+        }
+        if (a.monetarySignals && a.monetarySignals.length) {
+            html += '<div style="font-size:.55rem;font-weight:700;color:#f97316;margin:6px 0 2px;">MONETARY (' + a.monetarySignals.length + ')</div>';
+            a.monetarySignals.forEach(m => { html += '<div style="font-size:.45rem;padding:2px 0;color:var(--text-dim);border-left:2px solid #f97316;padding-left:6px;">' + escHtml(m) + '</div>'; });
+        }
+        body.innerHTML = html || '<div style="color:var(--text-dim);">No references found.</div>';
+    }
+}
+window.setHdvTab = setHdvTab;
+window.loadDocViewer = loadDocViewer;
 
 /* ══════════════════════════════════════════════════════
    VISUALIZATION MODES
