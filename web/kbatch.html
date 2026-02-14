@@ -1240,102 +1240,16 @@ console.log(qasm.split('\n').slice(0,5).join('\n'));</textarea>
         }
     };
 
-    // ══════════════════ QUANTUM SIMULATOR (local) ══════════════════
-    function cmul(ar, ai, br, bi) { return [ar*br - ai*bi, ar*bi + ai*br]; }
+    // ══════════════════ QUANTUM (shared from quantum-prefixes.js) ══════════════════
+    // QSim, QGATES, rxGate, ryGate, rzGate, submitToIBM, hellingerFidelity
+    // are now provided by QuantumPrefixes shared module.
+    const QP_Q = window.QuantumPrefixes || {};
+    const QSim = QP_Q.QSim || function(){};
+    const QGATES = QP_Q.QGATES || {};
+    const rxGate = QP_Q.rxGate || function(t){ return [[1,0],[0,0],[0,0],[1,0]]; };
+    const ryGate = QP_Q.ryGate || function(t){ return [[1,0],[0,0],[0,0],[1,0]]; };
+    const rzGate = QP_Q.rzGate || function(t){ return [[1,0],[0,0],[0,0],[1,0]]; };
 
-    class QSim {
-        constructor(n) {
-            this.n = n;
-            this.N = 1 << n;
-            this.re = new Float64Array(this.N);
-            this.im = new Float64Array(this.N);
-            this.re[0] = 1;
-        }
-
-        gate1(q, m) {
-            const bit = 1 << q;
-            for (let i = 0; i < this.N; i++) {
-                if (i & bit) continue;
-                const j = i | bit;
-                const jr = this.re[i], ji = this.im[i];
-                const kr = this.re[j], ki = this.im[j];
-                const [a, b] = cmul(m[0][0], m[0][1], jr, ji);
-                const [c, d] = cmul(m[1][0], m[1][1], kr, ki);
-                const [e, f] = cmul(m[2][0], m[2][1], jr, ji);
-                const [g, h] = cmul(m[3][0], m[3][1], kr, ki);
-                this.re[i] = a + c; this.im[i] = b + d;
-                this.re[j] = e + g; this.im[j] = f + h;
-            }
-        }
-
-        cnot(ctrl, tgt) {
-            const cmask = 1 << ctrl, tmask = 1 << tgt;
-            for (let i = 0; i < this.N; i++) {
-                if ((i & cmask) && !(i & tmask)) {
-                    const j = i | tmask;
-                    const tr = this.re[i]; const ti = this.im[i];
-                    this.re[i] = this.re[j]; this.im[i] = this.im[j];
-                    this.re[j] = tr; this.im[j] = ti;
-                }
-            }
-        }
-
-        cz(ctrl, tgt) {
-            const cmask = 1 << ctrl, tmask = 1 << tgt;
-            for (let i = 0; i < this.N; i++) {
-                if ((i & cmask) && (i & tmask)) {
-                    this.re[i] = -this.re[i]; this.im[i] = -this.im[i];
-                }
-            }
-        }
-
-        swap(q1, q2) {
-            const m1 = 1 << q1, m2 = 1 << q2;
-            for (let i = 0; i < this.N; i++) {
-                if ((i & m1) && !(i & m2)) {
-                    const j = (i ^ m1) | m2;
-                    const tr = this.re[i]; const ti = this.im[i];
-                    this.re[i] = this.re[j]; this.im[i] = this.im[j];
-                    this.re[j] = tr; this.im[j] = ti;
-                }
-            }
-        }
-
-        measure(shots) {
-            const probs = new Float64Array(this.N);
-            for (let i = 0; i < this.N; i++) probs[i] = this.re[i]**2 + this.im[i]**2;
-            const counts = {};
-            for (let s = 0; s < shots; s++) {
-                let r = Math.random(), acc = 0;
-                for (let i = 0; i < this.N; i++) {
-                    acc += probs[i];
-                    if (r < acc) {
-                        const bits = i.toString(2).padStart(this.n, '0');
-                        counts[bits] = (counts[bits] || 0) + 1;
-                        break;
-                    }
-                }
-            }
-            return counts;
-        }
-    }
-
-    // Gate matrices: each is [[a_re, a_im], [b_re, b_im], [c_re, c_im], [d_re, d_im]]
-    const S2 = 1 / Math.sqrt(2);
-    const QGATES = {
-        h:  [[S2,0],[S2,0],[S2,0],[-S2,0]],
-        x:  [[0,0],[1,0],[1,0],[0,0]],
-        y:  [[0,0],[0,-1],[0,1],[0,0]],
-        z:  [[1,0],[0,0],[0,0],[-1,0]],
-        s:  [[1,0],[0,0],[0,0],[0,1]],
-        t:  [[1,0],[0,0],[0,0],[S2,S2]],
-        id: [[1,0],[0,0],[0,0],[1,0]],
-    };
-    function rxGate(t) { const c=Math.cos(t/2),s=Math.sin(t/2); return [[c,0],[0,-s],[0,-s],[c,0]]; }
-    function ryGate(t) { const c=Math.cos(t/2),s=Math.sin(t/2); return [[c,0],[-s,0],[s,0],[c,0]]; }
-    function rzGate(t) { const c=Math.cos(t/2),s=Math.sin(t/2); return [[c,-s],[0,0],[0,0],[c,s]]; }
-
-    // Prefix → Gate mapping (from quantum-prefix-gutter.mdc)
     const PREFIX_GATE = {
         '+1':'h', '1':'cnot', '-1':'x', '+0':'rz', '0':'id',
         '-0':'s', '+n':'t', 'n':'swap', '-n':'id', '+2':'cz', '+3':'y'

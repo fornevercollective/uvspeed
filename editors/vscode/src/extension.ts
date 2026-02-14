@@ -246,7 +246,66 @@ export function activate(context: vscode.ExtensionContext) {
         }),
 
         vscode.commands.registerCommand('quantumPrefixes.circuit', () => {
-            vscode.window.showInformationMessage('⚛ Quantum Circuit — coming in v0.2.0 (prefix → gate mapping visualization)');
+            const editor = vscode.window.activeTextEditor;
+            if (!editor) return;
+            const doc = editor.document;
+
+            // Build circuit from prefix classification
+            const GATE_MAP: Record<string, { gate: string; qubits: number }> = {
+                '+1': { gate: 'H', qubits: 1 },
+                '1':  { gate: 'CNOT', qubits: 2 },
+                '-1': { gate: 'X', qubits: 1 },
+                '+0': { gate: 'Rz', qubits: 1 },
+                '0':  { gate: 'I', qubits: 1 },
+                '-0': { gate: 'S', qubits: 1 },
+                '+n': { gate: 'T', qubits: 1 },
+                'n':  { gate: 'SWAP', qubits: 2 },
+                '-n': { gate: 'M', qubits: 1 },
+            };
+
+            const gates: Array<{ gate: string; qubit: number; target?: number; line: number; symbol: string }> = [];
+            let maxQ = 0, qPtr = 0;
+
+            for (let i = 0; i < doc.lineCount; i++) {
+                const result = classifyLine(doc.lineAt(i).text);
+                const mapping = GATE_MAP[result.symbol] || GATE_MAP['-n'];
+                const g: typeof gates[0] = { gate: mapping.gate, qubit: qPtr % 8, line: i + 1, symbol: result.symbol };
+                if (mapping.qubits === 2) g.target = (qPtr + 1) % 8;
+                gates.push(g);
+                if (g.qubit > maxQ) maxQ = g.qubit;
+                if (g.target !== undefined && g.target > maxQ) maxQ = g.target;
+                if (['+1', '1', '+0'].includes(result.symbol)) qPtr++;
+                if (['+n', '-n', '-0'].includes(result.symbol)) qPtr = Math.max(0, qPtr - 1);
+            }
+
+            // Build ASCII circuit
+            const numQ = maxQ + 1;
+            const circuitLines: string[] = [];
+            for (let q = 0; q < numQ; q++) {
+                let wire = `q${q}: `;
+                gates.forEach(g => {
+                    if (g.qubit === q) wire += `[${g.gate}]─`;
+                    else if (g.target === q) wire += `─●──`;
+                    else wire += `────`;
+                });
+                circuitLines.push(wire);
+            }
+
+            // Show as QASM in new document
+            let qasm = `// ⚛ Quantum Circuit — ${doc.fileName.split('/').pop()}\n`;
+            qasm += `// ${numQ} qubits, ${gates.length} gates\n\n`;
+            qasm += `OPENQASM 2.0;\ninclude "qelib1.inc";\nqreg q[${numQ}];\ncreg c[${numQ}];\n\n`;
+            gates.forEach(g => {
+                if (g.gate === 'CNOT') qasm += `cx q[${g.qubit}],q[${g.target ?? 0}];  // line ${g.line} (${g.symbol})\n`;
+                else if (g.gate === 'SWAP') qasm += `swap q[${g.qubit}],q[${g.target ?? 0}];  // line ${g.line} (${g.symbol})\n`;
+                else if (g.gate === 'Rz') qasm += `rz(0.7854) q[${g.qubit}];  // line ${g.line} (${g.symbol})\n`;
+                else if (g.gate !== 'I' && g.gate !== 'M') qasm += `${g.gate.toLowerCase()} q[${g.qubit}];  // line ${g.line} (${g.symbol})\n`;
+            });
+            qasm += `\nmeasure q -> c;\n\n// ── ASCII Circuit ──\n// ${circuitLines.join('\n// ')}`;
+
+            vscode.workspace.openTextDocument({ content: qasm, language: 'plaintext' }).then(d => {
+                vscode.window.showTextDocument(d);
+            });
         }),
     );
 

@@ -207,7 +207,160 @@ TOOLS = [
             "properties": {},
         },
     },
+    {
+        "name": "uvspeed_prefix_gaps",
+        "description": (
+            "Analyze quantum prefix coverage gaps in source code. "
+            "Returns which prefix categories are missing or underrepresented, "
+            "with structured suggestions for filling gaps (e.g., missing error handling, "
+            "missing loops, missing documentation). "
+            "Use after generating code to check structural completeness."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "code": {"type": "string", "description": "Source code to analyze for prefix gaps"},
+                "language": {"type": "string", "description": "Programming language (python, javascript, rust, etc.)"},
+                "threshold": {
+                    "type": "number",
+                    "description": "Minimum acceptable coverage percentage (default 80)",
+                    "default": 80,
+                },
+            },
+            "required": ["code", "language"],
+        },
+    },
 ]
+
+
+# ---------------------------------------------------------------------------
+# Local Prefix Classifier (mirrors quantum-prefixes.js logic)
+# ---------------------------------------------------------------------------
+
+import re
+
+_PREFIX_PATTERNS: Dict[str, List[re.Pattern]] = {
+    "n:": [re.compile(r"^#!"), re.compile(r"^<!(DOCTYPE|doctype)")],
+    "+1:": [re.compile(r"^\s*(#|//|/\*|\*|--|<!--|%|;;\s)")],
+    "-n:": [
+        re.compile(r"^\s*(import |from .+ import|require\(|use |include|#include|@import|extern crate)"),
+    ],
+    "+0:": [
+        re.compile(r"^\s*(class |struct |type |enum |interface |trait |@dataclass|@frozen)"),
+    ],
+    "0:": [
+        re.compile(r"^\s*(def |fn |func |function |const .+=.*=>|let .+=.*=>|async |pub fn |pub async )"),
+    ],
+    "-1:": [
+        re.compile(r"^\s*(try |except |catch|raise |throw |finally |rescue |panic!)"),
+    ],
+    "+n:": [
+        re.compile(r"^\s*(if |else |elif |elsif |switch |match |case |guard |when |unless )"),
+    ],
+    "+2:": [
+        re.compile(r"^\s*(for |while |loop |each |do \{|\.forEach|\.map\(|\.filter\()"),
+    ],
+    "-0:": [
+        re.compile(r"^\s*(return |yield |break|continue)"),
+    ],
+    "+3:": [
+        re.compile(r"^\s*(print|console\.|log\.|echo |puts |fmt\.Print|println!|render|display)"),
+    ],
+    "1:": [
+        re.compile(r"^\s*(let |var |const |self\.\w+\s*=|this\.\w+\s*=|\w+\s*[:=]\s)"),
+    ],
+}
+
+_CATEGORY_NAMES = {
+    "n:": "shebang",
+    "+1:": "comment",
+    "-n:": "import",
+    "+0:": "class",
+    "0:": "function",
+    "-1:": "error",
+    "+n:": "condition",
+    "+2:": "loop",
+    "-0:": "return",
+    "+3:": "output",
+    "1:": "variable",
+}
+
+_GAP_SUGGESTIONS = {
+    "-1:": "Missing error handling — consider adding try/catch or raise/throw blocks",
+    "+1:": "Missing documentation — add comments or docstrings for clarity",
+    "+2:": "No loops detected — consider iteration for batch processing",
+    "+n:": "No conditional logic — add if/else for edge cases or validation",
+    "+3:": "No output/logging — add print/log statements for debugging",
+    "-0:": "No explicit returns — ensure functions have clear return values",
+    "0:": "No function definitions — consider extracting logic into functions",
+    "+0:": "No class/struct definitions — consider data structures for complex state",
+    "1:": "No variable assignments detected — check if logic is overly inline",
+    "-n:": "No imports — ensure dependencies are properly declared",
+    "n:": "No shebang/entry point — consider adding #!/usr/bin/env for scripts",
+}
+
+
+def _classify_line(line: str) -> str:
+    stripped = line.strip()
+    if not stripped:
+        return " "
+    for sym, patterns in _PREFIX_PATTERNS.items():
+        for p in patterns:
+            if p.search(stripped):
+                return sym
+    return " "
+
+
+def _analyze_prefix_gaps(code: str, language: str, threshold: float) -> Dict:
+    """Analyze prefix coverage and find structural gaps."""
+    lines = code.split("\n")
+    total = len(lines)
+    counts: Dict[str, int] = {}
+    classified = 0
+
+    for line in lines:
+        sym = _classify_line(line)
+        if sym != " ":
+            classified += 1
+            counts[sym] = counts.get(sym, 0) + 1
+
+    coverage = round((classified / total) * 100, 1) if total > 0 else 0
+
+    # Identify missing/underrepresented categories
+    gaps = []
+    for sym, cat_name in _CATEGORY_NAMES.items():
+        count = counts.get(sym, 0)
+        pct = round((count / total) * 100, 1) if total > 0 else 0
+        if count == 0:
+            gaps.append({
+                "symbol": sym,
+                "category": cat_name,
+                "count": 0,
+                "percentage": 0,
+                "severity": "missing",
+                "suggestion": _GAP_SUGGESTIONS.get(sym, ""),
+            })
+        elif pct < 3 and sym in ("-1:", "+2:", "+n:", "+3:"):
+            gaps.append({
+                "symbol": sym,
+                "category": cat_name,
+                "count": count,
+                "percentage": pct,
+                "severity": "underrepresented",
+                "suggestion": _GAP_SUGGESTIONS.get(sym, "").replace("Missing", "Low").replace("No ", "Few "),
+            })
+
+    return {
+        "coverage": coverage,
+        "threshold": threshold,
+        "meets_threshold": coverage >= threshold,
+        "total_lines": total,
+        "classified_lines": classified,
+        "prefix_counts": counts,
+        "gaps": gaps,
+        "gap_count": len(gaps),
+        "language": language,
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -277,6 +430,13 @@ async def handle_tool(name: str, arguments: Dict[str, Any]) -> str:
 
     elif name == "uvspeed_languages":
         result = await bridge_call("GET", "/api/languages")
+
+    elif name == "uvspeed_prefix_gaps":
+        result = _analyze_prefix_gaps(
+            arguments["code"],
+            arguments.get("language", "python"),
+            arguments.get("threshold", 80),
+        )
 
     else:
         result = {"error": f"Unknown tool: {name}"}

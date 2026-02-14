@@ -1,0 +1,54 @@
+# Prefix-Aware Autocomplete
+
+When generating or editing code in this project, apply quantum prefix gap analysis
+to ensure structural completeness. Every code block should have balanced coverage
+across the 11-symbol prefix system.
+
+## After Generating Code
+
+1. Mentally classify each line using the 11-symbol system:
+   - `n:` shebang/entry, `+1:` comment, `-n:` import, `+0:` class/struct
+   - `0:` function, `-1:` error handling, `+n:` conditional, `+2:` loop
+   - `-0:` return, `+3:` output/log, `1:` variable
+
+2. Check coverage — target **80%+** classified lines.
+
+3. If coverage is low, suggest additions for missing categories:
+   - Missing `-1:` → suggest `try/except` or `catch` blocks
+   - Missing `+1:` → suggest docstrings or inline comments
+   - Missing `+2:` → suggest iteration where batch processing applies
+   - Missing `+n:` → suggest edge-case guards or input validation
+   - Missing `+3:` → suggest logging/debug output
+   - Missing `-0:` → ensure functions have explicit returns
+
+## When User Says "fill gaps"
+
+1. Use the MCP tool `uvspeed_prefix_gaps` with the current code and language.
+2. For each gap returned, generate the smallest meaningful code block that fills it.
+3. Place new blocks in contextually appropriate locations (error handling near I/O,
+   logging near state changes, comments near complex logic).
+
+## Coverage Reference
+
+Use `QuantumPrefixes.prefixMetadata(content, language)` in browser context
+or the `uvspeed_prefix` MCP tool for real-time prefix classification.
+
+## Example: Filling Gaps in Python
+
+```python
+# Before (60% coverage — missing -1:, +2:, +3:)
+def process(data):
+    result = transform(data)
+    return result
+
+# After (95% coverage — all categories present)
+def process(data):
+    """Transform input data through the pipeline."""  # +1: comment
+    if not data:                                       # +n: condition
+        raise ValueError("Empty input")               # -1: error
+    results = []                                       # 1: variable
+    for item in data:                                  # +2: loop
+        results.append(transform(item))
+    print(f"Processed {len(results)} items")           # +3: output
+    return results                                     # -0: return
+```

@@ -681,6 +681,226 @@
     }
 
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // Quantum Statevector Simulator (local, up to 12 qubits)
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+    function _cmul(ar, ai, br, bi) { return [ar*br - ai*bi, ar*bi + ai*br]; }
+
+    var _S2 = 1 / Math.sqrt(2);
+
+    /** Gate matrices: [[a_re,a_im],[b_re,b_im],[c_re,c_im],[d_re,d_im]] */
+    var QGATES = {
+        h:  [[_S2,0],[_S2,0],[_S2,0],[-_S2,0]],
+        x:  [[0,0],[1,0],[1,0],[0,0]],
+        y:  [[0,0],[0,-1],[0,1],[0,0]],
+        z:  [[1,0],[0,0],[0,0],[-1,0]],
+        s:  [[1,0],[0,0],[0,0],[0,1]],
+        t:  [[1,0],[0,0],[0,0],[_S2,_S2]],
+        id: [[1,0],[0,0],[0,0],[1,0]],
+    };
+    function rxGate(t) { var c=Math.cos(t/2),s=Math.sin(t/2); return [[c,0],[0,-s],[0,-s],[c,0]]; }
+    function ryGate(t) { var c=Math.cos(t/2),s=Math.sin(t/2); return [[c,0],[-s,0],[s,0],[c,0]]; }
+    function rzGate(t) { var c=Math.cos(t/2),s=Math.sin(t/2); return [[c,-s],[0,0],[0,0],[c,s]]; }
+
+    /**
+     * Statevector quantum simulator.
+     * @param {number} n  Number of qubits (max 12)
+     */
+    function QSim(n) {
+        this.n = n;
+        this.N = 1 << n;
+        this.re = new Float64Array(this.N);
+        this.im = new Float64Array(this.N);
+        this.re[0] = 1; // |000...0>
+    }
+
+    QSim.prototype.gate1 = function(q, m) {
+        var bit = 1 << q;
+        for (var i = 0; i < this.N; i++) {
+            if (i & bit) continue;
+            var j = i | bit;
+            var jr = this.re[i], ji = this.im[i];
+            var kr = this.re[j], ki = this.im[j];
+            var a = _cmul(m[0][0], m[0][1], jr, ji);
+            var c = _cmul(m[1][0], m[1][1], kr, ki);
+            var e = _cmul(m[2][0], m[2][1], jr, ji);
+            var g = _cmul(m[3][0], m[3][1], kr, ki);
+            this.re[i] = a[0] + c[0]; this.im[i] = a[1] + c[1];
+            this.re[j] = e[0] + g[0]; this.im[j] = e[1] + g[1];
+        }
+    };
+
+    QSim.prototype.cnot = function(ctrl, tgt) {
+        var cmask = 1 << ctrl, tmask = 1 << tgt;
+        for (var i = 0; i < this.N; i++) {
+            if ((i & cmask) && !(i & tmask)) {
+                var j = i | tmask;
+                var tr = this.re[i], ti = this.im[i];
+                this.re[i] = this.re[j]; this.im[i] = this.im[j];
+                this.re[j] = tr; this.im[j] = ti;
+            }
+        }
+    };
+
+    QSim.prototype.cz = function(ctrl, tgt) {
+        var cmask = 1 << ctrl, tmask = 1 << tgt;
+        for (var i = 0; i < this.N; i++) {
+            if ((i & cmask) && (i & tmask)) {
+                this.re[i] = -this.re[i]; this.im[i] = -this.im[i];
+            }
+        }
+    };
+
+    QSim.prototype.swap = function(q1, q2) {
+        var m1 = 1 << q1, m2 = 1 << q2;
+        for (var i = 0; i < this.N; i++) {
+            if ((i & m1) && !(i & m2)) {
+                var j = (i ^ m1) | m2;
+                var tr = this.re[i], ti = this.im[i];
+                this.re[i] = this.re[j]; this.im[i] = this.im[j];
+                this.re[j] = tr; this.im[j] = ti;
+            }
+        }
+    };
+
+    QSim.prototype.measure = function(shots) {
+        var probs = new Float64Array(this.N);
+        for (var i = 0; i < this.N; i++) probs[i] = this.re[i]*this.re[i] + this.im[i]*this.im[i];
+        var counts = {};
+        for (var s = 0; s < shots; s++) {
+            var r = Math.random(), acc = 0;
+            for (var i = 0; i < this.N; i++) {
+                acc += probs[i];
+                if (r < acc) {
+                    var bits = i.toString(2);
+                    while (bits.length < this.n) bits = '0' + bits;
+                    counts[bits] = (counts[bits] || 0) + 1;
+                    break;
+                }
+            }
+        }
+        return counts;
+    };
+
+    /** Map gate name → QSim operation */
+    var _GATE_APPLY = {
+        'H': function(sim, g) { sim.gate1(g.qubit, QGATES.h); },
+        'X': function(sim, g) { sim.gate1(g.qubit, QGATES.x); },
+        'Y': function(sim, g) { sim.gate1(g.qubit, QGATES.y); },
+        'I': function(sim, g) { /* identity */ },
+        'S': function(sim, g) { sim.gate1(g.qubit, QGATES.s); },
+        'T': function(sim, g) { sim.gate1(g.qubit, QGATES.t); },
+        'Rz': function(sim, g) { sim.gate1(g.qubit, rzGate(Math.PI / 4)); },
+        'CNOT': function(sim, g) { sim.cnot(g.qubit, g.target || ((g.qubit + 1) % sim.n)); },
+        'CZ': function(sim, g) { sim.cz(g.qubit, g.target || ((g.qubit + 1) % sim.n)); },
+        'SWAP': function(sim, g) { sim.swap(g.qubit, g.target || ((g.qubit + 1) % sim.n)); },
+        'M': function(sim, g) { /* measurement at end */ },
+    };
+
+    /**
+     * Simulate a quantum circuit from classified source code.
+     * @param {string} content  Source code
+     * @param {string} language  Language hint
+     * @param {number} [shots]  Number of measurement shots (default 1024)
+     * @returns {{ counts: Object, circuit: Object, qubits: number }}
+     */
+    function simulateCircuit(content, language, shots) {
+        shots = shots || 1024;
+        var circuit = toQuantumCircuit(content, language);
+        var n = Math.min(circuit.qubits, 12);
+        if (n < 1) n = 1;
+        var sim = new QSim(n);
+        circuit.gates.forEach(function(g) {
+            var apply = _GATE_APPLY[g.gate];
+            if (apply) apply(sim, g);
+        });
+        var counts = sim.measure(shots);
+        return { counts: counts, circuit: circuit, qubits: n };
+    }
+
+    /**
+     * Submit a circuit to IBM Quantum hardware via REST API.
+     * Free tier: 10 min/month on 127-qubit Eagle processors.
+     * @param {Object} circuit  Circuit from toQuantumCircuit()
+     * @param {string} token    IBM Quantum API token
+     * @param {string} [backend] Backend name (default 'ibm_brisbane')
+     * @param {number} [shots]   Measurement shots (default 4096)
+     * @returns {Promise<Object>} Measurement counts
+     */
+    function submitToIBM(circuit, token, backend, shots) {
+        backend = backend || 'ibm_brisbane';
+        shots = shots || 4096;
+        var baseUrl = 'https://api.quantum-computing.ibm.com';
+        var headers = { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' };
+
+        // Build QASM from circuit gates
+        var n = circuit.qubits;
+        var qasm = 'OPENQASM 2.0;\ninclude "qelib1.inc";\nqreg q[' + n + '];\ncreg c[' + n + '];\n\n';
+        circuit.gates.forEach(function(g) {
+            if (g.gate === 'CNOT') qasm += 'cx q[' + g.qubit + '],q[' + (g.target || 0) + '];\n';
+            else if (g.gate === 'CZ') qasm += 'cz q[' + g.qubit + '],q[' + (g.target || 0) + '];\n';
+            else if (g.gate === 'SWAP') qasm += 'swap q[' + g.qubit + '],q[' + (g.target || 0) + '];\n';
+            else if (g.gate === 'Rz') qasm += 'rz(' + (Math.PI/4).toFixed(4) + ') q[' + g.qubit + '];\n';
+            else if (g.gate === 'H') qasm += 'h q[' + g.qubit + '];\n';
+            else if (g.gate === 'X') qasm += 'x q[' + g.qubit + '];\n';
+            else if (g.gate === 'Y') qasm += 'y q[' + g.qubit + '];\n';
+            else if (g.gate === 'S') qasm += 's q[' + g.qubit + '];\n';
+            else if (g.gate === 'T') qasm += 't q[' + g.qubit + '];\n';
+        });
+        qasm += '\nmeasure q -> c;\n';
+
+        return fetch(baseUrl + '/api/v1/jobs', {
+            method: 'POST', headers: headers,
+            body: JSON.stringify({ program_id: 'sampler', backend: backend, params: { circuits: [qasm], shots: shots } })
+        }).then(function(res) {
+            if (!res.ok) return res.text().then(function(t) { throw new Error('IBM API ' + res.status + ': ' + t); });
+            return res.json();
+        }).then(function(job) {
+            var jobId = job.id || job.job_id;
+            // Poll for results
+            function poll(attempt) {
+                if (attempt > 120) throw new Error('Job timed out');
+                return new Promise(function(resolve) { setTimeout(resolve, 5000); })
+                    .then(function() { return fetch(baseUrl + '/api/v1/jobs/' + jobId, { headers: headers }); })
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        var st = data.status || data.state;
+                        if (st === 'COMPLETED' || st === 'completed') {
+                            return fetch(baseUrl + '/api/v1/jobs/' + jobId + '/results', { headers: headers })
+                                .then(function(r) { return r.json(); })
+                                .then(function(rd) { return rd.results ? rd.results[0].data.counts : rd; });
+                        }
+                        if (st === 'FAILED' || st === 'CANCELLED') throw new Error('Job ' + st);
+                        return poll(attempt + 1);
+                    });
+            }
+            return poll(0);
+        });
+    }
+
+    /**
+     * Compute Hellinger fidelity between two count distributions.
+     * Returns 0 (completely different) to 1 (identical).
+     * @param {Object} countsA  Measurement counts from simulator
+     * @param {Object} countsB  Measurement counts from QPU
+     * @returns {number} Fidelity score 0-1
+     */
+    function hellingerFidelity(countsA, countsB) {
+        var allKeys = {};
+        var totalA = 0, totalB = 0;
+        for (var k in countsA) { allKeys[k] = 1; totalA += countsA[k]; }
+        for (var k in countsB) { allKeys[k] = 1; totalB += countsB[k]; }
+        if (totalA === 0 || totalB === 0) return 0;
+        var sum = 0;
+        for (var k in allKeys) {
+            var pA = (countsA[k] || 0) / totalA;
+            var pB = (countsB[k] || 0) / totalB;
+            sum += Math.sqrt(pA * pB);
+        }
+        return sum * sum; // Fidelity = (sum of sqrt(p*q))^2
+    }
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     // Aggregate Stats Helper
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     function aggregateGlobalStats() {
@@ -1038,6 +1258,16 @@
         toQuantumCircuit: toQuantumCircuit,
         sendToQPU: sendToQPU,
         QUBIT_GATE_MAP: QUBIT_GATE_MAP,
+
+        // QPU execution (local simulator + IBM Quantum)
+        QSim: QSim,
+        QGATES: QGATES,
+        rxGate: rxGate,
+        ryGate: ryGate,
+        rzGate: rzGate,
+        simulateCircuit: simulateCircuit,
+        submitToIBM: submitToIBM,
+        hellingerFidelity: hellingerFidelity,
 
         // Theme
         toggleTheme: toggleTheme,
