@@ -201,8 +201,8 @@
     #status-bar .spacer { flex: 1; }
     #status-bar .btn { background: none; border: 1px solid #30363d; color: #8b949e; padding: 1px 6px; border-radius: 4px; font-size: .5625rem; cursor: pointer; }
     #status-bar .btn:active { background: #21262d; }
-    /* Reposition global theme toggle left of offline/status tags */
-    #qp-theme-toggle { position: fixed !important; top: 3px !important; right: 120px !important; }
+    /* Theme toggle is moved into status bar via JS — reset its fixed positioning */
+    #qp-theme-toggle { position: static !important; top: auto !important; right: auto !important; z-index: auto !important; flex-shrink: 0; }
     /* Terminal fills rest */
     #terminal-wrap { flex: 1; overflow: hidden; position: relative; }
     #terminal-wrap .xterm { height: 100% !important; }
@@ -2914,6 +2914,27 @@ window.introDismiss = introDismiss;
 // Init terminal (behind intro)
 initTerminal();
 setInterval(updateStatusBar, 5000);
+
+// Move theme toggle into status bar (quantum-prefixes.js injects it with position:fixed)
+(function relocateThemeToggle(){
+    function move(){
+        const toggle = document.getElementById('qp-theme-toggle');
+        const sbNet = document.getElementById('sb-net');
+        if(toggle && sbNet && sbNet.parentNode){
+            sbNet.parentNode.insertBefore(toggle, sbNet);
+            // Clear inline styles set by quantum-prefixes.js
+            toggle.style.position = 'static';
+            toggle.style.top = 'auto';
+            toggle.style.right = 'auto';
+            toggle.style.zIndex = 'auto';
+        } else {
+            // quantum-prefixes.js may not have injected yet — retry
+            setTimeout(move, 200);
+        }
+    }
+    // Small delay so quantum-prefixes.js has time to inject the toggle
+    setTimeout(move, 100);
+})();
 
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
