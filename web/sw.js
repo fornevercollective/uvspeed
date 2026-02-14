@@ -2,7 +2,7 @@
 // Service Worker — Offline-first PWA cache for quantum notepad
 // Phase 4.0 · Caches all 20 web apps + shared modules for full offline operation
 
-const CACHE_NAME = 'uvspeed-v4.6';
+const CACHE_NAME = 'uvspeed-v4.7';
 const OFFLINE_URLS = [
     './',
     'quantum-notepad.html',
