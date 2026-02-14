@@ -16,14 +16,6 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
-    <!-- KaTeX — fast LaTeX math rendering (Free Tier F1) -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16/dist/katex.min.css">
-    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16/dist/katex.min.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16/dist/contrib/auto-render.min.js"></script>
-    <!-- mathjs — client-side symbolic/numeric math (Free Tier F3) -->
-    <script src="https://cdn.jsdelivr.net/npm/mathjs@13/lib/browser/math.min.js"></script>
-    <!-- Plotly.js — interactive plots/charts (Free Tier F6) -->
-    <script src="https://cdn.jsdelivr.net/npm/plotly.js-dist-min@2/plotly.min.js"></script>
     <script src="quantum-prefixes.js"></script>
     <style>
         /* ===== Inlined Design System (cursor-theme.css) ===== */
@@ -14456,6 +14448,34 @@ print(f"  Norm:  {qs.normalize().norm().numpy():.6f}")`);
                 const btn = document.getElementById('pwa-install-btn');
                 if (btn) btn.remove();
             });
+
+            // ===== MATH LIBRARIES — LAZY LOAD (non-blocking) =====
+            // KaTeX, mathjs, Plotly load after page is interactive — never block render
+            (function loadMathLibs(){
+                function addCSS(href){
+                    const l=document.createElement('link');l.rel='stylesheet';l.href=href;document.head.appendChild(l);
+                }
+                function addJS(src, cb){
+                    const s=document.createElement('script');s.src=src;s.async=true;
+                    if(cb) s.onload=cb; document.head.appendChild(s);
+                }
+                // KaTeX CSS + JS
+                addCSS('https://cdn.jsdelivr.net/npm/katex@0.16/dist/katex.min.css');
+                addJS('https://cdn.jsdelivr.net/npm/katex@0.16/dist/katex.min.js', function(){
+                    addJS('https://cdn.jsdelivr.net/npm/katex@0.16/dist/contrib/auto-render.min.js');
+                    console.log('⚛ KaTeX loaded');
+                });
+                // mathjs (~200KB)
+                addJS('https://cdn.jsdelivr.net/npm/mathjs@13/lib/browser/math.min.js', function(){
+                    console.log('⚛ mathjs loaded');
+                });
+                // Plotly (~3.5MB) — load last, lowest priority
+                setTimeout(function(){
+                    addJS('https://cdn.jsdelivr.net/npm/plotly.js-dist-min@2/plotly.min.js', function(){
+                        console.log('⚛ Plotly loaded');
+                    });
+                }, 2000); // 2s delay so page is fully interactive first
+            })();
 
             // ===== PYODIDE WASM BACKBONE (Free Tier F7) =====
             // Lazy-loads Python-in-browser when first needed — no bridge required
