@@ -188,10 +188,10 @@
     /* Status bar */
     #status-bar {
         display: flex; align-items: center; gap: 6px;
-        padding: 4px 8px; min-height: 28px;
+        padding: 4px 8px; min-height: 28px; position: relative;
         background: #161b22; border-bottom: 1px solid #21262d;
         font-size: .625rem; font-family: 'SF Mono', 'Menlo', 'Cascadia Code', monospace;
-        color: #8b949e; overflow: hidden; flex-shrink: 0;
+        color: #8b949e; overflow: visible; flex-shrink: 0;
     }
     #status-bar .title { color: #58a6ff; font-weight: 600; }
     #status-bar .sep { color: #30363d; }
@@ -201,6 +201,8 @@
     #status-bar .spacer { flex: 1; }
     #status-bar .btn { background: none; border: 1px solid #30363d; color: #8b949e; padding: 1px 6px; border-radius: 4px; font-size: .5625rem; cursor: pointer; }
     #status-bar .btn:active { background: #21262d; }
+    /* Reposition global theme toggle so it doesn't overlap offline/status tags */
+    #qp-theme-toggle { top: 3px !important; right: 50px !important; }
     /* Terminal fills rest */
     #terminal-wrap { flex: 1; overflow: hidden; position: relative; }
     #terminal-wrap .xterm { height: 100% !important; }
@@ -237,7 +239,7 @@
     .qk.sep { color: #30363d; padding: 6px 2px; }
     /* Keyboard heatmap panel */
     #kb-panel {
-        flex-shrink: 0; height: 160px; position: relative;
+        flex-shrink: 0; min-height: 120px; height: 160px; position: relative;
         background: #0d1117; border-top: 1px solid #21262d;
     }
     #kb-panel .kb-title {
@@ -252,6 +254,33 @@
     #kb-panel .kb-sync.live::before { content: ''; display: inline-block; width: 5px; height: 5px; background: #3fb950; border-radius: 50%; margin-right: 3px; animation: pulse 1.2s infinite; }
     @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
     #kb-canvas { width: 100%; height: 100%; display: block; }
+    /* Hexcast streaming toolbar */
+    #hexcast-bar {
+        display: none; flex-shrink: 0; align-items: center; gap: 4px;
+        padding: 3px 8px; min-height: 30px;
+        background: #161b22; border-bottom: 1px solid #21262d;
+        overflow-x: auto; -webkit-overflow-scrolling: touch;
+    }
+    #hexcast-bar.show { display: flex; }
+    #hexcast-bar .hc-label {
+        font-size: .5625rem; color: #58a6ff; font-weight: 600;
+        font-family: 'SF Mono', monospace; margin-right: 4px; white-space: nowrap;
+    }
+    #hexcast-bar .hc-btn {
+        background: #21262d; border: 1px solid #30363d; color: #c9d1d9;
+        padding: 3px 8px; border-radius: 4px; font-size: .5625rem; cursor: pointer;
+        font-family: 'SF Mono', monospace; white-space: nowrap;
+        transition: background 0.15s, border-color 0.15s;
+    }
+    #hexcast-bar .hc-btn:hover { background: #30363d; border-color: #484f58; }
+    #hexcast-bar .hc-btn:active { background: #388bfd33; border-color: #58a6ff; }
+    #hexcast-bar .hc-btn.active { background: #238636; border-color: #3fb950; color: #fff; }
+    #hexcast-bar .hc-btn.stop { background: #da3633; border-color: #f85149; color: #fff; }
+    #hexcast-bar .hc-sep { width: 1px; height: 16px; background: #30363d; flex-shrink: 0; }
+    #hexcast-bar .hc-status {
+        font-size: .5rem; color: #484f58; font-family: 'SF Mono', monospace;
+        margin-left: auto; white-space: nowrap;
+    }
     /* Overlay for pages */
     #overlay { display: none; position: fixed; inset: 0; z-index: 100; background: #0d1117; }
     #overlay.show { display: flex; flex-direction: column; }
@@ -299,6 +328,7 @@
 (function(){
     var el = document.getElementById('intro');
     var dismissed = false;
+    var returning = !!sessionStorage.getItem('hexterm-intro-done');
     function dismiss(){
         if(dismissed) return;
         dismissed = true;
@@ -309,14 +339,9 @@
     // Expose globally so onclick="introSkip()" works even if main script hasn't loaded
     window.introSkip = dismiss;
     window.introDismiss = dismiss;
-    // Auto-dismiss after 3s regardless
-    if(!sessionStorage.getItem('hexterm-intro-done')){
-        setTimeout(dismiss, 3000);
-    } else {
-        el.style.display='none';
-        dismissed = true;
-    }
-    // Click anywhere on intro to dismiss
+    // Always show banner briefly: 3s first visit, 1.5s return visit
+    setTimeout(dismiss, returning ? 1500 : 3000);
+    // Click/tap anywhere on intro to dismiss early
     el.addEventListener('click', dismiss);
     el.addEventListener('touchend', function(){ dismiss(); }, {passive:true});
 })();
@@ -353,7 +378,22 @@
         <span class="spacer"></span>
         <span id="sb-net" class="tag">offline</span>
         <span id="sb-battery"></span>
+        <button class="btn" onclick="document.getElementById('hexcast-bar').classList.toggle('show')" title="Hexcast tools">⬡</button>
         <button class="btn" onclick="toggleFullscreen()">⛶</button>
+    </div>
+    <div id="hexcast-bar">
+        <span class="hc-label">⬡ hexcast</span>
+        <button class="hc-btn" onclick="hcRun('front')" title="Front camera">📷 front</button>
+        <button class="hc-btn" onclick="hcRun('back')" title="Rear camera">📷 back</button>
+        <button class="hc-btn" onclick="hcRun('screen')" title="Screen capture">🖥 screen</button>
+        <button class="hc-btn" onclick="hcRun('test')" title="Test pattern">🎨 test</button>
+        <div class="hc-sep"></div>
+        <button class="hc-btn" onclick="hcPrompt('send')" title="Send to remote">📤 send</button>
+        <button class="hc-btn" onclick="hcPrompt('connect')" title="Connect to stream">📥 connect</button>
+        <button class="hc-btn" onclick="hcRun('discover')" title="Discover peers">🔍 discover</button>
+        <div class="hc-sep"></div>
+        <button class="hc-btn stop" onclick="hcRun('stop')" title="Stop active feed">⏹ stop</button>
+        <span class="hc-status" id="hc-status">idle</span>
     </div>
     <div id="terminal-wrap"></div>
     <div id="quick-bar">
@@ -395,7 +435,7 @@
         <span class="lbl">streams:</span><span class="val" id="bs-streams">0</span>
         <span class="spacer"></span>
         <span class="lbl">uvspeed</span>
-        <span class="val" id="bs-ver">v3.6</span>
+        <span class="val" id="bs-ver">v4.4</span>
     </div>
 </div>
 
@@ -417,7 +457,7 @@
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // Config
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-const VERSION = '4.0.0';
+const VERSION = '4.4.0';
 const HOSTNAME = 'hexterm';
 const USER = 'user';
 const HEXCAST_PORT = 9876;
@@ -2651,6 +2691,10 @@ function switchTab(name) {
         t.classList.toggle('active', t.dataset.tab === name);
     });
 
+    // Show/hide hexcast toolbar
+    const hcBar = document.getElementById('hexcast-bar');
+    if (hcBar) hcBar.classList.toggle('show', name === 'hexcast');
+
     // Focus actions
     if (!term) return;
     switch (name) {
@@ -2658,7 +2702,11 @@ function switchTab(name) {
             term.focus();
             break;
         case 'hexcast':
-            processCommand('hexcast');
+            // Show toolbar + print status (don't auto-start camera)
+            term.writeln('');
+            term.writeln('\x1b[36m  ⬡ hexcast\x1b[0m — streaming tools ready');
+            term.writeln('\x1b[90m  Use toolbar above or type: hexcast front|back|screen|test|send|connect\x1b[0m');
+            showPrompt();
             break;
         case 'sync':
             processCommand('sync status');
@@ -2669,6 +2717,28 @@ function switchTab(name) {
         default:
             processCommand(name);
     }
+}
+
+// Hexcast toolbar helpers
+function hcRun(sub) {
+    if (term) processCommand('hexcast ' + sub);
+    _updateHcStatus();
+}
+function hcPrompt(action) {
+    if (!term) return;
+    const ip = prompt('Enter IP address (e.g. 192.168.1.100):');
+    if (ip && ip.trim()) processCommand('hexcast ' + action + ' ' + ip.trim());
+    _updateHcStatus();
+}
+function _updateHcStatus() {
+    const el = document.getElementById('hc-status');
+    if (!el) return;
+    setTimeout(() => {
+        if (window._hexTermFeed) el.textContent = '● streaming';
+        else if (window._hexTermSend) el.textContent = '● sending';
+        else if (window._hexTermWS) el.textContent = '● connected';
+        else el.textContent = 'idle';
+    }, 500);
 }
 
 function addTab() {
@@ -2695,7 +2765,7 @@ window.addEventListener('offline', updateStatusBar);
 // Animated intro (early dismiss script handles core logic;
 // this section adds starfield + mascot animations)
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-let introActive = !sessionStorage.getItem('hexterm-intro-done');
+let introActive = true; // Banner always shows briefly (early script handles auto-dismiss)
 const introEl = document.getElementById('intro');
 const introVideo = document.getElementById('intro-video');
 const introPrompt = document.getElementById('intro-prompt');
@@ -2840,12 +2910,6 @@ function introDismiss() {
 }
 window.introSkip = introDismiss;
 window.introDismiss = introDismiss;
-
-// If early dismiss already fired, just make sure intro is hidden + focus term
-if (!introActive) {
-    introEl.style.display = 'none';
-    if (term) term.focus();
-}
 
 // Init terminal (behind intro)
 initTerminal();
@@ -3005,7 +3069,7 @@ function renderKeyboard() {
             }
 
             // Key bg
-            ctx.fillStyle = intensity > 0.05 ? kbRainbow(rbPos, intensity) : '#161b22';
+            ctx.fillStyle = intensity > 0.05 ? kbRainbow(rbPos, intensity) : '#1c2128';
             const rad = 3;
             ctx.beginPath();
             ctx.roundRect(x + 1.5, y + 1.5, keyW - 3, keyH - 3, rad);
@@ -3022,14 +3086,14 @@ function renderKeyboard() {
             }
 
             // Border
-            ctx.strokeStyle = intensity > 0.05 ? kbRainbow(rbPos, Math.min(1, intensity + 0.15)) : '#30363d';
+            ctx.strokeStyle = intensity > 0.05 ? kbRainbow(rbPos, Math.min(1, intensity + 0.15)) : '#3d444d';
             ctx.lineWidth = isActive ? 1.5 : 0.5;
             ctx.beginPath();
             ctx.roundRect(x + 1.5, y + 1.5, keyW - 3, keyH - 3, rad);
             ctx.stroke();
 
             // Label
-            ctx.fillStyle = intensity > 0.4 ? '#0d1117' : '#6e7681';
+            ctx.fillStyle = intensity > 0.4 ? '#0d1117' : '#8b949e';
             ctx.font = `${Math.max(8, keyH * 0.38)}px 'SF Mono', monospace`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
@@ -3055,12 +3119,12 @@ function renderKeyboard() {
                 });
                 ctx.fillStyle = grad;
             } else {
-                ctx.fillStyle = '#161b22';
+                ctx.fillStyle = '#1c2128';
             }
             ctx.beginPath();
             ctx.roundRect(spX, spY, spW, keyH * 0.65, 3);
             ctx.fill();
-            ctx.strokeStyle = spI > 0.05 ? kbRainbow(0.5, spI + 0.1) : '#30363d';
+            ctx.strokeStyle = spI > 0.05 ? kbRainbow(0.5, spI + 0.1) : '#3d444d';
             ctx.lineWidth = 0.5;
             ctx.beginPath();
             ctx.roundRect(spX, spY, spW, keyH * 0.65, 3);
