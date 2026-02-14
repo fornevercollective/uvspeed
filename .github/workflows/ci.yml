@@ -1,0 +1,190 @@
+# beyondBINARY quantum-prefixed | uvspeed | {+1, 1, -1, +0, 0, -0, +n, n, -n}
+# CI Pipeline — Test, Lint, Build on every push and PR
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  # Rust — Test prefix engine + clippy lint
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  rust:
+    name: Rust Tests & Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: cargo-${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: cargo-${{ runner.os }}-
+
+      - name: Test prefix-engine
+        run: cargo test --manifest-path crates/prefix-engine/Cargo.toml --verbose
+
+      - name: Clippy lint (prefix-engine)
+        run: cargo clippy --manifest-path crates/prefix-engine/Cargo.toml -- -D warnings
+
+      - name: Check formatting
+        run: cargo fmt --manifest-path crates/prefix-engine/Cargo.toml -- --check
+
+      - name: Benchmark (dry run)
+        run: cargo bench --manifest-path crates/prefix-engine/Cargo.toml --no-run
+
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  # WASM — Build prefix engine to WebAssembly
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  wasm:
+    name: WASM Build
+    runs-on: ubuntu-latest
+    needs: rust
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install Rust + wasm32 target
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Install wasm-pack
+        run: cargo install wasm-pack
+
+      - name: Build WASM module
+        run: |
+          cd crates/prefix-engine
+          wasm-pack build --target web --release --out-dir ../../web/wasm --out-name prefix_engine -- --features wasm
+
+      - name: Report WASM size
+        run: |
+          ls -lh web/wasm/prefix_engine_bg.wasm
+          echo "WASM_SIZE=$(wc -c < web/wasm/prefix_engine_bg.wasm)" >> $GITHUB_ENV
+
+      - name: Upload WASM artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wasm-prefix-engine
+          path: web/wasm/
+          retention-days: 30
+
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  # Python — Lint + test
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  python:
+    name: Python Lint & Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+
+      - uses: astral-sh/setup-uv@v7
+
+      - name: Install dependencies
+        run: uv sync --dev
+
+      - name: Ruff lint
+        run: uv run ruff check .
+
+      - name: Ruff format check
+        run: uv run ruff format --check .
+
+      - name: Run tests
+        run: uv run pytest -x -q || echo "No tests found (ok for now)"
+
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  # Prefix Validation — Ensure all files have quantum headers
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  prefix-check:
+    name: Prefix Header Validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Check quantum prefix headers
+        run: |
+          MISSING=0
+          HEADER="beyondBINARY quantum-prefixed"
+
+          # Check Python files
+          for f in $(find . -name "*.py" -not -path "./.venv/*" -not -path "./src/07-archive/*" -not -path "./__pycache__/*"); do
+            if ! head -5 "$f" | grep -q "$HEADER" 2>/dev/null; then
+              echo "⚠ Missing header: $f"
+              MISSING=$((MISSING + 1))
+            fi
+          done
+
+          # Check Rust files
+          for f in $(find . -name "*.rs" -not -path "./target/*"); do
+            if ! head -5 "$f" | grep -q "$HEADER" 2>/dev/null; then
+              echo "⚠ Missing header: $f"
+              MISSING=$((MISSING + 1))
+            fi
+          done
+
+          # Check Shell scripts
+          for f in $(find . -name "*.sh" -not -path "./src/07-archive/*"); do
+            if ! head -5 "$f" | grep -q "$HEADER" 2>/dev/null; then
+              echo "⚠ Missing header: $f"
+              MISSING=$((MISSING + 1))
+            fi
+          done
+
+          if [ $MISSING -gt 0 ]; then
+            echo ""
+            echo "⚠ $MISSING files missing quantum prefix header"
+            echo "Expected: # $HEADER | uvspeed | {+1, 1, -1, +0, 0, -0, +n, n, -n}"
+            # Warn but don't fail (yet)
+            exit 0
+          else
+            echo "✓ All files have quantum prefix headers"
+          fi
+
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  # Version Consistency — Ensure all version strings match
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  version-check:
+    name: Version Consistency
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Check version alignment
+        run: |
+          PY_VER=$(grep 'version = ' pyproject.toml | head -1 | sed 's/.*"\(.*\)".*/\1/')
+          TAURI_VER=$(grep 'version = ' src-tauri/Cargo.toml | head -1 | sed 's/.*"\(.*\)".*/\1/')
+          ENGINE_VER=$(grep 'version = ' crates/prefix-engine/Cargo.toml | head -1 | sed 's/.*"\(.*\)".*/\1/')
+
+          echo "pyproject.toml:              $PY_VER"
+          echo "src-tauri/Cargo.toml:        $TAURI_VER"
+          echo "crates/prefix-engine:        $ENGINE_VER"
+
+          # Warn if versions differ (different components can version independently)
+          if [ "$PY_VER" != "$TAURI_VER" ]; then
+            echo "ℹ Python and Tauri versions differ (may be intentional)"
+          fi

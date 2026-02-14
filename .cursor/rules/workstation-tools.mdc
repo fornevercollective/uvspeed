@@ -1,0 +1,116 @@
+---
+description: Gold standard toolchain — fastest runners, correct tools, version awareness
+globs:
+alwaysApply: true
+---
+
+# Gold Standard Tool Stack — M4 AI Workstation
+
+## ALWAYS Use the Fast Tool
+
+| Slow | Fast (use this) | Why |
+|------|----------------|-----|
+| `grep` | `rg` (ripgrep) | 10x faster, respects .gitignore |
+| `find` | `fd` | 5x faster, sane defaults |
+| `cat` | `bat` | Syntax highlighting, line numbers |
+| `ls` | `eza` | Rich output, git-aware |
+| `pip install` | `uv pip install` | 10-100x faster |
+| `pip install -e .` | `uv pip install -e .` | Cached, instant |
+| `python -m venv` | `uv venv` | Sub-second |
+| `pip freeze` | `uv pip freeze` | Instant |
+| `npm install` | `npm install` | (no faster alt, but use sparingly) |
+| `bash scripts/x.sh` | `nu scripts/x.nu` | Structured data, better errors |
+| `pytest` | `uv run pytest` | Uses project venv automatically |
+| `ruff check` | `uv run ruff check` | Same |
+
+## Gold Standard Runners
+
+### Pre-push checklist (use THESE, not manual commands)
+```bash
+nu scripts/pre.nu                    # Full audit (fastest — Nushell)
+nu scripts/pre.nu folder             # Git status check
+nu scripts/pre.nu inspect            # All 19 apps health
+nu scripts/pre.nu inspect notepad    # Single app check
+nu scripts/pre.nu gold               # Verify gold standard files
+bash scripts/pre.sh pre push "msg"   # Audit + commit + push (bash only for push)
+```
+
+### Build pipeline
+```bash
+nu scripts/build.nu all              # Build everything
+nu scripts/build.nu wasm             # Just WASM
+nu scripts/build.nu tauri            # Just Tauri
+bash scripts/build-wasm.sh           # Rust → WASM → web/wasm/
+```
+
+### Test suites
+```bash
+nu scripts/test.nu all               # All test suites
+nu scripts/test.nu rust              # cargo test
+nu scripts/test.nu python            # uv run pytest
+cargo test -p uvspeed-prefix-engine  # Direct Rust tests (fastest)
+uv run pytest                        # Direct Python tests
+```
+
+### Lint (always use uv run)
+```bash
+uv run ruff check .                  # Python lint
+uv run ruff format --check .         # Python format check
+cargo clippy -p uvspeed-prefix-engine -- -D warnings  # Rust lint
+cargo fmt -p uvspeed-prefix-engine --check             # Rust format
+```
+
+### Audit and health
+```bash
+nu scripts/audit.nu                  # Code stats by language
+nu scripts/audit.nu health           # Verify all tools installed
+nu scripts/audit.nu versions         # Version consistency check
+bash scripts/version-sync.sh         # Check version alignment
+bash scripts/version-sync.sh set 4.3.0  # Set ALL versions at once
+```
+
+### Dev mode
+```bash
+bash scripts/watch-dev.sh            # Auto-sync web/ → tauri-dist/
+cargo tauri dev                      # Tauri dev mode (hot reload)
+```
+
+## Machine Specs
+- Apple M4 · 10-core GPU · Metal 4 · 16 GB unified · macOS 26.2
+- Disk: 228 GB total, often tight — check `df -h /` before large installs
+
+## When Space is Tight
+```bash
+uv cache clean && npm cache clean --force && brew cleanup --prune=1
+```
+Avoid: large Ollama models (>4 GB), PyTorch on 3.13 (~2 GB, already on 3.9)
+
+## Python
+- Primary interpreter: **Python 3.13** via `uv`
+- ALWAYS use `uv run` to run Python tools (it auto-activates the project venv)
+- NEVER use bare `pip` — always `uv pip`
+- tinygrad is LOCAL at `~/tinygrad` (Metal backend) — `PYTHONPATH=~/tinygrad`
+- MLX v0.30.6 is Apple-native Metal ML
+- Ollama for local LLMs: `ollama serve`
+
+## Rust
+- Toolchain: **Rust 1.93+ stable**
+- Tauri builds: `cargo tauri build --bundles app`
+- Prefix engine: `cargo test -p uvspeed-prefix-engine`
+- WASM: `bash scripts/build-wasm.sh` (needs `wasm-pack`)
+
+## CI/CD Pinned Versions
+- `actions/checkout@v6`
+- `actions/setup-python@v6`
+- `actions/setup-node@v6`
+- `astral-sh/setup-uv@v7`
+- `dtolnay/rust-toolchain@stable`
+
+## Nushell
+- Installed at `~/.local/bin/nu`
+- All project scripts in `scripts/*.nu`
+- Prefer `nu scripts/X.nu` over `bash scripts/X.sh` when both exist
+
+## Brew
+- Homebrew: `/opt/homebrew/` — general tools
+- Zerobrew: `/opt/zerobrew/` — media codecs (dav1d, x264, svt-av1, opus)

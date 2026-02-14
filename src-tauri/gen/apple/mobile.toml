@@ -1,0 +1,12 @@
+# beyondBINARY quantum-prefixed | uvspeed | {+1, 1, -1, +0, 0, -0, +n, n, -n}
+# Tauri v2 Mobile Configuration — iOS/Android targets
+# See: https://v2.tauri.app/start/prerequisites/#mobile
+
+[ios]
+development-team = ""  # Set your Apple Developer Team ID
+bundle-identifier = "com.fornevercollective.uvspeed"
+minimum-os-version = "16.0"
+
+[android]
+min-sdk-version = 26
+target-sdk-version = 34

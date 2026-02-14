@@ -1,0 +1,170 @@
+{
+  "// beyondBINARY quantum-prefixed | uvspeed | {+1, 1, -1, +0, 0, -0, +n, n, -n}": true,
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "⚛ pre — full audit",
+      "type": "shell",
+      "command": "nu scripts/pre.nu",
+      "group": { "kind": "build", "isDefault": true },
+      "presentation": { "reveal": "always", "panel": "shared", "clear": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "⚛ folder — git status",
+      "type": "shell",
+      "command": "nu scripts/pre.nu folder",
+      "presentation": { "reveal": "always", "panel": "shared", "clear": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "⚛ inspect — all 19 apps",
+      "type": "shell",
+      "command": "nu scripts/pre.nu inspect",
+      "presentation": { "reveal": "always", "panel": "shared", "clear": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "⚛ inspect notepad",
+      "type": "shell",
+      "command": "nu scripts/pre.nu inspect notepad",
+      "presentation": { "reveal": "always", "panel": "shared", "clear": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "⚛ inspect dash",
+      "type": "shell",
+      "command": "nu scripts/pre.nu inspect dash",
+      "presentation": { "reveal": "always", "panel": "shared", "clear": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "⚛ inspect sponsor",
+      "type": "shell",
+      "command": "nu scripts/pre.nu inspect sponsor",
+      "presentation": { "reveal": "always", "panel": "shared", "clear": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "⚛ gold — verify files",
+      "type": "shell",
+      "command": "nu scripts/pre.nu gold",
+      "presentation": { "reveal": "always", "panel": "shared", "clear": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "⚛ readme — check README",
+      "type": "shell",
+      "command": "nu scripts/pre.nu readme",
+      "presentation": { "reveal": "always", "panel": "shared", "clear": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "⚛ push — commit & push",
+      "type": "shell",
+      "command": "bash scripts/pre.sh push",
+      "presentation": { "reveal": "always", "panel": "shared", "clear": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "⚛ pre push — audit then push",
+      "type": "shell",
+      "command": "bash scripts/pre.sh pre push",
+      "presentation": { "reveal": "always", "panel": "shared", "clear": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "─── Build ───────────────",
+      "type": "shell",
+      "command": "echo separator",
+      "presentation": { "reveal": "never" },
+      "problemMatcher": []
+    },
+    {
+      "label": "⚡ cargo test (Rust)",
+      "type": "shell",
+      "command": "cargo test -p uvspeed-prefix-engine",
+      "presentation": { "reveal": "always", "panel": "shared", "clear": true },
+      "problemMatcher": "$rustc"
+    },
+    {
+      "label": "⚡ cargo clippy (Rust lint)",
+      "type": "shell",
+      "command": "cargo clippy -p uvspeed-prefix-engine -- -D warnings",
+      "presentation": { "reveal": "always", "panel": "shared", "clear": true },
+      "problemMatcher": "$rustc"
+    },
+    {
+      "label": "⚡ ruff check (Python lint)",
+      "type": "shell",
+      "command": "uv run ruff check .",
+      "presentation": { "reveal": "always", "panel": "shared", "clear": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "⚡ pytest (Python tests)",
+      "type": "shell",
+      "command": "uv run pytest",
+      "presentation": { "reveal": "always", "panel": "shared", "clear": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "⚡ build WASM",
+      "type": "shell",
+      "command": "bash scripts/build-wasm.sh",
+      "presentation": { "reveal": "always", "panel": "shared", "clear": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "⚡ build Tauri",
+      "type": "shell",
+      "command": "mkdir -p tauri-dist && cp -r web/* tauri-dist/ && cargo tauri build --bundles app",
+      "presentation": { "reveal": "always", "panel": "shared", "clear": true },
+      "problemMatcher": "$rustc"
+    },
+    {
+      "label": "⚡ build all (nu)",
+      "type": "shell",
+      "command": "nu scripts/build.nu all",
+      "presentation": { "reveal": "always", "panel": "shared", "clear": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "⚡ test all (nu)",
+      "type": "shell",
+      "command": "nu scripts/test.nu all",
+      "presentation": { "reveal": "always", "panel": "shared", "clear": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "⚡ audit health (nu)",
+      "type": "shell",
+      "command": "nu scripts/audit.nu health",
+      "presentation": { "reveal": "always", "panel": "shared", "clear": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "⚡ version sync check",
+      "type": "shell",
+      "command": "bash scripts/version-sync.sh",
+      "presentation": { "reveal": "always", "panel": "shared", "clear": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "⚡ watch dev (auto-sync)",
+      "type": "shell",
+      "command": "bash scripts/watch-dev.sh",
+      "presentation": { "reveal": "always", "panel": "dedicated" },
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "⚡ bridge server",
+      "type": "shell",
+      "command": "uv run uvspeed_cli.py serve",
+      "presentation": { "reveal": "always", "panel": "dedicated" },
+      "isBackground": true,
+      "problemMatcher": []
+    }
+  ]
+}

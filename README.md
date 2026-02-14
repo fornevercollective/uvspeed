@@ -12,6 +12,16 @@
 [![License](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
 [![Live Demo](https://img.shields.io/badge/Live-GitHub_Pages-00c853)](https://fornevercollective.github.io/uvspeed/web/quantum-notepad.html)
 
+**Built with:**
+![Rust](https://img.shields.io/badge/Rust-000?logo=rust&logoColor=white)
+![Tauri](https://img.shields.io/badge/Tauri_v2-24C8D8?logo=tauri&logoColor=white)
+![Python](https://img.shields.io/badge/Python_3.13-3776AB?logo=python&logoColor=white)
+![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?logo=javascript&logoColor=000)
+![WebAssembly](https://img.shields.io/badge/WASM-654FF0?logo=webassembly&logoColor=white)
+![HTML5](https://img.shields.io/badge/HTML5_PWA-E34F26?logo=html5&logoColor=white)
+![CSS3](https://img.shields.io/badge/CSS3-1572B6?logo=css3&logoColor=white)
+![Shell](https://img.shields.io/badge/Shell-4EAA25?logo=gnubash&logoColor=white)
+
 **[Prefix/QuantumGutter](https://fornevercollective.github.io/uvspeed/web/quantum-gutter.html)** · **[notePad](https://fornevercollective.github.io/uvspeed/web/quantum-notepad.html)** · **[hexTerm](https://fornevercollective.github.io/uvspeed/web/terminal.html)** · **[hexCast](https://fornevercollective.github.io/uvspeed/web/hexcast.html)** · **[FREYAunits](https://fornevercollective.github.io/uvspeed/web/quantum-notepad.html)** · **[brotherNumsy](https://fornevercollective.github.io/uvspeed/web/brothernumsy.html)** · **[kBatch](https://fornevercollective.github.io/uvspeed/web/kbatch.html)** · **[HexBench](https://fornevercollective.github.io/uvspeed/web/hexbench.html)** · **[ArchFlow](https://fornevercollective.github.io/uvspeed/web/archflow.html)** · **[gpu/cpu](https://fornevercollective.github.io/uvspeed/web/blackwell.html)** · **[Dashboard](https://fornevercollective.github.io/uvspeed/web/github-dashboard.html)** · **[Sponsor](https://fornevercollective.github.io/uvspeed/web/sponsor.html)**
 
 ---
@@ -252,33 +262,38 @@ Supported in 20+ languages: Python, JavaScript, TypeScript, Rust, Go, Swift, Kot
 
 ```
 uvspeed/
-├── web/                    # 19 standalone HTML apps (PWA-ready)
-│   ├── quantum-gutter.html # Prefix system showcase + 3D cube
-│   ├── quantum-notepad.html # Main notepad with prefix gutter
-│   ├── terminal.html       # Full terminal emulator (hexterm)
-│   ├── hexbench.html       # Voltage lab — PSU, Arduino, nodes, Pybricks
-│   ├── hexcast.html        # Video hex broadcast
-│   ├── hexcast-send.html   # Mobile camera streaming PWA
-│   ├── archflow.html       # Architecture node visualizer
-│   ├── research-lab.html   # Markdown research editor + node canvas
-│   ├── blackwell.html      # NVIDIA Blackwell GPU dashboard
-│   ├── questcast.html      # Meta Quest broadcast + research
-│   ├── jawta-audio.html    # Spatial audio + live coding
-│   ├── quantum-prefixes.js # Shared prefix API (cross-app sync)
-│   ├── sw.js               # Service worker (offline cache)
-│   └── ...                 # launcher, feed, grid, kbatch, sponsor, numsy, etc.
-├── src-tauri/              # Tauri v2 desktop app (Rust)
-│   ├── src/main.rs         # Window management, menus, device presets
-│   └── tauri.conf.json     # App config (launcher as default window)
-├── src/                    # Python/JS source
-│   ├── 01-core/            # Bridge server, MCP server, classifier
-│   ├── 02-electron/        # Legacy Electron app (deprecated → Tauri)
-│   └── 03-tools/           # Launch scripts, build tools
-├── uvspeed_hexcast.py      # Hexcast CLI (camera streaming)
-├── uvspeed_cli.py          # Bridge CLI
-├── pyproject.toml          # Python package config (v4.0)
-├── package.json            # Node package config (legacy Electron)
-└── install.sh              # Full install script
+├── web/                         # 19 standalone HTML apps (PWA-ready)
+│   ├── quantum-gutter.html      # Prefix system showcase + 3D cube
+│   ├── quantum-notepad.html     # Main notepad with prefix gutter
+│   ├── terminal.html            # Full terminal emulator (hexterm)
+│   ├── research-lab.html        # Research editor + node canvas + Gold Standard workflow
+│   ├── quantum-prefixes.js      # Shared prefix API (cross-app sync)
+│   ├── quantum-prefixes.d.ts    # TypeScript type definitions
+│   ├── quantum-theme.css        # Shared light/dark theme module
+│   ├── wasm-loader.ts           # WASM prefix engine loader (JS fallback)
+│   ├── sw.js                    # Service worker (offline cache)
+│   └── ...                      # hexcast, hexbench, blackwell, archflow, sponsor, etc.
+├── crates/prefix-engine/        # Rust prefix classifier (native + WASM + C FFI)
+├── src-tauri/                   # Tauri v2 desktop app (Rust)
+│   ├── src/main.rs              # Window management, menus, IPC commands
+│   └── src/prefix_engine.rs     # Tauri IPC → Rust classifier bridge
+├── src/bridge/                  # Go WebSocket bridge server
+├── src/shaders/                 # WGSL GPU compute shaders
+├── scripts/                     # Build automation
+│   ├── build.nu / test.nu       # Nushell pipelines (build, test, audit)
+│   ├── build-wasm.sh            # Rust → WASM compilation
+│   ├── version-sync.sh          # Cross-file version alignment
+│   └── watch-dev.sh             # Dev file watcher (web/ → tauri-dist/)
+├── .github/workflows/           # CI/CD (4 workflows)
+│   ├── ci.yml                   # Rust + Python + WASM + prefix validation
+│   ├── health.yml               # Weekly health checks for all 19 apps
+│   ├── pages.yml                # GitHub Pages deploy
+│   └── release.yml              # Tagged release builds
+├── .pre-commit-config.yaml      # Pre-commit hooks (ruff, clippy, prefix, version)
+├── uvspeed_cli.py               # Python CLI (serve, classify, prefix, stats, health)
+├── pyproject.toml               # Python package config
+├── tsconfig.json                # TypeScript config
+└── install.sh                   # Full install script
 ```
 
 ### Multi-Stream Architecture
@@ -328,11 +343,39 @@ mkdir -p tauri-dist && cp -r web/* tauri-dist/
 cargo tauri build --bundles app
 
 # Run tests
-pytest
+pytest                                    # Python tests
+cargo test -p uvspeed-prefix-engine       # Rust prefix engine tests
 
 # Lint
-ruff check .
+ruff check .                              # Python lint
+cargo clippy -p uvspeed-prefix-engine     # Rust lint
+
+# Build WASM
+bash scripts/build-wasm.sh               # Rust → WASM → web/wasm/
+
+# Nushell pipelines (optional)
+nu scripts/build.nu all                   # Build everything
+nu scripts/test.nu all                    # Run all test suites
+nu scripts/audit.nu health                # Check dev tool versions
+
+# Version management
+bash scripts/version-sync.sh              # Check version consistency
+bash scripts/version-sync.sh set 4.3.0    # Set all versions at once
+
+# Pre-commit hooks (one-time setup)
+pip install pre-commit && pre-commit install
 ```
+
+### Gold Standard Workflow
+
+```
+Edit code → git commit (pre-commit: ruff + clippy + prefix headers + version sync)
+         → git push   (CI: Rust tests + WASM build + Python tests + health check)
+         → Runtime    (JS engine / WASM engine / Tauri IPC / Go bridge / Python CLI)
+         → Output     (BroadcastChannel → 19 PWA apps, WGSL GPU shader, Quantum QPU)
+```
+
+10 languages: TypeScript, Rust, Python, JavaScript, Go, CSS, Shell, Nushell, WGSL, TOML/YAML
 
 ---
 

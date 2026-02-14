@@ -7,6 +7,9 @@
 use tauri::Manager;
 use tauri::menu::{MenuBuilder, SubmenuBuilder, MenuItemBuilder};
 
+// Quantum prefix engine — Rust-native IPC commands
+mod prefix_engine;
+
 // ──────────────────────────────────────────────────────────
 // Device frame presets (width, height)
 // ──────────────────────────────────────────────────────────
@@ -591,6 +594,12 @@ fn main() {
             open_feed,
             set_device_frame,
             list_windows,
+            // Prefix engine IPC — Rust-native classification
+            prefix_engine::classify_line,
+            prefix_engine::classify_file,
+            prefix_engine::classify_lines,
+            prefix_engine::generate_gutter,
+            prefix_engine::benchmark_classifier,
         ])
         .setup(|app| {
             println!("⚛ uvspeed v4.0 — Tauri v2");

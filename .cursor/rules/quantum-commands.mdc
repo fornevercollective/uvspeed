@@ -5,44 +5,59 @@ alwaysApply: false
 
 # Quantum Bridge Server Commands
 
-## Start Server
+## Start Server (gold standard)
 ```bash
-cd /Users/tref/uvspeed && uv run python quantum_bridge_server.py
+cd /Users/tref/uvspeed && uv run uvspeed_cli.py serve
 ```
 
-## Common API Calls
-
-### Prefix Code
+## CLI Tools (always use uv run)
 ```bash
-curl -s POST http://localhost:8085/api/prefix -H "Content-Type: application/json" -d '{"code": "CODE_HERE", "language": "python"}'
+uv run uvspeed_cli.py classify myfile.py     # Classify with prefixes
+uv run uvspeed_cli.py prefix src/lib.rs      # Add prefix gutter
+uv run uvspeed_cli.py stats *.py --json      # Prefix distribution
+uv run uvspeed_cli.py pre                    # Pre-push checklist
+uv run uvspeed_cli.py health                 # Check bridge server
+uv run uvspeed_cli.py version                # Version info
 ```
 
-### Security Scan
+## API Endpoints (when bridge is running on :8085)
 ```bash
-curl -s POST http://localhost:8085/api/security/scan -H "Content-Type: application/json" -d '{"directory": "."}'
+# Prefix code
+curl -s -X POST http://localhost:8085/api/prefix \
+  -H "Content-Type: application/json" \
+  -d '{"code": "CODE_HERE", "language": "python"}'
+
+# Security scan
+curl -s -X POST http://localhost:8085/api/security/scan \
+  -H "Content-Type: application/json" \
+  -d '{"directory": "."}'
+
+# Git hook install
+curl -s -X POST http://localhost:8085/api/git/hook/install \
+  -H "Content-Type: application/json" \
+  -d '{"repo": "."}'
+
+# PR diff report
+curl -s -X POST http://localhost:8085/api/git/diff-report \
+  -H "Content-Type: application/json" \
+  -d '{"old": "OLD", "new": "NEW", "language": "python", "filename": "file.py"}'
+
+# Roadmap scan
+curl -s -X POST http://localhost:8085/api/roadmap/scan \
+  -H "Content-Type: application/json" \
+  -d '{"directory": "."}'
 ```
 
-### Install Git Hook
+## Quick Launch
 ```bash
-curl -s POST http://localhost:8085/api/git/hook/install -H "Content-Type: application/json" -d '{"repo": "."}'
+open web/quantum-notepad.html        # Notepad
+open web/quantum-gutter.html         # Prefix showcase
+open web/research-lab.html           # Research Lab
+open web/blackwell.html              # GPU dashboard
+open web/hexcast.html                # Video broadcast
 ```
 
-### PR Diff Report
+## Stamp All Files with Prefix Headers
 ```bash
-curl -s POST http://localhost:8085/api/git/diff-report -H "Content-Type: application/json" -d '{"old": "OLD", "new": "NEW", "language": "python", "filename": "file.py"}'
-```
-
-### Scan Roadmap
-```bash
-curl -s POST http://localhost:8085/api/roadmap/scan -H "Content-Type: application/json" -d '{"directory": "."}'
-```
-
-### Stamp All Files
-```bash
-python3 tools/prefix_all_files.py
-```
-
-### Launch Notepad
-```bash
-open web/quantum-notepad.html
+uv run python tools/prefix_all_files.py
 ```

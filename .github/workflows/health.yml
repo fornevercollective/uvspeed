@@ -1,0 +1,204 @@
+# beyondBINARY quantum-prefixed | uvspeed | {+1, 1, -1, +0, 0, -0, +n, n, -n}
+# Health Check — Validate all 19 PWA apps load without errors
+
+name: Health Check
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'web/**'
+      - 'src-tauri/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'web/**'
+  workflow_dispatch:
+  schedule:
+    - cron: '0 6 * * 1'  # Weekly Monday 6am UTC
+
+jobs:
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  # Validate HTML structure of all web apps
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  html-validation:
+    name: HTML Structure Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Validate all web apps
+        run: |
+          OK=0
+          FAIL=0
+          APPS=$(ls web/*.html)
+
+          for app in $APPS; do
+            NAME=$(basename "$app")
+            ERRORS=""
+
+            # Check DOCTYPE
+            if ! head -1 "$app" | grep -qi "DOCTYPE"; then
+              ERRORS="${ERRORS}missing DOCTYPE, "
+            fi
+
+            # Check closing tags
+            if ! grep -q "</html>" "$app"; then
+              ERRORS="${ERRORS}missing </html>, "
+            fi
+            if ! grep -q "</head>" "$app"; then
+              ERRORS="${ERRORS}missing </head>, "
+            fi
+            if ! grep -q "</body>" "$app"; then
+              ERRORS="${ERRORS}missing </body>, "
+            fi
+
+            # Check for quantum-prefixes.js include
+            if ! grep -q "quantum-prefixes" "$app"; then
+              ERRORS="${ERRORS}missing quantum-prefixes.js, "
+            fi
+
+            # Check for service worker registration
+            if ! grep -q "sw.js\|serviceWorker" "$app"; then
+              ERRORS="${ERRORS}no service worker, "
+            fi
+
+            if [ -z "$ERRORS" ]; then
+              echo "✓ $NAME"
+              OK=$((OK + 1))
+            else
+              echo "✗ $NAME — ${ERRORS%, }"
+              FAIL=$((FAIL + 1))
+            fi
+          done
+
+          echo ""
+          echo "Results: $OK passed, $FAIL failed out of $(echo "$APPS" | wc -w | tr -d ' ') apps"
+
+          if [ $FAIL -gt 0 ]; then
+            exit 1
+          fi
+
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  # Check for JavaScript syntax errors
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  js-syntax:
+    name: JavaScript Syntax Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+
+      - name: Check JS files for syntax errors
+        run: |
+          OK=0
+          FAIL=0
+
+          for f in web/quantum-prefixes.js web/sw.js; do
+            if node --check "$f" 2>/dev/null; then
+              echo "✓ $f"
+              OK=$((OK + 1))
+            else
+              echo "✗ $f — syntax error"
+              FAIL=$((FAIL + 1))
+            fi
+          done
+
+          echo ""
+          echo "Results: $OK passed, $FAIL failed"
+          [ $FAIL -eq 0 ] || exit 1
+
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  # Shared module integrity
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  shared-modules:
+    name: Shared Module Integrity
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Verify quantum-prefixes.js API surface
+        run: |
+          FILE="web/quantum-prefixes.js"
+          REQUIRED_EXPORTS=(
+            "classifyLine"
+            "prefixContent"
+            "prefixMetadata"
+            "broadcastState"
+            "detectLanguage"
+            "toggleTheme"
+            "setTheme"
+            "getTheme"
+            "connectIoT"
+            "aggregateGlobalStats"
+          )
+
+          MISSING=0
+          for fn in "${REQUIRED_EXPORTS[@]}"; do
+            if ! grep -q "$fn" "$FILE"; then
+              echo "✗ Missing export: $fn"
+              MISSING=$((MISSING + 1))
+            fi
+          done
+
+          if [ $MISSING -eq 0 ]; then
+            echo "✓ All ${#REQUIRED_EXPORTS[@]} required exports present"
+          else
+            echo "⚠ $MISSING required exports missing from $FILE"
+            exit 1
+          fi
+
+      - name: Verify service worker app list
+        run: |
+          SW="web/sw.js"
+          APPS=$(ls web/*.html | wc -l | tr -d ' ')
+          SW_APPS=$(grep -c "\.html" "$SW" || true)
+
+          echo "HTML apps: $APPS"
+          echo "SW cached: $SW_APPS"
+
+          if [ "$SW_APPS" -lt "$APPS" ]; then
+            echo "⚠ Service worker may be missing some apps"
+          else
+            echo "✓ Service worker covers all apps"
+          fi
+
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  # File size budget
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  size-budget:
+    name: File Size Budget
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Check file sizes
+        run: |
+          MAX_HTML_KB=500   # Alert if any HTML > 500KB
+          MAX_JS_KB=200     # Alert if any JS > 200KB
+
+          echo "=== HTML apps (max ${MAX_HTML_KB}KB) ==="
+          for f in web/*.html; do
+            SIZE=$(wc -c < "$f" | tr -d ' ')
+            SIZE_KB=$((SIZE / 1024))
+            if [ $SIZE_KB -gt $MAX_HTML_KB ]; then
+              echo "⚠ $(basename $f): ${SIZE_KB}KB (over budget)"
+            else
+              echo "✓ $(basename $f): ${SIZE_KB}KB"
+            fi
+          done
+
+          echo ""
+          echo "=== JS modules (max ${MAX_JS_KB}KB) ==="
+          for f in web/*.js; do
+            SIZE=$(wc -c < "$f" | tr -d ' ')
+            SIZE_KB=$((SIZE / 1024))
+            if [ $SIZE_KB -gt $MAX_JS_KB ]; then
+              echo "⚠ $(basename $f): ${SIZE_KB}KB (over budget)"
+            else
+              echo "✓ $(basename $f): ${SIZE_KB}KB"
+            fi
+          done

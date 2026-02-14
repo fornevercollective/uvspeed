@@ -1,0 +1,180 @@
+{
+  "_comment": "beyondBINARY quantum-prefixed | uvspeed | M4 AI workstation manifest",
+  "_updated": "2026-02-13",
+  "_machine": "Apple M4 · 10-core GPU · Metal 4 · 16 GB unified · macOS 26.2",
+  "_purpose": "Track all tools, versions, update URLs, and release channels for the AI/tinygrad/Cursor/uvspeed stack",
+
+  "shells": {
+    "zsh": {
+      "installed": "5.9",
+      "source": "system",
+      "config": "~/.zshrc",
+      "notes": "Primary Cursor terminal shell"
+    },
+    "nushell": {
+      "installed": "0.110.0",
+      "latest_check": "https://github.com/nushell/nushell/releases",
+      "source": "~/.local/bin/nu",
+      "config": "~/.config/nushell/",
+      "notes": "Structured data shell — secondary terminal"
+    },
+    "bash": {
+      "installed": "3.2.57",
+      "source": "system",
+      "notes": "Apple GPL-v2 version, use for POSIX compat only"
+    }
+  },
+
+  "languages": {
+    "python": {
+      "installed": "3.13.5",
+      "source": "brew",
+      "latest_check": "https://github.com/python/cpython/releases",
+      "also_available": ["3.14.3 (brew)", "3.12.11 (uv)", "3.9.6 (system)"],
+      "primary": "/opt/homebrew/opt/python@3.13/libexec/bin/python",
+      "notes": "3.13 is primary for AI workloads. tinygrad requires >=3.11"
+    },
+    "rust": {
+      "installed": "1.93.1",
+      "source": "rustup",
+      "latest_check": "https://github.com/rust-lang/rust/releases",
+      "toolchain": "stable-aarch64-apple-darwin",
+      "notes": "Used by Tauri, zerobrew, starship, ripgrep, nushell"
+    },
+    "node": {
+      "installed": "25.6.1",
+      "source": "brew",
+      "latest_check": "https://github.com/nodejs/node/releases",
+      "notes": "Electron desktop app build. pnpm as package manager"
+    },
+    "julia": {
+      "installed": "1.11.6",
+      "source": "juliaup",
+      "latest_check": "https://github.com/JuliaLang/julia/releases",
+      "notes": "Scientific computing, potential tinygrad interop"
+    }
+  },
+
+  "ai_ml": {
+    "tinygrad": {
+      "installed": "0.12.0",
+      "source": "local (~/tinygrad)",
+      "latest_check": "https://github.com/tinygrad/tinygrad/releases",
+      "repo": "https://github.com/tinygrad/tinygrad",
+      "backend": "METAL",
+      "python_requires": ">=3.11",
+      "notes": "Local dev build from source. Update: cd ~/tinygrad && git pull"
+    },
+    "mlx": {
+      "installed": "0.30.6",
+      "source": "pip (python3.13)",
+      "latest_check": "https://github.com/ml-explore/mlx/releases",
+      "backend": "Metal native (Apple Silicon only)",
+      "notes": "Apple's ML framework. pip install --upgrade mlx mlx-lm"
+    },
+    "ollama": {
+      "installed": "0.15.6",
+      "source": "brew",
+      "latest_check": "https://github.com/ollama/ollama/releases",
+      "backend": "Metal (llama.cpp)",
+      "notes": "Local LLM server. Start: ollama serve. Models need ~2-8 GB each"
+    },
+    "torch": {
+      "installed": "2.4.0",
+      "source": "pip (system python 3.9)",
+      "latest_check": "https://github.com/pytorch/pytorch/releases",
+      "backend": "MPS (Metal Performance Shaders)",
+      "notes": "On system Python only. Consider migrating to 3.13 when stable"
+    },
+    "transformers": {
+      "installed": "4.57.3",
+      "source": "pip (system python 3.9)",
+      "latest_check": "https://github.com/huggingface/transformers/releases",
+      "notes": "HuggingFace transformers. Pairs with torch and tokenizers"
+    },
+    "grepai": {
+      "installed": "unknown",
+      "source": "brew",
+      "path": "/opt/homebrew/bin/grepai",
+      "notes": "Semantic code search for Cursor/uvspeed"
+    }
+  },
+
+  "python_packages": {
+    "numpy":       { "installed": "2.4.2",  "python": "3.13", "latest_check": "https://github.com/numpy/numpy/releases" },
+    "scipy":       { "installed": "1.17.0", "python": "3.13", "latest_check": "https://github.com/scipy/scipy/releases" },
+    "pillow":      { "installed": "12.1.1", "python": "3.13", "latest_check": "https://github.com/python-pillow/Pillow/releases" },
+    "mlx":         { "installed": "0.30.6", "python": "3.13", "latest_check": "https://github.com/ml-explore/mlx/releases" },
+    "accelerate":  { "installed": "1.10.1", "python": "3.9",  "notes": "On system Python with torch" },
+    "safetensors": { "installed": "0.7.0",  "python": "3.9",  "notes": "On system Python with torch" },
+    "tokenizers":  { "installed": "0.22.2", "python": "3.9",  "notes": "On system Python with HF" },
+    "opencv":      { "installed": "4.13.0", "python": "3.9",  "notes": "On system Python (hexcast)" },
+    "pandas":      { "installed": "2.3.3",  "python": "3.9",  "notes": "On system Python" },
+    "matplotlib":  { "installed": "3.9.4",  "python": "3.9",  "notes": "On system Python" }
+  },
+
+  "cli_tools": {
+    "ripgrep":  { "installed": "15.1.0",  "source": "brew", "latest_check": "https://github.com/BurntSushi/ripgrep/releases",  "prefix": "-n:", "notes": "Fast regex search — Cursor Grep backend" },
+    "fd":       { "installed": "10.3.0",  "source": "brew", "latest_check": "https://github.com/sharkdp/fd/releases",         "prefix": "-n:", "notes": "Fast find alternative" },
+    "bat":      { "installed": "0.26.1",  "source": "brew", "latest_check": "https://github.com/sharkdp/bat/releases",        "prefix": "+3:", "notes": "Cat with syntax highlighting" },
+    "fzf":      { "installed": "0.67.0",  "source": "brew", "latest_check": "https://github.com/junegunn/fzf/releases",       "prefix": "+n:", "notes": "Fuzzy finder — Ctrl+R history, Ctrl+T files" },
+    "eza":      { "installed": "0.23.4",  "source": "brew", "latest_check": "https://github.com/eza-community/eza/releases",  "prefix": "+3:", "notes": "Modern ls with icons + git" },
+    "jq":       { "installed": "1.7.1",   "source": "brew", "latest_check": "https://github.com/jqlang/jq/releases",          "prefix": "0:",  "notes": "JSON processor" },
+    "tree":     { "installed": "2.3.1",   "source": "brew", "latest_check": "https://github.com/Old-Man-Programmer/tree",      "prefix": "+3:", "notes": "Directory tree viewer" },
+    "htop":     { "installed": "3.4.1",   "source": "brew", "latest_check": "https://github.com/htop-dev/htop/releases",      "prefix": "+3:", "notes": "Interactive process monitor" },
+    "tmux":     { "installed": "3.6a",    "source": "brew", "latest_check": "https://github.com/tmux/tmux/releases",          "prefix": "+2:", "notes": "Terminal multiplexer" },
+    "starship": { "installed": "1.24.2",  "source": "brew", "latest_check": "https://github.com/starship/starship/releases",  "prefix": "+3:", "notes": "Cross-shell prompt (Rust)" },
+    "cmake":    { "installed": "4.2.3",   "source": "brew", "latest_check": "https://github.com/Kitware/CMake/releases",      "prefix": "0:",  "notes": "Build system generator" },
+    "ninja":    { "installed": "1.13.2",  "source": "brew", "latest_check": "https://github.com/ninja-build/ninja/releases",  "prefix": "0:",  "notes": "Fast build system" },
+    "wget":     { "installed": "1.25.0",  "source": "brew", "latest_check": "https://ftp.gnu.org/gnu/wget/",                  "prefix": "-n:", "notes": "HTTP downloader" },
+    "ffmpeg":   { "installed": "8.0.1",   "source": "brew", "latest_check": "https://github.com/FFmpeg/FFmpeg/releases",      "prefix": "0:",  "notes": "Video/audio processing (hexcast)" },
+    "mkcert":   { "installed": "1.4.4",   "source": "brew", "latest_check": "https://github.com/FiloSottile/mkcert/releases", "prefix": "-1:", "notes": "Local TLS certificates" }
+  },
+
+  "package_managers": {
+    "brew":     { "installed": "5.0.14",  "latest_check": "https://github.com/Homebrew/brew/releases" },
+    "uv":       { "installed": "0.7.21",  "latest_check": "https://github.com/astral-sh/uv/releases", "notes": "Fast Python package manager (Rust)" },
+    "zerobrew": { "installed": "0.1.0",   "latest_check": "https://github.com/nicholasgasior/zerobrew", "notes": "Rust Homebrew-compatible, content-addressed store" },
+    "cargo":    { "installed": "1.93.1",  "notes": "Comes with rustup" },
+    "pnpm":     { "installed": "10.28.0", "latest_check": "https://github.com/pnpm/pnpm/releases" }
+  },
+
+  "desktop_apps": {
+    "ghostty":    { "source": "brew cask", "latest_check": "https://github.com/ghostty-org/ghostty/releases", "notes": "GPU-accelerated terminal" },
+    "android_platform_tools": { "source": "brew cask", "notes": "adb for Quest/Android development" },
+    "sidequest":  { "source": "brew cask", "notes": "Quest sideloading" }
+  },
+
+  "zerobrew_packages": {
+    "_comment": "Media codecs in /opt/zerobrew/ — separate from brew",
+    "dav1d":   { "installed": "1.5.3",   "notes": "AV1 decoder" },
+    "lame":    { "installed": "3.100",   "notes": "MP3 encoder" },
+    "opus":    { "installed": "1.6.1",   "notes": "Audio codec" },
+    "sdl2":    { "installed": "2.32.10", "notes": "Graphics/audio/input" },
+    "svt-av1": { "installed": "4.0.1",   "notes": "AV1 encoder (fast)" },
+    "x264":    { "installed": "r3222",   "notes": "H.264 encoder" },
+    "x265":    { "installed": "4.1",     "notes": "H.265/HEVC encoder" }
+  },
+
+  "update_commands": {
+    "brew_all":       "brew update && brew upgrade",
+    "brew_check":     "brew outdated",
+    "python_ai":      "pip install --break-system-packages --upgrade numpy scipy pillow mlx mlx-lm",
+    "tinygrad":       "cd ~/tinygrad && git pull",
+    "rust":           "rustup update stable",
+    "node":           "brew upgrade node",
+    "uv":             "brew upgrade uv",
+    "ollama":         "brew upgrade ollama",
+    "nushell":        "cargo install nu (or brew upgrade nushell)",
+    "zerobrew":       "zb install <package> (auto-updates)",
+    "full_setup":     "bash tools/setup-workstation.sh"
+  },
+
+  "health_checks": {
+    "tinygrad_metal": "PYTHONPATH=~/tinygrad python3.13 -c \"from tinygrad import Device; print(Device.DEFAULT)\"",
+    "mlx_metal":      "python3.13 -c \"import mlx.core as mx; print(mx.array([1,2,3]))\"",
+    "torch_mps":      "python3 -c \"import torch; print(torch.backends.mps.is_available())\"",
+    "ollama_running":  "curl -s http://127.0.0.1:11434/api/tags | jq .models",
+    "disk_free":      "df -h / | tail -1"
+  }
+}

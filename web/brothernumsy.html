@@ -240,6 +240,176 @@
         .code-toolbar button:hover { background: #30363d; }
         .code-toolbar .btn-run { background: #238636; border-color: #2ea043; color: #fff; }
         .code-toolbar .btn-run:hover { background: #2ea043; }
+
+        /* ===== Game Blocks Builder ===== */
+        .blocks-builder {
+            display: grid;
+            grid-template-columns: 160px 1fr;
+            min-height: 320px;
+            max-height: 480px;
+        }
+        .blocks-palette {
+            background: #161b22;
+            border-right: 1px solid #21262d;
+            padding: 8px;
+            overflow-y: auto;
+            font-size: 0.6875rem;
+        }
+        .blocks-palette-cat {
+            margin-bottom: 8px;
+        }
+        .blocks-palette-cat-title {
+            font-weight: 700;
+            font-size: 0.5625rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 3px 0;
+            margin-bottom: 3px;
+        }
+        .blocks-palette-chip {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 8px;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            margin-bottom: 3px;
+            cursor: grab;
+            background: #0d1117;
+            transition: border-color 0.15s, background 0.15s;
+            font-size: 0.625rem;
+            font-weight: 600;
+        }
+        .blocks-palette-chip:hover {
+            border-color: #58a6ff;
+            background: #161b22;
+        }
+        .blocks-palette-chip .chip-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .blocks-canvas-wrap {
+            position: relative;
+            overflow: auto;
+            background: #0d1117;
+            background-image: radial-gradient(circle, #21262d 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        .blocks-canvas {
+            position: relative;
+            min-width: 1200px;
+            min-height: 600px;
+        }
+        .blocks-toolbar {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            display: flex;
+            gap: 4px;
+            z-index: 5;
+        }
+        .blocks-toolbar button {
+            padding: 3px 10px;
+            border: 1px solid #30363d;
+            border-radius: 4px;
+            background: #21262d;
+            color: #c9d1d9;
+            font-family: inherit;
+            font-size: 0.625rem;
+            cursor: pointer;
+        }
+        .blocks-toolbar button:hover { background: #30363d; }
+        .blocks-toolbar .btn-export { background: #238636; border-color: #2ea043; color: #fff; }
+        .blocks-toolbar .btn-export:hover { background: #2ea043; }
+
+        /* Game Block element */
+        .game-block {
+            position: absolute;
+            min-width: 140px;
+            border-radius: 8px;
+            border: 2px solid;
+            background: #161b22;
+            cursor: grab;
+            user-select: none;
+            font-size: 0.6875rem;
+            z-index: 2;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            transition: box-shadow 0.15s;
+        }
+        .game-block:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.5); }
+        .game-block.dragging { z-index: 10; opacity: 0.9; cursor: grabbing; }
+        .game-block-head {
+            padding: 5px 10px;
+            border-radius: 6px 6px 0 0;
+            font-weight: 700;
+            font-size: 0.625rem;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 6px;
+            color: #0d1117;
+        }
+        .game-block-head .block-prefix {
+            font-size: 0.5625rem;
+            opacity: 0.7;
+            font-weight: 400;
+        }
+        .game-block-body {
+            padding: 6px 10px 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .game-block-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.625rem;
+        }
+        .game-block-row label {
+            color: #8b949e;
+            min-width: 48px;
+            flex-shrink: 0;
+        }
+        .game-block-row input,
+        .game-block-row select {
+            flex: 1;
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 3px;
+            color: #c9d1d9;
+            padding: 2px 6px;
+            font-family: inherit;
+            font-size: 0.625rem;
+            outline: none;
+        }
+        .game-block-row input:focus,
+        .game-block-row select:focus { border-color: #58a6ff; }
+        .block-connector {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            border: 2px solid;
+            background: #0d1117;
+            cursor: crosshair;
+            z-index: 3;
+        }
+        .block-connector.out { right: -6px; top: 50%; transform: translateY(-50%); }
+        .block-connector.in { left: -6px; top: 50%; transform: translateY(-50%); }
+        .blocks-connections {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
         .code-output {
             background: #0d1117;
             padding: 12px;
@@ -425,6 +595,33 @@ state.obstacles.forEach((o, i) => {
                         <div class="code-output" id="code-output">
                             <div class="out-info">// Output appears here when you run code</div>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Blocks Builder -->
+        <div class="panel-section">
+            <div class="panel-header" id="blocks-panel-toggle">
+                <span style="color:#f0883e;">&#9881; Game Blocks Builder</span>
+                <span>
+                    <span class="tag" style="background:#f0883e22;color:#f0883e;">entity + physics + AI</span>
+                    <span class="tag" style="background:#21262d;color:#8b949e;">drag &amp; connect</span>
+                    <span style="color:#484f58;margin-left:6px;">&#9660;</span>
+                </span>
+            </div>
+            <div class="panel-body collapsed" id="blocks-panel-body">
+                <div class="blocks-builder">
+                    <div class="blocks-palette" id="blocks-palette"></div>
+                    <div class="blocks-canvas-wrap" id="blocks-canvas-wrap">
+                        <div class="blocks-toolbar">
+                            <button onclick="gameBlocks.loadPreset('runner')">&#9654; Runner Preset</button>
+                            <button onclick="gameBlocks.loadPreset('platformer')">&#127918; Platformer</button>
+                            <button onclick="gameBlocks.clear()">Clear</button>
+                            <button class="btn-export" onclick="gameBlocks.exportAndInject()">&#9889; Export &amp; Inject</button>
+                        </div>
+                        <svg class="blocks-connections" id="blocks-connections"></svg>
+                        <div class="blocks-canvas" id="blocks-canvas"></div>
                     </div>
                 </div>
             </div>
@@ -1900,6 +2097,495 @@ FreyaUnits.units.forEach(u => {
         });
     })();
 
+    // ──────────────────── GAME BLOCKS BUILDER ────────────────────
+    (function(){
+        // +0: Block type definitions — category, color, prefix, label, input rows
+        const GB_TYPES = {
+            // Entity blocks — quantum prefix: 1: (variable)
+            player:      { cat:'entity',  color:'#3fb950', prefix:'1:',  label:'Player',       rows:[{l:'Speed',inp:'4.5'},{l:'Jump',inp:'-12'},{l:'Gravity',inp:'0.65'},{l:'Sprite',sel:['brotherNumsy','custom']}] },
+            companion:   { cat:'entity',  color:'#3fb950', prefix:'1:',  label:'Companion',    rows:[{l:'Name',inp:'Freya'},{l:'Float Y',inp:'20'},{l:'Power Max',inp:'100'}] },
+            enemy:       { cat:'entity',  color:'#3fb950', prefix:'1:',  label:'Enemy',        rows:[{l:'Type',sel:['ground','flying','boss']},{l:'Speed',inp:'1.0'},{l:'HP',inp:'1'},{l:'Sprite',sel:['binary0','binary1','flyingPair','custom']}] },
+            collectible: { cat:'entity',  color:'#3fb950', prefix:'1:',  label:'Collectible',  rows:[{l:'Type',sel:['quantum','golden','freya','custom']},{l:'Points',inp:'10'},{l:'Effect',sel:['score','powerup','invincible','speed']}] },
+            // Physics blocks — quantum prefix: 0: (function)
+            gravity_cfg: { cat:'physics', color:'#58a6ff', prefix:'0:',  label:'Gravity',      rows:[{l:'Force',inp:'0.65'},{l:'Max Fall',inp:'15'},{l:'Direction',sel:['down','up','radial']}] },
+            collision:   { cat:'physics', color:'#58a6ff', prefix:'0:',  label:'Collision',    rows:[{l:'Type',sel:['rect','circle','pixel']},{l:'Response',sel:['destroy','bounce','damage','push']}] },
+            bounds:      { cat:'physics', color:'#58a6ff', prefix:'0:',  label:'Bounds',       rows:[{l:'Floor Y',inp:'0.78'},{l:'Ceil Y',inp:'0.1'},{l:'Wrap X',sel:['yes','no']}] },
+            velocity:    { cat:'physics', color:'#58a6ff', prefix:'0:',  label:'Velocity',     rows:[{l:'X',inp:'0'},{l:'Y',inp:'0'},{l:'Friction',inp:'0.98'}] },
+            // Visual blocks — quantum prefix: +3: (output)
+            sprite:      { cat:'visual',  color:'#a78bfa', prefix:'+3:', label:'Sprite',       rows:[{l:'Width',inp:'16'},{l:'Height',inp:'16'},{l:'Frames',inp:'2'},{l:'FPS',inp:'8'}] },
+            particle:    { cat:'visual',  color:'#a78bfa', prefix:'+3:', label:'Particles',    rows:[{l:'Count',inp:'20'},{l:'Life',inp:'30'},{l:'Color',inp:'#e6b422'},{l:'Spread',inp:'5'}] },
+            parallax:    { cat:'visual',  color:'#a78bfa', prefix:'+3:', label:'Parallax',     rows:[{l:'Layers',inp:'3'},{l:'Speed',inp:'0.5'},{l:'Type',sel:['stars','clouds','city','custom']}] },
+            hud_el:      { cat:'visual',  color:'#a78bfa', prefix:'+3:', label:'HUD Element',  rows:[{l:'Show',sel:['score','health','timer','distance','power']},{l:'Position',sel:['top-left','top-right','bottom']}] },
+            // Logic blocks — quantum prefix: +n: (condition)
+            if_cond:     { cat:'logic',   color:'#f0883e', prefix:'+n:', label:'If Condition',  rows:[{l:'When',sel:['collision','timer','score_above','key_press','power_full','random']},{l:'Value',inp:'100'}] },
+            on_event:    { cat:'logic',   color:'#f0883e', prefix:'+n:', label:'On Event',      rows:[{l:'Event',sel:['game_start','game_over','collect','damage','level_up','spawn']},{l:'Action',sel:['emit','spawn','modify','log']}] },
+            random:      { cat:'logic',   color:'#f0883e', prefix:'+n:', label:'Random',        rows:[{l:'Min',inp:'0'},{l:'Max',inp:'100'},{l:'Target',sel:['spawn_timer','speed','position','count']}] },
+            // Loop blocks — quantum prefix: +2: (loop)
+            game_loop:   { cat:'loop',    color:'#e2498a', prefix:'+2:', label:'Game Loop',     rows:[{l:'FPS',inp:'60'},{l:'Time Scale',inp:'1.0'}] },
+            spawn_wave:  { cat:'loop',    color:'#e2498a', prefix:'+2:', label:'Spawn Wave',    rows:[{l:'Min Delay',inp:'60'},{l:'Max Delay',inp:'140'},{l:'Increase',inp:'0.08'}] },
+            repeat:      { cat:'loop',    color:'#e2498a', prefix:'+2:', label:'Repeat',        rows:[{l:'Count',inp:'10'},{l:'Interval',inp:'30'}] },
+            // AI blocks — quantum prefix: -n: (import/data)
+            ai_behavior: { cat:'ai',      color:'#06b6d4', prefix:'-n:', label:'AI Behavior',   rows:[{l:'Mode',sel:['heuristic','nn_simple','random','follow_player']},{l:'React Dist',inp:'150'},{l:'Learn',sel:['yes','no']}] },
+            difficulty:  { cat:'ai',      color:'#06b6d4', prefix:'-n:', label:'Difficulty',     rows:[{l:'Start',inp:'1'},{l:'Max',inp:'10'},{l:'Ramp',sel:['linear','exponential','step']},{l:'Per Score',inp:'50'}] },
+            // Error/damage blocks — quantum prefix: -1: (error)
+            damage:      { cat:'error',   color:'#ff5757', prefix:'-1:', label:'Damage',        rows:[{l:'Amount',inp:'1'},{l:'Effect',sel:['death','knockback','stun','shrink']},{l:'I-Frames',inp:'60'}] },
+            gameover:    { cat:'error',   color:'#ff5757', prefix:'-1:', label:'Game Over',     rows:[{l:'Trigger',sel:['hp_zero','fall','timeout','manual']},{l:'Allow Retry',sel:['yes','no']},{l:'Show Score',sel:['yes','no']}] },
+            // Return/output — quantum prefix: -0: (return)
+            score_rule:  { cat:'output',  color:'#d4a017', prefix:'-0:', label:'Score Rule',    rows:[{l:'Source',sel:['collect','distance','time','combo','kill']},{l:'Multiplier',inp:'1'},{l:'Display',sel:['float_text','hud','both']}] },
+        };
+
+        const CAT_META = {
+            entity:  { label:'Entity',   icon:'&#9632;',  color:'#3fb950' },
+            physics: { label:'Physics',  icon:'&#9881;',  color:'#58a6ff' },
+            visual:  { label:'Visual',   icon:'&#9733;',  color:'#a78bfa' },
+            logic:   { label:'Logic',    icon:'&#9670;',  color:'#f0883e' },
+            loop:    { label:'Loop',     icon:'&#8634;',  color:'#e2498a' },
+            ai:      { label:'AI',       icon:'&#9041;',  color:'#06b6d4' },
+            error:   { label:'Error',    icon:'&#9888;',  color:'#ff5757' },
+            output:  { label:'Output',   icon:'&#9678;',  color:'#d4a017' },
+        };
+
+        let blocks = [];
+        let connections = [];
+        let nextId = 0;
+        let dragBlock = null;
+        let dragOff = { x: 0, y: 0 };
+        let connectingFrom = null;
+
+        const palette = document.getElementById('blocks-palette');
+        const canvas = document.getElementById('blocks-canvas');
+        const svgConns = document.getElementById('blocks-connections');
+        const canvasWrap = document.getElementById('blocks-canvas-wrap');
+
+        // Build palette
+        const cats = {};
+        Object.entries(GB_TYPES).forEach(([k, v]) => {
+            if (!cats[v.cat]) cats[v.cat] = [];
+            cats[v.cat].push({ key: k, ...v });
+        });
+
+        Object.entries(cats).forEach(([catKey, items]) => {
+            const meta = CAT_META[catKey];
+            const div = document.createElement('div');
+            div.className = 'blocks-palette-cat';
+            div.innerHTML = `<div class="blocks-palette-cat-title" style="color:${meta.color};">${meta.icon} ${meta.label}</div>`;
+            items.forEach(item => {
+                const chip = document.createElement('div');
+                chip.className = 'blocks-palette-chip';
+                chip.innerHTML = `<span class="chip-dot" style="background:${item.color};"></span>${item.label}`;
+                chip.addEventListener('click', () => addBlock(item.key, 200 + Math.random() * 300, 30 + blocks.length * 70));
+                chip.setAttribute('draggable', 'true');
+                chip.addEventListener('dragstart', e => {
+                    e.dataTransfer.setData('text/plain', item.key);
+                });
+                div.appendChild(chip);
+            });
+            palette.appendChild(div);
+        });
+
+        // Drop on canvas
+        canvasWrap.addEventListener('dragover', e => e.preventDefault());
+        canvasWrap.addEventListener('drop', e => {
+            e.preventDefault();
+            const type = e.dataTransfer.getData('text/plain');
+            if (!GB_TYPES[type]) return;
+            const rect = canvas.getBoundingClientRect();
+            addBlock(type, e.clientX - rect.left + canvasWrap.scrollLeft, e.clientY - rect.top + canvasWrap.scrollTop);
+        });
+
+        function addBlock(type, x, y) {
+            const def = GB_TYPES[type];
+            if (!def) return;
+            const id = 'gb-' + (nextId++);
+            const el = document.createElement('div');
+            el.className = 'game-block';
+            el.style.left = x + 'px';
+            el.style.top = y + 'px';
+            el.style.borderColor = def.color;
+            el.dataset.id = id;
+            el.dataset.type = type;
+
+            let bodyHtml = '';
+            def.rows.forEach((r, ri) => {
+                bodyHtml += '<div class="game-block-row">';
+                bodyHtml += `<label>${r.l}</label>`;
+                if (r.sel) {
+                    bodyHtml += `<select data-row="${ri}">` + r.sel.map(o => `<option value="${o}">${o}</option>`).join('') + '</select>';
+                } else if (r.inp !== undefined) {
+                    bodyHtml += `<input type="text" data-row="${ri}" value="${r.inp}">`;
+                } else {
+                    bodyHtml += `<span>${r.l}</span>`;
+                }
+                bodyHtml += '</div>';
+            });
+
+            el.innerHTML = `
+                <div class="game-block-head" style="background:${def.color};">
+                    <span>${def.label}</span>
+                    <span class="block-prefix">${def.prefix}</span>
+                </div>
+                <div class="game-block-body">${bodyHtml}</div>
+                <div class="block-connector out" style="border-color:${def.color};" data-dir="out" title="Connect out"></div>
+                <div class="block-connector in" style="border-color:${def.color};" data-dir="in" title="Connect in"></div>
+            `;
+
+            // Prevent inputs from starting drag
+            el.querySelectorAll('input, select').forEach(inp => {
+                inp.addEventListener('mousedown', e => e.stopPropagation());
+                inp.addEventListener('keydown', e => e.stopPropagation());
+            });
+
+            // Double-click head to remove
+            el.querySelector('.game-block-head').addEventListener('dblclick', () => {
+                removeBlock(id);
+            });
+
+            canvas.appendChild(el);
+            blocks.push({ id, type, el, x, y });
+
+            // Drag
+            el.addEventListener('mousedown', onBlockMouseDown);
+            el.addEventListener('touchstart', onBlockTouchStart, { passive: false });
+
+            // Connector click
+            el.querySelectorAll('.block-connector').forEach(c => {
+                c.addEventListener('mousedown', e => {
+                    e.stopPropagation();
+                    const dir = c.dataset.dir;
+                    if (dir === 'out') {
+                        connectingFrom = id;
+                        c.style.background = def.color;
+                    } else if (dir === 'in' && connectingFrom && connectingFrom !== id) {
+                        // Don't allow duplicate connections
+                        if (!connections.find(cn => cn.from === connectingFrom && cn.to === id)) {
+                            connections.push({ from: connectingFrom, to: id });
+                            drawConnections();
+                        }
+                        connectingFrom = null;
+                        document.querySelectorAll('.block-connector.out').forEach(o => o.style.background = '#0d1117');
+                    }
+                });
+            });
+
+            return id;
+        }
+
+        function removeBlock(id) {
+            const idx = blocks.findIndex(b => b.id === id);
+            if (idx < 0) return;
+            blocks[idx].el.remove();
+            blocks.splice(idx, 1);
+            connections = connections.filter(c => c.from !== id && c.to !== id);
+            drawConnections();
+        }
+
+        function onBlockMouseDown(e) {
+            if (e.target.closest('input, select, .block-connector')) return;
+            const el = e.currentTarget;
+            const b = blocks.find(b => b.el === el);
+            if (!b) return;
+            dragBlock = b;
+            dragOff.x = e.clientX - b.x;
+            dragOff.y = e.clientY - b.y;
+            el.classList.add('dragging');
+            e.preventDefault();
+        }
+
+        function onBlockTouchStart(e) {
+            if (e.target.closest('input, select, .block-connector')) return;
+            const el = e.currentTarget;
+            const b = blocks.find(b => b.el === el);
+            if (!b) return;
+            const t = e.touches[0];
+            dragBlock = b;
+            dragOff.x = t.clientX - b.x;
+            dragOff.y = t.clientY - b.y;
+            el.classList.add('dragging');
+            e.preventDefault();
+        }
+
+        document.addEventListener('mousemove', e => {
+            if (!dragBlock) return;
+            dragBlock.x = e.clientX - dragOff.x;
+            dragBlock.y = e.clientY - dragOff.y;
+            dragBlock.el.style.left = dragBlock.x + 'px';
+            dragBlock.el.style.top = dragBlock.y + 'px';
+            drawConnections();
+        });
+
+        document.addEventListener('touchmove', e => {
+            if (!dragBlock) return;
+            const t = e.touches[0];
+            dragBlock.x = t.clientX - dragOff.x;
+            dragBlock.y = t.clientY - dragOff.y;
+            dragBlock.el.style.left = dragBlock.x + 'px';
+            dragBlock.el.style.top = dragBlock.y + 'px';
+            drawConnections();
+        }, { passive: false });
+
+        document.addEventListener('mouseup', () => {
+            if (dragBlock) {
+                dragBlock.el.classList.remove('dragging');
+                dragBlock = null;
+            }
+            if (connectingFrom) {
+                connectingFrom = null;
+                document.querySelectorAll('.block-connector.out').forEach(o => o.style.background = '#0d1117');
+            }
+        });
+
+        document.addEventListener('touchend', () => {
+            if (dragBlock) {
+                dragBlock.el.classList.remove('dragging');
+                dragBlock = null;
+            }
+        });
+
+        function drawConnections() {
+            while (svgConns.firstChild) svgConns.removeChild(svgConns.firstChild);
+            connections.forEach(cn => {
+                const fromB = blocks.find(b => b.id === cn.from);
+                const toB = blocks.find(b => b.id === cn.to);
+                if (!fromB || !toB) return;
+                const fromEl = fromB.el;
+                const toEl = toB.el;
+                const x1 = fromB.x + fromEl.offsetWidth;
+                const y1 = fromB.y + fromEl.offsetHeight / 2;
+                const x2 = toB.x;
+                const y2 = toB.y + toEl.offsetHeight / 2;
+                const mx = (x1 + x2) / 2;
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                path.setAttribute('d', `M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}`);
+                path.setAttribute('stroke', GB_TYPES[fromB.type].color);
+                path.setAttribute('stroke-width', '2');
+                path.setAttribute('fill', 'none');
+                path.setAttribute('opacity', '0.6');
+                svgConns.appendChild(path);
+                // Arrow
+                const arrow = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                arrow.setAttribute('cx', x2);
+                arrow.setAttribute('cy', y2);
+                arrow.setAttribute('r', '3');
+                arrow.setAttribute('fill', GB_TYPES[toB.type].color);
+                svgConns.appendChild(arrow);
+            });
+        }
+
+        function getBlockValues(b) {
+            const def = GB_TYPES[b.type];
+            const vals = {};
+            b.el.querySelectorAll('input, select').forEach(inp => {
+                const ri = parseInt(inp.dataset.row);
+                const row = def.rows[ri];
+                if (row) vals[row.l.toLowerCase().replace(/\s/g,'_')] = inp.value;
+            });
+            return vals;
+        }
+
+        // +0: Export blocks to JavaScript game configuration
+        function exportConfig() {
+            const config = { entities: [], physics: [], visuals: [], logic: [], loops: [], ai: [], errors: [], output: [], connections: [] };
+            blocks.forEach(b => {
+                const def = GB_TYPES[b.type];
+                const vals = getBlockValues(b);
+                const entry = { type: b.type, id: b.id, prefix: def.prefix, category: def.cat, params: vals };
+                if (config[def.cat]) config[def.cat].push(entry);
+                else { /* custom categories */ }
+            });
+            config.connections = connections.map(c => ({ from: c.from, to: c.to }));
+            return config;
+        }
+
+        // +0: Generate injectable JavaScript from block config
+        function generateJS(config) {
+            let js = '// ═══ Game Blocks Builder — Auto-generated ═══\n';
+            js += '// beyondBINARY quantum-prefixed | {' + [...new Set(blocks.map(b => GB_TYPES[b.type].prefix))].join(', ') + '}\n\n';
+
+            // Entity configs
+            config.entities?.forEach(e => {
+                js += `// ${e.prefix} ${e.type}\n`;
+                if (e.type === 'player') {
+                    js += `game.speedMult = 1.0; // base will use ${e.params.speed || BASE_SPEED};\n`;
+                    js += `// JUMP_FORCE override: ${e.params.jump || JUMP_FORCE}\n`;
+                    js += `// GRAVITY override: ${e.params.gravity || GRAVITY}\n\n`;
+                } else if (e.type === 'enemy') {
+                    js += `// Enemy config: ${e.params.type || 'ground'}, speed=${e.params.speed || '1.0'}, hp=${e.params.hp || '1'}\n\n`;
+                } else if (e.type === 'collectible') {
+                    js += `// Collectible: ${e.params.type || 'quantum'}, points=${e.params.points || '10'}, effect=${e.params.effect || 'score'}\n\n`;
+                } else if (e.type === 'companion') {
+                    js += `// Companion: ${e.params.name || 'Freya'}, power_max=${e.params.power_max || '100'}\n\n`;
+                }
+            });
+
+            // Physics
+            config.physics?.forEach(p => {
+                js += `// ${p.prefix} ${p.type}\n`;
+                if (p.type === 'gravity_cfg') js += `// Gravity: force=${p.params.force}, max_fall=${p.params.max_fall}, dir=${p.params.direction}\n`;
+                if (p.type === 'spawn_wave') js += `// Spawn: delay=${p.params.min_delay}-${p.params.max_delay}, ramp=${p.params.increase}\n`;
+                js += '\n';
+            });
+
+            // AI
+            config.ai?.forEach(a => {
+                js += `// ${a.prefix} ${a.type}\n`;
+                if (a.type === 'ai_behavior') {
+                    js += `numsyAI.onFrame(function(state) {\n`;
+                    js += `    if (!state.alive) return;\n`;
+                    js += `    var ob = state.obstacles[0];\n`;
+                    if (a.params.mode === 'heuristic') {
+                        js += `    // Heuristic: react at ${a.params.react_dist || 150}px\n`;
+                        js += `    if (ob && ob.dist < ${a.params.react_dist || 150} && ob.dist > 0) {\n`;
+                        js += `        if (ob.type === 'flying') numsyAI.act('duck');\n`;
+                        js += `        else numsyAI.act('jump');\n`;
+                        js += `    }\n`;
+                    } else if (a.params.mode === 'random') {
+                        js += `    if (Math.random() < 0.05) numsyAI.act(Math.random() > 0.5 ? 'jump' : 'duck');\n`;
+                    }
+                    js += `});\n\n`;
+                }
+                if (a.type === 'difficulty') {
+                    js += `// Difficulty ramp: ${a.params.start}-${a.params.max}, ${a.params.ramp}, every ${a.params.per_score} pts\n\n`;
+                }
+            });
+
+            // Loops
+            config.loops?.forEach(l => {
+                js += `// ${l.prefix} ${l.type}: `;
+                const params = Object.entries(l.params).map(([k, v]) => `${k}=${v}`).join(', ');
+                js += params + '\n\n';
+            });
+
+            // Score rules
+            config.output?.forEach(o => {
+                js += `// ${o.prefix} score_rule: source=${o.params.source}, mult=${o.params.multiplier}\n\n`;
+            });
+
+            js += '// ═══ End Game Blocks Config ═══\n';
+            js += `console.log('[GameBlocks] Config loaded: ${blocks.length} blocks, ${connections.length} connections');\n`;
+            return js;
+        }
+
+        function exportAndInject() {
+            const config = exportConfig();
+            const js = generateJS(config);
+            // Put generated code in the Live Code Cell editor
+            const codeInput = document.getElementById('code-input');
+            if (codeInput) codeInput.value = js;
+            // Log to terminal
+            const termOutput = document.getElementById('term-output');
+            if (termOutput) {
+                const div = document.createElement('div');
+                div.className = 'term-line info';
+                div.innerHTML = `<b style="color:#f0883e;">[GameBlocks]</b> Exported ${blocks.length} blocks → Live Code Cell`;
+                termOutput.appendChild(div);
+            }
+            // Also log config to console
+            console.log('[GameBlocks] Config:', config);
+            console.log('[GameBlocks] Generated JS:', js);
+        }
+
+        // +2: Preset loaders
+        function loadPreset(name) {
+            clear();
+            if (name === 'runner') {
+                // Current brotherNumsy configuration as blocks
+                const gl = addBlock('game_loop', 40, 30);
+                const pl = addBlock('player', 40, 130);
+                const fr = addBlock('companion', 40, 270);
+                const gv = addBlock('gravity_cfg', 220, 30);
+                const bd = addBlock('bounds', 220, 150);
+                const sw = addBlock('spawn_wave', 220, 270);
+                const e1 = addBlock('enemy', 420, 30);
+                const e2 = addBlock('enemy', 420, 140);
+                const c1 = addBlock('collectible', 420, 260);
+                const c2 = addBlock('collectible', 420, 370);
+                const cl = addBlock('collision', 620, 30);
+                const dm = addBlock('damage', 620, 140);
+                const sr = addBlock('score_rule', 620, 260);
+                const ai = addBlock('ai_behavior', 820, 30);
+                const df = addBlock('difficulty', 820, 160);
+                const hd = addBlock('hud_el', 820, 290);
+                const go = addBlock('gameover', 1000, 30);
+                const px = addBlock('parallax', 1000, 160);
+                const pt = addBlock('particle', 1000, 280);
+                // Set enemy types
+                const e2El = blocks.find(b => b.id === e2);
+                if (e2El) {
+                    const sel = e2El.el.querySelector('select');
+                    if (sel) sel.value = 'flying';
+                }
+                const c2El = blocks.find(b => b.id === c2);
+                if (c2El) {
+                    const sel = c2El.el.querySelector('select[data-row="0"]');
+                    if (sel) sel.value = 'golden';
+                    const efSel = c2El.el.querySelector('select[data-row="2"]');
+                    if (efSel) efSel.value = 'invincible';
+                }
+                // Connect flow
+                connections.push(
+                    { from: gl, to: gv }, { from: gl, to: pl }, { from: pl, to: fr },
+                    { from: gv, to: bd }, { from: bd, to: sw },
+                    { from: sw, to: e1 }, { from: sw, to: e2 }, { from: sw, to: c1 }, { from: sw, to: c2 },
+                    { from: e1, to: cl }, { from: e2, to: cl }, { from: cl, to: dm }, { from: cl, to: sr },
+                    { from: dm, to: go }, { from: sr, to: hd },
+                    { from: ai, to: df }, { from: df, to: sw },
+                    { from: px, to: pt }
+                );
+                drawConnections();
+            } else if (name === 'platformer') {
+                const gl = addBlock('game_loop', 40, 30);
+                const pl = addBlock('player', 40, 150);
+                const gv = addBlock('gravity_cfg', 220, 30);
+                const bd = addBlock('bounds', 220, 150);
+                const e1 = addBlock('enemy', 420, 30);
+                const c1 = addBlock('collectible', 420, 150);
+                const cl = addBlock('collision', 620, 30);
+                const dm = addBlock('damage', 620, 150);
+                const sr = addBlock('score_rule', 620, 280);
+                const rp = addBlock('repeat', 820, 30);
+                const hd = addBlock('hud_el', 820, 150);
+                const go = addBlock('gameover', 1000, 30);
+                // Adjust gravity
+                const gvEl = blocks.find(b => b.id === gv);
+                if (gvEl) {
+                    const forceInp = gvEl.el.querySelector('input[data-row="0"]');
+                    if (forceInp) forceInp.value = '0.45';
+                }
+                // Player config
+                const plEl = blocks.find(b => b.id === pl);
+                if (plEl) {
+                    const jumpInp = plEl.el.querySelector('input[data-row="1"]');
+                    if (jumpInp) jumpInp.value = '-14';
+                }
+                connections.push(
+                    { from: gl, to: gv }, { from: gl, to: pl },
+                    { from: gv, to: bd }, { from: bd, to: rp },
+                    { from: rp, to: e1 }, { from: rp, to: c1 },
+                    { from: e1, to: cl }, { from: c1, to: cl },
+                    { from: cl, to: dm }, { from: cl, to: sr },
+                    { from: dm, to: go }, { from: sr, to: hd }
+                );
+                drawConnections();
+            }
+        }
+
+        function clear() {
+            blocks.forEach(b => b.el.remove());
+            blocks = [];
+            connections = [];
+            nextId = 0;
+            while (svgConns.firstChild) svgConns.removeChild(svgConns.firstChild);
+        }
+
+        // Panel toggle
+        document.getElementById('blocks-panel-toggle').addEventListener('click', () => {
+            document.getElementById('blocks-panel-body').classList.toggle('collapsed');
+        });
+
+        // Expose API
+        window.gameBlocks = { addBlock, removeBlock, exportConfig, generateJS, exportAndInject, loadPreset, clear, blocks, connections, GB_TYPES };
+    })();
+
     // ──────────────────── TERMINAL ────────────────────
     (function(){
         const termOutput = document.getElementById('term-output');
@@ -1932,6 +2618,9 @@ FreyaUnits.units.forEach(u => {
                 termPrint('<b>nyan</b>      — spawn a nyan cat');
                 termPrint('<b>swarm</b>     — spawn a nyan cat swarm');
                 termPrint('<b>eval &lt;js&gt;</b> — evaluate JavaScript');
+                termPrint('<b>blocks</b>    — list game blocks');
+                termPrint('<b>export</b>    — export blocks to code');
+                termPrint('<b>preset &lt;name&gt;</b> — load block preset (runner/platformer)');
                 termPrint('<b>clear</b>     — clear terminal');
             },
             status: () => {
@@ -1976,6 +2665,25 @@ FreyaUnits.units.forEach(u => {
             nyan: () => { game._spawnNyanCat(1); termPrint('🌈 Nyan cat spawned!', 'result'); },
             swarm: () => { game._spawnNyanCat(15); termPrint('🌈🌈🌈 Nyan swarm! 15 cats!', 'result'); },
             clear: () => { termOutput.innerHTML = ''; },
+            blocks: () => {
+                if (!window.gameBlocks) { termPrint('GameBlocks not loaded', 'error'); return; }
+                const b = window.gameBlocks;
+                termPrint('─── Game Blocks ───', 'info');
+                termPrint(`Blocks: <b>${b.blocks.length}</b> | Connections: <b>${b.connections.length}</b>`);
+                b.blocks.forEach(bl => {
+                    const def = b.GB_TYPES[bl.type];
+                    termPrint(`  <span style="color:${def.color};">${def.prefix}</span> <b>${def.label}</b> (${bl.id}) at (${Math.round(bl.x)}, ${Math.round(bl.y)})`);
+                });
+            },
+            export: () => {
+                if (!window.gameBlocks) { termPrint('GameBlocks not loaded', 'error'); return; }
+                window.gameBlocks.exportAndInject();
+                termPrint('Exported blocks → Live Code Cell', 'result');
+            },
+            preset: () => {
+                termPrint('Available presets: <b>runner</b>, <b>platformer</b>', 'info');
+                termPrint('Usage: <b>preset runner</b> or <b>preset platformer</b>');
+            },
         };
 
         function processCommand(input) {
@@ -1988,7 +2696,15 @@ FreyaUnits.units.forEach(u => {
             const parts = trimmed.split(/\s+/);
             const cmd = parts[0].toLowerCase();
 
-            if (cmd === 'convert' && parts.length >= 4) {
+            if (cmd === 'preset' && parts.length >= 2 && window.gameBlocks) {
+                const name = parts[1].toLowerCase();
+                if (name === 'runner' || name === 'platformer') {
+                    window.gameBlocks.loadPreset(name);
+                    termPrint(`Loaded <b>${name}</b> preset — ${window.gameBlocks.blocks.length} blocks`, 'result');
+                } else {
+                    termPrint('Unknown preset. Available: <b>runner</b>, <b>platformer</b>', 'error');
+                }
+            } else if (cmd === 'convert' && parts.length >= 4) {
                 const val = parseFloat(parts[1]);
                 const from = parts[2];
                 const to = parts[3];

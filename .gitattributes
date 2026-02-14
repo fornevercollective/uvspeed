@@ -1,41 +1,136 @@
 # beyondBINARY quantum-prefixed | uvspeed | {+1, 1, -1, +0, 0, -0, +n, n, -n}
 # GitHub Linguist overrides — controls repo language stats
+# See docs/github-language-detection-guide.md for full documentation
 
-# Vendored / generated — exclude from language stats
-node_modules/**    linguist-vendored
-package-lock.json  linguist-generated
-uv.lock            linguist-generated
-dist/**            linguist-generated
-*.egg-info/**      linguist-generated
+# ==============================================================================
+# VENDORED / THIRD-PARTY CODE — Exclude from language stats
+# ==============================================================================
+node_modules/**        linguist-vendored
+vendor/**              linguist-vendored
+target/**              linguist-vendored
+.cargo/**              linguist-vendored
+.venv/**               linguist-vendored
+venv/**                linguist-vendored
+__pycache__/**         linguist-vendored
+*.egg-info/**          linguist-vendored
+*.egg-link             linguist-vendored
+src/07-archive/**      linguist-vendored
+src/02-electron/**     linguist-vendored
+src/**/*_v2.py         linguist-vendored
+src/**/*_broken.*      linguist-vendored
 
-# Electron index_broken — mark as vendored
-src/02-electron/src/index_broken.html  linguist-vendored
+# ==============================================================================
+# GENERATED / BUILD ARTIFACTS — Exclude from stats, hide in diffs
+# ==============================================================================
+dist/**                linguist-generated
+build/**               linguist-generated
+tauri-dist/**          linguist-generated
+*.min.js               linguist-generated
+*.min.css              linguist-generated
+*.bundle.js            linguist-generated
+package-lock.json      linguist-generated
+uv.lock                linguist-generated
+Cargo.lock             linguist-generated
+*.pyc                  linguist-generated
+*.pyo                  linguist-generated
+*.so                   linguist-generated
+*.dylib                linguist-generated
+*.dll                  linguist-generated
 
-# Archive / old version copies — exclude from language stats
-src/07-archive/**  linguist-vendored
-src/01-core/*_v2.py  linguist-vendored
+# ==============================================================================
+# DOCUMENTATION — Exclude from language stats (but keep searchable)
+# ==============================================================================
+*.md                   linguist-documentation
+*.mdx                  linguist-documentation
+*.mdc                  linguist-language=Markdown linguist-documentation
+docs/**                linguist-documentation
+LICENSE                linguist-documentation
+CHANGELOG*             linguist-documentation
+README*                linguist-documentation
 
-# Classify .mdc files as Markdown for stats
-*.mdc linguist-language=Markdown
+# ==============================================================================
+# HTML FILES — Strategy: Mark as documentation to prevent "100% HTML"
+# ------------------------------------------------------------------------------
+# HTML files are UI wrappers; real code is Rust/Python/JavaScript
+# Excluding HTML ensures language bar shows actual code distribution
+# ==============================================================================
+web/*.html             linguist-documentation
+src/**/*.html          linguist-documentation
 
-# Classify quantum notepad HTML correctly
-web/quantum-notepad.html linguist-detectable
+# ==============================================================================
+# CONFIG FILES — Prevent from inflating language stats
+# ==============================================================================
+*.toml                 linguist-detectable=false
+*.lock                 linguist-detectable=false
+*.json                 linguist-detectable=false
+*.yaml                 linguist-detectable=false
+*.yml                  linguist-detectable=false
+.gitignore             linguist-detectable=false
+.editorconfig          linguist-detectable=false
+.prettierrc*           linguist-detectable=false
+.eslintrc*             linguist-detectable=false
+tsconfig.json          linguist-detectable=false
+pyproject.toml         linguist-detectable=false
+package.json           linguist-detectable=false
+Cargo.toml             linguist-detectable=false
+tauri.conf.json        linguist-detectable=false
 
-# Binary files
-*.png binary
-*.jpg binary
-*.ico binary
-*.icns binary
+# Exception: Keep JSON/YAML in src/ as they might be code/data
+src/**/*.json          linguist-detectable=true
+src/**/*.yaml          linguist-detectable=true
+src/**/*.yml           linguist-detectable=true
 
-# Normalize line endings
-*.py    text eol=lf
-*.js    text eol=lf
-*.ts    text eol=lf
-*.html  text eol=lf
-*.css   text eol=lf
-*.sh    text eol=lf
-*.md    text eol=lf
-*.json  text eol=lf
-*.toml  text eol=lf
-*.yaml  text eol=lf
-*.yml   text eol=lf
+# ==============================================================================
+# LANGUAGE DETECTION — Ensure proper language classification
+# ==============================================================================
+*.rs                   linguist-language=Rust
+*.py                   linguist-language=Python
+*.js                   linguist-language=JavaScript
+*.mjs                  linguist-language=JavaScript
+*.ts                   linguist-language=TypeScript
+*.tsx                  linguist-language=TypeScript
+*.css                  linguist-language=CSS
+*.sh                   linguist-language=Shell
+*.bash                 linguist-language=Shell
+*.zsh                  linguist-language=Shell
+*.nu                   linguist-language=Nushell
+*.go                   linguist-language=Go
+*.wgsl                 linguist-language=WGSL
+*.wasm                 binary
+*.d.ts                 linguist-language=TypeScript
+
+# ==============================================================================
+# BINARY FILES — Mark as binary (not counted in language stats)
+# ==============================================================================
+*.png                  binary
+*.jpg                  binary
+*.jpeg                 binary
+*.gif                  binary
+*.ico                  binary
+*.icns                 binary
+*.svg                  binary
+*.woff                 binary
+*.woff2                binary
+*.ttf                  binary
+*.eot                  binary
+*.pdf                  binary
+*.zip                  binary
+*.tar.gz               binary
+*.dmg                  binary
+*.app                  binary
+
+# ==============================================================================
+# LINE ENDINGS — Normalize to LF for cross-platform compatibility
+# ==============================================================================
+*.py                   text eol=lf
+*.js                   text eol=lf
+*.ts                   text eol=lf
+*.html                 text eol=lf
+*.css                  text eol=lf
+*.sh                   text eol=lf
+*.md                   text eol=lf
+*.json                 text eol=lf
+*.toml                 text eol=lf
+*.yaml                 text eol=lf
+*.yml                  text eol=lf
+*.rs                   text eol=lf

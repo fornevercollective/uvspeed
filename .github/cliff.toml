@@ -1,0 +1,46 @@
+# beyondBINARY quantum-prefixed | uvspeed | {+1, 1, -1, +0, 0, -0, +n, n, -n}
+# git-cliff changelog configuration
+# Install: cargo install git-cliff
+# Usage: git cliff --output CHANGELOG.md
+
+[changelog]
+header = """
+# Changelog\n
+All notable changes to uvspeed are documented here.\n
+"""
+body = """
+{% if version %}\
+    ## [{{ version | trim_start_matches(pat="v") }}] — {{ timestamp | date(format="%Y-%m-%d") }}
+{% else %}\
+    ## [Unreleased]
+{% endif %}\
+{% for group, commits in commits | group_by(attribute="group") %}
+    ### {{ group | upper_first }}
+    {% for commit in commits %}
+        - {% if commit.breaking %}**BREAKING** {% endif %}{{ commit.message | upper_first }}\
+    {% endfor %}
+{% endfor %}\n
+"""
+trim = true
+
+[git]
+conventional_commits = true
+filter_unconventional = true
+split_commits = false
+commit_parsers = [
+  { message = "^feat", group = "Features" },
+  { message = "^fix", group = "Bug Fixes" },
+  { message = "^perf", group = "Performance" },
+  { message = "^refactor", group = "Refactoring" },
+  { message = "^style", group = "Styling" },
+  { message = "^test", group = "Testing" },
+  { message = "^doc", group = "Documentation" },
+  { message = "^ci", group = "CI/CD" },
+  { message = "^chore", group = "Miscellaneous" },
+  { message = "^deps", group = "Dependencies" },
+  { message = "^v[0-9]", group = "Releases" },
+  { body = ".*security", group = "Security" },
+]
+filter_commits = false
+tag_pattern = "v[0-9]*"
+sort_commits = "oldest"

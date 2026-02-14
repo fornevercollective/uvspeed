@@ -116,6 +116,49 @@
     .cov-row .cov-bar { flex: 1; height: 18px; background: #21262d; border-radius: 4px; overflow: hidden; position: relative; }
     .cov-row .cov-fill { height: 100%; border-radius: 4px; transition: width 1s ease; display: flex; align-items: center; justify-content: flex-end; padding-right: 6px; font-size: 0.5625rem; font-weight: 700; color: #0d1117; }
 
+    /* ── Architecture Flow ── */
+    .arch-flow-section { background: #161b22; border: 1px solid #21262d; border-radius: 16px; padding: 32px; margin-bottom: 40px; }
+    .arch-flow-title { font-size: 1rem; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+    .arch-flow-title .af-chip { font-size: 0.5625rem; font-family: 'SF Mono', monospace; padding: 2px 8px; border-radius: 999px; }
+    .arch-stack { display: flex; flex-direction: column; gap: 0; position: relative; }
+    .arch-layer {
+        display: grid; grid-template-columns: 60px 60px 1fr auto;
+        align-items: center; gap: 12px; padding: 10px 16px;
+        border: 1px solid #21262d; border-radius: 8px; margin-bottom: 6px;
+        background: #0d1117; transition: all 0.2s; font-size: 0.75rem;
+    }
+    .arch-layer:hover { border-color: #30363d; transform: translateX(4px); }
+    .arch-layer .al-prefix { font-family: 'SF Mono', monospace; font-weight: 800; font-size: 0.8125rem; }
+    .arch-layer .al-hw { font-weight: 700; color: #e6edf3; }
+    .arch-layer .al-desc { color: #8b949e; font-size: 0.6875rem; }
+    .arch-layer .al-stat { font-family: 'SF Mono', monospace; font-size: 0.625rem; color: #58a6ff; text-align: right; white-space: nowrap; }
+    .arch-flow-arrow { text-align: center; color: #30363d; font-size: 0.75rem; margin: -2px 0; }
+    .arch-stats-row { display: flex; gap: 16px; margin-top: 20px; flex-wrap: wrap; }
+    .arch-stat-card { flex: 1; min-width: 140px; background: #0d1117; border: 1px solid #21262d; border-radius: 10px; padding: 14px; text-align: center; }
+    .arch-stat-card .as-val { font-family: 'SF Mono', monospace; font-size: 1.25rem; font-weight: 800; }
+    .arch-stat-card .as-lbl { font-size: 0.625rem; color: #8b949e; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
+
+    /* ── Manufacturer Grid ── */
+    .mfg-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; margin-bottom: 32px; }
+    .mfg-card { background: #161b22; border: 1px solid #21262d; border-radius: 12px; padding: 20px; transition: all 0.2s; }
+    .mfg-card:hover { border-color: #30363d; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.4); }
+    .mfg-card h4 { font-size: 0.9375rem; font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+    .mfg-card .mfg-sub { font-size: 0.6875rem; color: #8b949e; margin-bottom: 10px; }
+    .mfg-card .mfg-layers { list-style: none; padding: 0; }
+    .mfg-card .mfg-layers li { font-size: 0.625rem; color: #8b949e; padding: 2px 0; display: flex; gap: 6px; }
+    .mfg-card .mfg-layers li .mfg-pre { font-family: 'SF Mono', monospace; font-weight: 700; min-width: 28px; }
+    .mfg-phase { display: inline-block; font-size: 0.5625rem; font-family: 'SF Mono', monospace; padding: 2px 8px; border-radius: 999px; margin-top: 10px; }
+
+    /* ── PWA Pipeline ── */
+    .pwa-pipeline { display: flex; flex-direction: column; gap: 0; margin-top: 20px; }
+    .pwa-stage { display: flex; gap: 16px; align-items: flex-start; padding: 16px 0; border-bottom: 1px solid #21262d; }
+    .pwa-stage:last-child { border-bottom: none; }
+    .pwa-stage .ps-num { font-family: 'SF Mono', monospace; font-size: 1.5rem; font-weight: 800; min-width: 40px; }
+    .pwa-stage .ps-body h4 { font-size: 0.875rem; font-weight: 700; margin-bottom: 3px; }
+    .pwa-stage .ps-body p { font-size: 0.75rem; color: #8b949e; line-height: 1.5; }
+    .pwa-stage .ps-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+    .pwa-stage .ps-tag { font-size: 0.5625rem; font-family: 'SF Mono', monospace; padding: 2px 8px; border-radius: 999px; background: rgba(88,166,255,0.1); color: #58a6ff; }
+
     /* ── Roadmap ── */
     .roadmap { display: flex; flex-direction: column; gap: 0; position: relative; padding-left: 28px; }
     .roadmap::before { content: ''; position: absolute; left: 8px; top: 8px; bottom: 8px; width: 2px; background: #21262d; }
@@ -367,6 +410,359 @@ class QuantumState:
     <div class="cov-chart fade-up" id="cov-chart"></div>
 </section>
 
+<!-- ━━━ Architecture: Prefixes as Hardware Data Flow ━━━ -->
+<section>
+    <h2 class="fade-up">Prefix ↔ Hardware Data Flow</h2>
+    <p class="section-sub fade-up">Each quantum prefix maps to a stage in the GPU/CPU compute pipeline. Code isn't just text — it has a physical address in silicon.</p>
+
+    <div class="arch-flow-section fade-up">
+        <div class="arch-flow-title">
+            NVIDIA Blackwell Ultra SM Architecture
+            <span class="af-chip" style="background:rgba(63,185,80,0.15);color:#3fb950;">Live in Blackwell App</span>
+        </div>
+        <div class="arch-stack">
+            <div class="arch-layer" style="border-left: 3px solid #ff5757;">
+                <span class="al-prefix" style="color:#ff5757;">n:</span>
+                <span class="al-hw">Instruction Cache</span>
+                <span class="al-desc">Entry points, shebangs — first bytes fetched from L1i cache into the warp scheduler. Where code execution begins on-chip.</span>
+                <span class="al-stat">128 KB L1i</span>
+            </div>
+            <div class="arch-flow-arrow">&#8595; fetch &#8595;</div>
+            <div class="arch-layer" style="border-left: 3px solid #f0883e;">
+                <span class="al-prefix" style="color:#f0883e;">+n:</span>
+                <span class="al-hw">Warp Schedulers</span>
+                <span class="al-desc">Conditionals, if/else/switch — branch divergence resolved here. 4 schedulers per SM dispatch 128 threads to execution units.</span>
+                <span class="al-stat">4 sched / SM</span>
+            </div>
+            <div class="arch-flow-arrow">&#8595; dispatch &#8595;</div>
+            <div class="arch-layer" style="border-left: 3px solid #3fb950;">
+                <span class="al-prefix" style="color:#3fb950;">1:</span>
+                <span class="al-hw">Register File</span>
+                <span class="al-desc">Variable declarations — 256 KB register file per SM holds all thread-local state. The fastest memory on the chip (0-cycle latency).</span>
+                <span class="al-stat">256 KB / SM</span>
+            </div>
+            <div class="arch-flow-arrow">&#8595; operands &#8595;</div>
+            <div class="arch-layer" style="border-left: 3px solid #58a6ff;">
+                <span class="al-prefix" style="color:#58a6ff;">0:</span>
+                <span class="al-hw">Processing Cores</span>
+                <span class="al-desc">Function/method bodies — INT32, FP32, FP64, Tensor Core 5th-gen units. This is where compute happens. 128 FP32 cores per SM.</span>
+                <span class="al-stat">128 FP32 / SM</span>
+            </div>
+            <div class="arch-flow-arrow">&#8595; execute &#8595;</div>
+            <div class="arch-layer" style="border-left: 3px solid #a78bfa;">
+                <span class="al-prefix" style="color:#a78bfa;">-n:</span>
+                <span class="al-hw">Load/Store + SFU</span>
+                <span class="al-desc">Imports, data loading — LD/ST units fetch from memory hierarchy. 32 LD/ST units + 32 SFU for transcendentals (sin, cos, exp).</span>
+                <span class="al-stat">32 LD/ST units</span>
+            </div>
+            <div class="arch-flow-arrow">&#8595; data &#8595;</div>
+            <div class="arch-layer" style="border-left: 3px solid #e2498a;">
+                <span class="al-prefix" style="color:#e2498a;">-0:</span>
+                <span class="al-hw">L1 Cache / Shared Mem</span>
+                <span class="al-desc">Return/yield — results staged in 128 KB configurable L1/shared memory. Hot data stays on-SM. Return values live here before writeback.</span>
+                <span class="al-stat">128 KB L1</span>
+            </div>
+            <div class="arch-flow-arrow">&#8595; writeback &#8595;</div>
+            <div class="arch-layer" style="border-left: 3px solid #d4a017;">
+                <span class="al-prefix" style="color:#d4a017;">+3:</span>
+                <span class="al-hw">L2 / HBM3e / NVLink</span>
+                <span class="al-desc">Output, print, render — final results flow to 64 MB L2 cache, 288 GB HBM3e (8 TB/s), or NVLink 5 (1.8 TB/s) to other GPUs.</span>
+                <span class="al-stat">288 GB HBM3e</span>
+            </div>
+        </div>
+
+        <div class="arch-stats-row">
+            <div class="arch-stat-card">
+                <div class="as-val" style="color:#3fb950;">192</div>
+                <div class="as-lbl">SMs per B200</div>
+            </div>
+            <div class="arch-stat-card">
+                <div class="as-val" style="color:#58a6ff;">2.5</div>
+                <div class="as-lbl">PetaFLOPS FP4 AI</div>
+            </div>
+            <div class="arch-stat-card">
+                <div class="as-val" style="color:#a78bfa;">8</div>
+                <div class="as-lbl">TB/s HBM Bandwidth</div>
+            </div>
+            <div class="arch-stat-card">
+                <div class="as-val" style="color:#e2498a;">1.8</div>
+                <div class="as-lbl">TB/s NVLink 5</div>
+            </div>
+            <div class="arch-stat-card">
+                <div class="as-val" style="color:#f0883e;">9</div>
+                <div class="as-lbl">Prefix Symbols</div>
+            </div>
+        </div>
+    </div>
+
+    <p class="fade-up" style="font-size:0.8125rem;color:#8b949e;margin-top:12px;">
+        <strong style="color:#e6edf3;">Why this matters:</strong> When you classify a line as <code>0:</code> (function), you're implicitly identifying code that will execute on FP32/Tensor cores.
+        A <code>1:</code> (variable) lives in the register file. A <code>-n:</code> (import) triggers load/store traffic.
+        The quantum prefix isn't just a label — it's a <em>physical address in the compute pipeline</em>.
+        Profiling tools like Perfetto, NSight, and our Blackwell app can correlate prefix distributions with actual hardware utilization.
+    </p>
+</section>
+
+<div class="rainbow"><span class="r1"></span><span class="r2"></span><span class="r3"></span><span class="r4"></span><span class="r5"></span><span class="r6"></span></div>
+
+<!-- ━━━ Multi-Manufacturer Architecture Expansion ━━━ -->
+<section>
+    <h2 class="fade-up">Multi-Architecture Expansion</h2>
+    <p class="section-sub fade-up">Same 9 prefixes, mapped to every major compute architecture. The data flow is universal — only the layer names change.</p>
+
+    <div class="mfg-grid fade-up">
+        <div class="mfg-card">
+            <h4><span style="color:#76b900;">&#9632;</span> NVIDIA Blackwell</h4>
+            <div class="mfg-sub">B200 / GB200 — 192 SMs, 4nm, 2.5 PFLOPS FP4</div>
+            <ul class="mfg-layers">
+                <li><span class="mfg-pre" style="color:#ff5757;">n:</span> Instruction Cache (128 KB L1i)</li>
+                <li><span class="mfg-pre" style="color:#f0883e;">+n:</span> 4× Warp Schedulers (128 threads/warp)</li>
+                <li><span class="mfg-pre" style="color:#3fb950;">1:</span> Register File (256 KB/SM)</li>
+                <li><span class="mfg-pre" style="color:#58a6ff;">0:</span> 128 FP32 + Tensor Core 5G</li>
+                <li><span class="mfg-pre" style="color:#a78bfa;">-n:</span> 32 LD/ST + 32 SFU</li>
+                <li><span class="mfg-pre" style="color:#e2498a;">-0:</span> 128 KB L1/Shared</li>
+                <li><span class="mfg-pre" style="color:#d4a017;">+3:</span> 64 MB L2 → 288 GB HBM3e</li>
+            </ul>
+            <span class="mfg-phase" style="background:rgba(63,185,80,0.15);color:#3fb950;">Phase 1 — Shipped</span>
+        </div>
+
+        <div class="mfg-card">
+            <h4><span style="color:#ed1c24;">&#9632;</span> AMD CDNA 4 (MI350X)</h4>
+            <div class="mfg-sub">Instinct MI350X — 288 CUs, 3nm, 2.3 PFLOPS FP4</div>
+            <ul class="mfg-layers">
+                <li><span class="mfg-pre" style="color:#ff5757;">n:</span> Instruction Buffer</li>
+                <li><span class="mfg-pre" style="color:#f0883e;">+n:</span> Wavefront Scheduler (64 threads/wave)</li>
+                <li><span class="mfg-pre" style="color:#3fb950;">1:</span> Vector Register File (256 KB/CU)</li>
+                <li><span class="mfg-pre" style="color:#58a6ff;">0:</span> 128 VALU + Matrix Core 2G</li>
+                <li><span class="mfg-pre" style="color:#a78bfa;">-n:</span> Scalar Unit + LD/ST</li>
+                <li><span class="mfg-pre" style="color:#e2498a;">-0:</span> 32 KB L1 + 64 KB LDS</li>
+                <li><span class="mfg-pre" style="color:#d4a017;">+3:</span> 256 MB Infinity Cache → 288 GB HBM3e</li>
+            </ul>
+            <span class="mfg-phase" style="background:rgba(88,166,255,0.15);color:#58a6ff;">Phase 2 — Q3 2026</span>
+        </div>
+
+        <div class="mfg-card">
+            <h4><span style="color:#0071c5;">&#9632;</span> Intel Xe3 (Battlemage)</h4>
+            <div class="mfg-sub">Arc B-series — 20 Xe-cores, Intel 4, 12 TFLOPS FP32</div>
+            <ul class="mfg-layers">
+                <li><span class="mfg-pre" style="color:#ff5757;">n:</span> Thread Dispatcher</li>
+                <li><span class="mfg-pre" style="color:#f0883e;">+n:</span> EU Thread Arbiter (8 threads/EU)</li>
+                <li><span class="mfg-pre" style="color:#3fb950;">1:</span> GRF (128 × 32B per EU)</li>
+                <li><span class="mfg-pre" style="color:#58a6ff;">0:</span> 128 ALUs + XMX Engines</li>
+                <li><span class="mfg-pre" style="color:#a78bfa;">-n:</span> Data Port + SLM gateway</li>
+                <li><span class="mfg-pre" style="color:#e2498a;">-0:</span> 192 KB SLM per Xe-core</li>
+                <li><span class="mfg-pre" style="color:#d4a017;">+3:</span> 16 MB L2 → 12 GB GDDR6</li>
+            </ul>
+            <span class="mfg-phase" style="background:rgba(88,166,255,0.15);color:#58a6ff;">Phase 2 — Q3 2026</span>
+        </div>
+
+        <div class="mfg-card">
+            <h4><span style="color:#a2aaad;">&#9632;</span> Apple M4 Ultra GPU</h4>
+            <div class="mfg-sub">80 GPU cores, 3nm, Neural Engine 38 TOPS</div>
+            <ul class="mfg-layers">
+                <li><span class="mfg-pre" style="color:#ff5757;">n:</span> Tile Dispatch / Vertex Fetch</li>
+                <li><span class="mfg-pre" style="color:#f0883e;">+n:</span> SIMD Group Controller</li>
+                <li><span class="mfg-pre" style="color:#3fb950;">1:</span> Thread Registers (per SIMD lane)</li>
+                <li><span class="mfg-pre" style="color:#58a6ff;">0:</span> ALU + FP16/FP32 Execution</li>
+                <li><span class="mfg-pre" style="color:#a78bfa;">-n:</span> Tile Memory / Imageblock</li>
+                <li><span class="mfg-pre" style="color:#e2498a;">-0:</span> Threadgroup Memory (32 KB)</li>
+                <li><span class="mfg-pre" style="color:#d4a017;">+3:</span> System Level Cache → 192 GB Unified</li>
+            </ul>
+            <span class="mfg-phase" style="background:rgba(72,79,88,0.3);color:#8b949e;">Phase 3 — 2027</span>
+        </div>
+
+        <div class="mfg-card">
+            <h4><span style="color:#f7a41d;">&#9632;</span> Qualcomm Adreno (Snapdragon X)</h4>
+            <div class="mfg-sub">Adreno X1-85 — 4nm, 4.6 TFLOPS, Mobile/Quest</div>
+            <ul class="mfg-layers">
+                <li><span class="mfg-pre" style="color:#ff5757;">n:</span> Command Processor</li>
+                <li><span class="mfg-pre" style="color:#f0883e;">+n:</span> Wave Manager (128 threads/wave)</li>
+                <li><span class="mfg-pre" style="color:#3fb950;">1:</span> Unified Shader Registers</li>
+                <li><span class="mfg-pre" style="color:#58a6ff;">0:</span> SP × ALU / Tensor Pipes</li>
+                <li><span class="mfg-pre" style="color:#a78bfa;">-n:</span> UCHE Load/Store</li>
+                <li><span class="mfg-pre" style="color:#e2498a;">-0:</span> GMEM (Tile Memory)</li>
+                <li><span class="mfg-pre" style="color:#d4a017;">+3:</span> System Cache → LPDDR5X</li>
+            </ul>
+            <span class="mfg-phase" style="background:rgba(72,79,88,0.3);color:#8b949e;">Phase 3 — 2027</span>
+        </div>
+
+        <div class="mfg-card">
+            <h4><span style="color:#06b6d4;">&#9632;</span> QPU (Quantum Processor)</h4>
+            <div class="mfg-sub">Superconducting / trapped-ion — prefix as qubit address</div>
+            <ul class="mfg-layers">
+                <li><span class="mfg-pre" style="color:#ff5757;">n:</span> Qubit Init (|0⟩ preparation)</li>
+                <li><span class="mfg-pre" style="color:#f0883e;">+n:</span> Gate Scheduler (circuit depth)</li>
+                <li><span class="mfg-pre" style="color:#3fb950;">1:</span> Qubit State (superposition)</li>
+                <li><span class="mfg-pre" style="color:#58a6ff;">0:</span> Gate Application (H, CNOT, T)</li>
+                <li><span class="mfg-pre" style="color:#a78bfa;">-n:</span> Entanglement Links</li>
+                <li><span class="mfg-pre" style="color:#e2498a;">-0:</span> Syndrome Extraction (QEC)</li>
+                <li><span class="mfg-pre" style="color:#d4a017;">+3:</span> Measurement → Classical Output</li>
+            </ul>
+            <span class="mfg-phase" style="background:rgba(197,134,192,0.15);color:#c586c0;">Phase 4 — Research</span>
+        </div>
+    </div>
+
+    <p class="fade-up" style="font-size:0.8125rem;color:#8b949e;">
+        <strong style="color:#e6edf3;">Phase Plan:</strong>
+        <strong>Phase 1</strong> (Shipped) — NVIDIA Blackwell SM as interactive layer stack with tweakable parameters.
+        <strong>Phase 2</strong> (Q3 2026) — AMD CDNA 4 CU + Intel Xe3 core layer views. Same stack UI, swappable architecture definitions.
+        <strong>Phase 3</strong> (2027) — Apple M-series Tile-based + Qualcomm Adreno mobile pipeline. Enables Meta Quest / mobile profiling.
+        <strong>Phase 4</strong> (Research) — QPU qubit topology. Prefix symbols as quantum circuit addresses.
+        All phases share the same 9-symbol mapping — only the hardware layer names change.
+    </p>
+</section>
+
+<div class="rainbow"><span class="r1"></span><span class="r2"></span><span class="r3"></span><span class="r4"></span><span class="r5"></span><span class="r6"></span></div>
+
+<!-- ━━━ Game Blocks Builder + PWA Pipeline ━━━ -->
+<section>
+    <h2 class="fade-up">Game Blocks → PWA Pipeline</h2>
+    <p class="section-sub fade-up">From visual blocks to a deployed PWA app — a collaborative, AI-assisted development workflow built on the prefix system.</p>
+
+    <div class="arch-flow-section fade-up" style="border-color:#f0883e44;">
+        <div class="arch-flow-title">
+            Game Blocks Builder
+            <span class="af-chip" style="background:rgba(240,136,62,0.15);color:#f0883e;">Live in brotherNumsy</span>
+        </div>
+        <p style="font-size:0.8125rem;color:#8b949e;margin-bottom:16px;">
+            24 block types across 8 categories — each block maps to a quantum prefix.
+            Drag blocks onto a canvas, connect data flow, tweak parameters, and export to injectable JavaScript.
+            The block graph <em>is</em> the quantum gutter in visual form.
+        </p>
+        <div class="arch-stack">
+            <div class="arch-layer" style="border-left:3px solid #3fb950;">
+                <span class="al-prefix" style="color:#3fb950;">1:</span>
+                <span class="al-hw">Entity</span>
+                <span class="al-desc">Player, Companion, Enemy, Collectible — game objects with tweakable properties</span>
+                <span class="al-stat">4 blocks</span>
+            </div>
+            <div class="arch-layer" style="border-left:3px solid #58a6ff;">
+                <span class="al-prefix" style="color:#58a6ff;">0:</span>
+                <span class="al-hw">Physics</span>
+                <span class="al-desc">Gravity, Collision, Bounds, Velocity — simulation rules</span>
+                <span class="al-stat">4 blocks</span>
+            </div>
+            <div class="arch-layer" style="border-left:3px solid #a78bfa;">
+                <span class="al-prefix" style="color:#a78bfa;">+3:</span>
+                <span class="al-hw">Visual</span>
+                <span class="al-desc">Sprite, Particles, Parallax, HUD — rendering output</span>
+                <span class="al-stat">4 blocks</span>
+            </div>
+            <div class="arch-layer" style="border-left:3px solid #f0883e;">
+                <span class="al-prefix" style="color:#f0883e;">+n:</span>
+                <span class="al-hw">Logic</span>
+                <span class="al-desc">If Condition, On Event, Random — branching decisions</span>
+                <span class="al-stat">3 blocks</span>
+            </div>
+            <div class="arch-layer" style="border-left:3px solid #e2498a;">
+                <span class="al-prefix" style="color:#e2498a;">+2:</span>
+                <span class="al-hw">Loop</span>
+                <span class="al-desc">Game Loop, Spawn Wave, Repeat — iteration</span>
+                <span class="al-stat">3 blocks</span>
+            </div>
+            <div class="arch-layer" style="border-left:3px solid #06b6d4;">
+                <span class="al-prefix" style="color:#06b6d4;">-n:</span>
+                <span class="al-hw">AI</span>
+                <span class="al-desc">AI Behavior, Difficulty Scaling — learning &amp; adaptation</span>
+                <span class="al-stat">2 blocks</span>
+            </div>
+            <div class="arch-layer" style="border-left:3px solid #ff5757;">
+                <span class="al-prefix" style="color:#ff5757;">-1:</span>
+                <span class="al-hw">Error</span>
+                <span class="al-desc">Damage, Game Over — failure states and recovery</span>
+                <span class="al-stat">2 blocks</span>
+            </div>
+            <div class="arch-layer" style="border-left:3px solid #d4a017;">
+                <span class="al-prefix" style="color:#d4a017;">-0:</span>
+                <span class="al-hw">Output</span>
+                <span class="al-desc">Score Rule — result calculation and display</span>
+                <span class="al-stat">2 blocks</span>
+            </div>
+        </div>
+    </div>
+
+    <h3 class="fade-up" style="font-size:1.125rem;font-weight:700;margin-bottom:16px;">Concept → PWA: The Distributed Build Pipeline</h3>
+
+    <div class="pwa-pipeline fade-up">
+        <div class="pwa-stage">
+            <div class="ps-num" style="color:#3fb950;">01</div>
+            <div class="ps-body">
+                <h4>Concept (Blocks)</h4>
+                <p>Drag blocks onto a canvas to define game/app structure. Each block is prefix-tagged. AI or human — same visual language. Export produces quantum-prefixed JavaScript.</p>
+                <div class="ps-tags">
+                    <span class="ps-tag">brotherNumsy</span>
+                    <span class="ps-tag">HexBench Pybricks</span>
+                    <span class="ps-tag">24 block types</span>
+                </div>
+            </div>
+        </div>
+        <div class="pwa-stage">
+            <div class="ps-num" style="color:#58a6ff;">02</div>
+            <div class="ps-body">
+                <h4>Code Generation (Notepad Cell)</h4>
+                <p>Blocks export to a Quantum Notepad code cell. AI refines, fills in sprite data, adds edge cases. Every line gets its prefix. Prefix coverage = code completeness metric.</p>
+                <div class="ps-tags">
+                    <span class="ps-tag">quantum-notepad</span>
+                    <span class="ps-tag">AI code gen</span>
+                    <span class="ps-tag">prefix coverage 95%+</span>
+                </div>
+            </div>
+        </div>
+        <div class="pwa-stage">
+            <div class="ps-num" style="color:#a78bfa;">03</div>
+            <div class="ps-body">
+                <h4>Live Preview (HexCast)</h4>
+                <p>Stream the running app via HexCast to any device. Debug in real-time with HexTerm. Measure performance with Blackwell app layer profiling. Iterate without deploying.</p>
+                <div class="ps-tags">
+                    <span class="ps-tag">hexcast</span>
+                    <span class="ps-tag">terminal</span>
+                    <span class="ps-tag">blackwell profiling</span>
+                </div>
+            </div>
+        </div>
+        <div class="pwa-stage">
+            <div class="ps-num" style="color:#f0883e;">04</div>
+            <div class="ps-body">
+                <h4>Collaborative Editing (Synced Notepads)</h4>
+                <p>Multiple users/AIs open the same notebook via BroadcastChannel sync. Each edits different blocks/cells. Prefix gutter shows who changed what dimension. Merge conflicts are structural, not line-based.</p>
+                <div class="ps-tags">
+                    <span class="ps-tag">BroadcastChannel</span>
+                    <span class="ps-tag">dimensional diff</span>
+                    <span class="ps-tag">multi-cursor</span>
+                </div>
+            </div>
+        </div>
+        <div class="pwa-stage">
+            <div class="ps-num" style="color:#e2498a;">05</div>
+            <div class="ps-body">
+                <h4>PWA Build &amp; Deploy</h4>
+                <p>One-click export from Notepad to a self-contained PWA HTML file. Service worker, manifest, icons — all generated. Push to GitHub Pages via the Dashboard. Works on every device: desktop, mobile, Quest, LEGO hub.</p>
+                <div class="ps-tags">
+                    <span class="ps-tag">PWA manifest</span>
+                    <span class="ps-tag">GitHub Pages</span>
+                    <span class="ps-tag">offline-first</span>
+                    <span class="ps-tag">all devices</span>
+                </div>
+            </div>
+        </div>
+        <div class="pwa-stage">
+            <div class="ps-num" style="color:#d4a017;">06</div>
+            <div class="ps-body">
+                <h4>Distributed App Workflow</h4>
+                <p>The deployed app stays connected to its source notebook. Users tweak individual blocks/layers collaboratively. AI agents can modify parameters in real-time. The app evolves without full redeployment — hot-patch via prefix-aware diffs.</p>
+                <div class="ps-tags">
+                    <span class="ps-tag">hot-patch</span>
+                    <span class="ps-tag">AI agents</span>
+                    <span class="ps-tag">prefix-aware merge</span>
+                    <span class="ps-tag">distributed</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="rainbow"><span class="r1"></span><span class="r2"></span><span class="r3"></span><span class="r4"></span><span class="r5"></span><span class="r6"></span></div>
+
 <!-- ━━━ Roadmap ━━━ -->
 <section>
     <h2 class="fade-up">Building toward</h2>
@@ -393,6 +789,16 @@ class QuantumState:
             <p>Inline Slice/Cube/Orb as a notebook cell. Click, scroll, drag — full spatial code navigation inside any notebook.</p>
             <span class="rm-tag" style="background:rgba(63,185,80,0.15);color:#3fb950;">Shipped</span>
         </div>
+        <div class="roadmap-item done">
+            <h4>Game Blocks Builder (brotherNumsy)</h4>
+            <p>24 block types across 8 prefix-mapped categories. Drag-drop canvas, connection graph, preset loader, export-to-code pipeline. Gamified AI integration foundation.</p>
+            <span class="rm-tag" style="background:rgba(63,185,80,0.15);color:#3fb950;">Shipped</span>
+        </div>
+        <div class="roadmap-item done">
+            <h4>GPU Architecture Layer Stack (Blackwell)</h4>
+            <p>NVIDIA Blackwell Ultra SM as an interactive 7-layer visual stack with tweakable sliders, live sparklines, animated data flow. Each layer maps to a quantum prefix.</p>
+            <span class="rm-tag" style="background:rgba(63,185,80,0.15);color:#3fb950;">Shipped</span>
+        </div>
         <div class="roadmap-item active">
             <h4>AST-Backed Classification</h4>
             <p>Move from regex to tree-sitter AST parsing. Exact node-type classification. Zero false positives. Coverage target: 99%+ for all 20 languages.</p>
@@ -401,6 +807,16 @@ class QuantumState:
         <div class="roadmap-item active">
             <h4>SIMD-Vectorized Engine (Native)</h4>
             <p>Zig/Rust native binary with SIMD prefix classification. Target: 100M+ lines/sec. Ship as a Tauri sidecar for desktop, WASM for web.</p>
+            <span class="rm-tag" style="background:rgba(88,166,255,0.15);color:#58a6ff;">In Progress</span>
+        </div>
+        <div class="roadmap-item active">
+            <h4>Multi-Manufacturer Architecture Views</h4>
+            <p>Phase 2: AMD CDNA 4 + Intel Xe3 layer stacks (Q3 2026). Phase 3: Apple M-series + Qualcomm Adreno for mobile/Quest (2027). Phase 4: QPU qubit topology (Research). Same visual paradigm, swappable definitions.</p>
+            <span class="rm-tag" style="background:rgba(88,166,255,0.15);color:#58a6ff;">In Progress</span>
+        </div>
+        <div class="roadmap-item active">
+            <h4>Concept → PWA Pipeline</h4>
+            <p>6-stage workflow: Blocks → Code Gen → Live Preview → Collaborative Edit → PWA Build → Distributed App. AI + humans edit the same prefix-aware notebook. Hot-patch deployed apps via dimensional diffs.</p>
             <span class="rm-tag" style="background:rgba(88,166,255,0.15);color:#58a6ff;">In Progress</span>
         </div>
         <div class="roadmap-item future">
@@ -1079,6 +1495,7 @@ document.querySelectorAll('.cov-chart').forEach(el => covObs.observe(el));
 
 // ── PWA + Quantum Sync ──
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+// ===== QUANTUM PREFIX LIVE SYNC =====
 if (QP) {
     QP.onStateChange(function(source, state) { if (source === 'quantum-gutter' || !state) return; });
     QP.broadcastState('quantum-gutter', { coverage: 0, totalLines: 0, classifiedLines: 0, prefixCounts: {}, role: 'showcase' });

@@ -1578,6 +1578,13 @@
         }
         .cell-nav-jump:focus { border-color: var(--cursor-accent); }
         .cell-nav-jump::placeholder { color: var(--cursor-text-muted); opacity: 0.5; }
+        /* Separator dot for quick-cmd bars */
+        .qcmd-sep { display: inline-block; width: 1px; height: 14px; background: var(--cursor-border-muted, #30363d); margin: 0 2px; vertical-align: middle; opacity: 0.5; }
+        /* Cell nav in quick-cmd bars */
+        .cnav-action { min-width: 22px; padding: 2px 4px !important; font-size: 0.6875rem !important; }
+        .cnav-jump-input { width: 32px; padding: 2px 4px; font-size: 0.5625rem; font-family: var(--cursor-font-mono); background: var(--cursor-bg-secondary); color: var(--cursor-text); border: 1px solid var(--cursor-border); border-radius: 4px; text-align: center; }
+        .cnav-jump-input:focus { border-color: var(--cursor-accent); outline: none; }
+        .cnav-jump-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
         .cell-nav-counter {
             font-size: 0.5625rem; color: var(--cursor-text-muted); white-space: nowrap;
             font-family: var(--cursor-font-mono);
@@ -3053,6 +3060,13 @@
                 <button class="btn btn--xs" id="t-add-cell" title="Add code cell">+ Code</button>
                 <button class="btn btn--xs" id="t-add-mermaid" title="Add diagram cell">+ Diagram</button>
                 <button class="btn btn--xs" id="t-run-all" style="background:var(--cursor-accent);color:#fff;">▶ Run All</button>
+                <span class="qcmd-sep"></span>
+                <button class="btn btn--xs cnav-action" data-cnav="first" title="Jump to first cell">⇤</button>
+                <button class="btn btn--xs cnav-action" data-cnav="up" title="Previous cell">▲</button>
+                <button class="btn btn--xs cnav-action" data-cnav="down" title="Next cell">▼</button>
+                <button class="btn btn--xs cnav-action" data-cnav="last" title="Jump to last cell">⇥</button>
+                <input class="cell-nav-jump cnav-jump-input" type="number" min="1" placeholder="#" title="Jump to cell number" style="width:32px;">
+                <span class="qcmd-sep"></span>
                 <button class="btn btn--xs" id="t-undo" title="Undo">↩</button>
                 <button class="btn btn--xs" id="t-redo" title="Redo">↪</button>
                 <button class="btn btn--xs" id="t-save" title="Save">💾</button>
@@ -3166,8 +3180,6 @@
             <div class="quantum-sidebar">
                 <!-- Extended Tab Row (AI / Language / Blocks) -->
                 <div class="sidebar-tabs-ext" id="sidebar-tabs-ext">
-                    <button class="sidebar-tab-ext" data-ext-tab="chat-tab" id="tab-chat">💬 Chat</button>
-                    <button class="sidebar-tab-ext" data-ext-tab="gpuq-tab" id="tab-gpuq">⚛ GPU&lt;&gt;Q</button>
                     <button class="sidebar-tab-ext" data-ext-tab="ai-tab" id="tab-ai">🤖 AI</button>
                     <button class="sidebar-tab-ext" data-ext-tab="lang-tab" id="tab-lang">🌐 Lang</button>
                     <button class="sidebar-tab-ext" data-ext-tab="blocks-tab" id="tab-blocks">🧱 Blocks</button>
@@ -3443,55 +3455,6 @@
                 </div><!-- /thermal-tab -->
 
                 <!-- ===== EXT TAB 1: AI / LLM ===== -->
-                <!-- ===== Chat Tab ===== -->
-                <div class="sidebar-tab-ext-panel" id="chat-tab">
-                <div class="chat-panel">
-                    <div class="chat-link-bar">
-                        <button class="chat-link-btn active" id="chat-link-all" title="All messages">All</button>
-                        <button class="chat-link-btn" id="chat-link-stream" title="HexStream video chat">🎥 Stream</button>
-                        <button class="chat-link-btn" id="chat-link-sync" title="Sync link — share this to connect">🔗 Sync</button>
-                        <span style="flex:1"></span>
-                        <span id="chat-user-label" style="color:var(--cursor-text-muted);font-weight:600;"></span>
-                    </div>
-                    <div class="chat-msgs" id="chat-sidebar-msgs">
-                        <div class="chat-msg sys">HexStream chat — messages sync across all open tabs</div>
-                    </div>
-                    <div class="chat-input-row">
-                        <input class="chat-input" id="chat-sidebar-input" type="text" placeholder="Type a message…" autocomplete="off" maxlength="500">
-                        <button class="chat-send" id="chat-sidebar-send">Send</button>
-                    </div>
-                </div>
-                </div>
-
-                <!-- ===== GPU<>Q / Mini Visualization Tab ===== -->
-                <div class="sidebar-tab-ext-panel" id="gpuq-tab">
-                <div class="gpuq-panel">
-                    <div class="sidebar-title">GPU &lt;&gt; Quantum Viz</div>
-                    <div style="font-size:0.5625rem;color:var(--cursor-text-muted);margin-bottom:6px;">Live prefix visualizations — click to expand fullscreen</div>
-                    <div class="gpuq-mini-row">
-                        <div class="gpuq-mini-card" id="gpuq-lattice-card" title="Click to open fullscreen Lattice">
-                            <canvas id="gpuq-lattice-cv" width="200" height="100"></canvas>
-                            <div class="gpuq-mini-label">Lattice</div>
-                        </div>
-                        <div class="gpuq-mini-card" id="gpuq-orb-card" title="Click to open fullscreen Orb/Atom">
-                            <canvas id="gpuq-orb-cv" width="200" height="100"></canvas>
-                            <div class="gpuq-mini-label">Orb / Atom</div>
-                        </div>
-                    </div>
-                    <div class="gpuq-mini-row">
-                        <div class="gpuq-mini-card" id="gpuq-cube-card" title="Click to open fullscreen 3D Cube">
-                            <canvas id="gpuq-cube-cv" width="200" height="100"></canvas>
-                            <div class="gpuq-mini-label">3D Cube</div>
-                        </div>
-                        <div class="gpuq-mini-card" id="gpuq-kbatch-card" title="Click to open kBatch analyzer">
-                            <canvas id="gpuq-kbatch-cv" width="200" height="100"></canvas>
-                            <div class="gpuq-mini-label">kBatch</div>
-                        </div>
-                    </div>
-                    <div style="font-size:0.5rem;color:var(--cursor-text-muted);text-align:center;margin-top:4px;">Live data from notebook cells — updates every 1.5s</div>
-                </div>
-                </div>
-
                 <div class="sidebar-tab-ext-panel" id="ai-tab">
                 <div class="llm-panel">
                     <div class="sidebar-title">AI / LLM Models</div>
@@ -3551,6 +3514,8 @@
                     <div class="lang-subtabs" id="lang-subtabs">
                         <span class="lang-subtab active" data-lang-sub="lang-packs-sub">🌐 Packs</span>
                         <span class="lang-subtab" data-lang-sub="lang-kbatch-sub">⌨ kbatch</span>
+                        <span class="lang-subtab" data-lang-sub="lang-chat-sub">💬 Chat</span>
+                        <span class="lang-subtab" data-lang-sub="lang-gpuq-sub">⚛ GPU<>Q</span>
                     </div>
 
                     <!-- Sub-panel: Language Packs -->
@@ -3642,6 +3607,56 @@
                             <button class="btn btn--xs" id="lkb-fullpage" onclick="window.open('kbatch.html','_blank')" style="background:rgba(63,185,80,.1);color:#3fb950;border-color:rgba(63,185,80,.3);">↗ Full Page</button>
                         </div>
                     </div>
+
+                    <!-- Sub-panel: Chat -->
+                    <div class="lang-subpanel" id="lang-chat-sub">
+                        <div class="chat-panel">
+                            <div class="chat-link-bar">
+                                <button class="chat-link-btn active" id="chat-link-all" title="All messages">All</button>
+                                <button class="chat-link-btn" id="chat-link-stream" title="HexStream video chat">🎥 Stream</button>
+                                <button class="chat-link-btn" id="chat-link-sync" title="Sync link — share this to connect">🔗 Sync</button>
+                                <span style="flex:1"></span>
+                                <span id="chat-user-label" style="color:var(--cursor-text-muted);font-weight:600;"></span>
+                            </div>
+                            <div class="chat-msgs" id="chat-sidebar-msgs">
+                                <div class="chat-msg sys">HexStream chat — messages sync across all open tabs</div>
+                            </div>
+                            <div class="chat-input-row">
+                                <input class="chat-input" id="chat-sidebar-input" type="text" placeholder="Type a message…" autocomplete="off" maxlength="500">
+                                <button class="chat-send" id="chat-sidebar-send">Send</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sub-panel: GPU<>Q Mini Visualizations -->
+                    <div class="lang-subpanel" id="lang-gpuq-sub">
+                        <div class="gpuq-panel" id="gpuq-tab">
+                            <div class="sidebar-title">GPU &lt;&gt; Quantum Viz</div>
+                            <div style="font-size:0.5625rem;color:var(--cursor-text-muted);margin-bottom:6px;">Live prefix visualizations — click to expand fullscreen</div>
+                            <div class="gpuq-mini-row">
+                                <div class="gpuq-mini-card" id="gpuq-lattice-card" title="Click to open fullscreen Lattice">
+                                    <canvas id="gpuq-lattice-cv" width="200" height="100"></canvas>
+                                    <div class="gpuq-mini-label">Lattice</div>
+                                </div>
+                                <div class="gpuq-mini-card" id="gpuq-orb-card" title="Click to open fullscreen Orb/Atom">
+                                    <canvas id="gpuq-orb-cv" width="200" height="100"></canvas>
+                                    <div class="gpuq-mini-label">Orb / Atom</div>
+                                </div>
+                            </div>
+                            <div class="gpuq-mini-row">
+                                <div class="gpuq-mini-card" id="gpuq-cube-card" title="Click to open fullscreen 3D Cube">
+                                    <canvas id="gpuq-cube-cv" width="200" height="100"></canvas>
+                                    <div class="gpuq-mini-label">3D Cube</div>
+                                </div>
+                                <div class="gpuq-mini-card" id="gpuq-kbatch-card" title="Click to open kBatch analyzer">
+                                    <canvas id="gpuq-kbatch-cv" width="200" height="100"></canvas>
+                                    <div class="gpuq-mini-label">kBatch</div>
+                                </div>
+                            </div>
+                            <div style="font-size:0.5rem;color:var(--cursor-text-muted);text-align:center;margin-top:4px;">Live data from notebook cells — updates every 1.5s</div>
+                        </div>
+                    </div>
+
                 </div>
                 </div><!-- /lang-tab -->
 
@@ -3793,6 +3808,13 @@
                     <button class="btn btn--xs" id="f-add-cell" title="Add code cell">+ Code</button>
                     <button class="btn btn--xs" id="f-add-mermaid" title="Add diagram cell">+ Diagram</button>
                     <button class="btn btn--xs" id="f-run-all" style="background:var(--cursor-accent);color:#fff;">▶ Run All</button>
+                    <span class="qcmd-sep"></span>
+                    <button class="btn btn--xs cnav-action" data-cnav="first" title="Jump to first cell">⇤</button>
+                    <button class="btn btn--xs cnav-action" data-cnav="up" title="Previous cell">▲</button>
+                    <button class="btn btn--xs cnav-action" data-cnav="down" title="Next cell">▼</button>
+                    <button class="btn btn--xs cnav-action" data-cnav="last" title="Jump to last cell">⇥</button>
+                    <input class="cell-nav-jump cnav-jump-input" type="number" min="1" placeholder="#" title="Jump to cell number" style="width:32px;">
+                    <span class="qcmd-sep"></span>
                     <button class="btn btn--xs" id="f-undo" title="Undo">↩</button>
                     <button class="btn btn--xs" id="f-redo" title="Redo">↪</button>
                     <button class="btn btn--xs" id="f-save" title="Save">💾</button>
@@ -7494,6 +7516,25 @@
                 });
                 document.getElementById('cnav-jump')?.addEventListener('change', (e) => {
                     this.jumpToCell(parseInt(e.target.value) || 1); e.target.value = '';
+                });
+
+                // Replicated cell nav buttons in top/bottom quick-cmd bars
+                document.querySelectorAll('.cnav-action').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const dir = btn.dataset.cnav;
+                        if (dir === 'first') this.jumpToCell(1);
+                        else if (dir === 'last') this.jumpToCell(this.cells.length);
+                        else if (dir === 'up') this.navigateCell(-1);
+                        else if (dir === 'down') this.navigateCell(1);
+                    });
+                });
+                document.querySelectorAll('.cnav-jump-input').forEach(inp => {
+                    inp.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter') { this.jumpToCell(parseInt(e.target.value) || 1); e.target.value = ''; }
+                    });
+                    inp.addEventListener('change', (e) => {
+                        this.jumpToCell(parseInt(e.target.value) || 1); e.target.value = '';
+                    });
                 });
 
                 document.getElementById('undo-btn').addEventListener('click', () => this.undo());
@@ -14340,8 +14381,9 @@ print(f"  Norm:  {qs.normalize().norm().numpy():.6f}")`);
 
                 function tick(ts) {
                     const t = ts / 1000;
-                    const tab = document.getElementById('gpuq-tab');
-                    if (tab && tab.classList.contains('active')) {
+                    const gpuqSub = document.getElementById('lang-gpuq-sub');
+                    const langTab = document.getElementById('lang-tab');
+                    if (gpuqSub && gpuqSub.classList.contains('active') && langTab && langTab.classList.contains('active')) {
                         drawLattice(document.getElementById('gpuq-lattice-cv'), t);
                         drawOrb(document.getElementById('gpuq-orb-cv'), t);
                         drawCube(document.getElementById('gpuq-cube-cv'), t);

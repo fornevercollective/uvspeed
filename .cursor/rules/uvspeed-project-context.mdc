@@ -8,7 +8,7 @@ alwaysApply: true
 Single-page PWA apps in `web/`, each a self-contained HTML file with inline CSS + JS.
 No build system — files serve directly. Shared module: `web/quantum-prefixes.js`.
 
-## All Apps (18 HTML files in web/)
+## All Apps (19 HTML files in web/)
 
 | App | File | Role |
 |-----|------|------|
@@ -30,10 +30,11 @@ No build system — files serve directly. Shared module: `web/quantum-prefixes.j
 | Brother Numsy | `brothernumsy.html` | Numsy game variant |
 | KBatch | `kbatch.html` | Keyboard batch tool |
 | Blackwell | `blackwell.html` | Blackwell GPU dashboard |
+| Quantum Gutter | `quantum-gutter.html` | Prefix system showcase — 3D cube, starfield, benchmarks |
 
 ## Shared Module: quantum-prefixes.js
 
-All 18 apps include `<script src="quantum-prefixes.js"></script>` and have a
+All 19 apps include `<script src="quantum-prefixes.js"></script>` and have a
 `// ===== QUANTUM PREFIX LIVE SYNC =====` init block.
 
 **API** (`window.QuantumPrefixes`):
@@ -80,10 +81,47 @@ All saved/exported files MUST contain quantum gutter prefixes:
 - **Dashboard JSON export**: wrapped with `QP.wrapJsonExport()`
 - **ArchFlow JSON export**: `quantumGutter` metadata + `prefixedMermaid` field
 
+## Gold Standard Build (10 languages)
+
+| Layer | Files | Runner |
+|-------|-------|--------|
+| TypeScript | `quantum-prefixes.d.ts`, `wasm-loader.ts`, `tsconfig.json` | `tsc --noEmit` |
+| Rust | `crates/prefix-engine/`, `src-tauri/src/prefix_engine.rs` | `cargo test`, `cargo clippy` |
+| WASM | `scripts/build-wasm.sh` → `web/wasm/` | `bash scripts/build-wasm.sh` |
+| Go | `src/bridge/main.go` | `go build` |
+| WGSL | `src/shaders/prefix-classify.wgsl` | WebGPU runtime |
+| CSS | `web/quantum-theme.css` | Shared theme module |
+| Nushell | `scripts/build.nu`, `test.nu`, `audit.nu`, `pre.nu` | `nu scripts/X.nu` |
+| Shell | `scripts/pre.sh`, `build-wasm.sh`, `version-sync.sh` | `bash scripts/X.sh` |
+| CI/CD | `.github/workflows/ci.yml`, `health.yml` | GitHub Actions |
+| Config | `.pre-commit-config.yaml`, `.github/cliff.toml` | `pre-commit run` |
+
+## Gold Standard Runners (ALWAYS use these)
+
+```bash
+# Pre-push checklist
+nu scripts/pre.nu                    # Full audit (Nushell — fastest)
+bash scripts/pre.sh pre              # Full audit (Bash)
+uv run uvspeed_cli.py pre            # Full audit (Python)
+
+# Tests
+cargo test -p uvspeed-prefix-engine  # Rust tests (fastest)
+uv run pytest                        # Python tests (fast via uv)
+
+# Lint
+cargo clippy -p uvspeed-prefix-engine -- -D warnings
+uv run ruff check .                  # NEVER bare ruff, always uv run
+
+# Search (NEVER grep/find)
+rg "pattern"                         # ripgrep — always
+fd "*.html" web/                     # fd — always
+```
+
 ## Common Patterns
 
 - `const $ = id => document.getElementById(id);` — used in hexbench, research-lab, archflow
 - IIFEs wrap most app logic: `(function(){ ... })();`
 - Console commands exposed via `window.appName = { ... }` API objects
-- Dark theme using CSS custom properties (`--cursor-*` vars)
+- Dark theme using CSS custom properties (`--qp-*` vars, legacy `--cursor-*` mapped)
 - Mobile-responsive with `@media(max-width:600px)` rules
+- Quantum theme: `web/quantum-theme.css` for shared light/dark theming

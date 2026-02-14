@@ -1,0 +1,91 @@
+---
+description: Auto-suggest tests, builds, and deployments using gold standard runners
+globs: ["web/**", "src-tauri/**", "crates/**", "*.py", "*.rs", ".github/**", "scripts/**"]
+alwaysApply: false
+---
+
+# Auto-Tasks — Gold Standard Build Suggestions
+
+When the user edits files, suggest the FAST runner — never bare pip/grep/find.
+
+## Web Apps (`web/*.html`, `web/*.js`, `web/*.css`)
+- After editing any HTML app → `nu scripts/pre.nu inspect` to verify health
+- After editing any HTML app → remind to bump `CACHE_NAME` in `web/sw.js`
+- After editing `quantum-prefixes.js` → update `quantum-prefixes.d.ts` types
+- After editing `quantum-theme.css` → `nu scripts/pre.nu inspect` to check all 19 apps
+- After adding a new HTML app → add to `sw.js` cache list + `README.md`
+
+## Rust (`crates/**/*.rs`, `src-tauri/**/*.rs`)
+- After editing prefix engine → `cargo test -p uvspeed-prefix-engine`
+- After editing Tauri commands → `cargo tauri build --bundles app`
+- After editing `Cargo.toml` → check `Cargo.lock` is updated
+- After changing classifier logic → `cargo bench -p uvspeed-prefix-engine`
+- Lint: `cargo clippy -p uvspeed-prefix-engine -- -D warnings`
+- Format: `cargo fmt -p uvspeed-prefix-engine`
+
+## Python (`*.py`)
+- After editing `uvspeed_cli.py` → `uv run ruff check uvspeed_cli.py`
+- After editing `pyproject.toml` → `uv sync`
+- After adding deps → `uv pip install -e ".[dev]"` (NEVER bare pip)
+- Test: `uv run pytest`
+- Lint: `uv run ruff check .`
+- Format: `uv run ruff format .`
+
+## Nushell (`scripts/*.nu`)
+- After editing build.nu → `nu scripts/build.nu all`
+- After editing test.nu → `nu scripts/test.nu all`
+- After editing pre.nu → `nu scripts/pre.nu`
+- After editing audit.nu → `nu scripts/audit.nu health`
+
+## Shell (`scripts/*.sh`)
+- After editing pre.sh → `bash scripts/pre.sh pre`
+- After editing build-wasm.sh → `bash scripts/build-wasm.sh`
+- After editing version-sync.sh → `bash scripts/version-sync.sh`
+
+## GitHub Actions (`.github/workflows/*.yml`)
+- After editing workflows → validate YAML: `uv run python -c "import yaml; yaml.safe_load(open('.github/workflows/ci.yml'))"`
+- Pinned versions: checkout@v6, setup-python@v6, setup-uv@v7, rust-toolchain@stable
+
+## Version Changes
+When bumping versions, run `bash scripts/version-sync.sh set X.Y.Z` to update ALL at once:
+1. `pyproject.toml` → `project.version`
+2. `src-tauri/Cargo.toml` → `package.version`
+3. `crates/prefix-engine/Cargo.toml` → `package.version`
+4. `web/sw.js` → `CACHE_NAME` version suffix
+5. `README.md` → version badge
+6. `uvspeed_cli.py` → `VERSION` constant
+
+## Build Commands (gold standard — always use these)
+```bash
+# Pre-push (ALWAYS run before pushing)
+nu scripts/pre.nu                    # or: bash scripts/pre.sh pre
+
+# Rust
+cargo test -p uvspeed-prefix-engine
+cargo clippy -p uvspeed-prefix-engine -- -D warnings
+
+# WASM
+bash scripts/build-wasm.sh
+
+# Python
+uv run ruff check .
+uv run pytest
+
+# Tauri
+mkdir -p tauri-dist && cp -r web/* tauri-dist/ && cargo tauri build --bundles app
+
+# Full pipeline
+nu scripts/build.nu all
+nu scripts/test.nu all
+
+# Pre-commit hooks (one-time setup)
+uv pip install pre-commit && pre-commit install
+```
+
+## Search Commands (gold standard)
+```bash
+rg "pattern" web/                    # NOT grep
+fd "*.html" web/                     # NOT find
+bat web/quantum-notepad.html         # NOT cat
+eza -la web/                         # NOT ls -la
+```

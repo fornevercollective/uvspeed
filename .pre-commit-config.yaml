@@ -1,0 +1,68 @@
+# beyondBINARY quantum-prefixed | uvspeed | {+1, 1, -1, +0, 0, -0, +n, n, -n}
+# Pre-commit hooks — lint, format, validate before every commit
+
+repos:
+  # ── General ──
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-json
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: ['--maxkb=500']
+
+  # ── Python (Ruff) ──
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.9.0
+    hooks:
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix]
+      - id: ruff-format
+
+  # ── Rust (local) ──
+  - repo: local
+    hooks:
+      - id: cargo-fmt
+        name: cargo fmt
+        entry: cargo fmt --manifest-path crates/prefix-engine/Cargo.toml --
+        language: system
+        types: [rust]
+        pass_filenames: false
+
+      - id: cargo-clippy
+        name: cargo clippy
+        entry: cargo clippy --manifest-path crates/prefix-engine/Cargo.toml -- -D warnings
+        language: system
+        types: [rust]
+        pass_filenames: false
+
+      - id: cargo-test
+        name: cargo test
+        entry: cargo test --manifest-path crates/prefix-engine/Cargo.toml --quiet
+        language: system
+        types: [rust]
+        pass_filenames: false
+
+  # ── Quantum prefix header ──
+  - repo: local
+    hooks:
+      - id: quantum-header-check
+        name: quantum prefix header
+        entry: bash -c 'for f in "$@"; do head -5 "$f" | grep -q "beyondBINARY quantum-prefixed" || echo "⚠ Missing header: $f"; done'
+        language: system
+        types_or: [python, rust, shell]
+
+  # ── Version consistency ──
+  - repo: local
+    hooks:
+      - id: version-sync
+        name: version consistency
+        entry: bash -c 'PY=$(grep "version = " pyproject.toml | head -1 | sed "s/.*\"\(.*\)\".*/\1/"); TAURI=$(grep "version = " src-tauri/Cargo.toml | head -1 | sed "s/.*\"\(.*\)\".*/\1/"); echo "Python=$PY Tauri=$TAURI"'
+        language: system
+        pass_filenames: false
+        always_run: true

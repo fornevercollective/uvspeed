@@ -27,7 +27,7 @@ fail()  { echo -e "${RED}[error]${NC} $1"; exit 1; }
 step()  { echo -e "\n${PURPLE}${BOLD}── $1 ──${NC}"; }
 
 # ─── Parse Args ───
-INSTALL_APP=0; INSTALL_AI=0; INSTALL_QUANTUM=0; NO_OPEN=0; LAUNCH_HEXCAST=0
+INSTALL_APP=0; INSTALL_AI=0; INSTALL_QUANTUM=0; INSTALL_WORKSTATION=0; NO_OPEN=0; LAUNCH_HEXCAST=0
 
 for arg in "$@"; do
     case "$arg" in
@@ -35,6 +35,7 @@ for arg in "$@"; do
         --ai)       INSTALL_AI=1 ;;
         --quantum)  INSTALL_QUANTUM=1 ;;
         --full)     INSTALL_APP=1; INSTALL_AI=1; INSTALL_QUANTUM=1 ;;
+        --workstation) INSTALL_WORKSTATION=1 ;;
         --no-open)  NO_OPEN=1 ;;
         --hexcast)  LAUNCH_HEXCAST=1 ;;
         --help|-h)
@@ -43,8 +44,9 @@ for arg in "$@"; do
             echo "  ./install.sh              default: uv + bridge + notepad"
             echo "  ./install.sh --hexcast    install + launch hexcast camera terminal"
             echo "  ./install.sh --app        + Tauri v2 desktop app build"
-            echo "  ./install.sh --ai         + Ollama local AI"
+            echo "  ./install.sh --ai         + Ollama local AI + tinygrad + MLX"
             echo "  ./install.sh --quantum    + Qiskit quantum sim"
+            echo "  ./install.sh --workstation  full dev tool stack (ripgrep, fd, bat, fzf, etc)"
             echo "  ./install.sh --full       all of the above"
             echo "  ./install.sh --no-open    don't open browser"
             echo ""
@@ -308,7 +310,40 @@ if [ "$INSTALL_QUANTUM" -eq 1 ]; then
 fi
 
 # ═══════════════════════════════════════════════════════
-step "Step 10: Nushell (optional modern shell)"
+if [ "${INSTALL_WORKSTATION:-0}" -eq 1 ]; then
+    step "Step 10: Workstation dev tools"
+    
+    WS_TOOLS=(ripgrep fd bat fzf jq tree htop tmux eza starship cmake ninja wget)
+    for tool in "${WS_TOOLS[@]}"; do
+        if brew list --formula "$tool" &>/dev/null 2>&1 || command -v "$tool" &>/dev/null; then
+            ok "$tool (installed)"
+        else
+            info "Installing $tool..."
+            pkg_install "$tool" || warn "$tool install failed"
+        fi
+    done
+    
+    # Python AI packages (MLX + tinygrad deps)
+    PY="/opt/homebrew/opt/python@3.13/libexec/bin/python"
+    if [ -x "$PY" ]; then
+        info "Checking Python 3.13 AI packages..."
+        for pypkg in numpy scipy pillow mlx; do
+            if "$PY" -c "import $pypkg" 2>/dev/null; then
+                ok "$pypkg (python3.13)"
+            else
+                info "Installing $pypkg..."
+                "$PY" -m pip install --break-system-packages --no-cache-dir "$pypkg" 2>/dev/null || warn "$pypkg failed"
+            fi
+        done
+    fi
+    
+    ok "Workstation tools ready"
+    info "Full workstation setup: bash tools/setup-workstation.sh"
+    info "Tool manifest: tools/workstation-manifest.json"
+fi
+
+# ═══════════════════════════════════════════════════════
+step "Step 11: Nushell (optional modern shell)"
 # ═══════════════════════════════════════════════════════
 if command -v nu &>/dev/null; then
     ok "Nushell $(nu --version 2>/dev/null)"

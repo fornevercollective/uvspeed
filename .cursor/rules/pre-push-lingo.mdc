@@ -1,0 +1,87 @@
+---
+description: Pre-push checklist lingo — short commands for repo audit and deploy
+globs:
+alwaysApply: true
+---
+
+# Pre-Push Lingo
+
+When the user says any of these short commands, execute the corresponding action immediately.
+These can be combined in a single message (e.g., "pre push" or "folder, inspect notepad, push").
+
+## Command Reference
+
+| Lingo | Action |
+|-------|--------|
+| **pre** | Full pre-push audit: folder + readme + inspect all + gold |
+| **folder** | `git status`, check for stale/duplicate files, branch status |
+| **readme** | Audit README.md (badges, architecture, gold standard section) |
+| **inspect** | Structural health check on ALL 19 web apps |
+| **inspect notepad** | Just quantum-notepad.html |
+| **inspect dash** | Just github-dashboard.html |
+| **inspect sponsor** | sponsor.html + quantum-gutter.html |
+| **inspect gutter** | Just quantum-gutter.html |
+| **inspect research** | Just research-lab.html |
+| **inspect blackwell** | Just blackwell.html |
+| **gold** | Verify all gold standard files exist (CI, hooks, TS, WASM, scripts) |
+| **push** | Stage all → commit → push (auto-generate message) |
+| **push "msg"** | Stage all → commit with message → push |
+
+## Combination Examples
+
+- `pre push` — full audit then commit + push
+- `pre push "v4.2 gold standard"` — audit then push with message
+- `folder inspect push` — quick folder + app check then push
+- `inspect notepad` — just check notepad health
+
+## Runners (use the fastest)
+
+| Runner | Command | Best for |
+|--------|---------|----------|
+| **Nushell** (fastest) | `nu scripts/pre.nu` | Daily use, structured output |
+| **Bash** (push support) | `bash scripts/pre.sh pre push "msg"` | When you need push |
+| **Python CLI** | `uv run uvspeed_cli.py pre` | From Python workflows |
+| **Cursor AI** | Just say "pre" in chat | Zero typing |
+
+## What Each Check Does
+
+### folder
+- Count modified + untracked files via `git status`
+- Check for stale `quantum-prefix.js` (should be `quantum-prefixes.js`)
+- Report branch name and unpushed commit count
+
+### inspect (per app)
+- `<!DOCTYPE html>` present
+- Closing `</html>`, `</head>`, `</body>`
+- `quantum-prefixes.js` include
+- `sw.js` service worker registration
+- `beyondBINARY quantum-prefixed` header comment
+- `QUANTUM PREFIX LIVE SYNC` section
+
+### gold (20 files)
+TypeScript: `quantum-prefixes.d.ts`, `wasm-loader.ts`, `tsconfig.json`
+CSS: `quantum-theme.css`
+Rust: `prefix_engine.rs`
+Go: `src/bridge/main.go`
+WGSL: `prefix-classify.wgsl`
+Nushell: `build.nu`, `test.nu`, `audit.nu`, `pre.nu`
+Shell: `build-wasm.sh`, `version-sync.sh`, `pre.sh`
+CI: `ci.yml`, `health.yml`
+Config: `.pre-commit-config.yaml`, `cliff.toml`, `auto-tasks.mdc`
+
+### readme
+- Version badge (v4.x)
+- Tech stack badges (8 languages)
+- Architecture tree includes `crates/prefix-engine`
+- Gold Standard Workflow section exists
+
+## Gold Standard Tool Enforcement
+
+When running these commands, ALWAYS use:
+- `rg` not `grep` — for searching
+- `fd` not `find` — for finding files
+- `uv run` not bare `python` — for Python tools
+- `uv pip` not `pip` — for package installs
+- `nu` not `bash` — when both script versions exist
+- `cargo test` not `make test` — for Rust
+- `cargo clippy` not manual lint — for Rust lint

@@ -221,6 +221,7 @@
                 <span style="flex:1"></span>
                 <span class="pal-chip" id="preset-decisive" style="color:var(--purple);border-color:var(--purple)">Decisive Path</span>
                 <span class="pal-chip" id="preset-tiers" style="color:var(--green);border-color:var(--green)">Tier Stack</span>
+                <span class="pal-chip" id="preset-gold" style="color:#e2b714;border-color:#e2b714">Gold Standard</span>
                 <span class="pal-chip" id="preset-clear" style="color:var(--red);border-color:var(--red)">Clear</span>
             </div>
             <div class="canvas-area">
@@ -278,104 +279,242 @@ mermaid.initialize({startOnLoad:false,theme:'dark',themeVariables:{
 }});
 
 // ===== RESEARCH DOCUMENT =====
-const DEFAULT_DOC = `# uvspeed — Decisive Build Path: PWA to Quantum Terminal
+const DEFAULT_DOC = `# uvspeed — Gold Standard Build Workflow
 
-## Current Stack (Baseline)
+> 10 languages, 21 files, full CI/CD automation — the complete pipeline from code edit to quantum classification.
+
+---
+
+## Architecture: Full Pipeline
 
 \`\`\`
-curl (uv) -> cargo (nushell) -> brew (ghostty) -> uv run (bridge) -> npm (electron) -> open (web)
+┌─ YOU EDIT CODE ─────────────────────────────────────────────┐
+│                                                              │
+│  Cursor Rules (5 .mdc files)                                │
+│  ├── quantum-prefix-gutter.mdc → prefix every line          │
+│  ├── workstation-tools.mdc → tool version awareness          │
+│  └── auto-tasks.mdc → suggest tests, builds, deploys        │
+│                                                              │
+├─ git commit ────────────────────────────────────────────────┤
+│                                                              │
+│  Pre-commit hooks (.pre-commit-config.yaml)                  │
+│  ├── ruff check + format (Python lint)                      │
+│  ├── cargo fmt + clippy + test (Rust lint)                  │
+│  ├── quantum prefix header validation                       │
+│  └── version consistency check                              │
+│                                                              │
+├─ git push ──────────────────────────────────────────────────┤
+│                                                              │
+│  GitHub Actions CI (4 workflows)                             │
+│  ├── pages.yml → deploy to GitHub Pages                      │
+│  ├── release.yml → build artifacts on tag                    │
+│  ├── ci.yml → test + lint + WASM build on every PR          │
+│  └── health.yml → load-test all 19 PWAs                     │
+│                                                              │
+├─ Runtime (Browser) ─────────────────────────────────────────┤
+│                                                              │
+│  Service Worker → cache + offline (19 apps)                  │
+│  BroadcastChannel → cross-app prefix sync                    │
+│  WASM prefix engine → 100x Rust-speed in browser            │
+│  quantum-theme.css → shared light/dark theming               │
+│                                                              │
+├─ Runtime (Desktop — Tauri v2) ──────────────────────────────┤
+│                                                              │
+│  Tauri IPC → Rust-native prefix classification               │
+│  ├── classify_line(line, language) → symbol + coords         │
+│  ├── classify_file(path) → full coverage stats               │
+│  ├── generate_gutter(source) → prefix strings                │
+│  └── benchmark_classifier(source) → lines/sec                │
+│                                                              │
+└──────────────────────────────────────────────────────────────┘
 \`\`\`
 
-6 install steps, 4 package managers. The decisive path reduces this to tiered single-command.
+---
+
+## Language Stack (10 languages)
+
+| Language | Files | Role | GitHub Bar |
+|----------|-------|------|-----------|
+| **TypeScript** | quantum-prefixes.d.ts, wasm-loader.ts, tsconfig.json | Type-safe API, WASM loader | ~15% |
+| **Rust** | prefix-engine, prefix_engine.rs, main.rs, build.rs | Core classifier, Tauri IPC, WASM | ~12% |
+| **Python** | uvspeed_cli.py, bridge, MCP server, hexcast | CLI tools, bridge server | ~35% |
+| **JavaScript** | quantum-prefixes.js, sw.js, tests, extensions | Runtime engine, service worker | ~20% |
+| **Go** | src/bridge/main.go | High-perf bridge server (10x throughput) | ~5% |
+| **CSS** | quantum-theme.css | Shared theme module, prefix colors | ~3% |
+| **Shell** | build-wasm.sh, version-sync.sh, watch-dev.sh | Build automation, dev tools | ~5% |
+| **Nushell** | build.nu, test.nu, audit.nu | Structured data pipelines | ~3% |
+| **WGSL** | prefix-classify.wgsl | GPU compute shader (256-thread) | ~1% |
+| **TOML/YAML** | Cargo.toml, cliff.toml, ci.yml, health.yml | Config, CI/CD | ~1% |
 
 ---
 
-## Data Type Matrix (Corrected)
+## Tier 1: High-Impact Upgrades
 
-| Data Type | Quantum QPU | Server GPU | Desktop | Mobile | IoT MCU | Photonic |
-|-----------|------------|-----------|---------|--------|---------|---------|
-| **Binary/Bits** | **NATIVE** | **Full** | **Full** | **Full** | **Full** | **Full** |
-| INT8 | Post-process | Tensor Core | NPU native | NPU fastest | ESP-DL | Digital |
-| FP16 | Not used | Tensor Core | NPU accel | NPU accel | Limited | R&D |
-| FP32 | Sim only | Full | Full | Full | Limited | Optical |
-| FP64 | State vec | Full | Full | Emulated | N/A | N/A |
-| BF16 | N/A | NVIDIA/AMD | Apple M4 | N/A | N/A | N/A |
-| UTF-8 | Classical | Unlimited | CPU bound | Mem limited | Flash | Transport |
+### TypeScript (.d.ts + tsconfig)
+- \`web/quantum-prefixes.d.ts\` — 200+ lines of type definitions
+- Types: PrefixSymbol, PrefixCategory, SupportedLanguage, ClassifyResult, PrefixMetadataResult, SyncState, IoTConnectionOptions, ThemeMode
+- \`window.QuantumPrefixes\` fully typed with all 30+ methods
+- All 19 apps get autocomplete/type-checking
 
-> Binary/Bits is the only universal full-speed row. INT8 is the universal compute row. The prefix classifier (4 bits for 9 symbols) maps to both.
+### WASM Compilation Pipeline
+- \`crates/prefix-engine/\` → compiles to WebAssembly via wasm-pack
+- \`scripts/build-wasm.sh\` — build + optimize (wasm-opt -Oz)
+- \`web/wasm-loader.ts\` — dynamic import with JS fallback
+- CI auto-builds WASM on every merge to main
+- Result: 100x faster prefix classification in browser
 
----
-
-## Tier Checkmark Matrix
-
-| Capability | Tier 0 (PWA) | Tier 1 (uv) | Tier 2 (Tauri) | Tier 3 (Mobile) | Tier 4 (IoT) | Tier 5 (QPU) |
-|-----------|-------------|------------|---------------|----------------|-------------|-------------|
-| Prefix gutter | JS | Python | Rust | WASM | ANSI | Quantum |
-| Cell tools (14) | Client | Client | Client | Client | Client | Client |
-| Viz (orb/cube) | Canvas | Canvas | wgpu | Canvas | Minimal | N/A |
-| Terminal | No | SSH | PTY | SSH | BusyBox | SSH QPU |
-| AI inference | No | Ollama | Sidecar | NPU | INT8 | Circuits |
-| Execution | No | Bridge | Sidecar | WiFi | N/A | Qiskit |
-| Auto-update | SW | uv | Tauri | AppStore | OTA | N/A |
-| Offline | Full | Full | Full | Full | Full | Cloud |
-| Install | URL | curl sh | brew | Store | Flash | API key |
+### Rust/Tauri IPC (5 commands)
+- \`classify_line\` → single line → { symbol, category, bits, coords }
+- \`classify_file\` → whole file → { coverage, prefix_counts, lines[] }
+- \`classify_lines\` → batch classification
+- \`generate_gutter\` → prefix strings for display
+- \`benchmark_classifier\` → performance measurement (lines/sec)
+- All route through the Rust prefix-engine crate (no JS overhead)
 
 ---
 
-## Install Tiers
+## Tier 2: Good Signal
 
-**Tier 0** — Zero install:
-\`open https://fornevercollective.github.io/uvspeed/\`
+### Shared CSS (quantum-theme.css)
+- Dark + light theme variables (40+ CSS custom properties)
+- Prefix color constants (13 prefix classes)
+- Base components: .qp-card, .qp-btn, .qp-input
+- Animations: qp-fade-in, qp-pulse, qp-spin
+- Print styles, responsive utilities
+- Legacy compat: --cursor-* mapped to --qp-*
 
-**Tier 1** — Developer (one command):
-\`curl -fsSL https://uvspeed.dev/install.sh | sh\`
+### Nushell Scripts (structured pipelines)
+- \`nu scripts/build.nu all\` — build web, tauri, wasm, python, rust
+- \`nu scripts/test.nu all\` — run rust, python, prefix, health suites
+- \`nu scripts/audit.nu\` — code stats, file counts, disk usage
+- \`nu scripts/audit.nu health\` — verify all dev tools installed
+- \`nu scripts/audit.nu versions\` — check version consistency
 
-**Tier 2** — Desktop app: \`brew install uvspeed\`
-
-**Tier 3** — Mobile: App Store / Play Store
-
-**Tier 4** — IoT: PWA in device browser
-
-**Tier 5** — Quantum: Cloud API dispatch
-
----
-
-## Stack Layers
-
+### Python CLI (subcommands)
+\`\`\`bash
+uvspeed-bridge serve              # Start quantum bridge server
+uvspeed-bridge classify main.py   # Classify file with prefixes
+uvspeed-bridge prefix src/lib.rs  # Add prefix gutter to source
+uvspeed-bridge stats *.py --json  # Prefix distribution statistics
+uvspeed-bridge health             # Check bridge server status
 \`\`\`
-Layer 0: PWA (HTML/CSS/JS)        -> runs everywhere
-Layer 1: uv (Rust binary)         -> Python runtime
-Layer 2: Bridge server (Python)   -> 55+ endpoints
-Layer 3: Tauri v2 (Rust shell)    -> native app
-Layer 4: Rust prefix engine       -> native + WASM
-Layer 5: wgpu (Rust GPU)          -> Metal/Vulkan/DX12/WebGPU
-Layer 6: CUDA-Q (Python/C++)      -> quantum-classical
+
+---
+
+## Tier 3: Future Differentiation
+
+### Go Bridge Server (src/bridge/main.go)
+- /health endpoint with uptime
+- /api/classify — POST source code, get prefix results
+- /api/state — global prefix state (all connected apps)
+- Full 9-symbol classifier in Go
+- 10x throughput vs Python bridge
+
+### WGSL Compute Shader (prefix-classify.wgsl)
+- 256-thread workgroups, one thread per line
+- Atomic operations for safe parallel writes
+- 4-bit packed output (2 symbols per byte)
+- Separate stats pass (count distribution)
+- Ready for WebGPU integration in Blackwell app
+
+### Tauri Mobile (iOS/Android)
+- Bundle identifier: com.fornevercollective.uvspeed
+- iOS minimum: 16.0 / Android min SDK: 26
+- Same web UI, native wrapper
+
+---
+
+## Automation Pipeline
+
+### ci.yml (every push/PR)
+| Job | What | Time |
+|-----|------|------|
+| rust | cargo test + clippy + fmt (prefix-engine) | ~2 min |
+| wasm | wasm-pack build → artifact upload | ~3 min |
+| python | ruff lint + format + pytest | ~1 min |
+| prefix-check | quantum header validation | ~30s |
+| version-check | version alignment across configs | ~15s |
+
+### health.yml (weekly + on web/ changes)
+| Job | What |
+|-----|------|
+| html-validation | DOCTYPE, </html>, quantum-prefixes.js, sw.js for all 19 apps |
+| js-syntax | node --check on JS modules |
+| shared-modules | verify 10+ required API exports exist |
+| size-budget | alert if HTML > 500KB or JS > 200KB |
+
+### Pre-commit Hooks
+\`\`\`
+trailing-whitespace, end-of-file-fixer, check-yaml/json/toml
+ruff (Python lint + format)
+cargo fmt + clippy + test (Rust)
+quantum prefix header check
+version consistency check
 \`\`\`
 
-Each layer is additive. Layer 0 works alone.
+### Auto-changelog (git-cliff)
+- Conventional commits → CHANGELOG.md
+- Groups: Features, Bug Fixes, Performance, Refactoring, CI/CD, Dependencies
+
+### Version Sync
+\`\`\`bash
+bash scripts/version-sync.sh        # Check consistency
+bash scripts/version-sync.sh set 4.3.0  # Set ALL versions at once
+\`\`\`
+Syncs: pyproject.toml, Cargo.toml (x2), uvspeed_cli.py, README.md badge
+
+### Dev File Watcher
+\`\`\`bash
+bash scripts/watch-dev.sh   # auto-copy web/ → tauri-dist/
+\`\`\`
+Uses fswatch (macOS), inotifywait (Linux), or poll fallback.
 
 ---
 
-## Quantum Chip Manufacturers
+## Data Flow: Code → Classification
 
-| Vendor | Qubit Type | Scale | SDK |
-|--------|-----------|-------|-----|
-| IBM | Superconducting | 1121 qubits | Qiskit (Python/Rust) |
-| Google | Superconducting | 105 qubits | Cirq (Python) |
-| IonQ | Trapped ion | 36 qubits | Qiskit/Cirq/PennyLane |
-| Quantinuum | Trapped ion | 56 qubits | TKET/Qiskit |
-| PsiQuantum | Photonic | R&D | Custom |
-| NVIDIA | GPU sim | 40 qubits | CUDA-Q (Python/C++) |
-| D-Wave | Annealing | 5000+ | Ocean SDK |
+\`\`\`mermaid
+graph LR
+    A[Source Code] --> B{Language?}
+    B -->|Browser| C[JS quantum-prefixes.js]
+    B -->|Browser+WASM| D[Rust prefix_engine.wasm]
+    B -->|Desktop| E[Tauri IPC → Rust]
+    B -->|CLI| F[Python uvspeed_cli.py]
+    B -->|Server| G[Go bridge :8085]
+    B -->|GPU| H[WGSL Compute Shader]
+    C --> I[9-Symbol Prefix]
+    D --> I
+    E --> I
+    F --> I
+    G --> I
+    H --> I
+    I --> J[BroadcastChannel Sync]
+    J --> K[All 19 Apps]
+\`\`\`
 
 ---
 
-## Phase Timeline
+## Quantum Prefix Engine (Rust Crate)
 
-- **Phase 3.5 (NOW):** PWA-first, research-lab page, install.sh, corrected tables
-- **Phase 4.0:** Tauri v2 replaces Electron, Rust prefix, auto-update
-- **Phase 4.1:** wgpu native, NPU offload, libghostty-vt
-- **Phase 5.0:** Quantum-hybrid prefix classification on fault-tolerant QPU
+| Feature | Value |
+|---------|-------|
+| Symbols | 9 ({+1, 1, -1, +0, 0, -0, +n, n, -n}) |
+| Storage | 4-bit per line (2 lines per byte) |
+| 3D coords | Each symbol → (x, y, z) in {-1, 0, +1} |
+| Targets | Native binary, WASM module, C ABI (FFI) |
+| Tests | 11 unit tests, benchmark suite |
+| Languages | 20+ keyword patterns |
+
+---
+
+## Phase Timeline (Updated)
+
+- **Phase 3.5:** PWA-first, research-lab, install.sh — *shipped*
+- **Phase 4.0:** Tauri v2, Rust prefix engine, auto-update — *shipped*
+- **Phase 4.2 (NOW):** Gold standard build — 10 languages, full CI/CD, WASM pipeline
+- **Phase 4.3:** WASM compilation live in production, Tauri mobile builds
+- **Phase 5.0:** wgpu native viz, NPU offload, WebGPU shaders in Blackwell
+- **Phase 6.0:** Quantum-hybrid prefix classification on fault-tolerant QPU
 `;
 
 let docContent = localStorage.getItem('uvspeed-research-doc') || DEFAULT_DOC;
@@ -897,8 +1036,71 @@ function loadTierStack() {
     setTimeout(drawConnections, 50);
 }
 
+function loadGoldStandard() {
+    clearCanvas();
+    // ── Layer 1: Edit Code ──
+    const cursor  = createNode('tool',     60,  40, 'Cursor IDE + Rules', ['out']);
+    const edit    = createNode('frontend', 300, 40, 'Edit Code', ['in','out']);
+    // ── Layer 2: Pre-commit ──
+    const commit  = createNode('workflow', 60,  180, 'git commit', ['in','out']);
+    const ruff    = createNode('analyze',  280, 180, 'ruff (Python)', ['in','out']);
+    const clippy  = createNode('analyze',  480, 180, 'clippy (Rust)', ['in','out']);
+    const prefix  = createNode('analyze',  680, 180, 'Prefix Validate', ['in','out']);
+    const versync = createNode('analyze',  880, 180, 'Version Sync', ['in']);
+    // ── Layer 3: CI/CD ──
+    const push    = createNode('workflow', 60,  340, 'git push', ['in','out']);
+    const ciRust  = createNode('test',    280, 340, 'CI: Rust Tests', ['in','out']);
+    const ciWasm  = createNode('deploy',  480, 340, 'CI: WASM Build', ['in','out']);
+    const ciPy    = createNode('test',    680, 340, 'CI: Python Tests', ['in','out']);
+    const health  = createNode('test',    880, 340, 'CI: Health Check', ['in']);
+    // ── Layer 4: Runtime Engines ──
+    const jsEng   = createNode('frontend', 60,  500, 'JS Engine', ['in','out']);
+    const wasmEng = createNode('runtime',  280, 500, 'WASM Engine', ['in','out']);
+    const tauriIPC= createNode('runtime',  480, 500, 'Tauri IPC (Rust)', ['in','out']);
+    const goBridge= createNode('server',   680, 500, 'Go Bridge :8085', ['in','out']);
+    const pyCli   = createNode('terminal', 880, 500, 'Python CLI', ['in']);
+    // ── Layer 5: Output ──
+    const sync    = createNode('stream',   280, 660, 'BroadcastChannel', ['in','out']);
+    const apps19  = createNode('deploy',   60,  660, '19 PWA Apps', ['in']);
+    const wgsl    = createNode('gpu',      480, 660, 'WGSL GPU Shader', ['in','out']);
+    const nuBuild = createNode('workflow', 680, 660, 'Nushell Pipelines', ['in']);
+    const qpu     = createNode('quantum',  880, 660, 'Quantum (QPU)', ['in']);
+
+    // Layer 1 → 2
+    addConnection(cursor.id, edit.id);
+    addConnection(edit.id, commit.id);
+    // Layer 2 (pre-commit chain)
+    addConnection(commit.id, ruff.id);
+    addConnection(ruff.id, clippy.id);
+    addConnection(clippy.id, prefix.id);
+    addConnection(prefix.id, versync.id);
+    // Layer 2 → 3
+    addConnection(commit.id, push.id);
+    // Layer 3 (CI chain)
+    addConnection(push.id, ciRust.id);
+    addConnection(ciRust.id, ciWasm.id);
+    addConnection(ciWasm.id, ciPy.id);
+    addConnection(ciPy.id, health.id);
+    // Layer 3 → 4 (build outputs)
+    addConnection(ciRust.id, tauriIPC.id);
+    addConnection(ciWasm.id, wasmEng.id);
+    addConnection(ciPy.id, pyCli.id);
+    addConnection(push.id, jsEng.id);
+    addConnection(push.id, goBridge.id);
+    // Layer 4 → 5 (runtime)
+    addConnection(jsEng.id, sync.id);
+    addConnection(wasmEng.id, sync.id);
+    addConnection(sync.id, apps19.id);
+    addConnection(tauriIPC.id, wgsl.id);
+    addConnection(goBridge.id, nuBuild.id);
+    addConnection(wgsl.id, qpu.id);
+
+    setTimeout(drawConnections, 50);
+}
+
 $('preset-decisive').addEventListener('click', loadDecisivePath);
 $('preset-tiers').addEventListener('click', loadTierStack);
+$('preset-gold').addEventListener('click', loadGoldStandard);
 $('preset-clear').addEventListener('click', clearCanvas);
 
 // Palette click-to-add
@@ -939,13 +1141,14 @@ function handleConsoleInput() {
             case 'export': $('doc-export').click(); break;
             case 'preset': loadDecisivePath(); logConsole('sys', 'Loaded: Decisive Path'); break;
             case 'tiers': loadTierStack(); logConsole('sys', 'Loaded: Tier Stack'); break;
+            case 'gold': loadGoldStandard(); logConsole('sys', 'Loaded: Gold Standard Workflow — 10 languages, full CI/CD'); break;
             case 'run': {
                 const nd = nodesData.find(n => n.name.toLowerCase().includes(arg.toLowerCase()));
                 if (nd) executeNode(nd.id); else logConsole('error', 'Node not found: ' + arg);
                 break;
             }
             case 'help':
-                logConsole('sys', 'Commands: /clear /nodes /save /export /preset /tiers /run <node> /help');
+                logConsole('sys', 'Commands: /clear /nodes /save /export /preset /tiers /gold /run <node> /help');
                 break;
             default: logConsole('sys', 'Unknown command: /' + cmd + ' — try /help');
         }
@@ -958,10 +1161,10 @@ consoleInput.addEventListener('keydown', e => { if (e.key === 'Enter') handleCon
 $('console-send').addEventListener('click', handleConsoleInput);
 
 // ===== INIT =====
-loadDecisivePath();
-logConsole('sys', 'Research Lab initialized');
+loadGoldStandard();
+logConsole('sys', 'Research Lab v4.2 — Gold Standard Build');
 logConsole('sys', 'Left: research document (edit/preview/split) | Right: node canvas | Bottom: console');
-logConsole('sys', 'Type /help for commands');
+logConsole('sys', 'Presets: Gold Standard, Decisive Path, Tier Stack — or /help for commands');
 
 // API
 window.researchLab = {
@@ -970,7 +1173,7 @@ window.researchLab = {
     addNode: (type, x, y, name, ports) => createNode(type, x || 100, y || 100, name, ports),
     connect: (a, b) => addConnection(a, b),
     execute: id => executeNode(id),
-    loadDecisivePath, loadTierStack, clearCanvas,
+    loadDecisivePath, loadTierStack, loadGoldStandard, clearCanvas,
     log: logConsole,
     getDoc: () => editor.value,
     setDoc: md => { editor.value = md; docContent = md; updateDocStats(); },

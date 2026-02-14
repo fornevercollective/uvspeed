@@ -37,10 +37,10 @@
   "license": "MIT",
   "devDependencies": {
     "electron": "^40.4.0",
-    "electron-builder": "^25.1.0"
+    "electron-builder": "^26.7.0"
   },
   "dependencies": {
-    "express": "^4.21.0",
+    "express": "^5.2.1",
     "node-pty": "^1.0.0",
     "ws": "^8.18.0",
     "xterm": "^5.5.0",

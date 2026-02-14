@@ -19,6 +19,9 @@ tauri-plugin-process = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 
+# Quantum prefix engine — Rust-native classifier
+uvspeed-prefix-engine = { path = "../crates/prefix-engine" }
+
 [features]
 default = ["custom-protocol"]
 custom-protocol = ["tauri/custom-protocol"]
