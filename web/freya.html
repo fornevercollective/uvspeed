@@ -437,7 +437,16 @@ document.getElementById('nav-tabs').addEventListener('click', e=>{
     document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
     document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
     tab.classList.add('active');
-    document.getElementById('sec-'+tab.dataset.tab).classList.add('active');
+    const secId='sec-'+tab.dataset.tab;
+    document.getElementById(secId).classList.add('active');
+    // Redraw quantum canvases when tab becomes visible (canvas can't draw while display:none)
+    if(tab.dataset.tab==='quantum'&&typeof drawQuantumCube==='function'){
+        requestAnimationFrame(()=>{
+            drawQuantumCube();
+            if(typeof drawGeoQuantumMap==='function') drawGeoQuantumMap();
+            if(typeof drawGeoVis==='function') drawGeoVis(lastGeoLat,lastGeoLng);
+        });
+    }
 });
 
 /* ═══════════════════════════════════════════════════
@@ -1049,6 +1058,16 @@ function drawGeoQuantumMap(){
     }
 }
 
+// Geo-quantum map click — navigate quantum space
+document.getElementById('geo-map').addEventListener('click',function(e){
+    const rect=this.getBoundingClientRect();
+    const mx=(e.clientX-rect.left)/rect.width;
+    const my=(e.clientY-rect.top)/rect.height;
+    qPos[0]=Math.floor(mx*11);
+    qPos[1]=Math.floor(my*11);
+    updateQuantumDisplay();
+});
+
 // Geo position canvas
 function drawGeoVis(lat,lng){
     const canvas=document.getElementById('q-geo');
@@ -1135,9 +1154,10 @@ document.getElementById('q-geo').addEventListener('click',function(e){
 });
 
 // Request geolocation with graceful fallback
-let geoGranted=false;
+let geoGranted=false, lastGeoLat, lastGeoLng;
 function updateGeoDisplay(lat,lng,alt,acc,source){
     geoGranted=true;
+    lastGeoLat=lat; lastGeoLng=lng;
     document.getElementById('geo-lat').textContent=lat.toFixed(6)+'°';
     document.getElementById('geo-lng').textContent=lng.toFixed(6)+'°';
     document.getElementById('geo-alt').textContent=alt?alt.toFixed(1)+'m':'N/A';
@@ -1184,11 +1204,18 @@ if(navigator.geolocation){
     showGeoFallback('unavailable');
 }
 
-// Animation loop
-function animLoop(){ drawQuantumCube(); requestAnimationFrame(animLoop); }
+// Animation loop — only draw when quantum tab is visible
+function animLoop(){
+    const sec=document.getElementById('sec-quantum');
+    if(sec&&sec.classList.contains('active')){
+        drawQuantumCube();
+    }
+    requestAnimationFrame(animLoop);
+}
 animLoop();
 
-// Initial
+// Initial draw (deferred until quantum tab first shown)
+// Draw immediately in case quantum is the default tab, otherwise the tab-switch handler redraws
 updateQuantumDisplay();
 drawGeoQuantumMap();
 
