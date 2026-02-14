@@ -2910,32 +2910,146 @@ const introPrompt = document.getElementById('intro-prompt');
         });
     }
 
+    // ── Brother Numsy sprites for splash screen ──
+    const NUMSY_PAL=[null,'#1a1a2e','#2d2040','#4a3560','#e6b422','#ffd700','#fff','#ff4444','#b8860b','#888899'];
+    const FREYA_PAL=[null,'#1a1a2e','#4c1d95','#7c3aed','#a78bfa','#06b6d4','#fff','#3b82f6','#f472b6','#c084fc'];
+    const NUMSY_SPR=[
+        [0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0],
+        [0,0,0,0,0,1,4,4,4,4,1,0,0,0,0,0],
+        [0,0,0,0,1,4,6,1,1,6,4,1,0,0,0,0],
+        [0,0,0,0,1,4,4,4,4,4,4,1,0,0,0,0],
+        [0,0,0,0,0,1,4,7,4,1,0,0,0,0,0,0],
+        [0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0],
+        [0,0,0,1,3,3,5,5,5,3,3,1,0,0,0,0],
+        [0,0,1,3,3,3,5,5,5,3,3,3,1,0,0,0],
+        [0,0,1,2,3,3,3,3,3,3,3,2,1,0,0,0],
+        [0,0,1,2,2,3,3,3,3,3,2,2,1,0,0,0],
+        [0,0,0,1,2,2,3,3,3,2,2,1,0,0,0,0],
+        [0,0,0,1,2,2,2,2,2,2,2,1,0,0,0,0],
+        [0,0,0,0,1,2,2,2,2,2,1,0,0,0,0,0],
+        [0,0,0,0,1,1,0,0,1,1,0,0,0,0,0,0],
+        [0,0,0,1,9,1,0,0,0,1,9,1,0,0,0,0],
+        [0,0,0,1,1,0,0,0,0,0,1,1,0,0,0,0],
+    ];
+    const FREYA_SPR=[
+        [0,0,0,0,1,1,1,1,0,0,0,0],
+        [0,0,0,1,4,4,4,4,1,0,0,0],
+        [0,0,1,4,6,1,1,6,4,1,0,0],
+        [0,0,1,4,4,8,4,4,4,1,0,0],
+        [0,0,0,1,1,1,1,1,1,0,0,0],
+        [0,1,5,1,3,3,3,3,1,5,1,0],
+    ];
+    const NYAN_SPR=[
+        [0,0,0,1,1,1,1,1,1,0],
+        [0,0,1,4,5,4,5,4,5,1],
+        [0,1,2,1,4,4,4,4,1,2],
+        [1,2,6,1,2,2,2,2,1,2],
+        [1,2,1,1,2,3,2,3,1,1],
+        [0,1,2,2,2,2,2,2,2,1],
+        [0,1,1,0,1,1,0,1,1,0],
+    ];
+    const NYAN_PAL_N=[null,'#1a1a2e','#e6b422','#ff4444','#b8860b','#ffd700','#fff'];
+    const NYAN_PAL_F=[null,'#1a1a2e','#7c3aed','#f472b6','#4c1d95','#06b6d4','#fff'];
+    const GOLDEN_SPR=[
+        [0,0,0,5,5,5,5,0,0,0],
+        [0,0,5,4,5,5,4,5,0,0],
+        [0,5,4,6,4,4,6,4,5,0],
+        [0,5,4,4,4,4,4,4,5,0],
+        [5,8,5,4,7,4,5,5,8,5],
+        [5,5,5,5,5,5,5,5,5,5],
+        [0,5,8,5,5,5,5,8,5,0],
+        [0,0,5,5,5,5,5,5,0,0],
+    ];
+    const GOLDEN_PAL=[null,'#1a1a2e','#2d2040','#4a3560','#e6b422','#ffd700','#fff','#ff4444','#b8860b'];
+    const RAINBOW=['#ff3838','#ff8c38','#ffe138','#3fb950','#38a5ff','#bc8cff'];
+    const NUMSY_TRAIL=['#ffd700','#e6b422','#b8860b','#daa520','#f0c040','#ffec80'];
+    const FREYA_TRAIL=['#c084fc','#a78bfa','#7c3aed','#6366f1','#06b6d4','#22d3ee'];
+
+    function drawSpr(ctx,spr,pal,x,y,s){
+        for(let r=0;r<spr.length;r++){
+            for(let c=0;c<spr[r].length;c++){
+                const v=spr[r][c]; if(!v)continue;
+                ctx.fillStyle=pal[v]||'#fff';
+                ctx.fillRect(x+c*s,y+r*s,s,s);
+            }
+        }
+    }
+
+    // Floating characters
+    const W=cvs.width, H=cvs.height;
+    const chars=[
+        {spr:NUMSY_SPR,pal:NUMSY_PAL,trail:NUMSY_TRAIL,s:3,x:-80,y:H*0.22,vx:0.7,bob:0,label:'Numsy'},
+        {spr:FREYA_SPR,pal:FREYA_PAL,trail:FREYA_TRAIL,s:3,x:W+40,y:H*0.7,vx:-0.6,bob:1.5,label:'Freya'},
+        {spr:NYAN_SPR,pal:NYAN_PAL_N,trail:RAINBOW,s:2.5,x:-60,y:H*0.45,vx:0.9,bob:3,label:''},
+        {spr:NYAN_SPR,pal:NYAN_PAL_F,trail:FREYA_TRAIL,s:2,x:W+30,y:H*0.15,vx:-0.5,bob:4.2,label:''},
+        {spr:GOLDEN_SPR,pal:GOLDEN_PAL,trail:['#ffd700','#e6b422'],s:2,x:-100,y:H*0.8,vx:0.4,bob:2,label:''},
+    ];
+
     let frame = 0;
     function drawStars() {
         if (!introActive && frame > 10) return; // stop after dismiss
         frame++;
         ctx.clearRect(0, 0, cvs.width, cvs.height);
         const t = Date.now() / 1000;
+
+        // Stars
         for (const s of stars) {
             const alpha = 0.3 + 0.7 * s.a * (0.5 + 0.5 * Math.sin(t * s.tw + s.ph));
-            // Slight color: mostly white, some faint blue/warm
             const hue = s.ph > 4 ? '200,220,255' : s.ph > 2 ? '255,240,220' : '255,255,255';
             ctx.fillStyle = `rgba(${hue},${alpha})`;
             ctx.beginPath();
             ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
             ctx.fill();
-            // Cross sparkle on bright stars
             if (s.r > 1.2 && alpha > 0.6) {
                 ctx.strokeStyle = `rgba(${hue},${alpha * 0.3})`;
                 ctx.lineWidth = 0.5;
                 ctx.beginPath();
-                ctx.moveTo(s.x - s.r * 3, s.y);
-                ctx.lineTo(s.x + s.r * 3, s.y);
-                ctx.moveTo(s.x, s.y - s.r * 3);
-                ctx.lineTo(s.x, s.y + s.r * 3);
+                ctx.moveTo(s.x - s.r * 3, s.y); ctx.lineTo(s.x + s.r * 3, s.y);
+                ctx.moveTo(s.x, s.y - s.r * 3); ctx.lineTo(s.x, s.y + s.r * 3);
                 ctx.stroke();
             }
         }
+
+        // Brother Numsy characters floating across
+        for (const ch of chars) {
+            ch.x += ch.vx;
+            const sprW = ch.spr[0].length * ch.s;
+            const sprH = ch.spr.length * ch.s;
+            // Wrap around
+            if (ch.vx > 0 && ch.x > cvs.width + sprW) ch.x = -sprW - 20;
+            if (ch.vx < 0 && ch.x < -sprW - 20) ch.x = cvs.width + 20;
+            const bobY = ch.y + Math.sin(t * 1.8 + ch.bob) * 8;
+
+            // Rainbow trail
+            const trailDir = ch.vx > 0 ? -1 : 1;
+            const trailLen = 18;
+            for (let ti = 0; ti < trailLen; ti++) {
+                const bandIdx = ti % ch.trail.length;
+                const tx = ch.x + trailDir * (ti * 3 + sprW * (ch.vx > 0 ? 0 : 1));
+                const trailY = bobY + (sprH / 2) - (ch.trail.length * 1.5) / 2;
+                for (let b = 0; b < Math.min(ch.trail.length, 6); b++) {
+                    const alpha = Math.max(0, 0.5 - ti * 0.025);
+                    ctx.fillStyle = ch.trail[(b + ti) % ch.trail.length];
+                    ctx.globalAlpha = alpha;
+                    ctx.fillRect(tx, trailY + b * 3, 3, 3);
+                }
+            }
+            ctx.globalAlpha = 1;
+
+            // Sprite glow
+            ctx.shadowColor = ch.trail[0]; ctx.shadowBlur = 6;
+            drawSpr(ctx, ch.spr, ch.pal, ch.x, bobY, ch.s);
+            ctx.shadowBlur = 0;
+
+            // Label
+            if (ch.label) {
+                ctx.fillStyle = 'rgba(255,255,255,0.4)';
+                ctx.font = '8px monospace'; ctx.textAlign = 'center';
+                ctx.fillText(ch.label, ch.x + sprW / 2, bobY - 6);
+                ctx.textAlign = 'start';
+            }
+        }
+
         requestAnimationFrame(drawStars);
     }
     drawStars();
