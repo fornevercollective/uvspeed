@@ -376,8 +376,8 @@
     // Expose globally so onclick="introSkip()" works even if main script hasn't loaded
     window.introSkip = dismiss;
     window.introDismiss = dismiss;
-    // Always show banner briefly: 3s first visit, 1.5s return visit
-    setTimeout(dismiss, returning ? 1500 : 3000);
+    // Show splash long enough to enjoy the animations: 6s first, 4s return (tap to skip)
+    setTimeout(dismiss, returning ? 4000 : 6000);
     // Click/tap anywhere on intro to dismiss early
     el.addEventListener('click', dismiss);
     el.addEventListener('touchend', function(){ dismiss(); }, {passive:true});
@@ -2978,11 +2978,11 @@ const introPrompt = document.getElementById('intro-prompt');
     // Floating characters
     const W=cvs.width, H=cvs.height;
     const chars=[
-        {spr:NUMSY_SPR,pal:NUMSY_PAL,trail:NUMSY_TRAIL,s:3,x:-80,y:H*0.22,vx:0.7,bob:0,label:'Numsy'},
-        {spr:FREYA_SPR,pal:FREYA_PAL,trail:FREYA_TRAIL,s:3,x:W+40,y:H*0.7,vx:-0.6,bob:1.5,label:'Freya'},
-        {spr:NYAN_SPR,pal:NYAN_PAL_N,trail:RAINBOW,s:2.5,x:-60,y:H*0.45,vx:0.9,bob:3,label:''},
-        {spr:NYAN_SPR,pal:NYAN_PAL_F,trail:FREYA_TRAIL,s:2,x:W+30,y:H*0.15,vx:-0.5,bob:4.2,label:''},
-        {spr:GOLDEN_SPR,pal:GOLDEN_PAL,trail:['#ffd700','#e6b422'],s:2,x:-100,y:H*0.8,vx:0.4,bob:2,label:''},
+        {spr:NUMSY_SPR,pal:NUMSY_PAL,trail:NUMSY_TRAIL,s:3,x:W*0.1,y:H*0.18,vx:1.2,bob:0,label:'Numsy'},
+        {spr:FREYA_SPR,pal:FREYA_PAL,trail:FREYA_TRAIL,s:3,x:W*0.85,y:H*0.72,vx:-1.0,bob:1.5,label:'Freya'},
+        {spr:NYAN_SPR,pal:NYAN_PAL_N,trail:RAINBOW,s:2.5,x:W*0.05,y:H*0.42,vx:1.5,bob:3,label:''},
+        {spr:NYAN_SPR,pal:NYAN_PAL_F,trail:FREYA_TRAIL,s:2,x:W*0.9,y:H*0.12,vx:-0.8,bob:4.2,label:''},
+        {spr:GOLDEN_SPR,pal:GOLDEN_PAL,trail:['#ffd700','#e6b422'],s:2.5,x:W*0.3,y:H*0.82,vx:0.7,bob:2,label:''},
     ];
 
     let frame = 0;
