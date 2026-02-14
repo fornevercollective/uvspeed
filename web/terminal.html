@@ -253,23 +253,52 @@
     }
     .qk:active { background: #30363d; }
     .qk.sep { color: #30363d; padding: 6px 2px; }
-    /* Keyboard heatmap panel */
+    /* Keyboard + media split panel */
     #kb-panel {
         flex-shrink: 0; min-height: 120px; height: 160px; position: relative;
         background: #0d1117; border-top: 1px solid #21262d;
+        display: flex;
     }
-    #kb-panel .kb-title {
+    #kb-side { flex: 1; position: relative; min-width: 0; }
+    #kb-side .kb-title {
         position: absolute; top: 4px; left: 8px; z-index: 1;
         font-size: .5625rem; color: #484f58; font-family: 'SF Mono', monospace;
     }
-    #kb-panel .kb-sync {
+    #kb-side .kb-sync {
         position: absolute; top: 4px; right: 8px; z-index: 1;
         font-size: .5rem; color: #484f58; font-family: 'SF Mono', monospace;
     }
-    #kb-panel .kb-sync.live { color: #3fb950; }
-    #kb-panel .kb-sync.live::before { content: ''; display: inline-block; width: 5px; height: 5px; background: #3fb950; border-radius: 50%; margin-right: 3px; animation: pulse 1.2s infinite; }
+    #kb-side .kb-sync.live { color: #3fb950; }
+    #kb-side .kb-sync.live::before { content: ''; display: inline-block; width: 5px; height: 5px; background: #3fb950; border-radius: 50%; margin-right: 3px; animation: pulse 1.2s infinite; }
     @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
     #kb-canvas { width: 100%; height: 100%; display: block; }
+    /* Media viewer panel (right of keyboard) */
+    #media-panel {
+        width: 220px; flex-shrink: 0; border-left: 1px solid #21262d;
+        display: flex; flex-direction: column; background: #0d1117;
+    }
+    #media-tabs {
+        display: flex; height: 20px; flex-shrink: 0; border-bottom: 1px solid #161b22;
+    }
+    .media-tab {
+        flex: 1; border: none; background: none; color: #484f58; font-size: .5rem;
+        font-family: 'SF Mono', monospace; cursor: pointer; padding: 0;
+        border-bottom: 2px solid transparent; transition: all .15s;
+    }
+    .media-tab:hover { color: #8b949e; }
+    .media-tab.active { color: #58a6ff; border-bottom-color: #58a6ff; }
+    #media-view { flex: 1; position: relative; overflow: hidden; }
+    #media-view canvas, #media-view video { width: 100%; height: 100%; display: block; object-fit: contain; }
+    .media-pane { display: none; width: 100%; height: 100%; }
+    .media-pane.active { display: block; }
+    #media-status {
+        position: absolute; bottom: 3px; left: 6px; font-size: .5rem;
+        color: #484f58; font-family: 'SF Mono', monospace; z-index: 1;
+        pointer-events: none;
+    }
+    @media (max-width: 600px) {
+        #media-panel { width: 140px; }
+    }
     /* Hexcast streaming toolbar */
     #hexcast-bar {
         display: none; flex-shrink: 0; align-items: center; gap: 4px;
@@ -431,9 +460,26 @@
     </div>
     <div id="rainbow-kb"><span class="r1"></span><span class="r2"></span><span class="r3"></span><span class="r4"></span><span class="r5"></span><span class="r6"></span></div>
     <div id="kb-panel">
-        <span class="kb-title">kbatch</span>
-        <span class="kb-sync" id="kb-sync-label">local</span>
-        <canvas id="kb-canvas"></canvas>
+        <div id="kb-side">
+            <span class="kb-title">kbatch</span>
+            <span class="kb-sync" id="kb-sync-label">local</span>
+            <canvas id="kb-canvas"></canvas>
+        </div>
+        <div id="media-panel">
+            <div id="media-tabs">
+                <button class="media-tab active" data-pane="mv-video" title="Video stream">📷</button>
+                <button class="media-tab" data-pane="mv-wave" title="Audio waveform">〰</button>
+                <button class="media-tab" data-pane="mv-spec" title="Spectrum">📊</button>
+                <button class="media-tab" data-pane="mv-hex" title="Hex view">⬡</button>
+            </div>
+            <div id="media-view">
+                <video id="mv-video" class="media-pane active" playsinline autoplay muted></video>
+                <canvas id="mv-wave" class="media-pane"></canvas>
+                <canvas id="mv-spec" class="media-pane"></canvas>
+                <canvas id="mv-hex" class="media-pane"></canvas>
+                <span id="media-status">idle</span>
+            </div>
+        </div>
     </div>
     <div id="rainbow-bottom"><span class="r1"></span><span class="r2"></span><span class="r3"></span><span class="r4"></span><span class="r5"></span><span class="r6"></span></div>
     <div id="bottom-stats">
@@ -2290,7 +2336,11 @@ function processCommand(raw) {
                         stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
                     }
 
-                    if (stream) { video.srcObject = stream; await video.play(); }
+                    if (stream) {
+                        video.srcObject = stream; await video.play();
+                        // Mirror to media panel
+                        if (window.mediaSetStream) window.mediaSetStream(stream);
+                    }
 
                     let frameN = 0;
                     const fps = 12;
@@ -2345,11 +2395,13 @@ function processCommand(raw) {
                     animId = requestAnimationFrame(renderFrame);
 
                     window._hexTermFeed = {
+                        stream,
                         stop() {
                             running = false;
                             if (animId) cancelAnimationFrame(animId);
                             if (stream) stream.getTracks().forEach(t => t.stop());
                             window._hexTermFeed = null;
+                            if (window.mediaStop) window.mediaStop();
                             term.write('\x1b[0m\x1b[2J\x1b[H');
                             showPrompt();
                         }
@@ -3298,6 +3350,208 @@ function kbSyncServe(port) {
 
 // Start rendering
 requestAnimationFrame(renderKeyboard);
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Media panel — video / audio / spectrum / hex
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+(function initMediaPanel() {
+    const tabs = document.querySelectorAll('.media-tab');
+    const panes = document.querySelectorAll('.media-pane');
+    const statusEl = document.getElementById('media-status');
+    let activePane = 'mv-video';
+    let audioCtx = null, analyser = null, audioStream = null;
+    let mediaAnimId = null;
+
+    // Tab switching
+    document.getElementById('media-tabs').addEventListener('click', e => {
+        const tab = e.target.closest('.media-tab');
+        if (!tab) return;
+        tabs.forEach(t => t.classList.remove('active'));
+        panes.forEach(p => p.classList.remove('active'));
+        tab.classList.add('active');
+        const paneId = tab.dataset.pane;
+        const pane = document.getElementById(paneId);
+        if (pane) pane.classList.add('active');
+        activePane = paneId;
+        // Start audio if switching to wave/spec for first time
+        if ((paneId === 'mv-wave' || paneId === 'mv-spec') && !audioCtx) {
+            startAudio();
+        }
+    });
+
+    // Expose for hexcast integration: route stream to the media video element
+    window._mediaVideoEl = document.getElementById('mv-video');
+    window.mediaSetStream = function(stream) {
+        const vid = document.getElementById('mv-video');
+        if (vid && stream) {
+            vid.srcObject = stream;
+            if (statusEl) statusEl.textContent = 'live';
+            // Also start audio analysis from the stream
+            if (!audioCtx) startAudioFromStream(stream);
+        }
+    };
+    window.mediaStop = function() {
+        const vid = document.getElementById('mv-video');
+        if (vid) { vid.srcObject = null; }
+        if (statusEl) statusEl.textContent = 'idle';
+    };
+
+    // Try to mirror any active hexcast feed
+    if (window._hexTermFeed && window._hexTermFeed.stream) {
+        window.mediaSetStream(window._hexTermFeed.stream);
+    }
+
+    // Audio: get mic or media stream
+    async function startAudio() {
+        try {
+            audioStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+            setupAnalyser(audioStream);
+            if (statusEl) statusEl.textContent = 'mic';
+        } catch(e) {
+            if (statusEl) statusEl.textContent = 'no mic';
+        }
+    }
+    function startAudioFromStream(stream) {
+        const audioTracks = stream.getAudioTracks();
+        if (audioTracks.length > 0) {
+            setupAnalyser(stream);
+        }
+    }
+    function setupAnalyser(stream) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const source = audioCtx.createMediaStreamSource(stream);
+        analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 256;
+        source.connect(analyser);
+        if (!mediaAnimId) renderMedia();
+    }
+
+    // Render loop for audio visualizations
+    const waveData = new Uint8Array(128);
+    const freqData = new Uint8Array(128);
+    let hexFrame = 0;
+
+    function renderMedia() {
+        mediaAnimId = requestAnimationFrame(renderMedia);
+        if (analyser) {
+            analyser.getByteTimeDomainData(waveData);
+            analyser.getByteFrequencyData(freqData);
+        }
+        if (activePane === 'mv-wave') drawWaveform();
+        else if (activePane === 'mv-spec') drawSpectrum();
+        else if (activePane === 'mv-hex') drawHexView();
+    }
+
+    // Waveform
+    function drawWaveform() {
+        const c = document.getElementById('mv-wave');
+        if (!c) return;
+        const ctx = c.getContext('2d');
+        c.width = c.clientWidth; c.height = c.clientHeight;
+        const W = c.width, H = c.height;
+        ctx.fillStyle = '#0d1117'; ctx.fillRect(0, 0, W, H);
+
+        // Center line
+        ctx.strokeStyle = '#21262d'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(0, H/2); ctx.lineTo(W, H/2); ctx.stroke();
+
+        // Waveform
+        const len = waveData.length;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        for (let i = 0; i < len; i++) {
+            const x = (i / len) * W;
+            const v = waveData[i] / 128.0;
+            const y = v * H / 2;
+            // Rainbow color based on position
+            const hue = (i / len) * 280;
+            ctx.strokeStyle = `hsl(${hue}, 85%, 60%)`;
+            if (i === 0) ctx.moveTo(x, y);
+            else { ctx.lineTo(x, y); ctx.stroke(); ctx.beginPath(); ctx.moveTo(x, y); }
+        }
+
+        // Peak indicator
+        let peak = 0;
+        for (let i = 0; i < len; i++) peak = Math.max(peak, Math.abs(waveData[i] - 128));
+        const peakNorm = peak / 128;
+        ctx.fillStyle = peakNorm > 0.8 ? '#f85149' : peakNorm > 0.4 ? '#f0883e' : '#3fb950';
+        ctx.fillRect(W - 6, H - H * peakNorm, 4, H * peakNorm);
+
+        // Label
+        ctx.fillStyle = '#484f58'; ctx.font = '8px monospace';
+        ctx.fillText('waveform', 4, 10);
+    }
+
+    // Spectrum / frequency bars
+    function drawSpectrum() {
+        const c = document.getElementById('mv-spec');
+        if (!c) return;
+        const ctx = c.getContext('2d');
+        c.width = c.clientWidth; c.height = c.clientHeight;
+        const W = c.width, H = c.height;
+        ctx.fillStyle = '#0d1117'; ctx.fillRect(0, 0, W, H);
+
+        const bars = Math.min(freqData.length, 64);
+        const barW = W / bars;
+        for (let i = 0; i < bars; i++) {
+            const v = freqData[i] / 255;
+            const barH = v * H;
+            // Color: low freq = red/warm, high = blue/cool
+            const hue = 200 - (i / bars) * 200;
+            ctx.fillStyle = `hsla(${hue}, 80%, ${40 + v * 30}%, ${0.6 + v * 0.4})`;
+            ctx.fillRect(i * barW, H - barH, barW - 1, barH);
+            // Peak dot
+            if (v > 0.1) {
+                ctx.fillStyle = `hsla(${hue}, 90%, 75%, ${v})`;
+                ctx.fillRect(i * barW, H - barH - 2, barW - 1, 2);
+            }
+        }
+
+        ctx.fillStyle = '#484f58'; ctx.font = '8px monospace';
+        ctx.fillText('spectrum', 4, 10);
+    }
+
+    // Hex view — live hex dump of audio bytes
+    function drawHexView() {
+        const c = document.getElementById('mv-hex');
+        if (!c) return;
+        const ctx = c.getContext('2d');
+        c.width = c.clientWidth; c.height = c.clientHeight;
+        const W = c.width, H = c.height;
+        hexFrame++;
+        ctx.fillStyle = '#0d1117'; ctx.fillRect(0, 0, W, H);
+
+        const cols = 8, rows = Math.floor(H / 10);
+        ctx.font = '8px monospace';
+        for (let r = 0; r < rows; r++) {
+            for (let col = 0; col < cols; col++) {
+                const idx = (r * cols + col + hexFrame) % waveData.length;
+                const v = waveData[idx];
+                const norm = v / 255;
+                // Color intensity by value
+                const hue = (1 - norm) * 200;
+                ctx.fillStyle = `hsl(${hue}, 70%, ${30 + norm * 40}%)`;
+                const x = 4 + col * (W / cols);
+                const y = 10 + r * 10;
+                ctx.fillText(v.toString(16).toUpperCase().padStart(2, '0'), x, y);
+            }
+        }
+
+        ctx.fillStyle = '#484f58';
+        ctx.fillText('hex', W - 20, 10);
+    }
+
+    // Start idle animation even without audio
+    renderMedia();
+
+    // Listen for hexcast stream events to auto-mirror
+    const hcBC = new BroadcastChannel('hexcast-stream');
+    hcBC.onmessage = (evt) => {
+        if (evt.data && evt.data.type === 'frame' && evt.data.imageData) {
+            // Could render hexcast frames to mv-hex canvas
+        }
+    };
+})();
 
 // ──────────────────────────────────────────────────────────
 // BroadcastChannel Hub — master window for feed coordination
