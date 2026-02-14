@@ -141,10 +141,10 @@
     #intro-video.show { opacity: 1; }
     #intro-cutout {
         position: absolute; z-index: 1; width: 100%; height: 100%;
-        display: flex; align-items: center; justify-content: center;
+        display: flex; align-items: center; justify-content: center; gap: 12px;
         pointer-events: none;
     }
-    #intro-cutout svg { width: 90%; max-width: 700px; pointer-events: none; }
+    #intro-cutout svg { width: 75%; max-width: 600px; pointer-events: none; flex-shrink: 1; }
     #intro-rainbow { position: absolute; bottom: 0; left: 0; right: 0; display: flex; height: 4px; }
     #intro-rainbow span { flex: 1; }
     #intro-rainbow .r1 { background: #ff3838; }
@@ -159,8 +159,7 @@
         z-index: 2; pointer-events: none;
     }
     #intro-hex {
-        position: absolute; z-index: 3; pointer-events: none;
-        bottom: 60px; left: 50%; transform: translateX(-50%);
+        z-index: 3; pointer-events: none; flex-shrink: 0;
     }
     #intro-sub .prefix { color: #58a6ff; }
     #intro-prompt {
@@ -297,6 +296,7 @@
     <canvas id="intro-stars"></canvas>
     <video id="intro-video" playsinline autoplay muted></video>
     <div id="intro-cutout">
+        <canvas id="intro-hex" width="72" height="84"></canvas>
         <svg viewBox="0 0 600 140" xmlns="http://www.w3.org/2000/svg">
             <defs>
                 <mask id="text-mask">
@@ -315,7 +315,6 @@
         <div style="color:#6e7681;font-family:'SF Mono',monospace;font-size:.6875rem">quantum-prefixed terminal</div>
         <div style="color:#484f58;font-family:'SF Mono',monospace;font-size:.5625rem;margin-top:12px">tap anywhere to enter</div>
     </div>
-    <canvas id="intro-hex" width="48" height="56"></canvas>
     <div id="intro-sub">
         <span class="prefix">+1:</span>decl <span class="prefix">1:</span>logic <span class="prefix">-1:</span>io
         <span class="prefix">+0:</span>assign <span class="prefix">0:</span>neutral <span class="prefix">-0:</span>comment
@@ -2827,15 +2826,15 @@ const introPrompt = document.getElementById('intro-prompt');
     drawStars();
 })();
 
-// Hex mascot — pixel-art character on intro
+// Hex mascot — pixel-art character on intro (sits next to hexterm banner)
 (function drawHexMascot() {
     const hc = document.getElementById('intro-hex');
     if (!hc) return;
     const hx = hc.getContext('2d');
-    const W = 48, H = 56;
+    const W = hc.width, H = hc.height;
     let t = 0;
-    // pixel art: 12x14 grid, scale 4x
-    const S = 4;
+    // pixel art: 12x14 grid, scale 6x (72x84 canvas)
+    const S = 6;
     // color palette
     const C = { t:'#4da6a8', d:'#3d8a8c', e1:'#58e8ff', e2:'#c084fc', r:'#ff3838', o:'#ff8c38', y:'#ffe138', g:'#3fb950', b:'#38a5ff', p:'#bc8cff', k:'#0d1117', gl:'rgba(88,232,255,0.15)' };
     // body shape (12 wide, 14 tall) - 0=empty, 1=teal, 2=dark teal, 3=cyan eye, 4=purple eye, 5-10=rainbow
@@ -2862,8 +2861,8 @@ const introPrompt = document.getElementById('intro-prompt');
         t += 0.03;
         hx.clearRect(0, 0, W, H);
         // glow
-        hx.shadowColor = C.e1; hx.shadowBlur = 6;
-        const bob = Math.sin(t * 2) * 2;
+        hx.shadowColor = C.e1; hx.shadowBlur = 8;
+        const bob = Math.sin(t * 2) * 3;
         hx.save();
         hx.translate(0, bob);
         for (let y = 0; y < PIX.length; y++) {
