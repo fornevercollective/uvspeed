@@ -2,7 +2,7 @@
 name = "uvspeed-prefix-engine"
 version = "3.5.0"
 edition = "2021"
-description = "beyondBINARY quantum prefix classifier — 9-symbol directional code addressing"
+description = "beyondBINARY quantum prefix classifier — 11-symbol directional code addressing"
 authors = ["ForNeverCollective"]
 license = "MIT"
 repository = "https://github.com/ForNeverCollective/uvspeed"

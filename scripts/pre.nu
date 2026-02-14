@@ -3,7 +3,7 @@
 # Usage:
 #   nu scripts/pre.nu              # full audit (folder + inspect + gold)
 #   nu scripts/pre.nu folder       # git status + stale files
-#   nu scripts/pre.nu inspect      # health check all 19 apps
+#   nu scripts/pre.nu inspect      # health check all 20 apps
 #   nu scripts/pre.nu gold         # verify gold standard files
 #   nu scripts/pre.nu readme       # README check
 

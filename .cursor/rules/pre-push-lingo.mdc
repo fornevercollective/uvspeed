@@ -16,7 +16,7 @@ These can be combined in a single message (e.g., "pre push" or "folder, inspect 
 | **pre** | Full pre-push audit: folder + readme + inspect all + gold |
 | **folder** | `git status`, check for stale/duplicate files, branch status |
 | **readme** | Audit README.md (badges, architecture, gold standard section) |
-| **inspect** | Structural health check on ALL 19 web apps |
+| **inspect** | Structural health check on ALL 20 web apps |
 | **inspect notepad** | Just quantum-notepad.html |
 | **inspect dash** | Just github-dashboard.html |
 | **inspect sponsor** | sponsor.html + quantum-gutter.html |

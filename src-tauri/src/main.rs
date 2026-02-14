@@ -87,7 +87,7 @@ fn resolve_device(device: &str) -> Option<(f64, f64)> {
 // Tauri commands
 // ──────────────────────────────────────────────────────────
 
-/// Prefix classifier — maps code lines to 9-symbol quantum prefix system
+/// Prefix classifier — maps code lines to 11-symbol quantum prefix system
 #[tauri::command]
 fn classify_prefix(line: &str) -> serde_json::Value {
     let trimmed = line.trim();
@@ -602,7 +602,7 @@ fn main() {
             prefix_engine::benchmark_classifier,
         ])
         .setup(|app| {
-            println!("⚛ uvspeed v4.0 — Tauri v2");
+            println!("⚛ uvspeed v4.3 — Tauri v2");
             println!("  {{+1, 1, -1, +0, 0, -0, +n, n, -n}}");
 
             // Build and set menu

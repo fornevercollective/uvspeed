@@ -99,7 +99,7 @@ TOOLS = [
     },
     {
         "name": "uvspeed_prefix",
-        "description": "Convert source code to quantum-prefixed format. Classifies each line with the beyondBINARY 9-symbol prefix system {+1, 1, -1, +0, 0, -0, +n, n, -n}. Supports 20 languages.",
+        "description": "Convert source code to quantum-prefixed format. Classifies each line with the beyondBINARY 11-symbol prefix system {+1, 1, -1, +0, 0, -0, +n, n, -n}. Supports 20 languages.",
         "inputSchema": {
             "type": "object",
             "properties": {

@@ -1,7 +1,7 @@
 {
     "name": "uvspeed — Quantum beyondBINARY notepad",
     "short_name": "uvspeed",
-    "description": "Infinite scroll quantum development environment with 9-symbol dimensional code addressing, 20+ language packs, and AI-powered prefix system.",
+    "description": "Infinite scroll quantum development environment with 11-symbol dimensional code addressing, 20+ language packs, and AI-powered prefix system.",
     "start_url": "quantum-notepad.html",
     "display": "standalone",
     "orientation": "any",

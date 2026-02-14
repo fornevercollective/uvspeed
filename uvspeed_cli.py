@@ -21,7 +21,7 @@ CORE_DIR = os.path.join(os.path.dirname(__file__), "src", "01-core")
 VERSION = "4.2.0"
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# 9-Symbol Prefix Classifier (Python port)
+# 11-Symbol Prefix Classifier (Python port)
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 SYMBOLS = {
@@ -248,7 +248,7 @@ def cmd_health(args: list):
 def cmd_version(args: list):
     """Show version info."""
     print(f"⚛ uvspeed-quantum v{VERSION}")
-    print("  Prefix system: 9-symbol beyondBINARY")
+    print("  Prefix system: 11-symbol (9 core + 2 extended) beyondBINARY")
     print("  Symbols: {+1, 1, -1, +0, 0, -0, +n, n, -n}")
     print(f"  Python:  {sys.version.split()[0]}")
     print(f"  Core:    {CORE_DIR}")

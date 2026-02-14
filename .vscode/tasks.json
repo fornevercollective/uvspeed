@@ -18,7 +18,7 @@
       "problemMatcher": []
     },
     {
-      "label": "⚛ inspect — all 19 apps",
+      "label": "⚛ inspect — all 20 apps",
       "type": "shell",
       "command": "nu scripts/pre.nu inspect",
       "presentation": { "reveal": "always", "panel": "shared", "clear": true },

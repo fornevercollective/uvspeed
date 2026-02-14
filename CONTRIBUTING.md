@@ -35,7 +35,7 @@ icons/              Screenshots + assets
 
 ## The beyondBINARY Prefix System
 
-Every line of code in every language is classified with the 9-symbol system:
+Every line of code in every language is classified with the 11-symbol system (9 core + 2 extended):
 
 | Symbol | Category | What it marks |
 |--------|----------|---------------|

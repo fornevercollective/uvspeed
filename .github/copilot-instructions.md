@@ -4,10 +4,10 @@
 
 ## Core Concept
 
-All code in this project uses the **9-symbol quantum prefix system** for dimensional code addressing.
+All code in this project uses the **11-symbol quantum prefix system (9 core + 2 extended)** for dimensional code addressing.
 Every line of code gets a prefix that classifies its structural role, replacing binary `{0, 1}` with `{+1, 1, -1, +0, 0, -0, +n, n, -n}`.
 
-## The 9 Symbols
+## The 11 Symbols
 
 | Prefix | Category   | Meaning                             | Weight |
 |--------|------------|-------------------------------------|--------|
@@ -28,7 +28,7 @@ Every line of code gets a prefix that classifies its structural role, replacing 
 1. When writing or editing code, mentally classify each line by its prefix
 2. When showing code examples, include prefix annotations as comments
 3. When reviewing code, note which prefix categories changed
-4. All 20 supported languages use the same 9-symbol system
+4. All 20 supported languages use the same 11-symbol system
 5. Every new file should include the header: `# beyondBINARY quantum-prefixed | uvspeed | {+1, 1, -1, +0, 0, -0, +n, n, -n}`
 
 ## Supported Languages (20)

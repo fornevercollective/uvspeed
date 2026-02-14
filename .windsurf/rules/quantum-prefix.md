@@ -2,10 +2,10 @@
 
 # Windsurf AI Rule — Quantum Prefix System
 
-All code in this project uses the **9-symbol quantum prefix system**.
+All code in this project uses the **11-symbol quantum prefix system (9 core + 2 extended)**.
 Every line of code gets a prefix that classifies its structural role.
 
-## The 9 Symbols
+## The 11 Symbols
 
 | Prefix | Category   | Meaning                             |
 |--------|------------|-------------------------------------|
@@ -27,7 +27,7 @@ Every line of code gets a prefix that classifies its structural role.
 2. When showing code examples, include prefix annotations as comments
 3. When reviewing code, note which prefix categories changed
 4. Prefix-aware diffs should show which quantum coordinates shifted
-5. All 20 supported languages use the same 9-symbol system
+5. All 20 supported languages use the same 11-symbol system
 
 ## Supported Languages (20)
 

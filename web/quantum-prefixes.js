@@ -5,7 +5,7 @@
  * hexcast, archflow, research-lab, dashboard, grid, launcher, etc.)
  *
  * Provides:
- *   • 9-symbol line classifier  (classifyLine)
+ *   • 11-symbol line classifier  (classifyLine)
  *   • Per-language regex rules   (LANG_PATTERNS)
  *   • Content prefixing          (prefixContent)
  *   • Metadata generation        (prefixMetadata)
@@ -24,7 +24,7 @@
     'use strict';
 
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    // 9-Symbol Prefix Map
+    // 11-Symbol Prefix Map
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     const PREFIXES = {
         shebang:   { sym: 'n:',  cls: 'pfx-shebang',   color: '#e2b714' },
@@ -380,7 +380,7 @@
         return Object.assign({}, data, {
             quantumGutter: {
                 source: source || 'unknown',
-                version: '9-symbol-v1',
+                version: '11-symbol-v2',
                 symbols: ['n:', '+1:', '-n:', '+0:', '0:', '-1:', '+n:', '1:', '-0:'],
                 totalLines: totalLines,
                 classifiedLines: totalClassified,
@@ -1007,7 +1007,7 @@
         PREFIXES: PREFIXES,
         PREFIX_ANSI: PREFIX_ANSI,
         LANG_PATTERNS: LANG_PATTERNS,
-        VERSION: '9-symbol-v1',
+        VERSION: '11-symbol-v2',
 
         // Core
         detectLanguage: detectLanguage,

@@ -72,7 +72,7 @@ def "main bench" [] {
 }
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# Quick smoke test — verify all 19 HTML apps parse
+# Quick smoke test — verify all 20 HTML apps parse
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 def "main smoke" [] {

@@ -80,7 +80,7 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [1.0.0] - 2026-02-10
 
 ### Added
-- **Quantum prefix system** — 9-symbol `{+1, 1, -1, +0, 0, -0, +n, n, -n}` for 20 languages
+- **Quantum prefix system** — 11-symbol (9 core + 2 extended) `{+1, 1, -1, +0, 0, -0, +n, n, -n}` for 20 languages
 - **Web notepad** — `quantum-notepad.html` single-file app with infinite scroll cells
 - **Quantum prefix gutter** — live visual column, color-coded, debounced, scroll-synced
 - **Convert timeline bar** — auto-calibrates on edit, coverage %, segment distribution

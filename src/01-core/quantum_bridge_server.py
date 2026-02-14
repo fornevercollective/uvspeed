@@ -73,6 +73,44 @@ except ImportError:
     pass
 
 # ---------------------------------------------------------------------------
+# SymPy / SciPy / Matplotlib / Qiskit detection (Free Tier math stack)
+# ---------------------------------------------------------------------------
+SYMPY_AVAILABLE = False
+SCIPY_AVAILABLE = False
+MATPLOTLIB_AVAILABLE = False
+QISKIT_AVAILABLE = False
+
+try:
+    import sympy
+    SYMPY_AVAILABLE = True
+    logger.info("sympy loaded — symbolic math available")
+except ImportError:
+    logger.info("sympy not available — install: pip install sympy")
+
+try:
+    import scipy
+    SCIPY_AVAILABLE = True
+    logger.info("scipy loaded — scientific computing available")
+except ImportError:
+    logger.info("scipy not available — install: pip install scipy")
+
+try:
+    import matplotlib
+    matplotlib.use('Agg')  # Non-interactive backend for server-side rendering
+    import matplotlib.pyplot as plt
+    MATPLOTLIB_AVAILABLE = True
+    logger.info("matplotlib loaded — plot rendering available")
+except ImportError:
+    logger.info("matplotlib not available — install: pip install matplotlib")
+
+try:
+    import qiskit
+    QISKIT_AVAILABLE = True
+    logger.info("qiskit loaded — quantum circuit simulation available")
+except ImportError:
+    logger.info("qiskit not available — install: pip install qiskit")
+
+# ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------
 HTTP_PORT = 8085
@@ -87,7 +125,7 @@ STORAGE_DIR.mkdir(exist_ok=True)
 
 class QuantumPrefixEngine:
     """
-    Universal quantum prefix parser — 9-symbol system across 18 languages.
+    Universal quantum prefix parser — 11-symbol system across 18 languages.
     Extends quantum_handler_clean.py with full language pack support.
     """
 
@@ -410,6 +448,52 @@ class ExecutionEngine:
         if NUMPY_AVAILABLE:
             ns['np'] = np
             ns['numpy'] = np
+        if SYMPY_AVAILABLE:
+            import sympy as _sp
+            ns['sympy'] = _sp
+            ns['sp'] = _sp
+            # Expose common SymPy functions directly
+            for _name in ['symbols', 'solve', 'simplify', 'expand', 'factor',
+                          'diff', 'integrate', 'limit', 'series', 'summation',
+                          'Matrix', 'Rational', 'sqrt', 'pi', 'E', 'I', 'oo',
+                          'sin', 'cos', 'tan', 'exp', 'log', 'Eq', 'latex',
+                          'Function', 'Symbol', 'Derivative', 'Integral',
+                          'fourier_transform', 'laplace_transform',
+                          'inverse_laplace_transform', 'Piecewise', 'plot']:
+                if hasattr(_sp, _name):
+                    ns[_name] = getattr(_sp, _name)
+            logger.info("SymPy functions injected into execution namespace")
+        if SCIPY_AVAILABLE:
+            import scipy as _sci
+            ns['scipy'] = _sci
+            # Expose common submodules
+            try:
+                from scipy import optimize, signal, stats, linalg, fft, interpolate
+                ns['optimize'] = optimize
+                ns['signal'] = signal
+                ns['stats'] = stats
+                ns['linalg'] = linalg
+                ns['fft'] = fft
+                ns['interpolate'] = interpolate
+            except ImportError:
+                pass
+            logger.info("SciPy modules injected into execution namespace")
+        if MATPLOTLIB_AVAILABLE:
+            ns['plt'] = plt
+            ns['matplotlib'] = matplotlib
+            logger.info("matplotlib.pyplot injected as plt")
+        if QISKIT_AVAILABLE:
+            ns['qiskit'] = qiskit
+            try:
+                from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister
+                from qiskit.quantum_info import Statevector
+                ns['QuantumCircuit'] = QuantumCircuit
+                ns['QuantumRegister'] = QuantumRegister
+                ns['ClassicalRegister'] = ClassicalRegister
+                ns['Statevector'] = Statevector
+            except ImportError:
+                pass
+            logger.info("Qiskit injected into execution namespace")
         # Try loading micrograd
         try:
             sys.path.insert(0, str(Path.home() / 'micrograd'))
@@ -439,6 +523,9 @@ class ExecutionEngine:
         try:
             # Inject captured print
             self.namespace['print'] = lambda *a, **kw: print(*a, file=stdout_capture, **kw)
+            # Clear any existing matplotlib figures before execution
+            if MATPLOTLIB_AVAILABLE:
+                plt.close('all')
             exec(code, self.namespace)
             result['success'] = True
             result['stdout'] = stdout_capture.getvalue()
@@ -449,9 +536,34 @@ class ExecutionEngine:
                 if last and not last.startswith(('import', 'from', 'def', 'class', '#', 'if', 'for', 'while', 'try', 'with', 'return', 'raise', 'del', 'assert')):
                     val = eval(last, self.namespace)
                     if val is not None:
-                        result['return_value'] = repr(val)
+                        # SymPy LaTeX rendering
+                        if SYMPY_AVAILABLE and hasattr(val, 'free_symbols'):
+                            try:
+                                result['return_value'] = repr(val)
+                                result['latex'] = sympy.latex(val)
+                            except Exception:
+                                result['return_value'] = repr(val)
+                        else:
+                            result['return_value'] = repr(val)
             except Exception:
                 pass
+            # Matplotlib base64 image capture
+            if MATPLOTLIB_AVAILABLE:
+                import base64
+                from io import BytesIO
+                figs = [plt.figure(i) for i in plt.get_fignums()]
+                if figs:
+                    images = []
+                    for fig in figs:
+                        buf = BytesIO()
+                        fig.savefig(buf, format='png', dpi=150, bbox_inches='tight',
+                                    facecolor='#0d1117', edgecolor='none')
+                        buf.seek(0)
+                        b64 = base64.b64encode(buf.read()).decode('utf-8')
+                        images.append(f"data:image/png;base64,{b64}")
+                        buf.close()
+                    result['images'] = images
+                    plt.close('all')
         except Exception as e:
             result['error'] = f"{type(e).__name__}: {e}\n{traceback.format_exc()}"
         finally:
@@ -496,6 +608,11 @@ class ModelFramework(Enum):
     OLLAMA = "ollama"
     OPENAI = "openai"
     ANTHROPIC = "anthropic"
+    CEREBRAS = "cerebras"       # OpenAI-compatible, ~2000 tok/s
+    GROQ = "groq"               # OpenAI-compatible, ~800 tok/s
+    TOGETHER = "together"       # OpenAI-compatible, hosted frontier
+    FIREWORKS = "fireworks"     # OpenAI-compatible, low latency
+    WOLFRAM = "wolfram"         # Wolfram Alpha Short Answers API
 
 @dataclass
 class AIModelConfig:
@@ -551,6 +668,46 @@ class AIInferenceLayer:
                 name='anthropic',
                 framework=ModelFramework.ANTHROPIC,
                 api_key=os.environ['ANTHROPIC_API_KEY'],
+            )
+        # Cerebras (if key in env) — ~2000 tok/s, OpenAI-compatible
+        if os.environ.get('CEREBRAS_API_KEY'):
+            self.models['cerebras'] = AIModelConfig(
+                name='cerebras',
+                framework=ModelFramework.CEREBRAS,
+                endpoint='https://api.cerebras.ai/v1/chat/completions',
+                api_key=os.environ['CEREBRAS_API_KEY'],
+            )
+        # Groq (if key in env) — ~800 tok/s, OpenAI-compatible
+        if os.environ.get('GROQ_API_KEY'):
+            self.models['groq'] = AIModelConfig(
+                name='groq',
+                framework=ModelFramework.GROQ,
+                endpoint='https://api.groq.com/openai/v1/chat/completions',
+                api_key=os.environ['GROQ_API_KEY'],
+            )
+        # Together AI (if key in env) — cheapest hosted frontier
+        if os.environ.get('TOGETHER_API_KEY'):
+            self.models['together'] = AIModelConfig(
+                name='together',
+                framework=ModelFramework.TOGETHER,
+                endpoint='https://api.together.xyz/v1/chat/completions',
+                api_key=os.environ['TOGETHER_API_KEY'],
+            )
+        # Fireworks AI (if key in env) — low latency, function calling
+        if os.environ.get('FIREWORKS_API_KEY'):
+            self.models['fireworks'] = AIModelConfig(
+                name='fireworks',
+                framework=ModelFramework.FIREWORKS,
+                endpoint='https://api.fireworks.ai/inference/v1/chat/completions',
+                api_key=os.environ['FIREWORKS_API_KEY'],
+            )
+        # Wolfram Alpha (if app ID in env) — 2000 free calls/mo
+        if os.environ.get('WOLFRAM_APP_ID'):
+            self.models['wolfram'] = AIModelConfig(
+                name='wolfram',
+                framework=ModelFramework.WOLFRAM,
+                endpoint='https://api.wolframalpha.com/v2/query',
+                api_key=os.environ['WOLFRAM_APP_ID'],
             )
 
     async def discover_ollama_models(self) -> List[Dict[str, Any]]:
@@ -616,6 +773,11 @@ class AIInferenceLayer:
             return await self._infer_openai(config, prompt)
         elif config.framework == ModelFramework.ANTHROPIC:
             return await self._infer_anthropic(config, prompt)
+        elif config.framework in (ModelFramework.CEREBRAS, ModelFramework.GROQ,
+                                   ModelFramework.TOGETHER, ModelFramework.FIREWORKS):
+            return await self._infer_openai_compatible(config, prompt)
+        elif config.framework == ModelFramework.WOLFRAM:
+            return await self._infer_wolfram(config, prompt)
         return {'error': 'Unknown framework', 'text': ''}
 
     async def _infer_ollama(self, config: AIModelConfig, prompt: str, model_override: Optional[str] = None) -> Dict[str, Any]:
@@ -706,7 +868,7 @@ class AIInferenceLayer:
     def _infer_tinygrad(self, prompt: str) -> Dict[str, Any]:
         """
         Tinygrad prefix classifier — classifies code lines using learned
-        weight matrices for the beyondBINARY 9-symbol system.
+        weight matrices for the beyondBINARY 11-symbol system.
         Falls back to numpy if tinygrad isn't available.
         """
         t0 = time.perf_counter()
@@ -860,6 +1022,157 @@ class AIInferenceLayer:
                     return {'text': text, 'model': 'anthropic/claude-3-haiku'}
         except Exception as e:
             return {'error': f'Anthropic: {e}', 'text': ''}
+
+    # ── OpenAI-compatible providers: Cerebras, Groq, Together, Fireworks ──
+
+    # Default model per provider
+    _PROVIDER_MODELS = {
+        ModelFramework.CEREBRAS: 'llama3.1-70b',
+        ModelFramework.GROQ: 'llama-3.1-70b-versatile',
+        ModelFramework.TOGETHER: 'meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo',
+        ModelFramework.FIREWORKS: 'accounts/fireworks/models/llama-v3p1-70b-instruct',
+    }
+
+    async def _infer_openai_compatible(self, config: AIModelConfig, prompt: str) -> Dict[str, Any]:
+        """Generic OpenAI-compatible inference for Cerebras, Groq, Together, Fireworks."""
+        try:
+            import aiohttp
+            model = self._PROVIDER_MODELS.get(config.framework, 'llama3.1-70b')
+            headers = {
+                "Authorization": f"Bearer {config.api_key}",
+                "Content-Type": "application/json",
+            }
+            payload = {
+                "model": model,
+                "messages": [{"role": "user", "content": prompt}],
+                "max_tokens": 4096,
+            }
+            t0 = time.perf_counter()
+            async with aiohttp.ClientSession() as session:
+                async with session.post(
+                    config.endpoint,
+                    json=payload, headers=headers,
+                    timeout=aiohttp.ClientTimeout(total=120)
+                ) as resp:
+                    data = await resp.json()
+                    text = data['choices'][0]['message']['content']
+                    elapsed = round((time.perf_counter() - t0) * 1000, 1)
+                    return {
+                        'text': text,
+                        'model': f'{config.framework.value}/{model}',
+                        'elapsed_ms': elapsed,
+                        'provider': config.framework.value,
+                    }
+        except Exception as e:
+            return {'error': f'{config.framework.value}: {e}', 'text': ''}
+
+    # ── Wolfram Alpha API ──
+
+    async def _infer_wolfram(self, config: AIModelConfig, prompt: str) -> Dict[str, Any]:
+        """Query Wolfram Alpha Full Results API and return structured math answer."""
+        try:
+            import aiohttp
+            import urllib.parse
+            params = urllib.parse.urlencode({
+                'input': prompt,
+                'appid': config.api_key,
+                'format': 'plaintext,image',
+                'output': 'json',
+            })
+            url = f"{config.endpoint}?{params}"
+            t0 = time.perf_counter()
+            async with aiohttp.ClientSession() as session:
+                async with session.get(
+                    url,
+                    timeout=aiohttp.ClientTimeout(total=30)
+                ) as resp:
+                    data = await resp.json()
+                    elapsed = round((time.perf_counter() - t0) * 1000, 1)
+                    # Parse Wolfram response pods
+                    result_parts = []
+                    images = []
+                    pods = data.get('queryresult', {}).get('pods', [])
+                    for pod in pods:
+                        title = pod.get('title', '')
+                        for sub in pod.get('subpods', []):
+                            plaintext = sub.get('plaintext', '')
+                            img_src = sub.get('img', {}).get('src', '')
+                            if plaintext:
+                                result_parts.append(f"**{title}**: {plaintext}")
+                            if img_src:
+                                images.append(img_src)
+                    text = '\n'.join(result_parts) if result_parts else 'No result found'
+                    return {
+                        'text': text,
+                        'model': 'wolfram/alpha',
+                        'elapsed_ms': elapsed,
+                        'provider': 'wolfram',
+                        'images': images[:4],  # Limit to 4 images
+                    }
+        except Exception as e:
+            return {'error': f'Wolfram Alpha: {e}', 'text': ''}
+
+    # ── Math-specific inference: route math queries through SymPy first ──
+
+    async def infer_math(self, prompt: str, model_name: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Math-specialized inference pipeline:
+        1. Try SymPy direct evaluation for pure math expressions
+        2. If that fails, ask LLM to generate SymPy code
+        3. Execute the generated code
+        4. Return LaTeX-rendered result
+        """
+        result = {'text': '', 'latex': '', 'images': [], 'steps': []}
+
+        # Step 1: Try direct SymPy evaluation
+        if SYMPY_AVAILABLE:
+            try:
+                from sympy.parsing.sympy_parser import parse_expr, standard_transformations, implicit_multiplication_application
+                transformations = standard_transformations + (implicit_multiplication_application,)
+                # Try to parse as a math expression
+                expr = parse_expr(prompt.strip(), transformations=transformations)
+                result['text'] = str(expr)
+                result['latex'] = sympy.latex(expr)
+                result['steps'].append({'action': 'sympy_parse', 'result': str(expr)})
+
+                # Try to simplify
+                simplified = sympy.simplify(expr)
+                if simplified != expr:
+                    result['text'] = str(simplified)
+                    result['latex'] = sympy.latex(simplified)
+                    result['steps'].append({'action': 'simplify', 'result': str(simplified)})
+
+                result['model'] = 'sympy/local'
+                result['success'] = True
+                return result
+            except Exception:
+                result['steps'].append({'action': 'sympy_parse', 'result': 'not a pure expression'})
+
+        # Step 2: Route to LLM with math system prompt
+        math_system = (
+            "You are a math assistant. For math questions, provide:\n"
+            "1. The solution in plain text\n"
+            "2. The solution as a LaTeX expression wrapped in $$...$$\n"
+            "3. If applicable, Python/SymPy code to verify the answer\n"
+            "Be precise and show your work step by step."
+        )
+        math_prompt = f"{math_system}\n\nUser question: {prompt}"
+
+        # Prefer Wolfram for factual math, LLM for reasoning
+        if 'wolfram' in self.models and not any(kw in prompt.lower() for kw in ['explain', 'why', 'how', 'prove', 'derive']):
+            wolfram_result = await self._infer_wolfram(self.models['wolfram'], prompt)
+            if wolfram_result.get('text') and 'No result' not in wolfram_result['text']:
+                result.update(wolfram_result)
+                result['steps'].append({'action': 'wolfram', 'result': wolfram_result['text']})
+                result['success'] = True
+                return result
+
+        # Fall back to fastest available LLM
+        llm_result = await self.infer(math_prompt, model_name)
+        result.update(llm_result)
+        result['steps'].append({'action': 'llm', 'result': llm_result.get('text', '')})
+        result['success'] = bool(llm_result.get('text'))
+        return result
 
     def list_models(self) -> List[Dict[str, str]]:
         return [
@@ -2143,6 +2456,120 @@ async def route_request(method: str, path: str, body: bytes, headers: dict) -> d
         model = data.get('model')
         return await ai_layer.infer(prompt, model)
 
+    # ── MATH (SymPy + Wolfram + LLM pipeline) ──────
+    elif path == '/api/math' and method == 'POST':
+        prompt = data.get('prompt', data.get('expression', ''))
+        model = data.get('model')
+        return await ai_layer.infer_math(prompt, model)
+
+    elif path == '/api/math/eval' and method == 'POST':
+        # Direct SymPy evaluation — no LLM, pure math
+        expr_str = data.get('expression', '')
+        if not SYMPY_AVAILABLE:
+            return {'error': 'SymPy not installed — pip install sympy', 'text': ''}
+        try:
+            from sympy.parsing.sympy_parser import parse_expr, standard_transformations, implicit_multiplication_application
+            transformations = standard_transformations + (implicit_multiplication_application,)
+            expr = parse_expr(expr_str, transformations=transformations)
+            simplified = sympy.simplify(expr)
+            return {
+                'success': True,
+                'expression': str(expr),
+                'simplified': str(simplified),
+                'latex': sympy.latex(simplified),
+                'type': type(simplified).__name__,
+                'is_number': simplified.is_number,
+                'numeric': float(simplified.evalf()) if simplified.is_number else None,
+            }
+        except Exception as e:
+            return {'error': f'SymPy: {e}', 'text': ''}
+
+    elif path == '/api/math/solve' and method == 'POST':
+        # Direct SymPy equation solving
+        expr_str = data.get('equation', '')
+        var_name = data.get('variable', 'x')
+        if not SYMPY_AVAILABLE:
+            return {'error': 'SymPy not installed — pip install sympy', 'text': ''}
+        try:
+            from sympy.parsing.sympy_parser import parse_expr, standard_transformations, implicit_multiplication_application
+            transformations = standard_transformations + (implicit_multiplication_application,)
+            x = sympy.Symbol(var_name)
+            # Support "expr = expr" format
+            if '=' in expr_str and '==' not in expr_str:
+                lhs, rhs = expr_str.split('=', 1)
+                equation = sympy.Eq(parse_expr(lhs.strip(), transformations=transformations),
+                                    parse_expr(rhs.strip(), transformations=transformations))
+            else:
+                equation = parse_expr(expr_str, transformations=transformations)
+            solutions = sympy.solve(equation, x)
+            return {
+                'success': True,
+                'equation': str(equation),
+                'solutions': [str(s) for s in solutions],
+                'latex_solutions': [sympy.latex(s) for s in solutions],
+                'latex_equation': sympy.latex(equation),
+                'count': len(solutions),
+            }
+        except Exception as e:
+            return {'error': f'SymPy solve: {e}', 'text': ''}
+
+    elif path == '/api/math/plot' and method == 'POST':
+        # Generate a plot via matplotlib, return base64 image
+        expr_str = data.get('expression', '')
+        x_range = data.get('range', [-10, 10])
+        if not SYMPY_AVAILABLE or not MATPLOTLIB_AVAILABLE:
+            return {'error': 'SymPy + Matplotlib required — pip install sympy matplotlib', 'text': ''}
+        try:
+            import base64
+            from io import BytesIO
+            from sympy.parsing.sympy_parser import parse_expr, standard_transformations, implicit_multiplication_application
+            transformations = standard_transformations + (implicit_multiplication_application,)
+            x = sympy.Symbol('x')
+            expr = parse_expr(expr_str, transformations=transformations)
+            f = sympy.lambdify(x, expr, modules=['numpy'])
+            xs = np.linspace(float(x_range[0]), float(x_range[1]), 500)
+            ys = f(xs)
+            fig, ax = plt.subplots(figsize=(8, 5), facecolor='#0d1117')
+            ax.set_facecolor('#0d1117')
+            ax.plot(xs, ys, color='#58a6ff', linewidth=2)
+            ax.set_title(f'y = {sympy.latex(expr)}', color='#e6edf3', fontsize=14)
+            ax.tick_params(colors='#8b949e')
+            ax.spines['bottom'].set_color('#30363d')
+            ax.spines['left'].set_color('#30363d')
+            ax.spines['top'].set_visible(False)
+            ax.spines['right'].set_visible(False)
+            ax.grid(True, alpha=0.15, color='#8b949e')
+            buf = BytesIO()
+            fig.savefig(buf, format='png', dpi=150, bbox_inches='tight',
+                        facecolor='#0d1117', edgecolor='none')
+            buf.seek(0)
+            b64 = base64.b64encode(buf.read()).decode('utf-8')
+            plt.close(fig)
+            return {
+                'success': True,
+                'image': f'data:image/png;base64,{b64}',
+                'latex': sympy.latex(expr),
+                'expression': str(expr),
+            }
+        except Exception as e:
+            return {'error': f'Plot: {e}', 'text': ''}
+
+    elif path == '/api/math/status':
+        return {
+            'sympy': SYMPY_AVAILABLE,
+            'scipy': SCIPY_AVAILABLE,
+            'matplotlib': MATPLOTLIB_AVAILABLE,
+            'qiskit': QISKIT_AVAILABLE,
+            'numpy': NUMPY_AVAILABLE,
+            'tinygrad': TINYGRAD_AVAILABLE,
+            'version': {
+                'sympy': getattr(sympy, '__version__', None) if SYMPY_AVAILABLE else None,
+                'scipy': getattr(scipy, '__version__', None) if SCIPY_AVAILABLE else None,
+                'matplotlib': getattr(matplotlib, '__version__', None) if MATPLOTLIB_AVAILABLE else None,
+                'numpy': getattr(np, '__version__', None) if NUMPY_AVAILABLE else None,
+            },
+        }
+
     # ── AI MODELS ───────────────────────────────────
     elif path == '/api/ai/models':
         return {'models': ai_layer.list_models(), 'ollama_default': ai_layer.ollama_model}
@@ -2548,7 +2975,7 @@ async def main():
 ║  WebSocket:   ws://localhost:{WS_PORT}                            ║
 ╠══════════════════════════════════════════════════════════════╣
 ║  Engines:                                                    ║
-║    Prefix:   18 languages · 9-symbol system                  ║
+║    Prefix:   18 languages · 11-symbol system                 ║
 ║    Exec:     Python + shell + uv run                         ║
 ║    AI:       {'tinygrad ·' if TINYGRAD_AVAILABLE else ''} {'numpy ·' if NUMPY_AVAILABLE else ''} Ollama · OpenAI · Anthropic     ║
 ║    Diff:     Prefix-aware quantum coordinate diffs           ║

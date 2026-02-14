@@ -309,11 +309,11 @@ const DEFAULT_DOC = `# uvspeed — Gold Standard Build Workflow
 │  ├── pages.yml → deploy to GitHub Pages                      │
 │  ├── release.yml → build artifacts on tag                    │
 │  ├── ci.yml → test + lint + WASM build on every PR          │
-│  └── health.yml → load-test all 19 PWAs                     │
+│  └── health.yml → load-test all 20 PWAs                     │
 │                                                              │
 ├─ Runtime (Browser) ─────────────────────────────────────────┤
 │                                                              │
-│  Service Worker → cache + offline (19 apps)                  │
+│  Service Worker → cache + offline (20 apps)                  │
 │  BroadcastChannel → cross-app prefix sync                    │
 │  WASM prefix engine → 100x Rust-speed in browser            │
 │  quantum-theme.css → shared light/dark theming               │
@@ -354,7 +354,7 @@ const DEFAULT_DOC = `# uvspeed — Gold Standard Build Workflow
 - \`web/quantum-prefixes.d.ts\` — 200+ lines of type definitions
 - Types: PrefixSymbol, PrefixCategory, SupportedLanguage, ClassifyResult, PrefixMetadataResult, SyncState, IoTConnectionOptions, ThemeMode
 - \`window.QuantumPrefixes\` fully typed with all 30+ methods
-- All 19 apps get autocomplete/type-checking
+- All 20 apps get autocomplete/type-checking
 
 ### WASM Compilation Pipeline
 - \`crates/prefix-engine/\` → compiles to WebAssembly via wasm-pack
@@ -407,7 +407,7 @@ uvspeed-bridge health             # Check bridge server status
 - /health endpoint with uptime
 - /api/classify — POST source code, get prefix results
 - /api/state — global prefix state (all connected apps)
-- Full 9-symbol classifier in Go
+- Full 11-symbol classifier in Go
 - 10x throughput vs Python bridge
 
 ### WGSL Compute Shader (prefix-classify.wgsl)
@@ -438,7 +438,7 @@ uvspeed-bridge health             # Check bridge server status
 ### health.yml (weekly + on web/ changes)
 | Job | What |
 |-----|------|
-| html-validation | DOCTYPE, </html>, quantum-prefixes.js, sw.js for all 19 apps |
+| html-validation | DOCTYPE, </html>, quantum-prefixes.js, sw.js for all 20 apps |
 | js-syntax | node --check on JS modules |
 | shared-modules | verify 10+ required API exports exist |
 | size-budget | alert if HTML > 500KB or JS > 200KB |
@@ -482,14 +482,14 @@ graph LR
     B -->|CLI| F[Python uvspeed_cli.py]
     B -->|Server| G[Go bridge :8085]
     B -->|GPU| H[WGSL Compute Shader]
-    C --> I[9-Symbol Prefix]
+    C --> I[11-Symbol Prefix]
     D --> I
     E --> I
     F --> I
     G --> I
     H --> I
     I --> J[BroadcastChannel Sync]
-    J --> K[All 19 Apps]
+    J --> K[All 20 Apps]
 \`\`\`
 
 ---
@@ -1061,7 +1061,7 @@ function loadGoldStandard() {
     const pyCli   = createNode('terminal', 880, 500, 'Python CLI', ['in']);
     // ── Layer 5: Output ──
     const sync    = createNode('stream',   280, 660, 'BroadcastChannel', ['in','out']);
-    const apps19  = createNode('deploy',   60,  660, '19 PWA Apps', ['in']);
+    const apps19  = createNode('deploy',   60,  660, '20 PWA Apps', ['in']);
     const wgsl    = createNode('gpu',      480, 660, 'WGSL GPU Shader', ['in','out']);
     const nuBuild = createNode('workflow', 680, 660, 'Nushell Pipelines', ['in']);
     const qpu     = createNode('quantum',  880, 660, 'Quantum (QPU)', ['in']);

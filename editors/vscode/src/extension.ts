@@ -1,7 +1,7 @@
 // beyondBINARY quantum-prefixed | uvspeed | {+1, 1, -1, +0, 0, -0, +n, n, -n}
 //
 // VS Code Extension: Quantum Prefix Gutter
-// Renders the 9-symbol prefix system as gutter decorations in every editor.
+// Renders the 11-symbol prefix system as gutter decorations in every editor.
 //
 // Architecture:
 //   1. Classifies each line using regex (fast) or WASM engine (faster)

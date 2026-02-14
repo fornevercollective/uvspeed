@@ -5,7 +5,7 @@
 set -e
 cd "$(dirname "$0")"
 
-echo "⚛ uvspeed v4.0 — building..."
+echo "⚛ uvspeed v4.3 — building..."
 
 # Sync web → tauri-dist
 echo "  Syncing web assets..."

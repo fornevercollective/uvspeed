@@ -1,7 +1,7 @@
 // beyondBINARY quantum-prefixed | uvspeed | {+1, 1, -1, +0, 0, -0, +n, n, -n}
 //
 // Quantum Prefix Classifier — Rust implementation
-// Maps code lines to the 9-symbol directional prefix system:
+// Maps code lines to the 11-symbol directional prefix system:
 //
 //   +1 = declaration (fn, class, struct, const, let, var, type, enum)
 //    1 = logic       (if, else, for, while, match, switch, case)

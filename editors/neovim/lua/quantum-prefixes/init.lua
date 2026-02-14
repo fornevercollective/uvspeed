@@ -1,7 +1,7 @@
 -- beyondBINARY quantum-prefixed | uvspeed | {+1, 1, -1, +0, 0, -0, +n, n, -n}
 --
 -- Neovim Plugin: Quantum Prefix Gutter
--- Renders the 9-symbol prefix system as virtual text in the sign column.
+-- Renders the 11-symbol prefix system as virtual text in the sign column.
 --
 -- Install: add to your lazy.nvim/packer config:
 --   { dir = "~/dev/uvspeed/editors/neovim" }

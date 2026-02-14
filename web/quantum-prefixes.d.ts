@@ -2,7 +2,7 @@
 // Type definitions for quantum-prefixes.js — Shared Quantum Gutter Prefix Engine
 
 /**
- * Prefix symbol strings used in the 9-symbol quantum system.
+ * Prefix symbol strings used in the 11-symbol quantum system.
  */
 export type PrefixSymbol =
   | 'n:'   // shebang / entry
@@ -173,7 +173,7 @@ export interface QuantumGutterMeta {
 /**
  * ⚛ QuantumPrefixes — The main API exposed on `window.QuantumPrefixes`.
  *
- * Universal module used by all UV-Speed apps for 9-symbol quantum prefix
+ * Universal module used by all UV-Speed apps for 11-symbol quantum prefix
  * classification, cross-app synchronization, IoT bridging, and theming.
  */
 export interface QuantumPrefixesAPI {

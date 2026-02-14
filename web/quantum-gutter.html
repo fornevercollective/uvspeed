@@ -215,7 +215,7 @@
 <div class="hero">
     <canvas id="hero-canvas"></canvas>
     <div class="hero-content">
-        <div class="hero-badge"><span class="dot"></span> 9 symbols &middot; 20 languages &middot; sub-microsecond</div>
+        <div class="hero-badge"><span class="dot"></span> 11 symbols &middot; 20 languages &middot; sub-microsecond</div>
         <h1>
             The <span class="gradient">Quantum Gutter</span>
         </h1>
@@ -233,7 +233,7 @@
         </p>
         <p>
             Every line of code has a structural identity. The beyondBINARY prefix system classifies
-            it in real time — imports, loops, returns, I/O — using 9 symbols that work in 20+ languages.
+            it in real time — imports, loops, returns, I/O — using 11 symbols that work in 20+ languages.
         </p>
         <div class="hero-actions">
             <a class="btn btn-primary" href="quantum-notepad.html">Open Notepad</a>
@@ -251,9 +251,9 @@
     <div class="stat"><div class="number">0</div><div class="label">Dependencies</div></div>
 </div>
 
-<!-- ━━━ The 9 Symbols ━━━ -->
+<!-- ━━━ The 11 Symbols ━━━ -->
 <section>
-    <h2 class="fade-up">The 9 symbols</h2>
+    <h2 class="fade-up">The 11 symbols</h2>
     <p class="section-sub fade-up">Every line maps to exactly one prefix. No ambiguity. No configuration. Universal across all languages.</p>
 
     <!-- Interactive 3D prefix cube -->
@@ -288,7 +288,7 @@
         <div class="pipe-step">
             <div class="pipe-icon">⚛</div>
             <h5>Prefix</h5>
-            <p>9-symbol structural tag</p>
+            <p>11-symbol structural tag</p>
         </div>
         <div class="pipe-arrow">→</div>
         <div class="pipe-step">
@@ -387,7 +387,7 @@ class QuantumState:
     <div class="canvas-trio fade-up">
         <div class="canvas-card">
             <canvas id="cv-slice" width="400" height="280"></canvas>
-            <div class="cc-label"><span>🧊 Slice</span><span class="cc-tag">9×9 prefix grid · click to navigate</span></div>
+            <div class="cc-label"><span>🧊 Slice</span><span class="cc-tag">11×11 prefix grid · click to navigate</span></div>
         </div>
         <div class="canvas-card">
             <canvas id="cv-orb" width="400" height="280"></canvas>
@@ -405,7 +405,7 @@ class QuantumState:
 <!-- ━━━ Language Coverage ━━━ -->
 <section>
     <h2 class="fade-up">20-language coverage</h2>
-    <p class="section-sub fade-up">Classification accuracy measured against hand-labeled corpora. Same 9 symbols, every language.</p>
+    <p class="section-sub fade-up">Classification accuracy measured against hand-labeled corpora. Same 11 symbols, every language.</p>
 
     <div class="cov-chart fade-up" id="cov-chart"></div>
 </section>
@@ -783,13 +783,13 @@ class QuantumState:
 
     <div class="roadmap fade-up">
         <div class="roadmap-item done">
-            <h4>9-Symbol Classifier</h4>
+            <h4>11-Symbol Classifier</h4>
             <p>Regex-based line classification for 20 languages. Sub-microsecond per line. Runs entirely in the browser with zero dependencies.</p>
             <span class="rm-tag" style="background:rgba(63,185,80,0.15);color:#3fb950;">Shipped</span>
         </div>
         <div class="roadmap-item done">
             <h4>Cross-App BroadcastChannel Sync</h4>
-            <p>All 18 apps share prefix state via <code>BroadcastChannel('quantum-prefixes')</code>. Open notepad + terminal + hexbench — they stay in sync.</p>
+            <p>All 20 apps share prefix state via <code>BroadcastChannel('quantum-prefixes')</code>. Open notepad + terminal + hexbench — they stay in sync.</p>
             <span class="rm-tag" style="background:rgba(63,185,80,0.15);color:#3fb950;">Shipped</span>
         </div>
         <div class="roadmap-item done">
@@ -892,7 +892,7 @@ class QuantumState:
         <a href="sponsor.html">sponsor</a> &middot;
         <a href="https://github.com/fornevercollective/uvspeed" target="_blank">github</a>
     </div>
-    <div style="margin-top:8px;">uvspeed v4.0 &middot; fornevercollective &middot; MIT</div>
+    <div style="margin-top:8px;">uvspeed v4.3 &middot; fornevercollective &middot; MIT</div>
 </div>
 
 <script src="quantum-prefixes.js"></script>
@@ -946,9 +946,9 @@ prefixes.forEach(p => {
     resize();
     window.addEventListener('resize', resize);
 
-    // 9 prefix nodes arranged in a 3x3x1 grid (we'll place them on faces of a cube)
-    // Use only the first 9 meaningful prefixes (excluding default space)
-    const nodes = prefixes.slice(0, 9).map((p, i) => {
+    // 11 prefix nodes arranged in grid (we'll place them on faces of a cube)
+    // Use all 11 meaningful prefixes (excluding default space)
+    const nodes = prefixes.slice(0, 11).map((p, i) => {
         // Map to 3D positions: 3x3 grid on different faces
         const row = Math.floor(i / 3);
         const col = i % 3;
@@ -1345,8 +1345,8 @@ langData.forEach(d => {
 });
 
 // ── Visual Canvases ──
-const pfxColors = ['#3fb950','#58a6ff','#bc8cff','#f0883e','#8b949e','#f85149','#d2a8ff','#79c0ff','#e3b341'];
-const pfxNames  = ['+1','1','-1','+0','0','-0','+n','n','-n'];
+const pfxColors = ['#3fb950','#58a6ff','#bc8cff','#f0883e','#8b949e','#f85149','#d2a8ff','#79c0ff','#e3b341','#58d1f0','#f9c74f'];
+const pfxNames  = ['+1','1','-1','+0','0','-0','+n','n','-n','+2','+3'];
 
 function hexRgba(hex, a) {
     return 'rgba(' + parseInt(hex.slice(1,3),16) + ',' + parseInt(hex.slice(3,5),16) + ',' + parseInt(hex.slice(5,7),16) + ',' + a + ')';
@@ -1373,7 +1373,7 @@ const ctxOrb = cvOrb ? cvOrb.getContext('2d') : null;
 const cvHex = document.getElementById('cv-hex');
 const ctxHex = cvHex ? cvHex.getContext('2d') : null;
 const hexColumns = [];
-for (let i = 0; i < 40; i++) hexColumns.push({ y: Math.random() * 280, speed: 0.3 + Math.random() * 1.5, chars: [], color: pfxColors[i % 9] });
+for (let i = 0; i < 40; i++) hexColumns.push({ y: Math.random() * 280, speed: 0.3 + Math.random() * 1.5, chars: [], color: pfxColors[i % 11] });
 
 let frame = 0;
 
@@ -1382,7 +1382,7 @@ function drawSlice(t) {
     const W = cvSlice.width, H = cvSlice.height, ctx = ctxSlice;
     const layer = Math.abs(slicePos[2]) % 6;
     ctx.fillStyle = '#0d1117'; ctx.fillRect(0, 0, W, H);
-    const grid = 9, cellW = W / grid, cellH = H / grid;
+    const grid = 11, cellW = W / grid, cellH = H / grid;
     for (let r = 0; r < grid; r++) for (let c = 0; c < grid; c++) {
         const x = c * cellW, y = r * cellH;
         const heat = Math.sin(t * 0.02 + c * 0.8 + r * 0.6 + layer * 1.3) * 0.5 + 0.5;
@@ -1424,7 +1424,7 @@ function drawOrb(t) {
         const sz = 1.5 + Math.sin(t * 0.015 + i) * 1;
         const bright = 0.2 + Math.abs(Math.sin(t * 0.01 + i * 0.7)) * 0.6;
         ctx.beginPath(); ctx.arc(px, py, sz, 0, Math.PI * 2);
-        ctx.fillStyle = hexRgba(pfxColors[i % 9], bright); ctx.fill();
+        ctx.fillStyle = hexRgba(pfxColors[i % 11], bright); ctx.fill();
     }
     ctx.fillStyle = 'rgba(255,255,255,0.3)'; ctx.font = '9px monospace';
     ctx.fillText('Quantum Orb  |  120 particles  |  Prefix density', 6, H - 6);
@@ -1439,7 +1439,7 @@ function drawHexStream(t) {
     for (let i = 0; i < hexColumns.length; i++) {
         const col = hexColumns[i];
         col.y += col.speed;
-        if (col.y > H + 20) { col.y = -10; col.color = pfxColors[Math.floor(Math.random() * 9)]; }
+        if (col.y > H + 20) { col.y = -10; col.color = pfxColors[Math.floor(Math.random() * 11)]; }
         const hex = ((t * 7 + i * 0x3F1) & 0xFFFF).toString(16).padStart(4, '0');
         const alpha = 0.3 + Math.sin(t * 0.05 + i) * 0.2 + 0.3;
         ctx.fillStyle = hexRgba(col.color, alpha);

@@ -4,7 +4,7 @@
 <img src="icons/nyan-banner.png" alt="uvspeed — beyondBINARY quantum-prefixed development platform" width="100%">
 </p>
 
-> A development platform built on the beyondBINARY prefix system `{+1, 1, -1, +0, 0, -0, +n, n, -n}` — structurally addressing code in 9 dimensions across 20+ languages.
+> A development platform built on the beyondBINARY prefix system `{+1, 1, -1, +0, 0, -0, +n, n, -n, +2, +3}` — structurally addressing code with 11 symbols across 20+ languages, each mapping to a quantum gate.
 
 [![Version](https://img.shields.io/badge/v4.3-uvspeed-brightgreen)](#install)
 [![Languages](https://img.shields.io/badge/Languages-20_supported-blue)](#quantum-prefix-system)
@@ -84,7 +84,7 @@
 <p align="center">
 <img src="icons/05-prefix-everything.png" alt="Prefix system applied to code" width="100%">
 </p>
-<p align="center"><em>Prefix everything — 9 symbols structurally addressing any codebase</em></p>
+<p align="center"><em>Prefix everything — 11 symbols structurally addressing any codebase</em></p>
 
 <p align="center">
 <img src="icons/12-quantum-navigation.png" alt="3D quantum navigation panel" width="100%">
@@ -167,7 +167,7 @@ Plus a `{dev}` launch mode that opens the terminal with the dev console active.
 | Module | Description |
 |--------|-------------|
 | **[quantum-prefixes.js](web/quantum-prefixes.js)** | Shared prefix API — `classifyLine()`, `prefixContent()`, cross-app `BroadcastChannel` sync, IoT WebSocket bridge, global light/dark theme engine |
-| **[sw.js](web/sw.js)** | Service worker — offline-first cache for all 19 apps + shared assets |
+| **[sw.js](web/sw.js)** | Service worker — offline-first cache for all 20 apps + shared assets |
 
 ### CLI Tools
 
@@ -240,7 +240,7 @@ Download from [Releases](https://github.com/fornevercollective/uvspeed/releases)
 
 ## Quantum Prefix System
 
-The 9-symbol system replaces binary `{0, 1}` with directional prefixes:
+The 11-symbol system (9 core + 2 extended) replaces binary `{0, 1}` with directional prefixes:
 
 ```
 +1:  declaration / structure     (class, struct, interface)
@@ -262,7 +262,7 @@ Supported in 20+ languages: Python, JavaScript, TypeScript, Rust, Go, Swift, Kot
 
 ```
 uvspeed/
-├── web/                         # 19 standalone HTML apps (PWA-ready)
+├── web/                         # 20 standalone HTML apps (PWA-ready)
 │   ├── quantum-gutter.html      # Prefix system showcase + 3D cube
 │   ├── quantum-notepad.html     # Main notepad with prefix gutter
 │   ├── terminal.html            # Full terminal emulator (hexterm)
@@ -274,7 +274,7 @@ uvspeed/
 │   ├── sw.js                    # Service worker (offline cache)
 │   └── ...                      # hexcast, hexbench, blackwell, archflow, sponsor, etc.
 ├── crates/prefix-engine/        # Rust prefix classifier (native + WASM + C FFI)
-│   ├── src/lib.rs               # Core regex classifier (9 symbols)
+│   ├── src/lib.rs               # Core regex classifier (11 symbols)
 │   ├── src/ast.rs               # Tree-sitter AST-backed classifier (zero false positives)
 │   └── src/simd.rs              # SIMD-vectorized engine (100M+ lines/sec target)
 ├── src-tauri/                   # Tauri v2 desktop app (Rust)
@@ -292,7 +292,7 @@ uvspeed/
 │   └── watch-dev.sh             # Dev file watcher (web/ → tauri-dist/)
 ├── .github/workflows/           # CI/CD (4 workflows)
 │   ├── ci.yml                   # Rust + Python + WASM + prefix validation
-│   ├── health.yml               # Weekly health checks for all 19 apps
+│   ├── health.yml               # Weekly health checks for all 20 apps
 │   ├── pages.yml                # GitHub Pages deploy
 │   └── release.yml              # Tagged release builds
 ├── .pre-commit-config.yaml      # Pre-commit hooks (ruff, clippy, prefix, version)
@@ -378,7 +378,7 @@ pip install pre-commit && pre-commit install
 Edit code → git commit (pre-commit: ruff + clippy + prefix headers + version sync)
          → git push   (CI: Rust tests + WASM build + Python tests + health check)
          → Runtime    (JS engine / WASM engine / Tauri IPC / Go bridge / Python CLI)
-         → Output     (BroadcastChannel → 19 PWA apps, WGSL GPU shader, Quantum QPU)
+         → Output     (BroadcastChannel → 20 PWA apps, WGSL GPU shader, Quantum QPU)
 ```
 
 10 languages: TypeScript, Rust, Python, JavaScript, Go, CSS, Shell, Nushell, WGSL, TOML/YAML

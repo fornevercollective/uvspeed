@@ -86,7 +86,7 @@ STORAGE_DIR.mkdir(exist_ok=True)
 
 class QuantumPrefixEngine:
     """
-    Universal quantum prefix parser — 9-symbol system across 18 languages.
+    Universal quantum prefix parser — 11-symbol system across 18 languages.
     Extends quantum_handler_clean.py with full language pack support.
     """
 
@@ -1599,7 +1599,7 @@ async def main():
 ║  WebSocket:   ws://localhost:{WS_PORT}                        ║
 ╠══════════════════════════════════════════════════════════╣
 ║  Engines:                                                ║
-║    Prefix:  18 languages · 9-symbol system               ║
+║    Prefix:  18 languages · 11-symbol system              ║
 ║    Exec:    Python + shell + uv run                      ║
 ║    AI:      {'tinygrad ·' if TINYGRAD_AVAILABLE else ''} {'numpy ·' if NUMPY_AVAILABLE else ''} Ollama · OpenAI · Anthropic  ║
 ║    Diff:    Prefix-aware quantum coordinate diffs        ║

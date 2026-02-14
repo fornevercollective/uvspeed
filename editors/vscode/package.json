@@ -1,7 +1,7 @@
 {
     "name": "uvspeed-quantum-prefixes",
     "displayName": "uvspeed Quantum Prefixes",
-    "description": "9-symbol quantum prefix gutter for code — structural classification beyond line numbers",
+    "description": "11-symbol quantum prefix gutter for code — structural classification beyond line numbers",
     "version": "0.1.0",
     "publisher": "ForNeverCollective",
     "license": "MIT",

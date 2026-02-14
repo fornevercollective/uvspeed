@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # beyondBINARY quantum-prefixed | uvspeed | {+1, 1, -1, +0, 0, -0, +n, n, -n}
 # Universal installer — zerobrew > brew > curl fallback
-# v4.0 · Dev terminal app install chain
+# v4.3 · Dev terminal app install chain
 #
 # Usage:
 #   ./install.sh              # default: uv + bridge + open notepad

@@ -1,7 +1,7 @@
 // beyondBINARY quantum-prefixed | uvspeed | {+1, 1, -1, +0, 0, -0, +n, n, -n}
 //
 // AST-backed prefix classification using tree-sitter.
-// Maps tree-sitter node types to the 9-symbol quantum prefix system.
+// Maps tree-sitter node types to the 11-symbol quantum prefix system.
 // Zero false positives — every classification is backed by a parsed AST node.
 //
 // Coverage target: 99%+ for supported languages.

@@ -5,7 +5,7 @@
 # Usage:
 #   bash scripts/pre.sh              # full pre-push audit
 #   bash scripts/pre.sh folder       # git status + stale file check
-#   bash scripts/pre.sh inspect      # health check all 19 apps
+#   bash scripts/pre.sh inspect      # health check all 20 apps
 #   bash scripts/pre.sh inspect notepad  # just notepad
 #   bash scripts/pre.sh gold         # verify gold standard files
 #   bash scripts/pre.sh push         # stage + commit + push

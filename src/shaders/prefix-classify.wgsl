@@ -1,7 +1,7 @@
 // beyondBINARY quantum-prefixed | uvspeed | {+1, 1, -1, +0, 0, -0, +n, n, -n}
 // WGSL Compute Shader — GPU-accelerated quantum prefix classification
 //
-// Maps code lines to the 9-symbol prefix system using parallel GPU threads.
+// Maps code lines to the 11-symbol prefix system using parallel GPU threads.
 // Each workgroup processes a batch of lines simultaneously.
 //
 // Symbol encoding (4-bit):

@@ -29,7 +29,7 @@ alwaysApply: true
 ```bash
 nu scripts/pre.nu                    # Full audit (fastest — Nushell)
 nu scripts/pre.nu folder             # Git status check
-nu scripts/pre.nu inspect            # All 19 apps health
+nu scripts/pre.nu inspect            # All 20 apps health
 nu scripts/pre.nu inspect notepad    # Single app check
 nu scripts/pre.nu gold               # Verify gold standard files
 bash scripts/pre.sh pre push "msg"   # Audit + commit + push (bash only for push)

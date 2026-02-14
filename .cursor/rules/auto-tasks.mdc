@@ -12,7 +12,7 @@ When the user edits files, suggest the FAST runner — never bare pip/grep/find.
 - After editing any HTML app → `nu scripts/pre.nu inspect` to verify health
 - After editing any HTML app → remind to bump `CACHE_NAME` in `web/sw.js`
 - After editing `quantum-prefixes.js` → update `quantum-prefixes.d.ts` types
-- After editing `quantum-theme.css` → `nu scripts/pre.nu inspect` to check all 19 apps
+- After editing `quantum-theme.css` → `nu scripts/pre.nu inspect` to check all 20 apps
 - After adding a new HTML app → add to `sw.js` cache list + `README.md`
 
 ## Rust (`crates/**/*.rs`, `src-tauri/**/*.rs`)

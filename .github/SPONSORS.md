@@ -2,7 +2,7 @@
 
 **beyondBINARY quantum-prefixed development platform**
 
-uvspeed is an open-source platform that reimagines how code is structurally addressed — replacing binary `{0, 1}` with a 9-symbol directional prefix system `{+1, 1, -1, +0, 0, -0, +n, n, -n}`. It spans 20+ languages and ships as zero-install web tools, a CLI, and a native desktop app.
+uvspeed is an open-source platform that reimagines how code is structurally addressed — replacing binary `{0, 1}` with an 11-symbol directional prefix system (9 core + 2 extended) `{+1, 1, -1, +0, 0, -0, +n, n, -n}`. It spans 20+ languages and ships as zero-install web tools, a CLI, and a native desktop app.
 
 ---
 

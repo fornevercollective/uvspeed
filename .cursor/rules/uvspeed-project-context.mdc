@@ -8,7 +8,7 @@ alwaysApply: true
 Single-page PWA apps in `web/`, each a self-contained HTML file with inline CSS + JS.
 No build system — files serve directly. Shared module: `web/quantum-prefixes.js`.
 
-## All Apps (19 HTML files in web/)
+## All Apps (20 HTML files in web/)
 
 | App | File | Role |
 |-----|------|------|
@@ -31,10 +31,11 @@ No build system — files serve directly. Shared module: `web/quantum-prefixes.j
 | KBatch | `kbatch.html` | Keyboard batch tool |
 | Blackwell | `blackwell.html` | Blackwell GPU dashboard |
 | Quantum Gutter | `quantum-gutter.html` | Prefix system showcase — 3D cube, starfield, benchmarks |
+| FreyaUnits | `freya.html` | Galactic converter, calculator, celestial charts, quantum geo nav |
 
 ## Shared Module: quantum-prefixes.js
 
-All 19 apps include `<script src="quantum-prefixes.js"></script>` and have a
+All 20 apps include `<script src="quantum-prefixes.js"></script>` and have a
 `// ===== QUANTUM PREFIX LIVE SYNC =====` init block.
 
 **API** (`window.QuantumPrefixes`):
