@@ -1068,8 +1068,40 @@ function drawGeoVis(lat,lng){
         ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();
     }
 
-    // Equator
-    ctx.strokeStyle='#fbbf2433';ctx.beginPath();ctx.moveTo(0,H/2);ctx.lineTo(W,H/2);ctx.stroke();
+    // Equator + Prime Meridian
+    ctx.strokeStyle='#fbbf2433';ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(0,H/2);ctx.lineTo(W,H/2);ctx.stroke();
+    ctx.strokeStyle='#fbbf2418';
+    ctx.beginPath();ctx.moveTo(W/2,0);ctx.lineTo(W/2,H);ctx.stroke();
+
+    // Simplified continental outlines (lat/lng point clouds)
+    ctx.fillStyle='#1e3a5f';
+    const continents=[
+        // North America
+        [-130,55],[-125,50],[-125,45],[-120,40],[-115,35],[-110,30],[-105,25],[-100,30],[-95,30],[-90,30],[-85,30],[-80,25],[-80,30],[-75,35],[-70,42],[-65,45],[-60,47],[-70,55],[-80,55],[-90,55],[-100,55],[-110,55],[-120,60],[-140,60],[-150,65],[-160,70],[-140,70],[-120,65],
+        // South America
+        [-80,10],[-75,5],[-70,0],[-65,-5],[-60,-10],[-55,-15],[-50,-20],[-45,-25],[-50,-30],[-60,-35],[-65,-40],[-70,-45],[-75,-50],[-70,-20],[-75,-10],[-80,0],
+        // Europe
+        [-10,38],[0,40],[5,43],[10,44],[15,45],[20,45],[25,40],[30,40],[30,45],[25,50],[20,50],[15,52],[10,54],[5,52],[0,50],[-5,48],[-10,43],
+        // Africa
+        [-15,15],[-5,5],[5,5],[10,0],[15,-5],[20,-10],[25,-15],[30,-20],[35,-25],[30,-30],[25,-30],[20,-25],[15,-15],[10,-5],[5,0],[0,5],[-5,10],[10,10],[20,15],[30,15],[35,20],[35,30],[30,33],[10,35],[0,35],[-10,30],[-15,25],
+        // Asia
+        [30,35],[40,40],[50,40],[60,40],[70,40],[80,35],[90,30],[100,25],[110,20],[115,25],[120,30],[125,35],[130,40],[135,45],[140,50],[150,55],[160,60],[170,65],[180,70],[140,55],[130,50],[120,45],[110,40],[100,40],[90,45],[80,50],[70,55],[60,55],[50,50],[40,45],
+        // Australia
+        [115,-20],[120,-15],[130,-15],[140,-18],[145,-20],[150,-25],[150,-30],[145,-35],[140,-38],[135,-35],[130,-30],[125,-25],[120,-25],
+    ];
+    continents.forEach(([lon,lat2])=>{
+        const cx=(lon+180)/360*W;
+        const cy=(90-lat2)/180*H;
+        ctx.beginPath();ctx.arc(cx,cy,1.8,0,Math.PI*2);ctx.fill();
+    });
+
+    // "Click to set location" hint when no GPS
+    if(lat===undefined&&!geoGranted){
+        ctx.font='11px monospace';ctx.fillStyle='#475569';ctx.textAlign='center';
+        ctx.fillText('Click map to set position',W/2,H/2+30);
+        ctx.font='9px monospace';ctx.fillText('or allow location access',W/2,H/2+44);
+    }
 
     // Position marker
     if(lat!==undefined&&lng!==undefined){
@@ -1092,18 +1124,64 @@ function drawGeoVis(lat,lng){
 }
 drawGeoVis();
 
-// Request geolocation
-if(navigator.geolocation){
-    navigator.geolocation.watchPosition(pos=>{
+// Click on geo canvas to set position manually
+document.getElementById('q-geo').addEventListener('click',function(e){
+    const rect=this.getBoundingClientRect();
+    const mx=(e.clientX-rect.left)/rect.width;
+    const my=(e.clientY-rect.top)/rect.height;
+    const clickLng=mx*360-180;
+    const clickLat=90-my*180;
+    updateGeoDisplay(clickLat,clickLng,null,null,'manual');
+});
+
+// Request geolocation with graceful fallback
+let geoGranted=false;
+function updateGeoDisplay(lat,lng,alt,acc,source){
+    geoGranted=true;
+    document.getElementById('geo-lat').textContent=lat.toFixed(6)+'°';
+    document.getElementById('geo-lng').textContent=lng.toFixed(6)+'°';
+    document.getElementById('geo-alt').textContent=alt?alt.toFixed(1)+'m':'N/A';
+    document.getElementById('geo-acc').textContent=(acc?acc.toFixed(0)+'m':'N/A')+(source?' ('+source+')':'');
+    drawGeoVis(lat,lng);
+    // Map quantum position to geo coordinates
+    const geoQ=document.getElementById('geo-qpos');
+    if(geoQ) geoQ.textContent=JSON.stringify(qPos);
+}
+function showGeoFallback(reason){
+    const latEl=document.getElementById('geo-lat');
+    const lngEl=document.getElementById('geo-lng');
+    const altEl=document.getElementById('geo-alt');
+    const accEl=document.getElementById('geo-acc');
+    const msg=reason==='denied'?'Denied — tap to retry':'Unavailable';
+    latEl.innerHTML='<span style="color:#f59e0b;cursor:pointer;" onclick="requestGeoPermission()">📍 '+msg+'</span>';
+    lngEl.textContent='—';altEl.textContent='—';accEl.textContent='—';
+    // Show approximate position using timezone offset as rough longitude estimate
+    const tzOffset=new Date().getTimezoneOffset();
+    const roughLng=-(tzOffset/60)*15; // ~15° per hour offset
+    drawGeoVis(0,roughLng); // equator + estimated longitude
+}
+function requestGeoPermission(){
+    if(!navigator.geolocation){showGeoFallback('unavailable');return;}
+    document.getElementById('geo-lat').innerHTML='<span style="color:#22d3ee;">⏳ Requesting…</span>';
+    navigator.geolocation.getCurrentPosition(pos=>{
         const{latitude:lat,longitude:lng,altitude:alt,accuracy:acc}=pos.coords;
-        document.getElementById('geo-lat').textContent=lat.toFixed(6)+'°';
-        document.getElementById('geo-lng').textContent=lng.toFixed(6)+'°';
-        document.getElementById('geo-alt').textContent=alt?alt.toFixed(1)+'m':'N/A';
-        document.getElementById('geo-acc').textContent=acc?acc.toFixed(0)+'m':'N/A';
-        drawGeoVis(lat,lng);
-    },()=>{
-        document.getElementById('geo-lat').textContent='Permission denied';
-    },{enableHighAccuracy:true});
+        updateGeoDisplay(lat,lng,alt,acc,'GPS');
+        // Start watching after initial success
+        navigator.geolocation.watchPosition(p=>{
+            const c=p.coords;
+            updateGeoDisplay(c.latitude,c.longitude,c.altitude,c.accuracy,'live');
+        },()=>{},{enableHighAccuracy:true,maximumAge:30000});
+    },err=>{
+        if(err.code===1) showGeoFallback('denied');
+        else if(err.code===2) showGeoFallback('unavailable');
+        else showGeoFallback('timeout');
+    },{enableHighAccuracy:true,timeout:10000});
+}
+// Auto-request on load
+if(navigator.geolocation){
+    requestGeoPermission();
+} else {
+    showGeoFallback('unavailable');
 }
 
 // Animation loop
