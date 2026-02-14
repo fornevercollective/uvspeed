@@ -6,7 +6,7 @@
 
 > A development platform built on the beyondBINARY prefix system `{+1, 1, -1, +0, 0, -0, +n, n, -n}` — structurally addressing code in 9 dimensions across 20+ languages.
 
-[![Version](https://img.shields.io/badge/v4.0-uvspeed-brightgreen)](#install)
+[![Version](https://img.shields.io/badge/v4.2-uvspeed-brightgreen)](#install)
 [![Languages](https://img.shields.io/badge/Languages-20_supported-blue)](#quantum-prefix-system)
 [![Sponsor](https://img.shields.io/badge/Sponsor-%E2%9D%A4-ff69b4)](https://github.com/sponsors/fornevercollective)
 [![License](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
@@ -132,8 +132,8 @@ Plus a `{dev}` launch mode that opens the terminal with the dev console active.
 
 | Tool | What it does |
 |------|-------------|
-| **[quantum-gutter](web/quantum-gutter.html)** | Prefix system showcase — live editor, benchmarks, visual slice/orb/hex stream, 20-language coverage |
-| **[quantum-notepad](web/quantum-notepad.html)** | Code notepad with prefix gutter, 20-language support, mermaid diagrams, convert timeline |
+| **[quantum-gutter](web/quantum-gutter.html)** | Prefix system showcase — interactive 3D prefix cube, inverse starfield, live editor, benchmarks, visual slice/orb/hex stream, 20-language coverage |
+| **[quantum-notepad](web/quantum-notepad.html)** | Code notepad with prefix gutter, 20-language support, mermaid diagrams, HexStream chat, GPU<>Q sidebar, 8-mode live heatmaps (treemap/bubble/bars/sunburst/orb/lattice/cube/slice), quantum 3D navigation |
 | **[terminal (hexterm)](web/terminal.html)** | Full terminal emulator — virtual FS, hexcast, kbatch, device presets, sync, gutter |
 | **[feed](web/feed.html)** | Lightweight video/audio feed window with speech-to-text transcript |
 | **[grid](web/grid.html)** | Multi-stream canvas with 2x2/3x3/4x4 layout, device management, dev console |
@@ -149,14 +149,14 @@ Plus a `{dev}` launch mode that opens the terminal with the dev console active.
 | **[hexbench](web/hexbench.html)** | Voltage lab — PSU monitor, Arduino code editor, node workbench, Pybricks builder |
 | **[research-lab](web/research-lab.html)** | Markdown research editor with node canvas, mermaid preview, console |
 | **[numsy](web/numsy.html)** | 1080x1080 Instagram visual generator |
-| **[sponsor](web/sponsor.html)** | Sponsor page with Rubik's cube, starfield, tier cards |
+| **[sponsor](web/sponsor.html)** | Sponsor page with Rubik's cube, inverse starfield, Numsy sprites, tier cards |
 | **[github-dashboard](web/github-dashboard.html)** | Project health dashboard — phases, deps, community, actions |
 
 ### Shared Modules
 
 | Module | Description |
 |--------|-------------|
-| **[quantum-prefixes.js](web/quantum-prefixes.js)** | Shared prefix API — `classifyLine()`, `prefixContent()`, cross-app `BroadcastChannel` sync, IoT WebSocket bridge |
+| **[quantum-prefixes.js](web/quantum-prefixes.js)** | Shared prefix API — `classifyLine()`, `prefixContent()`, cross-app `BroadcastChannel` sync, IoT WebSocket bridge, global light/dark theme engine |
 | **[sw.js](web/sw.js)** | Service worker — offline-first cache for all 19 apps + shared assets |
 
 ### CLI Tools
@@ -253,6 +253,7 @@ Supported in 20+ languages: Python, JavaScript, TypeScript, Rust, Go, Swift, Kot
 ```
 uvspeed/
 ├── web/                    # 19 standalone HTML apps (PWA-ready)
+│   ├── quantum-gutter.html # Prefix system showcase + 3D cube
 │   ├── quantum-notepad.html # Main notepad with prefix gutter
 │   ├── terminal.html       # Full terminal emulator (hexterm)
 │   ├── hexbench.html       # Voltage lab — PSU, Arduino, nodes, Pybricks

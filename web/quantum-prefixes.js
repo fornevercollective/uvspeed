@@ -721,6 +721,18 @@
                 '.nav-cube-face span.ncf-active { color: #fff !important; }',
                 '.nav-cube-arrow { background: var(--qp-bg-tertiary) !important; color: var(--qp-text-muted) !important; border-color: var(--qp-border) !important; }',
                 '.ncv-controls { border-top-color: var(--qp-border) !important; }',
+                // Sidebar panels — ensure backgrounds are not too white in light mode
+                '.sidebar-tabs-ext { background: var(--qp-bg-tertiary) !important; }',
+                '.sidebar-tab-ext-panel { background: var(--qp-bg) !important; }',
+                '.gpuq-mini-card { background: var(--qp-bg-tertiary) !important; border-color: var(--qp-border) !important; }',
+                '.gpuq-mini-label { border-top-color: var(--qp-border-muted, var(--qp-border)) !important; }',
+                '.chat-msg { background: var(--qp-bg-tertiary) !important; }',
+                '.chat-msg.sys { background: none !important; }',
+                '.chat-link-bar { background: var(--qp-bg-tertiary) !important; }',
+                '.layer-btn { background: var(--qp-bg-tertiary) !important; border-color: var(--qp-border) !important; }',
+                '.blocks-panel, .lang-panel, .llm-panel, .gpuq-panel { background: var(--qp-bg) !important; }',
+                // kBatch panels
+                '.lkb-panel { background: var(--qp-bg) !important; }',
             ].join('\n') : [
                 ':root {',
                 '  --cursor-bg: var(--qp-bg); --cursor-bg-secondary: var(--qp-bg-secondary);',

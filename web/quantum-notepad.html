@@ -774,6 +774,61 @@
         .sidebar-tab-ext-panel { display: none; overflow-y: auto; overflow-x: hidden; max-width: 100%; box-sizing: border-box; }
         .sidebar-tab-ext-panel.active { display: block; }
 
+        /* --- Chat Panel (sidebar) --- */
+        .chat-panel { display: flex; flex-direction: column; height: 320px; }
+        .chat-msgs {
+            flex: 1; overflow-y: auto; padding: 6px 8px;
+            font-family: var(--cursor-font-mono); font-size: 0.625rem;
+        }
+        .chat-msg { margin-bottom: 4px; padding: 3px 6px; border-radius: 5px; background: var(--cursor-bg-tertiary); line-height: 1.4; word-break: break-word; }
+        .chat-msg .chat-user { font-weight: 700; color: var(--cursor-accent); margin-right: 4px; }
+        .chat-msg .chat-ts { font-size: 0.5rem; color: var(--cursor-text-muted); float: right; }
+        .chat-msg.sys { color: var(--cursor-text-muted); font-style: italic; background: none; padding: 1px 6px; font-size: 0.5625rem; }
+        .chat-input-row {
+            display: flex; gap: 4px; padding: 5px 6px;
+            border-top: 1px solid var(--cursor-border-muted); background: var(--cursor-bg);
+        }
+        .chat-input {
+            flex: 1; padding: 4px 8px; font-size: 0.625rem;
+            border: 1px solid var(--cursor-border); border-radius: 4px;
+            background: var(--cursor-bg-tertiary); color: var(--cursor-text);
+            font-family: var(--cursor-font-mono); outline: none;
+        }
+        .chat-input:focus { border-color: var(--cursor-accent); }
+        .chat-send {
+            padding: 4px 10px; font-size: 0.5625rem; font-weight: 700;
+            border: 1px solid var(--cursor-accent); border-radius: 4px;
+            background: var(--cursor-accent-subtle); color: var(--cursor-accent);
+            cursor: pointer; white-space: nowrap;
+        }
+        .chat-send:hover { background: var(--cursor-accent); color: #fff; }
+        .chat-link-bar {
+            display: flex; gap: 4px; padding: 4px 6px; border-bottom: 1px solid var(--cursor-border-muted);
+            background: var(--cursor-bg-tertiary); font-size: 0.5rem;
+        }
+        .chat-link-btn {
+            padding: 2px 6px; border-radius: 3px; border: 1px solid var(--cursor-border);
+            background: var(--cursor-bg); color: var(--cursor-text-muted); cursor: pointer;
+            font-size: 0.5rem; font-weight: 600;
+        }
+        .chat-link-btn:hover { color: var(--cursor-accent); border-color: var(--cursor-accent); }
+        .chat-link-btn.active { background: var(--cursor-accent-subtle); color: var(--cursor-accent); border-color: var(--cursor-accent); }
+
+        /* --- GPU<>Q / Mini Viz Panel --- */
+        .gpuq-panel { padding: var(--cursor-space-sm); }
+        .gpuq-mini-row { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 8px; }
+        .gpuq-mini-card {
+            background: var(--cursor-bg-tertiary); border: 1px solid var(--cursor-border);
+            border-radius: 6px; overflow: hidden; cursor: pointer; transition: border-color 0.15s;
+        }
+        .gpuq-mini-card:hover { border-color: var(--cursor-accent); }
+        .gpuq-mini-card canvas { width: 100%; height: 80px; display: block; }
+        .gpuq-mini-label {
+            padding: 3px 6px; font-size: 0.5rem; font-weight: 700;
+            color: var(--cursor-text-muted); text-transform: uppercase; letter-spacing: 0.3px;
+            text-align: center; border-top: 1px solid var(--cursor-border-muted);
+        }
+
         /* --- AI/LLM Panel --- */
         .llm-panel { padding: var(--cursor-space-sm); }
         .llm-model-card {
@@ -2887,9 +2942,9 @@
     <div style="display:flex;height:2px;width:100%;flex-shrink:0"><span style="flex:1;background:#ff3838"></span><span style="flex:1;background:#ff8c38"></span><span style="flex:1;background:#ffe138"></span><span style="flex:1;background:#3fb950"></span><span style="flex:1;background:#38a5ff"></span><span style="flex:1;background:#bc8cff"></span></div>
 
     <!-- ===== Hex Stream Chat Widget ===== -->
-    <button class="hxs-toggle" id="hxs-toggle" title="Hex Stream — chat & share screen">
+    <button class="hxs-toggle" id="hxs-toggle" title="Hex Stream — video chat & share screen">
         <span class="hxs-dot" id="hxs-dot"></span>
-        HexStream
+        <span>📡 HexStream</span>
     </button>
     <div class="hxs-panel" id="hxs-panel">
         <div class="hxs-video-area" id="hxs-video-area">
@@ -3111,8 +3166,10 @@
             <div class="quantum-sidebar">
                 <!-- Extended Tab Row (AI / Language / Blocks) -->
                 <div class="sidebar-tabs-ext" id="sidebar-tabs-ext">
-                    <button class="sidebar-tab-ext" data-ext-tab="ai-tab" id="tab-ai">🤖 AI/LLM</button>
-                    <button class="sidebar-tab-ext" data-ext-tab="lang-tab" id="tab-lang">🌐 Language</button>
+                    <button class="sidebar-tab-ext" data-ext-tab="chat-tab" id="tab-chat">💬 Chat</button>
+                    <button class="sidebar-tab-ext" data-ext-tab="gpuq-tab" id="tab-gpuq">⚛ GPU&lt;&gt;Q</button>
+                    <button class="sidebar-tab-ext" data-ext-tab="ai-tab" id="tab-ai">🤖 AI</button>
+                    <button class="sidebar-tab-ext" data-ext-tab="lang-tab" id="tab-lang">🌐 Lang</button>
                     <button class="sidebar-tab-ext" data-ext-tab="blocks-tab" id="tab-blocks">🧱 Blocks</button>
                 </div>
 
@@ -3386,6 +3443,55 @@
                 </div><!-- /thermal-tab -->
 
                 <!-- ===== EXT TAB 1: AI / LLM ===== -->
+                <!-- ===== Chat Tab ===== -->
+                <div class="sidebar-tab-ext-panel" id="chat-tab">
+                <div class="chat-panel">
+                    <div class="chat-link-bar">
+                        <button class="chat-link-btn active" id="chat-link-all" title="All messages">All</button>
+                        <button class="chat-link-btn" id="chat-link-stream" title="HexStream video chat">🎥 Stream</button>
+                        <button class="chat-link-btn" id="chat-link-sync" title="Sync link — share this to connect">🔗 Sync</button>
+                        <span style="flex:1"></span>
+                        <span id="chat-user-label" style="color:var(--cursor-text-muted);font-weight:600;"></span>
+                    </div>
+                    <div class="chat-msgs" id="chat-sidebar-msgs">
+                        <div class="chat-msg sys">HexStream chat — messages sync across all open tabs</div>
+                    </div>
+                    <div class="chat-input-row">
+                        <input class="chat-input" id="chat-sidebar-input" type="text" placeholder="Type a message…" autocomplete="off" maxlength="500">
+                        <button class="chat-send" id="chat-sidebar-send">Send</button>
+                    </div>
+                </div>
+                </div>
+
+                <!-- ===== GPU<>Q / Mini Visualization Tab ===== -->
+                <div class="sidebar-tab-ext-panel" id="gpuq-tab">
+                <div class="gpuq-panel">
+                    <div class="sidebar-title">GPU &lt;&gt; Quantum Viz</div>
+                    <div style="font-size:0.5625rem;color:var(--cursor-text-muted);margin-bottom:6px;">Live prefix visualizations — click to expand fullscreen</div>
+                    <div class="gpuq-mini-row">
+                        <div class="gpuq-mini-card" id="gpuq-lattice-card" title="Click to open fullscreen Lattice">
+                            <canvas id="gpuq-lattice-cv" width="200" height="100"></canvas>
+                            <div class="gpuq-mini-label">Lattice</div>
+                        </div>
+                        <div class="gpuq-mini-card" id="gpuq-orb-card" title="Click to open fullscreen Orb/Atom">
+                            <canvas id="gpuq-orb-cv" width="200" height="100"></canvas>
+                            <div class="gpuq-mini-label">Orb / Atom</div>
+                        </div>
+                    </div>
+                    <div class="gpuq-mini-row">
+                        <div class="gpuq-mini-card" id="gpuq-cube-card" title="Click to open fullscreen 3D Cube">
+                            <canvas id="gpuq-cube-cv" width="200" height="100"></canvas>
+                            <div class="gpuq-mini-label">3D Cube</div>
+                        </div>
+                        <div class="gpuq-mini-card" id="gpuq-kbatch-card" title="Click to open kBatch analyzer">
+                            <canvas id="gpuq-kbatch-cv" width="200" height="100"></canvas>
+                            <div class="gpuq-mini-label">kBatch</div>
+                        </div>
+                    </div>
+                    <div style="font-size:0.5rem;color:var(--cursor-text-muted);text-align:center;margin-top:4px;">Live data from notebook cells — updates every 1.5s</div>
+                </div>
+                </div>
+
                 <div class="sidebar-tab-ext-panel" id="ai-tab">
                 <div class="llm-panel">
                     <div class="sidebar-title">AI / LLM Models</div>
@@ -12697,6 +12803,7 @@ print(f"  Norm:  {qs.normalize().norm().numpy():.6f}")`);
             let dpr = window.devicePixelRatio || 1;
             let qheatAnimId = null;  // animation frame ID
             let qheatT0 = 0;        // animation start time
+            let qheatLastGather = 0; // throttle live data refresh
 
             const PREFIX_COLORS = {
                 shebang:   '#3fb950', comment:  '#58a6ff', import:   '#d2a8ff',
@@ -12720,18 +12827,33 @@ print(f"  Norm:  {qs.normalize().norm().numpy():.6f}")`);
                 ).join('');
             }
 
-            // Gather data from all notebook cells
+            // Extended data — beyond just prefixes
+            let qheatMeta = { totalLines: 0, classifiedLines: 0, cellCount: 0, languages: {}, cellTypes: {}, complexity: [], execStates: {} };
+
+            // Gather data from all notebook cells — extended with live metadata
             function gatherData() {
                 qheatData = [];
                 let totalLines = 0, classifiedLines = 0, activePrefixes = new Set();
+                const languages = {}, cellTypes = {}, complexity = [], execStates = {};
                 const lang = notebook.cells.length > 0 ? notebook.detectCellLanguage(notebook.cells[0]) : 'python';
 
                 notebook.cells.forEach((cell, idx) => {
-                    if (!cell.content) return;
+                    // Track cell type & language
+                    const cType = cell.type || 'code';
+                    cellTypes[cType] = (cellTypes[cType] || 0) + 1;
+                    const cLang = notebook.detectCellLanguage ? notebook.detectCellLanguage(cell) : lang;
+                    languages[cLang] = (languages[cLang] || 0) + 1;
+                    // Track execution state
+                    const exec = cell.executionCount ? 'executed' : (cell.output ? 'has-output' : 'idle');
+                    execStates[exec] = (execStates[exec] || 0) + 1;
+
+                    if (!cell.content) { complexity.push({ idx, lines: 0, chars: 0 }); return; }
                     const lines = cell.content.split('\n');
+                    complexity.push({ idx, lines: lines.length, chars: cell.content.length, type: cType, lang: cLang, exec });
+
                     const cellCounts = {};
                     lines.forEach(line => {
-                        const { category } = notebook.classifyLine(line, notebook.detectCellLanguage(cell));
+                        const { category } = notebook.classifyLine(line, cLang);
                         cellCounts[category] = (cellCounts[category] || 0) + 1;
                         totalLines++;
                         if (category !== 'default') { classifiedLines++; activePrefixes.add(category); }
@@ -12743,15 +12865,17 @@ print(f"  Norm:  {qs.normalize().norm().numpy():.6f}")`);
                             cat, sym: PREFIX_SYMS[cat] || '  ',
                             color: PREFIX_COLORS[cat] || '#30363d',
                             lines: count, cellId: cell.id, cellIdx: idx,
-                            pct: 0
+                            pct: 0, cellType: cType, cellLang: cLang, cellExec: exec
                         });
                     }
                 });
 
                 // Calculate percentages
                 qheatData.forEach(d => { d.pct = totalLines > 0 ? ((d.lines / totalLines) * 100) : 0; });
-                // Sort by size descending
                 qheatData.sort((a, b) => b.lines - a.lines);
+
+                // Store extended metadata
+                qheatMeta = { totalLines, classifiedLines, cellCount: notebook.cells.length, languages, cellTypes, complexity, execStates, activePrefixes: activePrefixes.size };
 
                 // Update stats
                 const coverage = totalLines > 0 ? Math.round((classifiedLines / totalLines) * 100) : 0;
@@ -12860,9 +12984,13 @@ print(f"  Norm:  {qs.normalize().norm().numpy():.6f}")`);
             function startAnimLoop() {
                 if (qheatAnimId) cancelAnimationFrame(qheatAnimId);
                 qheatT0 = performance.now();
+                qheatLastGather = 0;
                 function tick(ts) {
                     if (!overlay.classList.contains('open')) { qheatAnimId = null; return; }
-                    render((ts - qheatT0) / 1000);
+                    const elapsed = (ts - qheatT0) / 1000;
+                    // Live data refresh every 1.5s — picks up edits in real time
+                    if (elapsed - qheatLastGather > 1.5) { gatherData(); qheatLastGather = elapsed; }
+                    render(elapsed);
                     qheatAnimId = requestAnimationFrame(tick);
                 }
                 qheatAnimId = requestAnimationFrame(tick);
@@ -13087,7 +13215,7 @@ print(f"  Norm:  {qs.normalize().norm().numpy():.6f}")`);
                     cats.forEach((cat, c) => { ctx.fillStyle = PREFIX_COLORS[cat]; ctx.fillText(PREFIX_SYMS[cat]||'', 10 + c*cellW + cellW/2, 6); });
 
                 } else if (qheatMode === 'orb') {
-                    // Orb — orbiting nodes revolve around core, concentric rings pulse
+                    // ===== LIVE ATOM — nucleus, electron shells, orbiting particles =====
                     const cx = bw / 2, cy = bh / 2;
                     const maxR = Math.min(bw, bh) * 0.44;
                     const cats = Object.entries(PREFIX_COLORS).filter(([k]) => k !== 'default' && k !== 'decorator');
@@ -13095,53 +13223,108 @@ print(f"  Norm:  {qs.normalize().norm().numpy():.6f}")`);
                     const catLines = {};
                     qheatData.forEach(d => { catLines[d.cat] = (catLines[d.cat] || 0) + d.lines; });
 
-                    // Pulsing concentric glow rings
-                    for (let i = 5; i >= 1; i--) {
-                        const r = maxR * (i / 5) * (1 + 0.02 * Math.sin(t * 1.5 + i * 0.8));
-                        const grd = ctx.createRadialGradient(cx, cy, r * 0.2, cx, cy, r);
-                        const ringAlpha = 0.04 * i + 0.015 * Math.sin(t * 2 + i);
-                        grd.addColorStop(0, `rgba(139,92,246,${ringAlpha})`);
-                        grd.addColorStop(1, 'rgba(139,92,246,0)');
-                        ctx.fillStyle = grd; ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.fill();
+                    // --- Electron shell orbit rings (tilted ellipses) ---
+                    const shellCount = Math.min(cats.length, 5);
+                    for (let s = 1; s <= shellCount; s++) {
+                        const shellR = maxR * (s / shellCount) * 0.92;
+                        const tilt = (s * 0.6) + t * 0.05 * s; // each shell rotates at different speed
+                        ctx.save();
+                        ctx.translate(cx, cy);
+                        ctx.rotate(tilt);
+                        ctx.scale(1, 0.35 + 0.08 * Math.sin(t * 0.4 + s)); // elliptical
+                        ctx.strokeStyle = cats[s-1] ? cats[s-1][1] : '#8b5cf6';
+                        ctx.globalAlpha = 0.12 + 0.06 * Math.sin(t * 1.5 + s * 1.2);
+                        ctx.lineWidth = 1.2;
+                        ctx.setLineDash([4, 6]);
+                        ctx.beginPath(); ctx.arc(0, 0, shellR, 0, Math.PI * 2); ctx.stroke();
+                        ctx.setLineDash([]);
+                        ctx.restore();
                     }
-                    // Core orb — breathing
-                    const coreR = maxR * 0.3 * (1 + 0.05 * Math.sin(t * 2));
-                    const coreGrd = ctx.createRadialGradient(cx, cy - maxR*0.05, maxR*0.03, cx, cy, coreR);
-                    coreGrd.addColorStop(0, `rgba(139,92,246,${0.45 + 0.1 * Math.sin(t * 2.5)})`);
-                    coreGrd.addColorStop(1, 'rgba(139,92,246,0.03)');
-                    ctx.fillStyle = coreGrd; ctx.beginPath(); ctx.arc(cx, cy, coreR, 0, Math.PI*2); ctx.fill();
 
-                    // Orbiting prefix nodes
+                    // --- Nucleus — glowing core with internal structure ---
+                    const nucleusR = maxR * 0.14 * (1 + 0.06 * Math.sin(t * 3));
+                    // Outer glow
+                    const nukeGlow = ctx.createRadialGradient(cx, cy, 0, cx, cy, nucleusR * 3);
+                    nukeGlow.addColorStop(0, `rgba(139,92,246,${0.15 + 0.05 * Math.sin(t * 2)})`);
+                    nukeGlow.addColorStop(0.5, 'rgba(139,92,246,0.03)');
+                    nukeGlow.addColorStop(1, 'rgba(139,92,246,0)');
+                    ctx.fillStyle = nukeGlow; ctx.beginPath(); ctx.arc(cx, cy, nucleusR * 3, 0, Math.PI*2); ctx.fill();
+                    // Core sphere with highlight
+                    const nukeCore = ctx.createRadialGradient(cx - nucleusR*0.3, cy - nucleusR*0.3, nucleusR*0.1, cx, cy, nucleusR);
+                    nukeCore.addColorStop(0, '#d4b8ff');
+                    nukeCore.addColorStop(0.4, '#8b5cf6');
+                    nukeCore.addColorStop(1, '#4c1d95');
+                    ctx.fillStyle = nukeCore; ctx.globalAlpha = 0.85 + 0.1 * Math.sin(t * 2.5);
+                    ctx.beginPath(); ctx.arc(cx, cy, nucleusR, 0, Math.PI*2); ctx.fill();
+                    ctx.globalAlpha = 1;
+                    // Nucleus label
+                    ctx.fillStyle = '#fff'; ctx.font = `bold ${Math.max(10, nucleusR * 0.7)}px monospace`;
+                    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                    ctx.fillText(`${total}L`, cx, cy);
+
+                    // --- Orbiting electrons (prefix particles on shells) ---
                     cats.forEach(([cat, color], i) => {
                         const weight = (catLines[cat] || 0) / total;
-                        const baseAngle = (i / cats.length) * Math.PI * 2 - Math.PI / 2;
-                        const orbitAngle = baseAngle + t * (0.25 + weight * 0.15); // orbit speed varies by weight
-                        const dist = Math.min(maxR * 0.9, maxR * (0.4 + weight * 1.1));
-                        const wobble = Math.sin(t * 1.5 + i * 2) * 8;
-                        const nx = cx + Math.cos(orbitAngle) * (dist + wobble);
-                        const ny = cy + Math.sin(orbitAngle) * (dist + wobble);
-                        const nodeR = (8 + weight * 40) * (1 + 0.06 * Math.sin(t * 2.5 + i));
+                        const shellIdx = i % shellCount;
+                        const shellR = maxR * ((shellIdx + 1) / shellCount) * 0.92;
+                        const tilt = ((shellIdx + 1) * 0.6) + t * 0.05 * (shellIdx + 1);
+                        // Orbit speed: heavier = slower (more stable), lighter = faster
+                        const speed = 0.8 + (1 - weight) * 1.5;
+                        const angle = (i / cats.length) * Math.PI * 2 + t * speed;
 
-                        // Glow halo
-                        const grd = ctx.createRadialGradient(nx, ny, 0, nx, ny, nodeR * 1.8);
-                        grd.addColorStop(0, color + '30'); grd.addColorStop(1, color + '00');
-                        ctx.fillStyle = grd; ctx.beginPath(); ctx.arc(nx, ny, nodeR * 1.8, 0, Math.PI*2); ctx.fill();
+                        // Position on the tilted elliptical orbit
+                        const ex = Math.cos(angle) * shellR;
+                        const ey = Math.sin(angle) * shellR * (0.35 + 0.08 * Math.sin(t * 0.4 + shellIdx + 1));
+                        // Rotate by shell tilt
+                        const cosT = Math.cos(tilt), sinT = Math.sin(tilt);
+                        const nx = cx + ex * cosT - ey * sinT;
+                        const ny = cy + ex * sinT + ey * cosT;
+                        const nodeR = 5 + weight * 30;
 
-                        ctx.fillStyle = color; ctx.globalAlpha = 0.6 + weight * 0.4;
+                        // Electron trail (motion blur)
+                        for (let trail = 3; trail >= 1; trail--) {
+                            const ta = angle - trail * 0.08;
+                            const tex = Math.cos(ta) * shellR;
+                            const tey = Math.sin(ta) * shellR * (0.35 + 0.08 * Math.sin(t * 0.4 + shellIdx + 1));
+                            const tnx = cx + tex * cosT - tey * sinT;
+                            const tny = cy + tex * sinT + tey * cosT;
+                            ctx.fillStyle = color; ctx.globalAlpha = 0.06 * trail;
+                            ctx.beginPath(); ctx.arc(tnx, tny, nodeR * 0.6, 0, Math.PI*2); ctx.fill();
+                        }
+
+                        // Electron glow
+                        const eGrd = ctx.createRadialGradient(nx, ny, 0, nx, ny, nodeR * 2);
+                        eGrd.addColorStop(0, color + '35'); eGrd.addColorStop(1, color + '00');
+                        ctx.fillStyle = eGrd; ctx.globalAlpha = 0.7;
+                        ctx.beginPath(); ctx.arc(nx, ny, nodeR * 2, 0, Math.PI*2); ctx.fill();
+
+                        // Electron sphere
+                        const eSphere = ctx.createRadialGradient(nx - nodeR*0.25, ny - nodeR*0.25, nodeR*0.1, nx, ny, nodeR);
+                        eSphere.addColorStop(0, '#fff'); eSphere.addColorStop(0.3, color); eSphere.addColorStop(1, color + '80');
+                        ctx.fillStyle = eSphere; ctx.globalAlpha = 0.8 + weight * 0.2;
                         ctx.beginPath(); ctx.arc(nx, ny, nodeR, 0, Math.PI*2); ctx.fill();
                         ctx.globalAlpha = 1;
-                        // Connector
-                        ctx.strokeStyle = color; ctx.globalAlpha = 0.1 + 0.05 * Math.sin(t + i); ctx.lineWidth = 1;
-                        ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(nx, ny); ctx.stroke();
-                        ctx.globalAlpha = 1;
+
                         // Label
-                        ctx.fillStyle = '#fff'; ctx.font = `bold ${Math.max(9, nodeR * 0.55)}px monospace`;
-                        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-                        ctx.fillText(PREFIX_SYMS[cat] || cat, nx, ny);
+                        if (nodeR > 8) {
+                            ctx.fillStyle = '#fff'; ctx.font = `bold ${Math.max(7, nodeR * 0.5)}px monospace`;
+                            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                            ctx.fillText(PREFIX_SYMS[cat] || '', nx, ny);
+                        }
                         qheatRects.push({ bx: nx, by: ny, br: nodeR, data: { cat, lines: catLines[cat]||0, sym: PREFIX_SYMS[cat]||'', color, pct: weight*100, label: cat, cellId:'' }, shape:'circle' });
                     });
-                    ctx.fillStyle = thFg(); ctx.font = 'bold 12px system-ui'; ctx.textAlign = 'center';
-                    ctx.fillText(`${total} lines`, cx, cy + 2);
+
+                    // --- Extended data HUD (top-left corner) ---
+                    ctx.globalAlpha = 0.7;
+                    ctx.fillStyle = thFgMuted(); ctx.font = '10px monospace'; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+                    const hudLines = [
+                        `${qheatMeta.cellCount} cells · ${total} lines · ${qheatMeta.activePrefixes}/9 prefixes`,
+                        `langs: ${Object.entries(qheatMeta.languages).map(([l,c])=>`${l}(${c})`).join(' ')}`,
+                        `types: ${Object.entries(qheatMeta.cellTypes).map(([t2,c])=>`${t2}(${c})`).join(' ')}`,
+                        `state: ${Object.entries(qheatMeta.execStates).map(([s,c])=>`${s}(${c})`).join(' ')}`,
+                    ];
+                    hudLines.forEach((line, li) => { ctx.fillText(line, 12, 12 + li * 14); });
+                    ctx.globalAlpha = 1;
 
                 } else if (qheatMode === 'lattice') {
                     // Lattice — nodes drift and connections pulse with energy flow
@@ -13204,72 +13387,149 @@ print(f"  Norm:  {qs.normalize().norm().numpy():.6f}")`);
                         qheatRects.push({ bx: n.nx, by: n.ny, br: n.nodeR, data: { cat: n.cat, lines: catLines[n.cat]||0, sym: PREFIX_SYMS[n.cat]||'', color: n.color, pct: n.weight*100, label: n.cat, cellId:'' }, shape:'circle' });
                     });
 
+                    // Extended data: cell complexity sparkline (bottom)
+                    if (qheatMeta.complexity && qheatMeta.complexity.length > 1) {
+                        const sparkH = 30, sparkY = bh - sparkH - 8, sparkW = bw - 24;
+                        const maxL = Math.max(...qheatMeta.complexity.map(c => c.lines)) || 1;
+                        ctx.strokeStyle = '#8b5cf6'; ctx.lineWidth = 1.5; ctx.globalAlpha = 0.5;
+                        ctx.beginPath();
+                        qheatMeta.complexity.forEach((c, ci) => {
+                            const sx = 12 + (ci / (qheatMeta.complexity.length - 1)) * sparkW;
+                            const sy = sparkY + sparkH - (c.lines / maxL) * sparkH;
+                            ci === 0 ? ctx.moveTo(sx, sy) : ctx.lineTo(sx, sy);
+                        });
+                        ctx.stroke(); ctx.globalAlpha = 1;
+                        ctx.fillStyle = thFgMuted(); ctx.font = '8px monospace'; ctx.textAlign = 'left';
+                        ctx.fillText('cell complexity →', 12, sparkY - 3);
+                    }
+
                 } else if (qheatMode === 'cube3d') {
-                    // 3D Cube — continuous rotation around Y axis
+                    // ===== GLASS CUBE — see-through wireframe with interior nodes =====
                     const cx = bw / 2, cy = bh / 2;
-                    const size = Math.min(bw, bh) * 0.28;
+                    const size = Math.min(bw, bh) * 0.3;
                     const total = qheatData.reduce((s,d)=>s+d.lines,0) || 1;
                     const catLines = {};
                     qheatData.forEach(d => { catLines[d.cat] = (catLines[d.cat] || 0) + d.lines; });
                     const cats = ['shebang','comment','import','class','function','error','condition','variable','return'];
 
-                    // Rotating isometric projection with time-based Y rotation
-                    const rotY = t * 0.4; // slow rotation
-                    const rotX = -0.5 + Math.sin(t * 0.15) * 0.12; // gentle nod
+                    // Rotation
+                    const rotY = t * 0.35;
+                    const rotX = -0.45 + Math.sin(t * 0.12) * 0.15;
                     const cosY = Math.cos(rotY), sinY = Math.sin(rotY);
                     const cosX = Math.cos(rotX), sinX = Math.sin(rotX);
 
                     const project = (x, y, z) => {
-                        // Center at origin
                         x -= 1.5; y -= 1.5; z -= 1.5;
-                        // Rotate Y
                         const x1 = x * cosY - z * sinY, z1 = x * sinY + z * cosY;
-                        // Rotate X
                         const y1 = y * cosX - z1 * sinX, z2 = y * sinX + z1 * cosX;
-                        // Perspective projection
-                        const scale = 6 / (6 + z2);
+                        const scale = 5.5 / (5.5 + z2);
                         return { px: cx + x1 * size * scale, py: cy - y1 * size * scale, depth: z2, scale };
                     };
 
-                    // Collect all cells with depth for sorting
+                    // --- Draw outer wireframe cage (glass edges) ---
+                    const edges = [
+                        [[0,0,0],[3,0,0]], [[0,3,0],[3,3,0]], [[0,0,3],[3,0,3]], [[0,3,3],[3,3,3]], // X edges
+                        [[0,0,0],[0,3,0]], [[3,0,0],[3,3,0]], [[0,0,3],[0,3,3]], [[3,0,3],[3,3,3]], // Y edges
+                        [[0,0,0],[0,0,3]], [[3,0,0],[3,0,3]], [[0,3,0],[0,3,3]], [[3,3,0],[3,3,3]], // Z edges
+                    ];
+                    // Internal grid lines (like a Rubik's cube internal structure)
+                    for (let i = 1; i <= 2; i++) {
+                        edges.push([[i,0,0],[i,3,0]], [[i,0,3],[i,3,3]], [[i,0,0],[i,0,3]], [[i,3,0],[i,3,3]]);
+                        edges.push([[0,i,0],[3,i,0]], [[0,i,3],[3,i,3]], [[0,i,0],[0,i,3]], [[3,i,0],[3,i,3]]);
+                        edges.push([[0,0,i],[3,0,i]], [[0,3,i],[3,3,i]], [[0,0,i],[0,3,i]], [[3,0,i],[3,3,i]]);
+                    }
+
+                    edges.forEach(([a, b]) => {
+                        const pa = project(a[0], a[1], a[2]);
+                        const pb = project(b[0], b[1], b[2]);
+                        const avgDepth = (pa.depth + pb.depth) / 2;
+                        const isOuter = (a[0]===0||a[0]===3||b[0]===0||b[0]===3) && (a[1]===0||a[1]===3||b[1]===0||b[1]===3);
+                        ctx.strokeStyle = isOuter ? 'rgba(139,92,246,0.35)' : 'rgba(139,92,246,0.1)';
+                        ctx.lineWidth = isOuter ? 1.2 : 0.6;
+                        ctx.globalAlpha = 0.5 + 0.3 / (1 + Math.max(0, avgDepth));
+                        ctx.beginPath(); ctx.moveTo(pa.px, pa.py); ctx.lineTo(pb.px, pb.py); ctx.stroke();
+                    });
+                    ctx.globalAlpha = 1;
+
+                    // --- Draw glass faces (very transparent) on the 6 outer sides ---
+                    const faces = [
+                        { pts: [[0,0,0],[3,0,0],[3,3,0],[0,3,0]], normal: [0,0,-1] }, // front
+                        { pts: [[0,0,3],[3,0,3],[3,3,3],[0,3,3]], normal: [0,0,1] },  // back
+                        { pts: [[0,0,0],[0,0,3],[0,3,3],[0,3,0]], normal: [-1,0,0] }, // left
+                        { pts: [[3,0,0],[3,0,3],[3,3,3],[3,3,0]], normal: [1,0,0] },  // right
+                        { pts: [[0,3,0],[3,3,0],[3,3,3],[0,3,3]], normal: [0,1,0] },  // top
+                        { pts: [[0,0,0],[3,0,0],[3,0,3],[0,0,3]], normal: [0,-1,0] }, // bottom
+                    ];
+                    faces.forEach(face => {
+                        const projected = face.pts.map(p => project(p[0], p[1], p[2]));
+                        const avgD = projected.reduce((s,p) => s + p.depth, 0) / 4;
+                        ctx.fillStyle = `rgba(139,92,246,${0.02 + 0.015 * Math.sin(t * 1.5 + avgD)})`;
+                        ctx.beginPath();
+                        ctx.moveTo(projected[0].px, projected[0].py);
+                        for (let i = 1; i < 4; i++) ctx.lineTo(projected[i].px, projected[i].py);
+                        ctx.closePath(); ctx.fill();
+                    });
+
+                    // --- Interior data nodes (visible through glass) ---
                     const cells = [];
                     for (let z = 0; z < 3; z++) for (let y = 0; y < 3; y++) for (let x = 0; x < 3; x++) {
-                        const idx = z * 3 + x;
-                        const cat = cats[idx % cats.length];
+                        const idx = (z * 9 + y * 3 + x) % cats.length;
+                        const cat = cats[idx];
                         const weight = (catLines[cat] || 0) / total;
                         const center = project(x + 0.5, y + 0.5, z + 0.5);
-                        cells.push({ x, y, z, cat, weight, center, color: PREFIX_COLORS[cat] || '#30363d' });
+                        cells.push({ x, y, z, cat, weight, center, color: PREFIX_COLORS[cat] || '#30363d', idx });
                     }
-                    // Sort back-to-front
                     cells.sort((a, b) => a.center.depth - b.center.depth);
 
                     cells.forEach(cell => {
-                        const s = 0.42;
                         const px = cell.center.px, py = cell.center.py;
-                        const cellSize = size * cell.center.scale * s;
-                        const pulse = 0.35 + cell.weight * 0.55 + 0.08 * Math.sin(t * 2 + cell.x + cell.y + cell.z);
+                        const baseSize = size * cell.center.scale * 0.2;
+                        const nodeR = baseSize + cell.weight * baseSize * 2;
+                        const pulse = 0.5 + cell.weight * 0.4 + 0.1 * Math.sin(t * 2.5 + cell.idx * 0.7);
+                        const depthFade = 0.4 + 0.5 / (1 + Math.max(0, cell.center.depth * 0.5));
 
                         // Glow
-                        const grd = ctx.createRadialGradient(px, py, 0, px, py, cellSize * 1.2);
-                        grd.addColorStop(0, cell.color + '50'); grd.addColorStop(1, cell.color + '00');
-                        ctx.fillStyle = grd; ctx.beginPath(); ctx.arc(px, py, cellSize * 1.2, 0, Math.PI*2); ctx.fill();
+                        const grd = ctx.createRadialGradient(px, py, 0, px, py, nodeR * 2.5);
+                        grd.addColorStop(0, cell.color + '30'); grd.addColorStop(1, cell.color + '00');
+                        ctx.fillStyle = grd; ctx.beginPath(); ctx.arc(px, py, nodeR * 2.5, 0, Math.PI*2); ctx.fill();
 
-                        // Cell
-                        ctx.fillStyle = cell.color; ctx.globalAlpha = pulse;
-                        ctx.beginPath(); ctx.arc(px, py, cellSize, 0, Math.PI*2); ctx.fill();
+                        // Node sphere
+                        const sphere = ctx.createRadialGradient(px - nodeR*0.2, py - nodeR*0.2, nodeR*0.1, px, py, nodeR);
+                        sphere.addColorStop(0, '#fff'); sphere.addColorStop(0.25, cell.color); sphere.addColorStop(1, cell.color + '40');
+                        ctx.fillStyle = sphere; ctx.globalAlpha = pulse * depthFade;
+                        ctx.beginPath(); ctx.arc(px, py, nodeR, 0, Math.PI*2); ctx.fill();
                         ctx.globalAlpha = 1;
-                        ctx.strokeStyle = thBgSep(); ctx.lineWidth = 0.5;
-                        ctx.beginPath(); ctx.arc(px, py, cellSize, 0, Math.PI*2); ctx.stroke();
 
-                        // Label on larger cells
-                        if (cellSize > 10) {
-                            ctx.fillStyle = '#fff'; ctx.font = `bold ${Math.max(7, cellSize * 0.55)}px monospace`;
+                        // Label
+                        if (nodeR > 8) {
+                            ctx.fillStyle = '#fff'; ctx.font = `bold ${Math.max(7, nodeR * 0.5)}px monospace`;
                             ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                            ctx.globalAlpha = depthFade;
                             ctx.fillText(PREFIX_SYMS[cell.cat]||'', px, py);
+                            ctx.globalAlpha = 1;
                         }
+                        qheatRects.push({ bx: px, by: py, br: nodeR, data: { cat: cell.cat, lines: catLines[cell.cat]||0, sym: PREFIX_SYMS[cell.cat]||'', color: cell.color, pct: cell.weight*100, label: cell.cat, cellId:'' }, shape:'circle' });
                     });
-                    ctx.fillStyle = thFgMuted(); ctx.font = '11px system-ui'; ctx.textAlign = 'center';
-                    ctx.fillText(`${total} lines · 9 prefix dimensions`, cx, bh - 16);
+
+                    // --- Floating particles between nodes (energy transfer) ---
+                    for (let p = 0; p < 12; p++) {
+                        const pt = (t * 0.6 + p * 0.37) % 3;
+                        const fx = pt, fy = 0.5 + Math.sin(t + p * 2) * 1, fz = 1.5 + Math.cos(t * 0.8 + p) * 1;
+                        const fp = project(fx, fy, fz);
+                        ctx.fillStyle = '#8b5cf6'; ctx.globalAlpha = 0.3 + 0.2 * Math.sin(t * 3 + p);
+                        ctx.beginPath(); ctx.arc(fp.px, fp.py, 1.5, 0, Math.PI*2); ctx.fill();
+                    }
+                    ctx.globalAlpha = 1;
+
+                    // --- HUD ---
+                    ctx.fillStyle = thFgMuted(); ctx.font = '10px monospace'; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+                    ctx.globalAlpha = 0.7;
+                    const cHud = [
+                        `${total} lines · 3×3×3 prefix lattice`,
+                        `cells: ${qheatMeta.cellCount} · ${Object.keys(qheatMeta.languages).join('+')}`,
+                    ];
+                    cHud.forEach((line, li) => ctx.fillText(line, 12, bh - 30 + li * 14));
+                    ctx.globalAlpha = 1;
                 }
             }
 
@@ -13873,9 +14133,242 @@ print(f"  Norm:  {qs.normalize().norm().numpy():.6f}")`);
                 bc.postMessage({ type:'join', user: username });
                 window.addEventListener('beforeunload', () => { stopStream(); bc.postMessage({ type:'leave', user: username }); });
 
-                // expose API
-                window.hexStream = { sendMessage: (txt) => { addMsg(username, txt, false); bc.postMessage({ type:'chat', user: username, text: txt, ts: Date.now() }); }, username };
+                // expose API + sidebar mirror function
+                window.hexStream = {
+                    sendMessage: (txt) => { addMsg(username, txt, false); bc.postMessage({ type:'chat', user: username, text: txt, ts: Date.now() }); },
+                    username,
+                    _addMsg: addMsg,
+                    _bc: bc
+                };
                 } catch(e) { console.warn('HexStream init error:', e); }
+            })();
+
+            // ===== CHAT SIDEBAR — mirrors HexStream + full history =====
+            (function initChatSidebar() {
+                try {
+                const msgs = document.getElementById('chat-sidebar-msgs');
+                const input = document.getElementById('chat-sidebar-input');
+                const sendBtn = document.getElementById('chat-sidebar-send');
+                const userLabel = document.getElementById('chat-user-label');
+                if (!msgs || !input) return;
+
+                const bc = new BroadcastChannel('hexstream-chat');
+                const username = window.hexStream ? window.hexStream.username : 'User-' + Math.random().toString(36).slice(2,6).toUpperCase();
+                if (userLabel) userLabel.textContent = username;
+
+                let chatHistory = [];
+                try { chatHistory = JSON.parse(localStorage.getItem('hxs-chat-history') || '[]'); } catch(e) {}
+
+                function escHtml(s) { const d = document.createElement('span'); d.textContent = s; return d.innerHTML; }
+
+                function renderMsg(user, text, isSystem, ts) {
+                    const d = document.createElement('div');
+                    d.className = 'chat-msg' + (isSystem ? ' sys' : '');
+                    const time = ts || new Date();
+                    const tsStr = (typeof time === 'object' ? time : new Date(time));
+                    const tsFmt = tsStr.getHours().toString().padStart(2,'0') + ':' + tsStr.getMinutes().toString().padStart(2,'0');
+                    if (isSystem) { d.textContent = text; }
+                    else { d.innerHTML = '<span class="chat-ts">' + tsFmt + '</span><span class="chat-user">' + escHtml(user) + '</span>' + escHtml(text); }
+                    msgs.appendChild(d);
+                    msgs.scrollTop = msgs.scrollHeight;
+                    while (msgs.children.length > 200) msgs.removeChild(msgs.firstChild);
+                }
+
+                // Restore history
+                chatHistory.forEach(m => renderMsg(m.user, m.text, m.sys, m.ts));
+
+                function saveMsg(user, text, sys) {
+                    chatHistory.push({ user, text, sys, ts: Date.now() });
+                    if (chatHistory.length > 200) chatHistory = chatHistory.slice(-200);
+                    try { localStorage.setItem('hxs-chat-history', JSON.stringify(chatHistory)); } catch(e) {}
+                }
+
+                function sendMessage() {
+                    const txt = input.value.trim();
+                    if (!txt) return;
+                    renderMsg(username, txt, false);
+                    saveMsg(username, txt, false);
+                    bc.postMessage({ type:'chat', user: username, text: txt, ts: Date.now() });
+                    // Also mirror to HexStream top-right widget
+                    if (window.hexStream && window.hexStream._addMsg) window.hexStream._addMsg(username, txt, false);
+                    input.value = '';
+                    input.focus();
+                }
+
+                sendBtn.addEventListener('click', sendMessage);
+                input.addEventListener('keydown', e => { if (e.key === 'Enter') sendMessage(); });
+
+                // Receive from BroadcastChannel
+                bc.onmessage = ev => {
+                    const d = ev.data;
+                    if (d.type === 'chat') { renderMsg(d.user, d.text, false, d.ts); saveMsg(d.user, d.text, false); }
+                    else if (d.type === 'join') { renderMsg(null, d.user + ' joined', true); saveMsg(d.user, d.user + ' joined', true); }
+                    else if (d.type === 'leave') { renderMsg(null, d.user + ' left', true); saveMsg(d.user, d.user + ' left', true); }
+                    else if (d.type === 'stream-start') { renderMsg(null, d.user + ' started ' + (d.source||'stream'), true); }
+                    else if (d.type === 'stream-stop') { renderMsg(null, d.user + ' stopped stream', true); }
+                };
+
+                // Quick-link buttons
+                document.getElementById('chat-link-stream')?.addEventListener('click', () => {
+                    // Open HexStream panel if not open
+                    const panel = document.getElementById('hxs-panel');
+                    if (panel && !panel.classList.contains('open')) panel.classList.add('open');
+                });
+                document.getElementById('chat-link-sync')?.addEventListener('click', () => {
+                    const syncCode = username + '-' + Date.now().toString(36);
+                    navigator.clipboard?.writeText(syncCode).then(() => {
+                        renderMsg(null, 'Sync code copied: ' + syncCode, true);
+                    }).catch(() => {
+                        renderMsg(null, 'Sync: ' + syncCode, true);
+                    });
+                });
+
+                } catch(e) { console.warn('Chat sidebar init error:', e); }
+            })();
+
+            // ===== GPU<>Q MINI VISUALIZATIONS (sidebar) =====
+            (function initGpuQMini() {
+                try {
+                const PREFIX_COLORS = {
+                    shebang:'#3fb950', comment:'#58a6ff', import:'#d2a8ff',
+                    class:'#ff3838', function:'#f0883e', error:'#da3633',
+                    condition:'#ffe138', variable:'#7ee787', return:'#484f58'
+                };
+                const cats = Object.entries(PREFIX_COLORS);
+                let gpuqAnimId = null;
+
+                function drawLattice(cv, t) {
+                    const ctx = cv.getContext('2d');
+                    const w = cv.width, h = cv.height;
+                    ctx.clearRect(0,0,w,h);
+                    const cols = 3, rows = 3, sx = w/(cols+1), sy = h/(rows+1);
+                    const nodes = [];
+                    cats.slice(0,9).forEach(([,c], i) => {
+                        const col = i % cols, row = Math.floor(i/cols);
+                        const nx = sx + col*sx + Math.sin(t*0.7+i*1.9)*6;
+                        const ny = sy*0.6 + row*sy*0.8 + Math.cos(t*0.5+i*2.3)*5;
+                        nodes.push({nx,ny,c,i});
+                    });
+                    // Connections
+                    for(let i=0;i<nodes.length;i++) for(let j=i+1;j<nodes.length;j++){
+                        const dx=nodes[j].nx-nodes[i].nx, dy=nodes[j].ny-nodes[i].ny;
+                        if(Math.sqrt(dx*dx+dy*dy)<sx*2.2){
+                            ctx.strokeStyle=nodes[i].c; ctx.globalAlpha=0.15+0.1*Math.sin(t*2+i+j);
+                            ctx.lineWidth=0.8; ctx.beginPath(); ctx.moveTo(nodes[i].nx,nodes[i].ny); ctx.lineTo(nodes[j].nx,nodes[j].ny); ctx.stroke();
+                        }
+                    }
+                    ctx.globalAlpha=1;
+                    nodes.forEach(n => {
+                        const r = 4+2*Math.sin(t*2+n.i);
+                        ctx.fillStyle=n.c; ctx.globalAlpha=0.8;
+                        ctx.beginPath(); ctx.arc(n.nx,n.ny,r,0,Math.PI*2); ctx.fill();
+                        ctx.globalAlpha=1;
+                    });
+                }
+
+                function drawOrb(cv, t) {
+                    const ctx = cv.getContext('2d');
+                    const w = cv.width, h = cv.height, cx = w/2, cy = h/2;
+                    ctx.clearRect(0,0,w,h);
+                    const maxR = Math.min(w,h)*0.42;
+                    // Shells
+                    for(let s=1;s<=3;s++){
+                        const r=maxR*(s/3); ctx.save(); ctx.translate(cx,cy); ctx.rotate(s*0.6+t*0.05*s);
+                        ctx.scale(1,0.35); ctx.strokeStyle='#8b5cf6'; ctx.globalAlpha=0.15; ctx.lineWidth=0.8;
+                        ctx.setLineDash([3,5]); ctx.beginPath(); ctx.arc(0,0,r,0,Math.PI*2); ctx.stroke();
+                        ctx.setLineDash([]); ctx.restore();
+                    }
+                    // Nucleus
+                    const grd = ctx.createRadialGradient(cx,cy-2,1,cx,cy,maxR*0.15);
+                    grd.addColorStop(0,'#d4b8ff'); grd.addColorStop(1,'#4c1d95');
+                    ctx.fillStyle=grd; ctx.globalAlpha=0.8+0.1*Math.sin(t*2.5);
+                    ctx.beginPath(); ctx.arc(cx,cy,maxR*0.15,0,Math.PI*2); ctx.fill(); ctx.globalAlpha=1;
+                    // Electrons
+                    cats.slice(0,6).forEach(([,c],i)=>{
+                        const shell = (i%3)+1, shellR=maxR*(shell/3);
+                        const a=(i/6)*Math.PI*2+t*(0.8+(1-i/6)*1.2);
+                        const ex=Math.cos(a)*shellR, ey=Math.sin(a)*shellR*0.35;
+                        const cosT=Math.cos(shell*0.6+t*0.05*shell), sinT=Math.sin(shell*0.6+t*0.05*shell);
+                        const nx=cx+ex*cosT-ey*sinT, ny=cy+ex*sinT+ey*cosT;
+                        ctx.fillStyle=c; ctx.globalAlpha=0.85;
+                        ctx.beginPath(); ctx.arc(nx,ny,3,0,Math.PI*2); ctx.fill(); ctx.globalAlpha=1;
+                    });
+                }
+
+                function drawCube(cv, t) {
+                    const ctx = cv.getContext('2d');
+                    const w = cv.width, h = cv.height, cx = w/2, cy = h/2;
+                    ctx.clearRect(0,0,w,h);
+                    const size = Math.min(w,h)*0.25;
+                    const rotY=t*0.35, rotX=-0.45+Math.sin(t*0.12)*0.15;
+                    const cosY=Math.cos(rotY),sinY=Math.sin(rotY),cosX=Math.cos(rotX),sinX=Math.sin(rotX);
+                    const proj=(x,y,z)=>{x-=1.5;y-=1.5;z-=1.5;const x1=x*cosY-z*sinY,z1=x*sinY+z*cosY;const y1=y*cosX-z1*sinX,z2=y*sinX+z1*cosX;const s=5/(5+z2);return{px:cx+x1*size*s,py:cy-y1*size*s,d:z2,s};};
+                    // Wireframe
+                    [[0,0,0,3,0,0],[0,3,0,3,3,0],[0,0,3,3,0,3],[0,3,3,3,3,3],[0,0,0,0,3,0],[3,0,0,3,3,0],[0,0,3,0,3,3],[3,0,3,3,3,3],[0,0,0,0,0,3],[3,0,0,3,0,3],[0,3,0,0,3,3],[3,3,0,3,3,3]].forEach(e=>{
+                        const a=proj(e[0],e[1],e[2]),b=proj(e[3],e[4],e[5]);
+                        ctx.strokeStyle='rgba(139,92,246,0.25)'; ctx.lineWidth=0.8;
+                        ctx.beginPath(); ctx.moveTo(a.px,a.py); ctx.lineTo(b.px,b.py); ctx.stroke();
+                    });
+                    // Nodes
+                    for(let z=0;z<3;z++)for(let y=0;y<3;y++)for(let x=0;x<3;x++){
+                        const c=cats[(z*3+x)%cats.length]; const p=proj(x+.5,y+.5,z+.5);
+                        const r=2+1/(1+Math.max(0,p.d*0.3));
+                        ctx.fillStyle=c[1]; ctx.globalAlpha=0.4+0.3/(1+Math.max(0,p.d*0.5));
+                        ctx.beginPath(); ctx.arc(p.px,p.py,r,0,Math.PI*2); ctx.fill(); ctx.globalAlpha=1;
+                    }
+                }
+
+                function drawKbatch(cv, t) {
+                    const ctx = cv.getContext('2d');
+                    const w = cv.width, h = cv.height;
+                    ctx.clearRect(0,0,w,h);
+                    // Mini keyboard heatmap
+                    const keys = 'QWERTYUIOPASDFGHJKLZXCVBNM';
+                    const rows = [10,9,7], rx = [0,0.5,1.2];
+                    let ki = 0;
+                    rows.forEach((count, row) => {
+                        for(let c=0;c<count&&ki<keys.length;c++,ki++){
+                            const kw=(w-8)/(10+1), kh=(h-8)/4;
+                            const kx=4+rx[row]*kw*0.5+c*kw*1.02;
+                            const ky=4+row*kh*1.1;
+                            const heat=0.15+0.4*Math.abs(Math.sin(t*1.5+ki*0.4));
+                            ctx.fillStyle = `hsla(${(ki*25+t*30)%360},70%,55%,${heat})`;
+                            ctx.beginPath(); ctx.roundRect(kx,ky,kw*0.9,kh*0.85,2); ctx.fill();
+                        }
+                    });
+                }
+
+                function tick(ts) {
+                    const t = ts / 1000;
+                    const tab = document.getElementById('gpuq-tab');
+                    if (tab && tab.classList.contains('active')) {
+                        drawLattice(document.getElementById('gpuq-lattice-cv'), t);
+                        drawOrb(document.getElementById('gpuq-orb-cv'), t);
+                        drawCube(document.getElementById('gpuq-cube-cv'), t);
+                        drawKbatch(document.getElementById('gpuq-kbatch-cv'), t);
+                    }
+                    gpuqAnimId = requestAnimationFrame(tick);
+                }
+                gpuqAnimId = requestAnimationFrame(tick);
+
+                // Click cards → open fullscreen heatmap in that mode
+                document.getElementById('gpuq-lattice-card')?.addEventListener('click', () => {
+                    const btn = document.querySelector('[data-qheat-mode="lattice"]');
+                    if (btn) btn.click();
+                    document.getElementById('ctl-expand')?.click();
+                });
+                document.getElementById('gpuq-orb-card')?.addEventListener('click', () => {
+                    const btn = document.querySelector('[data-qheat-mode="orb"]');
+                    if (btn) btn.click();
+                    document.getElementById('ctl-expand')?.click();
+                });
+                document.getElementById('gpuq-cube-card')?.addEventListener('click', () => {
+                    const btn = document.querySelector('[data-qheat-mode="cube3d"]');
+                    if (btn) btn.click();
+                    document.getElementById('ctl-expand')?.click();
+                });
+
+                } catch(e) { console.warn('GPU<>Q mini init error:', e); }
             })();
 
             // ===== CHALK / HANDWRITTEN MODE TOGGLE =====

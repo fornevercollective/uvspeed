@@ -65,6 +65,13 @@
     .stat .number { font-family: 'SF Mono', monospace; font-size: 2rem; font-weight: 800; background: linear-gradient(135deg, #e2b714, #569cd6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     .stat .label { font-size: 0.75rem; color: #8b949e; text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
 
+    /* ── Prefix Cube ── */
+    .prefix-cube-wrap { display: flex; flex-direction: column; align-items: center; margin-bottom: 48px; }
+    .prefix-cube-canvas { width: 100%; max-width: 420px; aspect-ratio: 1; border-radius: 16px; border: 1px solid #21262d; background: rgba(13,17,23,0.7); backdrop-filter: blur(8px); cursor: grab; touch-action: none; }
+    .prefix-cube-canvas:active { cursor: grabbing; }
+    .prefix-cube-hint { font-size: 0.6875rem; color: #484f58; margin-top: 8px; font-family: 'SF Mono', monospace; letter-spacing: 0.5px; }
+    [data-theme="light"] .prefix-cube-canvas { background: rgba(240,242,245,0.85); border-color: var(--qp-border, #d0d7de); }
+
     /* ── Symbol table ── */
     .sym-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
     .sym-card { background: #161b22; border: 1px solid #21262d; border-radius: 10px; padding: 16px; transition: all 0.2s; cursor: default; }
@@ -205,6 +212,12 @@
 <section>
     <h2 class="fade-up">The 9 symbols</h2>
     <p class="section-sub fade-up">Every line maps to exactly one prefix. No ambiguity. No configuration. Universal across all languages.</p>
+
+    <!-- Interactive 3D prefix cube -->
+    <div class="prefix-cube-wrap fade-up">
+        <canvas class="prefix-cube-canvas" id="prefix-cube"></canvas>
+        <div class="prefix-cube-hint">drag to rotate · scroll to zoom · hover for detail</div>
+    </div>
 
     <div class="sym-grid fade-up" id="sym-grid"></div>
 </section>
@@ -472,6 +485,299 @@ prefixes.forEach(p => {
     symGrid.appendChild(card);
 });
 
+// ━━━ Interactive 3D Prefix Cube ━━━
+(function initPrefixCube() {
+    const cvs = document.getElementById('prefix-cube');
+    if (!cvs) return;
+    const ctx = cvs.getContext('2d');
+
+    // High-DPI canvas setup
+    function resize() {
+        const rect = cvs.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
+        cvs.width = rect.width * dpr;
+        cvs.height = rect.height * dpr;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    // 9 prefix nodes arranged in a 3x3x1 grid (we'll place them on faces of a cube)
+    // Use only the first 9 meaningful prefixes (excluding default space)
+    const nodes = prefixes.slice(0, 9).map((p, i) => {
+        // Map to 3D positions: 3x3 grid on different faces
+        const row = Math.floor(i / 3);
+        const col = i % 3;
+        return {
+            sym: p.sym.trim() || '·',
+            cat: p.cat,
+            desc: p.desc,
+            color: p.color,
+            // Positions normalized -1..+1
+            x: (col - 1) * 0.55,
+            y: (row - 1) * 0.55,
+            z: 0,
+            // Orbit: place some nodes on different Z planes for depth
+            oz: (i % 3 === 1) ? 0.4 : (i % 3 === 2) ? -0.4 : 0
+        };
+    });
+    // Add the remaining prefixes (+3, 1:, default) as smaller orbiting particles
+    const extras = prefixes.slice(9).map((p, i) => ({
+        sym: p.sym.trim() || '·', cat: p.cat, color: p.color,
+        angle: (i / 3) * Math.PI * 2, dist: 0.85, speed: 0.2 + i * 0.08
+    }));
+
+    let rotX = -0.35, rotY = 0.45, zoom = 1.0;
+    let dragging = false, lastMx = 0, lastMy = 0;
+    let hovered = -1;
+    let autoRotate = true, autoTimer = null;
+
+    // Cube wireframe vertices
+    const cubeVerts = [
+        [-1,-1,-1],[1,-1,-1],[1,1,-1],[-1,1,-1],
+        [-1,-1,1],[1,-1,1],[1,1,1],[-1,1,1]
+    ];
+    const cubeEdges = [
+        [0,1],[1,2],[2,3],[3,0], // front
+        [4,5],[5,6],[6,7],[7,4], // back
+        [0,4],[1,5],[2,6],[3,7]  // connectors
+    ];
+
+    function rot3d(x, y, z) {
+        // Rotate Y
+        let x1 = x * Math.cos(rotY) - z * Math.sin(rotY);
+        let z1 = x * Math.sin(rotY) + z * Math.cos(rotY);
+        // Rotate X
+        let y1 = y * Math.cos(rotX) - z1 * Math.sin(rotX);
+        let z2 = y * Math.sin(rotX) + z1 * Math.cos(rotX);
+        return [x1, y1, z2];
+    }
+
+    function project(x, y, z) {
+        const [rx, ry, rz] = rot3d(x, y, z);
+        const f = 2.8 / (4 + rz * zoom);
+        const rect = cvs.getBoundingClientRect();
+        const cx = rect.width / 2, cy = rect.height / 2;
+        const scale = Math.min(rect.width, rect.height) * 0.38 * zoom;
+        return { x: cx + rx * scale * f, y: cy + ry * scale * f, z: rz, scale: f };
+    }
+
+    // Mouse/touch interaction
+    cvs.addEventListener('pointerdown', e => {
+        dragging = true; lastMx = e.clientX; lastMy = e.clientY;
+        autoRotate = false; clearTimeout(autoTimer);
+        cvs.setPointerCapture(e.pointerId);
+    });
+    cvs.addEventListener('pointermove', e => {
+        const rect = cvs.getBoundingClientRect();
+        if (dragging) {
+            rotY += (e.clientX - lastMx) * 0.008;
+            rotX += (e.clientY - lastMy) * 0.008;
+            rotX = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, rotX));
+            lastMx = e.clientX; lastMy = e.clientY;
+        }
+        // Hover detection
+        const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+        hovered = -1;
+        for (let i = 0; i < nodes.length; i++) {
+            const n = nodes[i];
+            const p = project(n.x, n.y, n.z + n.oz);
+            const dx = mx - p.x, dy = my - p.y;
+            if (dx * dx + dy * dy < 900) { hovered = i; break; }
+        }
+        cvs.style.cursor = hovered >= 0 ? 'pointer' : (dragging ? 'grabbing' : 'grab');
+    });
+    cvs.addEventListener('pointerup', () => {
+        dragging = false;
+        autoTimer = setTimeout(() => { autoRotate = true; }, 4000);
+    });
+    cvs.addEventListener('wheel', e => {
+        e.preventDefault();
+        zoom = Math.max(0.5, Math.min(2.5, zoom - e.deltaY * 0.002));
+    }, { passive: false });
+
+    function draw() {
+        const rect = cvs.getBoundingClientRect();
+        const W = rect.width, H = rect.height;
+        const t = Date.now() / 1000;
+        const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+
+        ctx.clearRect(0, 0, W, H);
+
+        if (autoRotate) {
+            rotY += 0.003;
+        }
+
+        // ── Cube wireframe ──
+        const edgeColor = isLight ? 'rgba(100,110,120,0.18)' : 'rgba(88,166,255,0.12)';
+        const faceColor = isLight ? 'rgba(200,210,220,0.06)' : 'rgba(88,166,255,0.03)';
+        ctx.strokeStyle = edgeColor;
+        ctx.lineWidth = 1;
+
+        // Draw transparent faces (subtle)
+        const faces = [
+            [0,1,2,3],[4,5,6,7],[0,1,5,4],[2,3,7,6],[0,3,7,4],[1,2,6,5]
+        ];
+        const s = 0.65; // cube scale
+        for (const face of faces) {
+            ctx.beginPath();
+            face.forEach((vi, fi) => {
+                const v = cubeVerts[vi];
+                const p = project(v[0] * s, v[1] * s, v[2] * s);
+                fi === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y);
+            });
+            ctx.closePath();
+            ctx.fillStyle = faceColor;
+            ctx.fill();
+        }
+
+        // Draw edges
+        for (const [a, b] of cubeEdges) {
+            const va = cubeVerts[a], vb = cubeVerts[b];
+            const pa = project(va[0] * s, va[1] * s, va[2] * s);
+            const pb = project(vb[0] * s, vb[1] * s, vb[2] * s);
+            ctx.beginPath(); ctx.moveTo(pa.x, pa.y); ctx.lineTo(pb.x, pb.y); ctx.stroke();
+        }
+
+        // ── Inner grid lines ──
+        const gridColor = isLight ? 'rgba(100,110,120,0.08)' : 'rgba(88,166,255,0.06)';
+        ctx.strokeStyle = gridColor;
+        ctx.lineWidth = 0.5;
+        for (let g = -1; g <= 1; g += 1) {
+            const gn = g * 0.33 * s * 2;
+            // Vertical planes (X-fixed)
+            const p1 = project(gn, -s, -s), p2 = project(gn, s, -s);
+            const p3 = project(gn, s, s), p4 = project(gn, -s, s);
+            ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.lineTo(p3.x, p3.y); ctx.lineTo(p4.x, p4.y); ctx.closePath(); ctx.stroke();
+            // Horizontal planes (Y-fixed)
+            const q1 = project(-s, gn, -s), q2 = project(s, gn, -s);
+            const q3 = project(s, gn, s), q4 = project(-s, gn, s);
+            ctx.beginPath(); ctx.moveTo(q1.x, q1.y); ctx.lineTo(q2.x, q2.y); ctx.lineTo(q3.x, q3.y); ctx.lineTo(q4.x, q4.y); ctx.closePath(); ctx.stroke();
+        }
+
+        // ── Orbiting extra particles ──
+        for (const ex of extras) {
+            ex.angle += 0.008 * ex.speed;
+            const ox = Math.cos(ex.angle + t * 0.1) * ex.dist * s;
+            const oy = Math.sin(ex.angle * 0.7 + t * 0.15) * ex.dist * s * 0.5;
+            const oz = Math.sin(ex.angle + t * 0.1) * ex.dist * s;
+            const p = project(ox, oy, oz);
+            const r = 4 * p.scale * zoom;
+            ctx.globalAlpha = 0.5;
+            ctx.fillStyle = ex.color;
+            ctx.beginPath(); ctx.arc(p.x, p.y, Math.max(r, 2), 0, Math.PI * 2); ctx.fill();
+            ctx.globalAlpha = 1;
+            // Label
+            ctx.fillStyle = isLight ? 'rgba(80,80,80,0.5)' : 'rgba(200,200,200,0.4)';
+            ctx.font = `${Math.max(7, 9 * p.scale * zoom)}px "SF Mono", monospace`;
+            ctx.textAlign = 'center';
+            ctx.fillText(ex.sym, p.x, p.y - Math.max(r, 2) - 3);
+        }
+
+        // ── Prefix nodes (depth-sorted) ──
+        const projected = nodes.map((n, i) => {
+            const p = project(n.x, n.y, n.z + n.oz + Math.sin(t * 0.5 + i) * 0.04);
+            return { ...n, px: p.x, py: p.y, pz: p.z, ps: p.scale, idx: i };
+        }).sort((a, b) => a.pz - b.pz); // back to front
+
+        for (const n of projected) {
+            const isH = hovered === n.idx;
+            const baseR = isH ? 28 : 20;
+            const r = baseR * n.ps * zoom;
+
+            // Glow
+            if (isH) {
+                const glow = ctx.createRadialGradient(n.px, n.py, r * 0.3, n.px, n.py, r * 2.5);
+                glow.addColorStop(0, n.color + '44');
+                glow.addColorStop(1, 'transparent');
+                ctx.fillStyle = glow;
+                ctx.beginPath(); ctx.arc(n.px, n.py, r * 2.5, 0, Math.PI * 2); ctx.fill();
+            }
+
+            // Node sphere
+            const grad = ctx.createRadialGradient(n.px - r * 0.25, n.py - r * 0.25, r * 0.1, n.px, n.py, r);
+            grad.addColorStop(0, isLight ? '#fff' : n.color + 'dd');
+            grad.addColorStop(0.6, n.color + (isH ? 'cc' : '88'));
+            grad.addColorStop(1, n.color + '22');
+            ctx.fillStyle = grad;
+            ctx.beginPath(); ctx.arc(n.px, n.py, Math.max(r, 6), 0, Math.PI * 2); ctx.fill();
+
+            // Border
+            ctx.strokeStyle = n.color + (isH ? 'ff' : '66');
+            ctx.lineWidth = isH ? 2 : 1;
+            ctx.stroke();
+
+            // Symbol text
+            const fontSize = Math.max(9, (isH ? 16 : 12) * n.ps * zoom);
+            ctx.font = `bold ${fontSize}px "SF Mono", monospace`;
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillStyle = isLight ? '#1a1a1a' : '#fff';
+            ctx.fillText(n.sym, n.px, n.py);
+
+            // Category label
+            if (isH || r > 14) {
+                const catFontSize = Math.max(7, 9 * n.ps * zoom);
+                ctx.font = `600 ${catFontSize}px -apple-system, sans-serif`;
+                ctx.fillStyle = isLight ? 'rgba(60,60,60,0.8)' : 'rgba(200,200,200,0.7)';
+                ctx.fillText(n.cat, n.px, n.py + Math.max(r, 6) + catFontSize + 2);
+            }
+
+            // Hover detail tooltip
+            if (isH) {
+                const tipY = n.py - Math.max(r, 6) - 28;
+                const tipText = `${n.sym}  ${n.cat} — ${n.desc}`;
+                ctx.font = '11px "SF Mono", monospace';
+                const tw = ctx.measureText(tipText).width;
+                const pad = 8;
+                const tipX = Math.max(pad + tw / 2 + 4, Math.min(W - tw / 2 - pad - 4, n.px));
+                // Background pill
+                ctx.fillStyle = isLight ? 'rgba(255,255,255,0.92)' : 'rgba(22,27,34,0.92)';
+                ctx.strokeStyle = n.color + '66';
+                ctx.lineWidth = 1;
+                const rr = 6;
+                ctx.beginPath();
+                ctx.roundRect(tipX - tw / 2 - pad, tipY - 12, tw + pad * 2, 24, rr);
+                ctx.fill(); ctx.stroke();
+                // Text
+                ctx.fillStyle = isLight ? '#24292f' : '#e6edf3';
+                ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                ctx.fillText(tipText, tipX, tipY);
+            }
+        }
+
+        // ── Connection lines between adjacent nodes ──
+        ctx.globalAlpha = 0.15;
+        ctx.strokeStyle = isLight ? '#555' : '#58a6ff';
+        ctx.lineWidth = 0.8;
+        for (let i = 0; i < projected.length; i++) {
+            for (let j = i + 1; j < projected.length; j++) {
+                const a = projected[i], b = projected[j];
+                const dx = a.px - b.px, dy = a.py - b.py;
+                if (dx * dx + dy * dy < 18000) {
+                    ctx.beginPath(); ctx.moveTo(a.px, a.py); ctx.lineTo(b.px, b.py); ctx.stroke();
+                }
+            }
+        }
+        ctx.globalAlpha = 1;
+
+        // ── Floating energy particles ──
+        for (let i = 0; i < 12; i++) {
+            const angle = t * 0.3 + i * (Math.PI * 2 / 12);
+            const radius = 0.5 + Math.sin(t * 0.5 + i * 0.8) * 0.25;
+            const px = Math.cos(angle) * radius * s;
+            const py = Math.sin(angle * 0.7) * radius * s * 0.6;
+            const pz = Math.sin(angle) * radius * s;
+            const p = project(px, py, pz);
+            const pr = 1.5 * p.scale * zoom;
+            ctx.fillStyle = isLight ? 'rgba(80,100,140,0.2)' : 'rgba(88,166,255,0.2)';
+            ctx.beginPath(); ctx.arc(p.x, p.y, Math.max(pr, 0.8), 0, Math.PI * 2); ctx.fill();
+        }
+
+        requestAnimationFrame(draw);
+    }
+    draw();
+})();
+
 // ── Live editor ──
 const codeInput = document.getElementById('code-input');
 const gutterOutput = document.getElementById('gutter-output');
@@ -714,27 +1020,42 @@ function tick() {
 }
 tick();
 
-// ── Starfield (hero + CTA) ──
+// ── Inverse Starfield (theme-aware: bright on dark, dark on light) ──
 function initStarfield(cvs, count) {
     if (!cvs) return;
     const ctx = cvs.getContext('2d');
     const stars = [];
     function resize() { cvs.width = cvs.parentElement.offsetWidth; cvs.height = cvs.parentElement.offsetHeight; }
     resize(); window.addEventListener('resize', resize);
-    for (let i = 0; i < count; i++) stars.push({ x: Math.random() * 3000, y: Math.random() * 1200, r: Math.random() * 1.4 + 0.2, a: Math.random() * 0.7 + 0.1, tw: Math.random() * 2 + 0.5, ph: Math.random() * Math.PI * 2 });
+    // Mix of white and colored stars
+    const starColors = ['255,255,255','200,200,220','180,160,255','160,220,255','255,200,140','200,255,180'];
+    for (let i = 0; i < count; i++) stars.push({
+        x: Math.random() * 3000, y: Math.random() * 1200,
+        r: Math.random() * 1.6 + 0.2, a: Math.random() * 0.7 + 0.15,
+        tw: Math.random() * 2 + 0.5, ph: Math.random() * Math.PI * 2,
+        c: starColors[Math.floor(Math.random() * starColors.length)],
+        ci: Math.random() < 0.3 ? '40,50,60' : '0,0,0' // dark star colors for light mode
+    });
     function draw() {
         ctx.clearRect(0, 0, cvs.width, cvs.height);
         const t = Date.now() / 1000;
+        const isLight = document.documentElement.getAttribute('data-theme') === 'light';
         for (const s of stars) {
-            ctx.fillStyle = `rgba(255,255,255,${0.1 + 0.9 * s.a * (0.5 + 0.5 * Math.sin(t * s.tw + s.ph))})`;
+            const alpha = 0.1 + 0.9 * s.a * (0.5 + 0.5 * Math.sin(t * s.tw + s.ph));
+            if (isLight) {
+                // Inverse: dark/muted stars on light background
+                ctx.fillStyle = `rgba(${s.ci},${alpha * 0.35})`;
+            } else {
+                ctx.fillStyle = `rgba(${s.c},${alpha})`;
+            }
             ctx.beginPath(); ctx.arc(s.x % cvs.width, s.y % cvs.height, s.r, 0, Math.PI * 2); ctx.fill();
         }
         requestAnimationFrame(draw);
     }
     draw();
 }
-initStarfield(document.getElementById('hero-canvas'), 200);
-initStarfield(document.getElementById('cta-canvas'), 120);
+initStarfield(document.getElementById('hero-canvas'), 250);
+initStarfield(document.getElementById('cta-canvas'), 150);
 
 // ── Scroll reveal ──
 const obs = new IntersectionObserver(entries => {
