@@ -588,15 +588,20 @@
      *   -n → M (Measure)     - unknown / collapse
      */
     var QUBIT_GATE_MAP = {
-        '+1': { gate: 'H',    name: 'Hadamard',  qubits: 1, desc: 'Superposition — declaration creates possibility space' },
-        '1':  { gate: 'CNOT', name: 'CNOT',      qubits: 2, desc: 'Entanglement — logic branches connect states' },
-        '-1': { gate: 'X',    name: 'Pauli-X',   qubits: 1, desc: 'Bit flip — I/O flips classical state' },
-        '+0': { gate: 'Rz',   name: 'Rz(π/4)',   qubits: 1, desc: 'Phase rotation — assignment changes phase' },
-        '0':  { gate: 'I',    name: 'Identity',   qubits: 1, desc: 'Identity — neutral, no transformation' },
-        '-0': { gate: 'S',    name: 'Phase',      qubits: 1, desc: 'Phase gate — comment adds metadata phase' },
-        '+n': { gate: 'T',    name: 'T-gate',     qubits: 1, desc: 'T-gate — modifier precision adjustment' },
-        'n':  { gate: 'SWAP', name: 'SWAP',       qubits: 2, desc: 'SWAP — import moves data between qubits' },
-        '-n': { gate: 'M',    name: 'Measure',    qubits: 1, desc: 'Measurement — unknown collapses superposition' },
+        // 9 core symbols → 9 quantum gates
+        '+1:': { gate: 'H',    name: 'Hadamard',  qubits: 1, desc: 'Superposition — declaration creates possibility space' },
+        '1:':  { gate: 'CNOT', name: 'CNOT',      qubits: 2, desc: 'Entanglement — logic branches connect states' },
+        '-1:': { gate: 'X',    name: 'Pauli-X',   qubits: 1, desc: 'Bit flip — I/O flips classical state' },
+        '+0:': { gate: 'Rz',   name: 'Rz(π/4)',   qubits: 1, desc: 'Phase rotation — assignment changes phase' },
+        '0:':  { gate: 'I',    name: 'Identity',   qubits: 1, desc: 'Identity — neutral, no transformation' },
+        '-0:': { gate: 'S',    name: 'Phase',      qubits: 1, desc: 'Phase gate — comment adds metadata phase' },
+        '+n:': { gate: 'T',    name: 'T-gate',     qubits: 1, desc: 'T-gate — modifier precision adjustment' },
+        'n:':  { gate: 'SWAP', name: 'SWAP',       qubits: 2, desc: 'SWAP — import moves data between qubits' },
+        '-n:': { gate: 'M',    name: 'Measure',    qubits: 1, desc: 'Measurement — unknown collapses superposition' },
+        // Extended symbols → additional gates
+        '+2:': { gate: 'CZ',   name: 'Ctrl-Z',    qubits: 2, desc: 'Controlled-Z — loop iteration entangles iterations' },
+        '+3:': { gate: 'Y',    name: 'Pauli-Y',   qubits: 1, desc: 'Y-rotation — output rotates observable state' },
+        '   ': { gate: 'I',    name: 'Identity',   qubits: 1, desc: 'Identity — blank line, no operation' },
     };
 
     /**
@@ -613,13 +618,14 @@
         var qubitPtr = 0;
 
         (meta.lines || []).forEach(function(line, idx) {
-            var mapping = QUBIT_GATE_MAP[line.sym] || QUBIT_GATE_MAP['-n'];
+            var sym = line.sym || '   ';
+            var mapping = QUBIT_GATE_MAP[sym] || QUBIT_GATE_MAP['-n:'];
             var gate = {
                 step: idx,
                 gate: mapping.gate,
                 qubit: qubitPtr % 8,  // 8-qubit register
                 lineNum: idx + 1,
-                symbol: line.sym,
+                symbol: sym,
             };
             if (mapping.qubits === 2) {
                 gate.target = (qubitPtr + 1) % 8;
@@ -627,9 +633,9 @@
             gates.push(gate);
             if (gate.qubit > maxQubit) maxQubit = gate.qubit;
             if (gate.target && gate.target > maxQubit) maxQubit = gate.target;
-            // Advance qubit pointer based on nesting
-            if (line.sym === '+1' || line.sym === '1') qubitPtr++;
-            if (line.sym === '+n' || line.sym === '-n') qubitPtr = Math.max(0, qubitPtr - 1);
+            // Advance qubit pointer based on nesting depth
+            if (sym === '+1:' || sym === '1:' || sym === '+0:') qubitPtr++;
+            if (sym === '+n:' || sym === '-n:' || sym === '-0:') qubitPtr = Math.max(0, qubitPtr - 1);
         });
 
         // Build ASCII circuit diagram
