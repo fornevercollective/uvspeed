@@ -140,11 +140,28 @@
     #intro-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 1s ease; pointer-events: none; }
     #intro-video.show { opacity: 1; }
     #intro-cutout {
-        position: absolute; z-index: 1; width: 100%; height: 100%;
-        display: flex; align-items: center; justify-content: center; gap: 12px;
+        position: relative; z-index: 1;
+        display: flex; align-items: center; justify-content: center; gap: 16px;
         pointer-events: none;
     }
-    #intro-cutout svg { width: 75%; max-width: 600px; pointer-events: none; flex-shrink: 1; }
+    #intro-title {
+        font-family: 'SF Mono', 'Menlo', 'Cascadia Code', monospace;
+        font-size: clamp(48px, 12vw, 96px); font-weight: 900; letter-spacing: -3px;
+        background: linear-gradient(135deg, #58e8ff 0%, #bc8cff 40%, #ff8c38 70%, #3fb950 100%);
+        background-size: 200% 200%;
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        background-clip: text;
+        animation: introGradient 3s ease infinite;
+        text-shadow: none;
+    }
+    #intro-title-sub {
+        font-family: 'SF Mono', monospace; font-size: clamp(9px, 2vw, 14px);
+        color: #6e7681; letter-spacing: 2px; margin-top: -4px; text-align: center;
+    }
+    @keyframes introGradient {
+        0%,100% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+    }
     #intro-rainbow { position: absolute; bottom: 0; left: 0; right: 0; display: flex; height: 4px; }
     #intro-rainbow span { flex: 1; }
     #intro-rainbow .r1 { background: #ff3838; }
@@ -297,18 +314,10 @@
     <video id="intro-video" playsinline autoplay muted></video>
     <div id="intro-cutout">
         <canvas id="intro-hex" width="72" height="84"></canvas>
-        <svg viewBox="0 0 600 140" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-                <mask id="text-mask">
-                    <rect width="600" height="140" fill="white"/>
-                    <text x="300" y="95" text-anchor="middle" font-family="'SF Mono', 'Menlo', monospace"
-                          font-size="90" font-weight="900" fill="black" letter-spacing="-2">hexterm</text>
-                    <text x="300" y="128" text-anchor="middle" font-family="'SF Mono', monospace"
-                          font-size="14" fill="black">{+1, 1, -1, +0, 0, -0, +n, n, -n}</text>
-                </mask>
-            </defs>
-            <rect width="600" height="140" fill="#0d1117" mask="url(#text-mask)"/>
-        </svg>
+        <div>
+            <div id="intro-title">hexterm</div>
+            <div id="intro-title-sub">{+1, 1, -1, +0, 0, -0, +n, n, -n}</div>
+        </div>
     </div>
     <div id="intro-prompt">
         <div style="font-family:'SF Mono',monospace;font-size:1.125rem;font-weight:700;color:#e6edf3;margin-bottom:6px">hexterm</div>
@@ -801,31 +810,85 @@ function initTerminal() {
     const isTauri = !!window.__TAURI__;
     const modeStr = isTauri ? 'tauri' : isPWA ? 'pwa' : 'browser';
 
-    term.writeln('');
-    term.writeln('\x1b[36m  _               _                     \x1b[0m');
-    term.writeln('\x1b[36m | |__   _____  _| |_ ___ _ __ _ __ ___\x1b[0m');
-    term.writeln('\x1b[36m | \'_ \\ / _ \\ \\/ / __/ _ \\ \'__| \'_ ` _ \\\x1b[0m');
-    term.writeln('\x1b[36m | | | |  __/>  <| ||  __/ |  | | | | | |\x1b[0m');
-    term.writeln('\x1b[36m |_| |_|\\___/_/\\_\\\\__\\___|_|  |_| |_| |_|\x1b[0m');
+    // ── Animated rainbow banner ──
+    // Rainbow ANSI 256-color codes for each column of the ASCII art
+    const RC = [196, 202, 208, 214, 220, 226, 190, 154, 118, 82, 46, 47, 48, 49, 50, 51, 45, 39, 33, 27, 21, 57, 93, 129, 165, 201, 200, 199, 198, 197, 196, 202, 208, 214, 220, 226, 190, 154, 118, 82];
+    function rainbowLine(line, offset) {
+        let out = '';
+        for (let i = 0; i < line.length; i++) {
+            if (line[i] === ' ') { out += ' '; continue; }
+            const ci = RC[(i + offset) % RC.length];
+            out += `\x1b[38;5;${ci}m${line[i]}`;
+        }
+        return out + '\x1b[0m';
+    }
+
+    const BANNER = [
+        '  _               _                     ',
+        ' | |__   _____  _| |_ ___ _ __ _ __ ___',
+        " | '_ \\ / _ \\ \\/ / __/ _ \\ '__| '_ ` _ \\",
+        ' | | | |  __/>  <| ||  __/ |  | | | | | |',
+        ' |_| |_|\\___/_/\\_\\\\__\\___|_|  |_| |_| |_|',
+    ];
+
+    // Animate: type each banner line char-by-char with rainbow shift
+    let bannerLine = 0, bannerCol = 0, bannerShift = 0;
+    const bannerSpeed = 8; // ms per char
     term.writeln('');
 
-    // Quantum prefix bumper
-    term.writeln('  \x1b[90m+1:\x1b[35mdecl  \x1b[90m1:\x1b[35mlogic  \x1b[90m-1:\x1b[35mio  \x1b[90m+0:\x1b[35massign  \x1b[90m0:\x1b[35mneutral\x1b[0m');
-    term.writeln('  \x1b[90m-0:\x1b[35mcomment  \x1b[90m+n:\x1b[35mmod  \x1b[90mn:\x1b[35mimport  \x1b[90m-n:\x1b[35munknown\x1b[0m');
-    term.writeln('');
-    term.writeln(`  \x1b[90m${VERSION}\x1b[0m  \x1b[35mbeyondBINARY\x1b[0m  \x1b[90m${modeStr} / ${navigator.platform}\x1b[0m`);
-    term.writeln(`  \x1b[90m{+1, 1, -1, +0, 0, -0, +n, n, -n}\x1b[0m`);
-    term.writeln('');
-    term.writeln(`  \x1b[32m+\x1b[0m terminal    \x1b[32mready\x1b[0m`);
-    term.writeln(`  ${camOk ? '\x1b[32m+' : '\x1b[33m-'}\x1b[0m camera      ${camOk ? '\x1b[32mready' : '\x1b[33munavailable'}\x1b[0m`);
-    term.writeln(`  \x1b[32m+\x1b[0m websocket   \x1b[32mready\x1b[0m`);
-    term.writeln(`  \x1b[32m+\x1b[0m kbatch      \x1b[32mlive keyboard\x1b[0m`);
-    term.writeln('');
-    term.writeln('  \x1b[36mhelp\x1b[0m \x1b[90mcmds\x1b[0m   \x1b[36mhexcast\x1b[0m \x1b[90mcam\x1b[0m   \x1b[36mdevice\x1b[0m \x1b[90msize\x1b[0m   \x1b[36msync\x1b[0m \x1b[90mlink\x1b[0m   \x1b[36mconsole\x1b[0m \x1b[90mdev\x1b[0m');
-    term.writeln('');
+    function typeBanner() {
+        if (bannerLine >= BANNER.length) {
+            // Banner done — print the rest instantly
+            finishWelcome();
+            return;
+        }
+        const line = BANNER[bannerLine];
+        if (bannerCol === 0) {
+            // Start new line — write colored line all at once for that "scan" feel
+            term.writeln(rainbowLine(line, bannerShift + bannerLine * 3));
+            bannerLine++;
+            bannerShift += 2;
+            setTimeout(typeBanner, 40 + Math.random() * 30); // slight stagger between lines
+        }
+    }
+    typeBanner();
 
-    showPrompt();
-    term.focus();
+    function finishWelcome() {
+        term.writeln('');
+        // Quantum prefix bumper with color-coded categories
+        term.writeln('  \x1b[38;5;47m+1:\x1b[38;5;156mdecl  \x1b[38;5;39m1:\x1b[38;5;117mlogic  \x1b[38;5;196m-1:\x1b[38;5;210mio  \x1b[38;5;208m+0:\x1b[38;5;222massign  \x1b[38;5;245m0:\x1b[38;5;250mneutral\x1b[0m');
+        term.writeln('  \x1b[38;5;141m-0:\x1b[38;5;183mcomment  \x1b[38;5;75m+n:\x1b[38;5;117mmod  \x1b[38;5;220mn:\x1b[38;5;229mimport  \x1b[38;5;245m-n:\x1b[38;5;250munknown\x1b[0m');
+        term.writeln('');
+        term.writeln(`  \x1b[38;5;245m${VERSION}\x1b[0m  \x1b[38;5;141mbeyondBINARY\x1b[0m  \x1b[38;5;245m${modeStr} / ${navigator.platform}\x1b[0m`);
+        term.writeln('  \x1b[38;5;240m{+1, 1, -1, +0, 0, -0, +n, n, -n}\x1b[0m');
+        term.writeln('');
+
+        // Animated status checks — staggered appearance
+        const checks = [
+            { ok: true,  label: 'terminal',  status: 'ready' },
+            { ok: camOk, label: 'camera',    status: camOk ? 'ready' : 'unavailable' },
+            { ok: true,  label: 'websocket', status: 'ready' },
+            { ok: true,  label: 'kbatch',    status: 'live keyboard' },
+        ];
+        let ci = 0;
+        function typeCheck() {
+            if (ci >= checks.length) {
+                term.writeln('');
+                term.writeln('  \x1b[38;5;81mhelp\x1b[0m \x1b[38;5;245mcmds\x1b[0m   \x1b[38;5;81mhexcast\x1b[0m \x1b[38;5;245mcam\x1b[0m   \x1b[38;5;81mdevice\x1b[0m \x1b[38;5;245msize\x1b[0m   \x1b[38;5;81msync\x1b[0m \x1b[38;5;245mlink\x1b[0m   \x1b[38;5;81mconsole\x1b[0m \x1b[38;5;245mdev\x1b[0m');
+                term.writeln('');
+                showPrompt();
+                term.focus();
+                return;
+            }
+            const c = checks[ci];
+            const icon = c.ok ? '\x1b[38;5;82m+' : '\x1b[38;5;220m-';
+            const stat = c.ok ? `\x1b[38;5;82m${c.status}` : `\x1b[38;5;220m${c.status}`;
+            term.writeln(`  ${icon}\x1b[0m ${c.label.padEnd(12)}${stat}\x1b[0m`);
+            ci++;
+            setTimeout(typeCheck, 80 + Math.random() * 40);
+        }
+        setTimeout(typeCheck, 60);
+    }
 
     // Refocus on tap (mobile)
     termEl.addEventListener('touchstart', () => term.focus(), { passive: true });
