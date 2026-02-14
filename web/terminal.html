@@ -2603,8 +2603,8 @@ function updateLatencyBar() {
         elCpu.className = 'val' + (lag > 50 ? ' err' : lag > 16 ? ' warn' : '');
     }, 1);
 
-    // Ping (WebSocket or network)
-    const kbLat = KB.syncWs && KB.syncWs.readyState === 1 ? '<1ms' : '—';
+    // Ping (WebSocket or network) — KB defined later in script, guard via window
+    const kbLat = (window._kbState && window._kbState.syncWs && window._kbState.syncWs.readyState === 1) ? '<1ms' : '—';
     elPing.textContent = kbLat;
 }
 
@@ -2937,6 +2937,7 @@ const KB = {
     syncWs: null,
     syncPeers: 0,
 };
+window._kbState = KB; // expose for latency bar (defined earlier in script)
 
 // Track key from terminal input
 function kbTrack(ch) {
