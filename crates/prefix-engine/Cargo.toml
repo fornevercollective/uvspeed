@@ -47,3 +47,7 @@ opt-level = 3
 lto = true
 codegen-units = 1
 strip = true
+
+# wasm-pack: wasm-opt requires bulk-memory flag for Rust 1.82+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = false
