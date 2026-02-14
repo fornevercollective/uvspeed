@@ -171,6 +171,32 @@ a{color:var(--accent);text-decoration:none;}a:hover{text-decoration:underline;}
 @media(min-width:1100px){
     .result{width:calc(33.33% - 8px);}
 }
+
+/* ===== LIGHT THEME ===== */
+:root.light{
+    --bg:#f8fafc;--bg2:#f1f5f9;--bg3:#e2e8f0;--border:#cbd5e1;--text:#0f172a;--muted:#475569;--dim:#64748b;
+    --accent:#7c3aed;--cyan:#0891b2;--green:#059669;--orange:#ea580c;--purple:#7c3aed;
+}
+:root.light html,:root.light body{background:var(--bg);}
+:root.light .result{background:var(--bg2);}
+:root.light #doc-viewer{background:var(--bg);}
+:root.light ::-webkit-scrollbar-track{background:var(--bg2);}
+:root.light ::-webkit-scrollbar-thumb{background:var(--border);}
+
+/* ===== SECTION NAVIGATOR (inside doc viewer) ===== */
+.dv-snav{position:absolute;top:0;left:0;width:24px;height:100%;display:flex;flex-direction:column;align-items:center;padding:6px 0;gap:2px;background:var(--bg2);border-right:1px solid var(--border);overflow-y:auto;z-index:5;}
+.dv-snav.hidden{display:none;}
+.dv-sn-dot{width:6px;height:6px;border-radius:50%;border:1.5px solid var(--border);background:transparent;cursor:pointer;transition:all .15s;flex-shrink:0;position:relative;}
+.dv-sn-dot:hover{border-color:var(--cyan);transform:scale(1.5);}
+.dv-sn-dot.active{background:var(--cyan);border-color:var(--cyan);box-shadow:0 0 4px rgba(6,182,212,.4);}
+.dv-sn-dot.processing{animation:dv-sn-pulse 1s ease infinite;}
+.dv-sn-bar{width:1.5px;height:8px;background:var(--border);border-radius:1px;flex-shrink:0;opacity:.4;}
+.dv-sn-bar.active{background:var(--cyan);opacity:.8;}
+.dv-sn-tooltip{position:absolute;left:18px;top:50%;transform:translateY(-50%);white-space:nowrap;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:2px 6px;border-radius:3px;font-family:var(--mono);font-size:8px;pointer-events:none;opacity:0;transition:opacity .15s;z-index:10;}
+.dv-sn-dot:hover .dv-sn-tooltip{opacity:1;}
+.dv-sn-progress{width:3px;background:var(--bg3);border-radius:2px;flex-shrink:0;overflow:hidden;margin:2px 0;height:30px;}
+.dv-sn-progress-fill{width:100%;background:linear-gradient(180deg,var(--cyan),var(--accent));border-radius:2px;transition:height .3s;}
+@keyframes dv-sn-pulse{0%,100%{box-shadow:0 0 0 0 rgba(6,182,212,.4);}50%{box-shadow:0 0 4px 2px rgba(6,182,212,.3);}}
 </style>
 </head>
 <body>
@@ -183,6 +209,7 @@ a{color:var(--accent);text-decoration:none;}a:hover{text-decoration:underline;}
             <a class="nav-btn" href="history.html">History</a>
             <a class="nav-btn" href="freya.html">Freya</a>
             <a class="nav-btn" href="terminal.html">HexTerm</a>
+            <button class="nav-btn" id="theme-toggle" onclick="toggleSearchTheme()" style="background:none;border:1px solid var(--border);cursor:pointer;font-size:12px;" title="Toggle light/dark">&#x263E;</button>
         </div>
     </div>
     <div id="mode-tabs">
@@ -229,11 +256,16 @@ a{color:var(--accent);text-decoration:none;}a:hover{text-decoration:underline;}
 
     <!-- ═══ DOCUMENT VIEWER ═══ -->
     <div id="doc-viewer-overlay"></div>
-    <div id="doc-viewer">
+    <div id="doc-viewer" style="position:relative;">
         <div class="dv-header">
             <button class="dv-close" id="dv-close">&times;</button>
             <div class="dv-title" id="dv-title">Document</div>
             <span class="dv-source" id="dv-source"></span>
+        </div>
+        <!-- Section Navigator (vertical, inside doc viewer) -->
+        <div class="dv-snav hidden" id="dv-snav">
+            <div class="dv-sn-progress" title="Processing"><div class="dv-sn-progress-fill" id="dv-snav-progress" style="height:0%;"></div></div>
+            <div id="dv-snav-dots"></div>
         </div>
         <div class="dv-tabs">
             <div class="dv-tab active" data-dv="content">Content</div>
@@ -241,7 +273,7 @@ a{color:var(--accent);text-decoration:none;}a:hover{text-decoration:underline;}
             <div class="dv-tab" data-dv="refs">References</div>
             <div class="dv-tab" data-dv="patterns">Patterns</div>
         </div>
-        <div class="dv-body" id="dv-body">
+        <div class="dv-body" id="dv-body" style="margin-left:0;transition:margin-left .2s;">
             <div style="text-align:center;padding:40px;color:var(--dim);">Click a search result to view document analysis.</div>
         </div>
     </div>
@@ -287,7 +319,14 @@ document.querySelectorAll('.mode-tab').forEach(tab => {
    ══════════════════════════════════════════════════════ */
 function initTimeline(){
     const cv = $('tl-canvas'); if(!cv) return;
-    function resize(){ cv.width = cv.parentElement.offsetWidth; cv.height = cv.parentElement.offsetHeight; HS.drawTimeline(cv); }
+    function resize(){
+        const dpr = window.devicePixelRatio || 1;
+        const p = cv.parentElement;
+        cv.width = p.offsetWidth * dpr; cv.height = p.offsetHeight * dpr;
+        cv.style.width = p.offsetWidth + 'px'; cv.style.height = p.offsetHeight + 'px';
+        const ctx = cv.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        HS.drawTimeline(cv);
+    }
     resize(); window.addEventListener('resize', resize);
 }
 
@@ -922,6 +961,137 @@ const q = params.get('q');
 const mode = params.get('mode');
 if(mode === 'freya') document.querySelector('.mode-tab[data-mode="freya"]').click();
 if(q){ $('search-input').value = q; doSearch(q); }
+
+// ══════════════════ THEME TOGGLE ══════════════════
+function toggleSearchTheme() {
+    const root = document.documentElement;
+    root.classList.toggle('light');
+    const isLight = root.classList.contains('light');
+    document.querySelector('meta[name="theme-color"]').content = isLight ? '#f8fafc' : '#050810';
+    const btn = $('theme-toggle');
+    if (btn) btn.textContent = isLight ? '\u2600' : '\u263E';
+    initTimeline(); // Repaint
+    localStorage.setItem('search-theme', isLight ? 'light' : 'dark');
+}
+window.toggleSearchTheme = toggleSearchTheme;
+if (localStorage.getItem('search-theme') === 'light') toggleSearchTheme();
+
+// ══════════════════ SECTION NAVIGATOR (DOC VIEWER) ══════════════════
+(function initDvSectionNav() {
+    var nav = $('dv-snav');
+    var dotsEl = $('dv-snav-dots');
+    var progressFill = $('dv-snav-progress');
+    var dvBody = $('dv-body');
+    if (!nav || !dotsEl || !dvBody) return;
+
+    var sections = [];
+    var activeIdx = -1;
+
+    function buildSections(doc, analysis) {
+        sections = [];
+        if (!doc || !doc.content) { hideNav(); return; }
+        var lines = doc.content.split('\n');
+        var totalWords = lines.join(' ').split(/\s+/).length;
+        var perSection = Math.max(80, Math.ceil(totalWords / 10));
+        var wc = 0, start = 0;
+        for (var i = 0; i < lines.length; i++) {
+            wc += lines[i].split(/\s+/).filter(Boolean).length;
+            if (wc >= perSection || i === lines.length - 1) {
+                var txt = lines.slice(start, i + 1).join(' ').trim();
+                var first = txt.split(/\s+/).slice(0, 5).join(' ');
+                var tc = analysis && analysis.tone ? (TONE_COLORS[analysis.tone.dominant] || 'var(--cyan)') : 'var(--cyan)';
+                sections.push({ label: first, scrollTarget: start / Math.max(lines.length, 1), color: tc });
+                wc = 0; start = i + 1;
+            }
+        }
+        renderNav();
+    }
+
+    function renderNav() {
+        dotsEl.innerHTML = '';
+        if (sections.length < 2) { hideNav(); return; }
+        showNav();
+        sections.forEach(function(s, i) {
+            if (i > 0) {
+                var bar = document.createElement('div');
+                bar.className = 'dv-sn-bar' + (i <= activeIdx ? ' active' : '');
+                dotsEl.appendChild(bar);
+            }
+            var dot = document.createElement('div');
+            dot.className = 'dv-sn-dot' + (i === activeIdx ? ' active' : '');
+            dot.style.borderColor = s.color;
+            if (i === activeIdx) dot.style.background = s.color;
+            var tip = document.createElement('div');
+            tip.className = 'dv-sn-tooltip';
+            tip.textContent = (i + 1) + '. ' + s.label;
+            dot.appendChild(tip);
+            dot.addEventListener('click', function() {
+                setActive(i);
+                dvBody.scrollTop = s.scrollTarget * dvBody.scrollHeight;
+            });
+            dotsEl.appendChild(dot);
+        });
+    }
+
+    function setActive(idx) {
+        activeIdx = idx;
+        dotsEl.querySelectorAll('.dv-sn-dot').forEach(function(d, i) {
+            d.classList.toggle('active', i === idx);
+            d.style.background = i === idx ? sections[i].color : 'transparent';
+        });
+        dotsEl.querySelectorAll('.dv-sn-bar').forEach(function(b, i) {
+            b.classList.toggle('active', i < idx);
+        });
+    }
+
+    function showNav() { nav.classList.remove('hidden'); dvBody.style.marginLeft = '24px'; }
+    function hideNav() { nav.classList.add('hidden'); dvBody.style.marginLeft = '0'; sections = []; }
+
+    function setProgress(pct) { if (progressFill) progressFill.style.height = pct + '%'; }
+
+    // Track scroll
+    dvBody.addEventListener('scroll', function() {
+        if (sections.length === 0) return;
+        var ratio = dvBody.scrollTop / Math.max(dvBody.scrollHeight - dvBody.clientHeight, 1);
+        var idx = Math.min(Math.floor(ratio * sections.length), sections.length - 1);
+        if (idx !== activeIdx) setActive(idx);
+    });
+
+    window._dvSectionNav = { build: buildSections, setProgress: setProgress, hide: hideNav };
+})();
+
+// Hook section nav into doc viewer open
+var _origOpenDV = window.openDocViewer;
+if (_origOpenDV) {
+    window.openDocViewer = function(item, idx) {
+        if (window._dvSectionNav) { window._dvSectionNav.hide(); window._dvSectionNav.setProgress(0); }
+        $('doc-viewer').classList.add('open');
+        $('doc-viewer-overlay').classList.add('open');
+        $('dv-title').textContent = item.title || 'Loading...';
+        $('dv-source').textContent = item.source || '';
+        $('dv-source').style.color = HS.getSourceColor(item.source);
+        _dvTab = 'content';
+        document.querySelectorAll('.dv-tab').forEach(function(t) { t.classList.toggle('active', t.dataset.dv === 'content'); });
+        $('dv-body').innerHTML = '<div style="text-align:center;padding:40px;color:var(--dim);">Fetching document...</div>';
+        _dvDoc = null; _dvAnalysis = null;
+
+        HS.fetchDocument(item.url, item.source).then(function(doc) {
+            _dvDoc = doc;
+            _dvDoc.title = _dvDoc.title || item.title;
+            _dvDoc.snippet = item.snippet;
+            $('dv-title').textContent = _dvDoc.title;
+            _dvAnalysis = HS.analyzeContext(_dvDoc);
+            _dvDoc._analysis = _dvAnalysis;
+            renderDvTab();
+            if (window._dvSectionNav) {
+                window._dvSectionNav.build(_dvDoc, _dvAnalysis);
+                window._dvSectionNav.setProgress(100);
+            }
+        }).catch(function() {
+            $('dv-body').innerHTML = '<div style="text-align:center;padding:40px;color:#f85149;">Failed to fetch. <a href="' + esc(item.url) + '" target="_blank" style="color:var(--cyan);">Open in new tab</a></div>';
+        });
+    };
+}
 
 // ── PWA ──
 if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});

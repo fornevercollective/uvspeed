@@ -127,6 +127,36 @@ a{color:var(--accent);text-decoration:none;}a:hover{text-decoration:underline;}
 #status-bar{display:flex;align-items:center;height:22px;background:var(--bg2);border-top:1px solid var(--border);padding:0 10px;gap:12px;font-size:.5625rem;font-family:var(--mono);color:var(--text-dim);flex-shrink:0;}
 #status-bar .val{color:var(--green);}
 #status-bar .spacer{flex:1;}
+
+/* ===== LIGHT THEME ===== */
+:root.light{
+    --bg:#f8fafc;--bg2:#f1f5f9;--bg3:#e2e8f0;--bg4:#cbd5e1;
+    --border:#cbd5e1;--border-hl:#94a3b8;
+    --text:#0f172a;--text-muted:#475569;--text-dim:#64748b;
+    --accent:#7c3aed;--accent2:#0891b2;--purple:#7c3aed;--cyan:#0891b2;
+    --green:#059669;--red:#dc2626;--orange:#ea580c;--yellow:#ca8a04;--rose:#e11d48;
+}
+:root.light #app{background:var(--bg);}
+:root.light #top-bar,:root.light #timeline-strip,:root.light #inspector,:root.light #terminal-panel,:root.light #status-bar,:root.light .block{background:var(--bg2);}
+:root.light #timeline-strip{background:var(--bg2);}
+:root.light #canvas-panel{background:var(--bg);}
+:root.light ::-webkit-scrollbar-track{background:var(--bg2);}
+:root.light ::-webkit-scrollbar-thumb{background:var(--border);}
+
+/* ===== SECTION NAVIGATOR ===== */
+#section-nav{width:28px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;background:var(--bg2);border-left:1px solid var(--border);padding:8px 0;gap:2px;overflow-y:auto;overflow-x:hidden;position:relative;z-index:10;}
+#section-nav.hidden{display:none;}
+.snav-dot{width:8px;height:8px;border-radius:50%;border:1.5px solid var(--border);background:transparent;cursor:pointer;transition:all .15s;position:relative;flex-shrink:0;}
+.snav-dot:hover{border-color:var(--cyan);transform:scale(1.4);}
+.snav-dot.active{background:var(--cyan);border-color:var(--cyan);box-shadow:0 0 6px rgba(6,182,212,.4);}
+.snav-dot.processing{animation:snav-pulse 1s ease infinite;}
+.snav-bar{width:2px;height:12px;background:var(--border);border-radius:1px;flex-shrink:0;opacity:.4;}
+.snav-bar.active{background:var(--cyan);opacity:.8;}
+.snav-label{position:absolute;right:22px;top:50%;transform:translateY(-50%);white-space:nowrap;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:2px 8px;border-radius:4px;font-family:var(--mono);font-size:.5625rem;pointer-events:none;opacity:0;transition:opacity .15s;z-index:20;}
+.snav-dot:hover .snav-label{opacity:1;}
+.snav-progress{width:4px;background:var(--bg3);border-radius:2px;flex-shrink:0;overflow:hidden;margin:2px 0;}
+.snav-progress-fill{width:100%;background:linear-gradient(180deg,var(--cyan),var(--accent));border-radius:2px;transition:height .3s;}
+@keyframes snav-pulse{0%,100%{box-shadow:0 0 0 0 rgba(6,182,212,.4);}50%{box-shadow:0 0 6px 3px rgba(6,182,212,.3);}}
 </style>
 </head>
 <body>
@@ -146,6 +176,7 @@ a{color:var(--accent);text-decoration:none;}a:hover{text-decoration:underline;}
         <button class="tbtn" id="tb-econ" onclick="toggleEconOverlay()" title="Economic heatmap overlay">Econ</button>
         <button class="tbtn" id="tb-viz" onclick="toggleViz()" title="Visualization modes">Viz</button>
         <button class="tbtn" id="tb-insp" onclick="toggleInspector()" title="Toggle inspector">Inspector</button>
+        <button class="tbtn" id="tb-theme" onclick="toggleHistoryTheme()" title="Toggle light/dark theme">&#x263E;</button>
     </div>
     <div class="rainbow"><span class="r1"></span><span class="r2"></span><span class="r3"></span><span class="r4"></span><span class="r5"></span><span class="r6"></span></div>
 
@@ -243,6 +274,14 @@ a{color:var(--accent);text-decoration:none;}a:hover{text-decoration:underline;}
                     </div>
                 </div>
             </div>
+        </div>
+
+        <!-- Section Navigator (vertical) -->
+        <div id="section-nav" class="hidden">
+            <div class="snav-progress" style="height:40px;" title="Processing progress">
+                <div class="snav-progress-fill" id="snav-progress-fill" style="height:0%;"></div>
+            </div>
+            <div id="snav-dots"></div>
         </div>
     </div>
 
@@ -350,18 +389,23 @@ const TL_MIN_LOG = -44, TL_MAX_LOG = 18, TL_RANGE = TL_MAX_LOG - TL_MIN_LOG;
 
 function tlResize(){
     const cv = $('timeline-canvas'); const p = cv.parentElement;
-    cv.width = p.offsetWidth; cv.height = p.offsetHeight;
+    const dpr = window.devicePixelRatio || 1;
+    cv.width = p.offsetWidth * dpr; cv.height = p.offsetHeight * dpr;
+    cv.style.width = p.offsetWidth + 'px'; cv.style.height = p.offsetHeight + 'px';
+    const ctx = cv.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     drawTimeline();
 }
 
 function drawTimeline(){
     const cv = $('timeline-canvas'); const ctx = cv.getContext('2d');
-    const W = cv.width, H = cv.height;
+    const dpr = window.devicePixelRatio || 1;
+    const W = cv.width / dpr, H = cv.height / dpr;
     const { center, zoom } = STATE.tl;
     const visRange = TL_RANGE / zoom;
     const visMin = center - visRange / 2, visMax = center + visRange / 2;
 
-    ctx.fillStyle = '#050810'; ctx.fillRect(0, 0, W, H);
+    const isLight = document.documentElement.classList.contains('light');
+    ctx.fillStyle = isLight ? '#f1f5f9' : '#050810'; ctx.fillRect(0, 0, W, H);
 
     // Draw scale bands
     TL_SCALES.forEach(s => {
@@ -927,7 +971,7 @@ function startViz(mode) {
 
     function draw() {
         frame++;
-        ctx.fillStyle = '#050810'; ctx.fillRect(0, 0, W, H);
+        ctx.fillStyle = document.documentElement.classList.contains('light') ? '#f1f5f9' : '#050810'; ctx.fillRect(0, 0, W, H);
 
         if (mode === 'flame') drawFlame(ctx, W, H, frame);
         else if (mode === 'tree') drawTree(ctx, W, H, frame);
@@ -1412,6 +1456,182 @@ addConnection('block-1', 'block-2');
         tlog('auto-search', 'query from URL: ' + q, 'cmd');
     }
 })();
+
+// ══════════════════ THEME TOGGLE ══════════════════
+function toggleHistoryTheme() {
+    const root = document.documentElement;
+    root.classList.toggle('light');
+    const isLight = root.classList.contains('light');
+    document.querySelector('meta[name="theme-color"]').content = isLight ? '#f8fafc' : '#050810';
+    const btn = $('tb-theme');
+    if (btn) btn.textContent = isLight ? '\u2600' : '\u263E';
+    // Repaint canvases
+    drawTimeline();
+    localStorage.setItem('history-theme', isLight ? 'light' : 'dark');
+}
+window.toggleHistoryTheme = toggleHistoryTheme;
+// Restore saved theme
+if (localStorage.getItem('history-theme') === 'light') toggleHistoryTheme();
+
+// ══════════════════ SECTION NAVIGATOR ══════════════════
+(function initSectionNav() {
+    const nav = $('section-nav');
+    const dotsEl = $('snav-dots');
+    const progressFill = $('snav-progress-fill');
+    if (!nav || !dotsEl) return;
+
+    let sections = [];
+    let activeSection = -1;
+    let processingTotal = 0;
+    let processingDone = 0;
+
+    function buildSections(doc, analysis) {
+        sections = [];
+        if (!doc || !doc.content) return;
+        const content = doc.content;
+        const lines = content.split('\n');
+        const totalWords = lines.join(' ').split(/\s+/).length;
+        // Split into ~8-12 sections by word count
+        const wordsPerSection = Math.max(100, Math.ceil(totalWords / 10));
+        let wordCount = 0, sectionStart = 0;
+        for (let i = 0; i < lines.length; i++) {
+            wordCount += lines[i].split(/\s+/).filter(Boolean).length;
+            if (wordCount >= wordsPerSection || i === lines.length - 1) {
+                const sectionText = lines.slice(sectionStart, i + 1).join(' ').trim();
+                const firstWords = sectionText.split(/\s+/).slice(0, 6).join(' ');
+                sections.push({
+                    label: firstWords + (firstWords.length < sectionText.length ? '...' : ''),
+                    startLine: sectionStart,
+                    endLine: i,
+                    wordCount: wordCount,
+                    color: analysis && analysis.tone ? _TC[analysis.tone.dominant] || 'var(--cyan)' : 'var(--cyan)',
+                    scrollTarget: sectionStart / Math.max(lines.length, 1),
+                    // Map to timeline position (proportional through the content)
+                    timelinePos: i / Math.max(lines.length, 1),
+                });
+                wordCount = 0;
+                sectionStart = i + 1;
+            }
+        }
+        renderNav();
+    }
+
+    function renderNav() {
+        dotsEl.innerHTML = '';
+        if (sections.length === 0) { nav.classList.add('hidden'); return; }
+        nav.classList.remove('hidden');
+        sections.forEach(function(s, i) {
+            if (i > 0) {
+                var bar = document.createElement('div');
+                bar.className = 'snav-bar' + (i <= activeSection ? ' active' : '');
+                dotsEl.appendChild(bar);
+            }
+            var dot = document.createElement('div');
+            dot.className = 'snav-dot' + (i === activeSection ? ' active' : '');
+            dot.style.borderColor = s.color;
+            if (i === activeSection) dot.style.background = s.color;
+            dot.title = s.label;
+            var label = document.createElement('div');
+            label.className = 'snav-label';
+            label.textContent = (i + 1) + '. ' + s.label;
+            dot.appendChild(label);
+            dot.addEventListener('click', function() {
+                setActiveSection(i);
+                scrollDocToSection(i);
+                syncTimelineToSection(i);
+            });
+            dotsEl.appendChild(dot);
+        });
+    }
+
+    function setActiveSection(idx) {
+        activeSection = idx;
+        dotsEl.querySelectorAll('.snav-dot').forEach(function(d, i) {
+            d.classList.toggle('active', i === idx);
+            if (i === idx) d.style.background = sections[i].color;
+            else d.style.background = 'transparent';
+        });
+        dotsEl.querySelectorAll('.snav-bar').forEach(function(b, i) {
+            b.classList.toggle('active', i < idx);
+        });
+    }
+
+    function scrollDocToSection(idx) {
+        var body = $('hdv-body');
+        if (!body || sections.length === 0) return;
+        var ratio = sections[idx].scrollTarget;
+        body.scrollTop = ratio * body.scrollHeight;
+    }
+
+    function syncTimelineToSection(idx) {
+        if (sections.length === 0) return;
+        // Map section position to visible timeline range
+        // Use the document's temporal context if available
+        var fraction = sections[idx].timelinePos;
+        // Subtle visual indicator: flash the timeline center marker
+        var cv = $('timeline-canvas');
+        if (cv) {
+            var ctx = cv.getContext('2d');
+            var dpr = window.devicePixelRatio || 1;
+            var W = cv.width / dpr;
+            var x = fraction * W;
+            ctx.save();
+            ctx.strokeStyle = 'rgba(6,182,212,0.8)';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([3, 3]);
+            ctx.beginPath();
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x, cv.height / dpr);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.restore();
+            // Fade after 2s
+            setTimeout(drawTimeline, 2000);
+        }
+    }
+
+    function setProgress(done, total) {
+        processingDone = done;
+        processingTotal = total;
+        var pct = total > 0 ? Math.round((done / total) * 100) : 0;
+        if (progressFill) progressFill.style.height = pct + '%';
+        // Mark dots as processing if not done
+        dotsEl.querySelectorAll('.snav-dot').forEach(function(d, i) {
+            if (i < done) d.classList.remove('processing');
+            else if (i < total) d.classList.add('processing');
+        });
+    }
+
+    // Auto-detect scroll position in doc viewer
+    var hdvBody = $('hdv-body');
+    if (hdvBody) {
+        hdvBody.addEventListener('scroll', function() {
+            if (sections.length === 0) return;
+            var ratio = hdvBody.scrollTop / Math.max(hdvBody.scrollHeight - hdvBody.clientHeight, 1);
+            var idx = Math.min(Math.floor(ratio * sections.length), sections.length - 1);
+            if (idx !== activeSection) setActiveSection(idx);
+        });
+    }
+
+    // Expose API
+    window.sectionNav = {
+        build: buildSections,
+        setActive: setActiveSection,
+        setProgress: setProgress,
+        getSections: function() { return sections; },
+    };
+})();
+
+// Hook section nav into doc viewer
+var _origLoadDocViewer = window.loadDocViewer;
+window.loadDocViewer = async function(item) {
+    if (window.sectionNav) window.sectionNav.setProgress(0, 1);
+    await _origLoadDocViewer(item);
+    if (window.sectionNav && _hdvDoc) {
+        window.sectionNav.build(_hdvDoc, _hdvAnalysis);
+        window.sectionNav.setProgress(1, 1);
+    }
+};
 
 // ── PWA + Quantum Sync ──
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});

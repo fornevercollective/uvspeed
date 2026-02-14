@@ -237,9 +237,11 @@ function getSourceColor(source) { return SRC_COLORS[source] || '#64748b'; }
 function drawTimeline(canvas) {
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
-    const W = canvas.width, H = canvas.height;
+    const dpr = window.devicePixelRatio || 1;
+    const W = canvas.width / dpr, H = canvas.height / dpr;
     const minLog = -44, maxLog = 18, range = maxLog - minLog;
-    ctx.fillStyle = '#050810'; ctx.fillRect(0, 0, W, H);
+    const isLight = document.documentElement.classList.contains('light');
+    ctx.fillStyle = isLight ? '#f1f5f9' : '#050810'; ctx.fillRect(0, 0, W, H);
     TL_SCALES.forEach(s => {
         const x1 = ((s.min - minLog) / range) * W;
         const x2 = ((s.max - minLog) / range) * W;
