@@ -6,7 +6,7 @@
 
 > A development platform built on the beyondBINARY prefix system `{+1, 1, -1, +0, 0, -0, +n, n, -n}` — structurally addressing code in 9 dimensions across 20+ languages.
 
-[![Version](https://img.shields.io/badge/v4.2-uvspeed-brightgreen)](#install)
+[![Version](https://img.shields.io/badge/v4.3-uvspeed-brightgreen)](#install)
 [![Languages](https://img.shields.io/badge/Languages-20_supported-blue)](#quantum-prefix-system)
 [![Sponsor](https://img.shields.io/badge/Sponsor-%E2%9D%A4-ff69b4)](https://github.com/sponsors/fornevercollective)
 [![License](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
@@ -274,9 +274,15 @@ uvspeed/
 │   ├── sw.js                    # Service worker (offline cache)
 │   └── ...                      # hexcast, hexbench, blackwell, archflow, sponsor, etc.
 ├── crates/prefix-engine/        # Rust prefix classifier (native + WASM + C FFI)
+│   ├── src/lib.rs               # Core regex classifier (9 symbols)
+│   ├── src/ast.rs               # Tree-sitter AST-backed classifier (zero false positives)
+│   └── src/simd.rs              # SIMD-vectorized engine (100M+ lines/sec target)
 ├── src-tauri/                   # Tauri v2 desktop app (Rust)
 │   ├── src/main.rs              # Window management, menus, IPC commands
 │   └── src/prefix_engine.rs     # Tauri IPC → Rust classifier bridge
+├── editors/                     # IDE plugins
+│   ├── vscode/                  # VS Code extension (gutter + status bar + commands)
+│   └── neovim/                  # Neovim plugin (Lua, extmarks)
 ├── src/bridge/                  # Go WebSocket bridge server
 ├── src/shaders/                 # WGSL GPU compute shaders
 ├── scripts/                     # Build automation
@@ -376,6 +382,30 @@ Edit code → git commit (pre-commit: ruff + clippy + prefix headers + version s
 ```
 
 10 languages: TypeScript, Rust, Python, JavaScript, Go, CSS, Shell, Nushell, WGSL, TOML/YAML
+
+### v4.3 — Multi-Architecture + AI + AST
+
+- **Multi-GPU Architecture Views** — Blackwell dashboard now supports 5 manufacturers:
+  NVIDIA Blackwell, AMD CDNA 4, Intel Xe3, Apple M4, Qualcomm Adreno X1.
+  Click chips in header to swap layer stacks, specs, heatmaps, and deploy targets.
+- **AST-Backed Classification** — Tree-sitter integration in Rust prefix engine.
+  Zero false positives. Exact node-type classification for Python, JS, TS, Rust, Go, C.
+  Regex fallback for unsupported languages. Accuracy comparison API built in.
+- **SIMD-Vectorized Engine** — New `simd.rs` module with first-byte dispatch tables
+  and SIMD-friendly batch processing. Target: 100M+ lines/sec.
+- **AI Game Training** — BrotherNumsy blocks builder now generates real executable code.
+  Neural network agent (`nn_simple` mode) trains on gameplay with online weight updates.
+  `numsyAI.train(episodes, agentFn)` API for automated training sessions.
+- **Dimensional Diff** — Quantum Notepad tracks X/Y/Z spatial changes between snapshots.
+  `notebook.showDimensionalDiff()` shows prefix shifts, not just line changes.
+  Terminal command: `diff` or `qdiff`.
+- **Quantum Circuit Mapping** — `QuantumPrefixes.toQuantumCircuit(code, lang)` maps
+  prefix symbols to quantum gates (H, CNOT, X, Rz, I, S, T, SWAP, M).
+  ASCII circuit diagram output. `sendToQPU()` relays to IoT bridge.
+- **IDE Plugins** — VS Code extension (`editors/vscode/`) and Neovim plugin
+  (`editors/neovim/`) with gutter decorations, status bar, and classification commands.
+- **HexTerm Launch Fix** — Cleaned splash: no more auto-camera popup, proper branded
+  intro with 2.5s auto-dismiss, prefix header added.
 
 ---
 

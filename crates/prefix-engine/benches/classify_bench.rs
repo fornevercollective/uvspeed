@@ -73,5 +73,11 @@ fn bench_gutter(c: &mut Criterion) {
     });
 }
 
-criterion_group!(benches, bench_classify_single, bench_classify_batch, bench_classify_binary, bench_gutter);
+criterion_group!(
+    benches,
+    bench_classify_single,
+    bench_classify_batch,
+    bench_classify_binary,
+    bench_gutter
+);
 criterion_main!(benches);

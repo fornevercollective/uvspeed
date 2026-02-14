@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>uvspeed — NVIDIA Blackwell Live Visualization</title>
+    <title>uvspeed — GPU Architecture Live Visualization</title>
     <link rel="icon" type="image/png" sizes="32x32" href="../icons/favicon.png">
     <link rel="icon" type="image/x-icon" href="../icons/favicon.ico">
     <link rel="apple-touch-icon" sizes="192x192" href="../icons/icon-192.png">
@@ -363,9 +363,16 @@
         .header-nav a {
             padding: 4px 10px; border-radius: var(--cursor-radius);
             background: var(--cursor-bg-tertiary); border: 1px solid var(--cursor-border);
-            color: var(--cursor-text-muted); transition: all 0.15s;
+            color: var(--cursor-text-muted); transition: all 0.15s; font-size:.6875rem;
         }
         .header-nav a:hover { color: var(--cursor-accent); border-color: var(--cursor-accent); text-decoration: none; }
+        .arch-chip {
+            padding: 3px 8px; border-radius: var(--cursor-radius); font-size: .625rem; font-weight: 700;
+            border: 1px solid var(--cursor-border); background: var(--cursor-bg-tertiary);
+            color: var(--cursor-text-muted); cursor: pointer; transition: all .15s; white-space: nowrap;
+        }
+        .arch-chip:hover { border-color: var(--ac); color: var(--ac); }
+        .arch-chip.active { background: color-mix(in srgb, var(--ac) 12%, transparent); border-color: var(--ac); color: var(--ac); }
 
         /* ===== Main Layout (sidebar + content) ===== */
         .main-area {
@@ -636,16 +643,20 @@
         <div class="app-header">
             <div class="header-title">
                 <img src="../icons/nyan-banner.png" alt="uvspeed" class="header-logo" title="uvspeed — beyondBINARY">
-                uvspeed — <span style="color:var(--nv-green);">Blackwell</span> Live
-                <span class="header-nv-badge"><span class="pulse pulse-nv"></span> NVIDIA</span>
+                uvspeed — <span id="arch-title-span" style="color:var(--nv-green);">Blackwell</span> Live
+                <span class="header-nv-badge" id="arch-badge"><span class="pulse pulse-nv"></span> <span id="arch-badge-text">NVIDIA</span></span>
             </div>
-            <div class="header-nav">
+            <div class="header-nav" style="gap:3px;">
+                <span class="arch-chip active" data-arch="nvidia" style="--ac:#76b900;">NVIDIA</span>
+                <span class="arch-chip" data-arch="amd" style="--ac:#ed1c24;">AMD</span>
+                <span class="arch-chip" data-arch="intel" style="--ac:#0071c5;">Intel</span>
+                <span class="arch-chip" data-arch="apple" style="--ac:#a2aaad;">Apple</span>
+                <span class="arch-chip" data-arch="qualcomm" style="--ac:#3253dc;">Qualcomm</span>
+                <span style="opacity:.2;margin:0 2px">|</span>
                 <a href="quantum-notepad.html">Notepad</a>
-                <a href="questcast.html">questcast</a>
+                <a href="research-lab.html">Research</a>
                 <a href="archflow.html">archflow</a>
-                <a href="jawta-audio.html">jawta</a>
                 <a href="hexcast.html">hexcast</a>
-                <a href="brothernumsy.html">Game</a>
             </div>
         </div>
 
@@ -1350,6 +1361,217 @@
             });
         });
 
+        // ===== Multi-Architecture Definitions =====
+        const ARCHITECTURES = {
+            nvidia: {
+                name: 'Blackwell', vendor: 'NVIDIA', color: '#76b900',
+                chip: 'B200 Ultra', smLabel: 'SM', smCount: 192,
+                layers: [
+                    { id: 'icache', name: 'Instruction Cache', desc: '128 KB per SM — fetch + decode + branch predictor', icon: '📦', color: '#4fc3f7' },
+                    { id: 'warp', name: 'Warp Schedulers ×4', desc: '128 threads/warp — Blackwell extended warps', icon: '🔀', color: '#ab47bc' },
+                    { id: 'regfile', name: 'Register File', desc: '65,536 × 32-bit — 256 KB per SM', icon: '📋', color: '#ff7043' },
+                    { id: 'cores', name: 'Processing Cores', desc: 'INT32 (128) + FP32 (128) + FP64 (2) + Tensor 5th Gen (4)', icon: '⚡', color: '#66bb6a' },
+                    { id: 'ldst', name: 'Load/Store + SFU', desc: '32 LD/ST units + 8 Special Function Units', icon: '💾', color: '#ef5350' },
+                    { id: 'l1', name: 'L1 Data Cache / Shared Memory', desc: '256 KB configurable — L1 + Shared + Texture', icon: '💾', color: '#26c6da' },
+                    { id: 'l2', name: 'L2 Cache → HBM3e → NVLink 5.0', desc: '96 MB L2, 192 GB HBM3e @ 8 TB/s, NVLink 5.0 @ 1.8 TB/s', icon: '🌐', color: '#78909c' },
+                ],
+                specs: [
+                    ['FP4 Tensor', '20 PFLOPS', '18 PFLOPS', '—'],
+                    ['FP8 Tensor', '10 PFLOPS', '9 PFLOPS', '3.96 PFLOPS'],
+                    ['HBM', 'HBM3e 192GB', 'HBM3e 192GB', 'HBM3 80GB'],
+                    ['Memory BW', '8 TB/s', '8 TB/s', '3.35 TB/s'],
+                    ['NVLink BW', '1.8 TB/s (NVL5)', '1.8 TB/s', '900 GB/s'],
+                    ['TDP', '1200W', '1000W', '700W'],
+                    ['Interconnect', 'NVLink 5.0', 'NVLink 5.0', 'NVLink 4.0'],
+                ],
+                specCols: ['B200 Ultra', 'B100', 'H100'],
+                memBW: '8 TB/s',
+            },
+            amd: {
+                name: 'CDNA 4', vendor: 'AMD', color: '#ed1c24',
+                chip: 'MI350X', smLabel: 'CU', smCount: 304,
+                layers: [
+                    { id: 'icache', name: 'Instruction Cache', desc: '64 KB per CU — GFX12 ISA fetch/decode', icon: '📦', color: '#e53935' },
+                    { id: 'warp', name: 'Wavefront Schedulers ×4', desc: '64 threads/wavefront — CDNA 4 dual-issue', icon: '🔀', color: '#8e24aa' },
+                    { id: 'regfile', name: 'Vector Register File', desc: '256 × 256-bit VGPR — 512 KB per CU', icon: '📋', color: '#ff7043' },
+                    { id: 'cores', name: 'Processing Cores', desc: 'INT32 (128) + FP32 (128) + FP64 (64:1) + Matrix (MFMA 4th Gen)', icon: '⚡', color: '#43a047' },
+                    { id: 'ldst', name: 'Load/Store + Texture', desc: '32 LD/ST + 16 texture address + 16 filter units', icon: '💾', color: '#e53935' },
+                    { id: 'l1', name: 'L1 Vector Cache / LDS', desc: '128 KB L1 + 128 KB LDS configurable per CU', icon: '💾', color: '#00acc1' },
+                    { id: 'l2', name: 'Infinity Cache → HBM3e → Infinity Fabric', desc: '256 MB Infinity Cache, 192 GB HBM3e @ 6.4 TB/s', icon: '🌐', color: '#78909c' },
+                ],
+                specs: [
+                    ['FP8 Matrix', '~24 PFLOPS', '—', '1.3 PFLOPS'],
+                    ['FP16 Matrix', '~12 PFLOPS', '—', '1.3 PFLOPS'],
+                    ['HBM', 'HBM3e 288GB', '—', 'HBM3 192GB'],
+                    ['Memory BW', '6.4 TB/s', '—', '5.3 TB/s'],
+                    ['Interconnect', 'Infinity Fabric 4', '—', 'Infinity Fabric 3'],
+                    ['TDP', '750W', '—', '750W'],
+                    ['Architecture', 'CDNA 4 (GFX12)', '—', 'CDNA 3 (GFX9)'],
+                ],
+                specCols: ['MI350X', '—', 'MI300X'],
+                memBW: '6.4 TB/s',
+            },
+            intel: {
+                name: 'Xe3 Battlemage', vendor: 'Intel', color: '#0071c5',
+                chip: 'Falcon Shores', smLabel: 'Xe-Core', smCount: 160,
+                layers: [
+                    { id: 'icache', name: 'Thread Dispatch', desc: 'EU thread dispatch — 8 threads per EU', icon: '📦', color: '#42a5f5' },
+                    { id: 'warp', name: 'EU Schedulers ×8', desc: '8 hardware threads per Execution Unit', icon: '🔀', color: '#7e57c2' },
+                    { id: 'regfile', name: 'GRF (General Register File)', desc: '128 × 256-bit per EU — 4 KB per thread', icon: '📋', color: '#ff7043' },
+                    { id: 'cores', name: 'Execution Units', desc: 'FP32 (8 ALU) + INT32 (8) + FP64 (4) + XMX Matrix (systolic)', icon: '⚡', color: '#66bb6a' },
+                    { id: 'ldst', name: 'Load/Store + Sampler', desc: '16 LD/ST + 4 texture samplers per Xe-Core', icon: '💾', color: '#ef5350' },
+                    { id: 'l1', name: 'L1 Cache / SLM', desc: '192 KB L1 + 128 KB Shared Local Memory per Xe-Core', icon: '💾', color: '#26c6da' },
+                    { id: 'l2', name: 'L2 → HBM2e → CXL', desc: '96 MB L2, 128 GB HBM2e @ 3.2 TB/s, CXL 2.0', icon: '🌐', color: '#78909c' },
+                ],
+                specs: [
+                    ['XMX FP8', '~8 PFLOPS', '~2 PFLOPS', '—'],
+                    ['FP32 Vector', '~120 TFLOPS', '~50 TFLOPS', '—'],
+                    ['HBM', 'HBM2e 128GB', 'HBM2e 64GB', '—'],
+                    ['Memory BW', '3.2 TB/s', '1.6 TB/s', '—'],
+                    ['Interconnect', 'CXL 2.0', 'PCIe 5.0', '—'],
+                    ['TDP', '600W', '300W', '—'],
+                    ['Architecture', 'Xe3 (Falcon Shores)', 'Xe2 (Battlemage)', '—'],
+                ],
+                specCols: ['Falcon Shores', 'Battlemage', '—'],
+                memBW: '3.2 TB/s',
+            },
+            apple: {
+                name: 'M4 Ultra', vendor: 'Apple', color: '#a2aaad',
+                chip: 'M4 Ultra', smLabel: 'GPU Core', smCount: 80,
+                layers: [
+                    { id: 'icache', name: 'Instruction Cache', desc: '64 KB per core cluster — Apple GPU ISA', icon: '📦', color: '#78909c' },
+                    { id: 'warp', name: 'SIMD-group Scheduler', desc: '32 threads per SIMD-group — 1024 concurrent threads/core', icon: '🔀', color: '#ab47bc' },
+                    { id: 'regfile', name: 'Tile Register File', desc: 'Tile-based deferred rendering — register spill to unified memory', icon: '📋', color: '#ff7043' },
+                    { id: 'cores', name: 'ALU + FP + RT + Neural', desc: 'FP32 (128) + FP16 (256) + Ray Tracing + Neural Engine (38 TOPS)', icon: '⚡', color: '#66bb6a' },
+                    { id: 'ldst', name: 'Load/Store + Texture', desc: 'Tile-based memory access — zero-copy unified memory', icon: '💾', color: '#ef5350' },
+                    { id: 'l1', name: 'Tile Buffer / Threadgroup Memory', desc: '96 KB tile buffer + 32 KB threadgroup memory per core', icon: '💾', color: '#26c6da' },
+                    { id: 'l2', name: 'SLC → Unified Memory', desc: '64 MB System Level Cache, 192 GB unified @ 800 GB/s', icon: '🌐', color: '#78909c' },
+                ],
+                specs: [
+                    ['FP32 GPU', '~28 TFLOPS', '~14 TFLOPS', '~7 TFLOPS'],
+                    ['FP16 GPU', '~56 TFLOPS', '~28 TFLOPS', '~14 TFLOPS'],
+                    ['Neural Engine', '38 TOPS', '38 TOPS', '18 TOPS'],
+                    ['Unified Memory', '192 GB', '128 GB', '32 GB'],
+                    ['Memory BW', '800 GB/s', '400 GB/s', '200 GB/s'],
+                    ['TDP', '~150W', '~75W', '~22W'],
+                    ['Architecture', 'M4 Ultra', 'M4 Max', 'M4 Pro'],
+                ],
+                specCols: ['M4 Ultra', 'M4 Max', 'M4 Pro'],
+                memBW: '800 GB/s',
+            },
+            qualcomm: {
+                name: 'Adreno X1', vendor: 'Qualcomm', color: '#3253dc',
+                chip: 'Snapdragon X Elite', smLabel: 'SP', smCount: 48,
+                layers: [
+                    { id: 'icache', name: 'Instruction Cache', desc: '32 KB per SP — Adreno X1 ISA', icon: '📦', color: '#5c6bc0' },
+                    { id: 'warp', name: 'Fiber Scheduler', desc: '64 fibers per SP — wavefront parallelism', icon: '🔀', color: '#7e57c2' },
+                    { id: 'regfile', name: 'Unified Register File', desc: '128 × 128-bit — VGPR + SGPR unified', icon: '📋', color: '#ff7043' },
+                    { id: 'cores', name: 'ALU + Tensor', desc: 'FP32 (32) + FP16 (64) + INT8 (128) + Hexagon NPU (45 TOPS)', icon: '⚡', color: '#66bb6a' },
+                    { id: 'ldst', name: 'Load/Store + Texture', desc: '8 LD/ST + 4 texture units — FlexRender tiling', icon: '💾', color: '#ef5350' },
+                    { id: 'l1', name: 'L1 Cache / GMEM', desc: '64 KB L1 + 6 MB Global Memory (tile buffer)', icon: '💾', color: '#26c6da' },
+                    { id: 'l2', name: 'System Cache → LPDDR5x', desc: '12 MB SLC, 32 GB LPDDR5x @ 135 GB/s', icon: '🌐', color: '#78909c' },
+                ],
+                specs: [
+                    ['FP32 GPU', '~4.6 TFLOPS', '~3.8 TFLOPS', '—'],
+                    ['FP16 GPU', '~9.2 TFLOPS', '~7.6 TFLOPS', '—'],
+                    ['NPU (INT8)', '45 TOPS', '45 TOPS', '—'],
+                    ['Memory', '32 GB LPDDR5x', '16 GB LPDDR5x', '—'],
+                    ['Memory BW', '135 GB/s', '135 GB/s', '—'],
+                    ['TDP', '~25W', '~15W', '—'],
+                    ['Architecture', 'Adreno X1-85', 'Adreno X1-80', '—'],
+                ],
+                specCols: ['X Elite', 'X Plus', '—'],
+                memBW: '135 GB/s',
+            },
+        };
+
+        let currentArch = 'nvidia';
+
+        function switchArchitecture(archId) {
+            const arch = ARCHITECTURES[archId];
+            if (!arch) return;
+            currentArch = archId;
+
+            // Update chips
+            document.querySelectorAll('.arch-chip').forEach(c => {
+                c.classList.toggle('active', c.dataset.arch === archId);
+            });
+
+            // Header
+            const titleSpan = document.getElementById('arch-title-span');
+            titleSpan.textContent = arch.name;
+            titleSpan.style.color = arch.color;
+            document.getElementById('arch-badge-text').textContent = arch.vendor;
+
+            // Layer stack card header
+            const stackHeader = document.querySelector('.sm-arch-stack')?.closest('.card')?.querySelector('.card-header');
+            if (stackHeader) {
+                stackHeader.querySelector('span:first-child').textContent = `${arch.name} ${arch.smLabel} — Layer Architecture`;
+                const tag = stackHeader.querySelector('.tag-nv,.tag-arch');
+                if (tag) { tag.textContent = `${arch.smCount} ${arch.smLabel}s × ${arch.chip}`; tag.className = 'tag tag-arch'; tag.style.color = arch.color; tag.style.borderColor = arch.color; tag.style.background = arch.color + '15'; }
+            }
+
+            // SM Heatmap header
+            const hmHeader = document.querySelector('#sm-heatmap')?.closest('.card')?.querySelector('.card-header span:first-child');
+            if (hmHeader) hmHeader.textContent = `${arch.smLabel} Activity Heatmap (${arch.smCount} ${arch.smLabel}s)`;
+
+            // Specs table
+            const specTable = document.querySelector('.specs-table');
+            if (specTable) {
+                const thead = specTable.querySelector('thead tr');
+                if (thead && arch.specCols) {
+                    const ths = thead.querySelectorAll('th');
+                    for (let i = 1; i < ths.length && i - 1 < arch.specCols.length; i++) {
+                        ths[i].textContent = arch.specCols[i - 1];
+                        ths[i].style.color = i === 1 ? arch.color : '';
+                    }
+                }
+                const tbody = specTable.querySelector('tbody');
+                if (tbody && arch.specs) {
+                    tbody.innerHTML = arch.specs.map(row =>
+                        `<tr>${row.map((cell, i) =>
+                            `<td${i === 1 ? ` style="color:${arch.color};"` : ''}>${cell}</td>`
+                        ).join('')}</tr>`
+                    ).join('');
+                }
+                // Update specs card header
+                const specHeader = specTable.closest('.card')?.querySelector('.card-header span:first-child');
+                if (specHeader) specHeader.textContent = `${arch.name} Specifications`;
+            }
+
+            // SM cell count
+            const heatmap = document.getElementById('sm-heatmap');
+            if (heatmap) {
+                const cells = heatmap.querySelectorAll('.sm-cell');
+                cells.forEach((cell, i) => {
+                    cell.style.display = i < arch.smCount ? '' : 'none';
+                });
+            }
+
+            // Footer
+            const footerSm = document.getElementById('footer-sm');
+            if (footerSm) footerSm.textContent = `${arch.smCount} ${arch.smLabel}s`;
+            const footerBW = document.getElementById('footer-bw');
+            if (footerBW) footerBW.textContent = arch.memBW;
+            const footerBrand = document.querySelector('.app-footer span:first-child');
+            if (footerBrand) footerBrand.textContent = `⚛ uvspeed ${arch.name} Live`;
+
+            // Log it
+            if (streamLog) {
+                const entry = document.createElement('div');
+                entry.className = 'stream-entry';
+                entry.style.color = arch.color;
+                entry.textContent = `⚛ Switched to ${arch.vendor} ${arch.name} (${arch.smCount} ${arch.smLabel}s × ${arch.chip})`;
+                streamLog.appendChild(entry);
+                streamLog.scrollTop = streamLog.scrollHeight;
+            }
+        }
+
+        // Bind arch chip clicks
+        document.querySelectorAll('.arch-chip[data-arch]').forEach(chip => {
+            chip.addEventListener('click', () => switchArchitecture(chip.dataset.arch));
+        });
+
         // ===== Layer Data Model =====
         const layerState = {
             icache: { util: 0.60, hitRate: 0.962, bw: 256, misses: 3.8, history: [] },
@@ -1752,8 +1974,17 @@
             QP.requestStateSync();
         })();
 
-        console.log('⚛ uvspeed Blackwell SM Layer Architecture — initialized');
-        console.log('Layers: I-Cache → Warp Sched → RegFile → Cores (INT32/FP32/FP64/Tensor) → LD/ST+SFU → L1/Shared → L2/HBM/NVLink');
+        // ===== PUBLIC API =====
+        window.gpuViz = {
+            switchArch: switchArchitecture,
+            get arch() { return currentArch; },
+            get architectures() { return Object.keys(ARCHITECTURES); },
+            get current() { return ARCHITECTURES[currentArch]; },
+        };
+
+        console.log('⚛ uvspeed GPU Architecture Visualizer — initialized');
+        console.log('Architectures: NVIDIA Blackwell, AMD CDNA 4, Intel Xe3, Apple M4, Qualcomm Adreno X1');
+        console.log('Switch: gpuViz.switchArch("amd") or click chips in header');
         console.log('{+1, 1, -1, +0, 0, -0, +n, n, -n}');
     })();
     </script>

@@ -102,6 +102,14 @@ grepai_semantic = true
 [tool.ruff]
 line-length = 120
 target-version = "py39"
+exclude = [
+    "src/",
+    "__pycache__",
+    ".venv",
+    "dist",
+    "tools/",
+    "uvspeed_quantum.egg-info",
+]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I"]

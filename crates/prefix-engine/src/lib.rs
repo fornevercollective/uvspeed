@@ -20,6 +20,11 @@
 
 use serde::{Deserialize, Serialize};
 
+#[cfg(feature = "ast")]
+pub mod ast;
+
+pub mod simd;
+
 /// The 9 quantum prefix symbols
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum PrefixSymbol {
@@ -46,30 +51,30 @@ pub enum PrefixSymbol {
 impl PrefixSymbol {
     pub fn as_str(&self) -> &'static str {
         match self {
-            Self::PlusOne  => "+1",
-            Self::One      => "1",
+            Self::PlusOne => "+1",
+            Self::One => "1",
             Self::MinusOne => "-1",
             Self::PlusZero => "+0",
-            Self::Zero     => "0",
-            Self::MinusZero=> "-0",
-            Self::PlusN    => "+n",
-            Self::N        => "n",
-            Self::MinusN   => "-n",
+            Self::Zero => "0",
+            Self::MinusZero => "-0",
+            Self::PlusN => "+n",
+            Self::N => "n",
+            Self::MinusN => "-n",
         }
     }
 
     /// 4-bit encoding (0-8) for binary/INT8 optimized storage
     pub fn to_bits(&self) -> u8 {
         match self {
-            Self::PlusOne  => 0,
-            Self::One      => 1,
+            Self::PlusOne => 0,
+            Self::One => 1,
             Self::MinusOne => 2,
             Self::PlusZero => 3,
-            Self::Zero     => 4,
-            Self::MinusZero=> 5,
-            Self::PlusN    => 6,
-            Self::N        => 7,
-            Self::MinusN   => 8,
+            Self::Zero => 4,
+            Self::MinusZero => 5,
+            Self::PlusN => 6,
+            Self::N => 7,
+            Self::MinusN => 8,
         }
     }
 
@@ -92,15 +97,15 @@ impl PrefixSymbol {
     /// Returns (x, y, z) where each axis is -1, 0, or +1
     pub fn to_3d(&self) -> (i8, i8, i8) {
         match self {
-            Self::PlusOne  => ( 1,  1,  0),  // +direction, high energy
-            Self::One      => ( 0,  1,  0),  // neutral direction, high energy
-            Self::MinusOne => (-1,  1,  0),  // -direction, high energy
-            Self::PlusZero => ( 1,  0,  0),  // +direction, zero energy
-            Self::Zero     => ( 0,  0,  0),  // origin
-            Self::MinusZero=> (-1,  0,  0),  // -direction, zero energy
-            Self::PlusN    => ( 1, -1,  0),  // +direction, negative energy
-            Self::N        => ( 0, -1,  0),  // neutral direction, negative energy
-            Self::MinusN   => (-1, -1,  0),  // -direction, negative energy
+            Self::PlusOne => (1, 1, 0),    // +direction, high energy
+            Self::One => (0, 1, 0),        // neutral direction, high energy
+            Self::MinusOne => (-1, 1, 0),  // -direction, high energy
+            Self::PlusZero => (1, 0, 0),   // +direction, zero energy
+            Self::Zero => (0, 0, 0),       // origin
+            Self::MinusZero => (-1, 0, 0), // -direction, zero energy
+            Self::PlusN => (1, -1, 0),     // +direction, negative energy
+            Self::N => (0, -1, 0),         // neutral direction, negative energy
+            Self::MinusN => (-1, -1, 0),   // -direction, negative energy
         }
     }
 }
@@ -123,28 +128,28 @@ impl Category {
     pub fn as_str(&self) -> &'static str {
         match self {
             Self::Declaration => "declaration",
-            Self::Logic       => "logic",
-            Self::IO          => "io",
-            Self::Assignment  => "assignment",
-            Self::Neutral     => "neutral",
-            Self::Comment     => "comment",
-            Self::Modifier    => "modifier",
-            Self::Import      => "import",
-            Self::Unknown     => "unknown",
+            Self::Logic => "logic",
+            Self::IO => "io",
+            Self::Assignment => "assignment",
+            Self::Neutral => "neutral",
+            Self::Comment => "comment",
+            Self::Modifier => "modifier",
+            Self::Import => "import",
+            Self::Unknown => "unknown",
         }
     }
 
     pub fn symbol(&self) -> PrefixSymbol {
         match self {
             Self::Declaration => PrefixSymbol::PlusOne,
-            Self::Logic       => PrefixSymbol::One,
-            Self::IO          => PrefixSymbol::MinusOne,
-            Self::Assignment  => PrefixSymbol::PlusZero,
-            Self::Neutral     => PrefixSymbol::Zero,
-            Self::Comment     => PrefixSymbol::MinusZero,
-            Self::Modifier    => PrefixSymbol::PlusN,
-            Self::Import      => PrefixSymbol::N,
-            Self::Unknown     => PrefixSymbol::MinusN,
+            Self::Logic => PrefixSymbol::One,
+            Self::IO => PrefixSymbol::MinusOne,
+            Self::Assignment => PrefixSymbol::PlusZero,
+            Self::Neutral => PrefixSymbol::Zero,
+            Self::Comment => PrefixSymbol::MinusZero,
+            Self::Modifier => PrefixSymbol::PlusN,
+            Self::Import => PrefixSymbol::N,
+            Self::Unknown => PrefixSymbol::MinusN,
         }
     }
 }
@@ -188,6 +193,11 @@ impl PrefixClassifier {
         }
 
         let bytes = trimmed.as_bytes();
+
+        // #include must be checked BEFORE generic # comment detection
+        if trimmed.starts_with("#include") || trimmed.starts_with("#import") {
+            return (PrefixSymbol::N, Category::Import);
+        }
 
         // Comments — check first character patterns
         if bytes[0] == b'#'
@@ -294,9 +304,14 @@ impl PrefixClassifier {
         }
 
         // Closing braces / brackets alone
-        if trimmed == "}" || trimmed == "};" || trimmed == ")" || trimmed == "]"
-            || trimmed == "end" || trimmed == "fi" || trimmed == "done"
-            || trimmed == "}" || trimmed == "})"
+        if trimmed == "}"
+            || trimmed == "};"
+            || trimmed == ")"
+            || trimmed == "]"
+            || trimmed == "end"
+            || trimmed == "fi"
+            || trimmed == "done"
+            || trimmed == "})"
         {
             return (PrefixSymbol::Zero, Category::Neutral);
         }
@@ -335,7 +350,7 @@ impl PrefixClassifier {
             .collect();
 
         // Pack two 4-bit values per byte
-        let mut packed = Vec::with_capacity((results.len() + 1) / 2);
+        let mut packed = Vec::with_capacity(results.len().div_ceil(2));
         for chunk in results.chunks(2) {
             let hi = chunk[0] << 4;
             let lo = if chunk.len() > 1 { chunk[1] } else { 0 };
@@ -360,12 +375,21 @@ impl PrefixClassifier {
 
 #[inline]
 fn starts_with_keyword(line: &str, keyword: &str) -> bool {
-    if line.len() < keyword.len() { return false; }
-    if !line.starts_with(keyword) { return false; }
+    if line.len() < keyword.len() {
+        return false;
+    }
+    if !line.starts_with(keyword) {
+        return false;
+    }
     // Ensure keyword boundary (next char is space, '(', '{', ':', '<', etc.)
-    if line.len() == keyword.len() { return true; }
+    if line.len() == keyword.len() {
+        return true;
+    }
     let next = line.as_bytes()[keyword.len()];
-    matches!(next, b' ' | b'(' | b'{' | b':' | b'<' | b'[' | b'\t' | b'!' | b'.')
+    matches!(
+        next,
+        b' ' | b'(' | b'{' | b':' | b'<' | b'[' | b'\t' | b'!' | b'.'
+    )
 }
 
 #[inline]
@@ -399,8 +423,12 @@ fn contains_assignment(line: &str) -> bool {
     for i in 0..bytes.len().saturating_sub(1) {
         if bytes[i] == b'=' {
             // Skip == and ===
-            if i > 0 && bytes[i-1] == b'=' { continue; }
-            if i + 1 < bytes.len() && bytes[i+1] == b'=' { continue; }
+            if i > 0 && bytes[i - 1] == b'=' {
+                continue;
+            }
+            if i + 1 < bytes.len() && bytes[i + 1] == b'=' {
+                continue;
+            }
             // Found a standalone = (or +=, -=, *=, /=, :=, etc.)
             return true;
         }
@@ -424,7 +452,9 @@ mod wasm {
     impl WasmPrefixClassifier {
         #[wasm_bindgen(constructor)]
         pub fn new() -> Self {
-            Self { inner: PrefixClassifier::new() }
+            Self {
+                inner: PrefixClassifier::new(),
+            }
         }
 
         /// Classify a single line, returns JSON string
@@ -460,10 +490,15 @@ mod wasm {
 
 /// C-compatible classify function
 /// Returns category index (0-8) mapping to PrefixSymbol
+///
+/// # Safety
+/// `line_ptr` must point to valid UTF-8 memory of at least `line_len` bytes.
 #[no_mangle]
-pub extern "C" fn uvspeed_classify(line_ptr: *const u8, line_len: usize) -> u8 {
-    if line_ptr.is_null() { return 8; } // MinusN
-    let line = unsafe { std::str::from_utf8_unchecked(std::slice::from_raw_parts(line_ptr, line_len)) };
+pub unsafe extern "C" fn uvspeed_classify(line_ptr: *const u8, line_len: usize) -> u8 {
+    if line_ptr.is_null() {
+        return 8;
+    } // MinusN
+    let line = std::str::from_utf8_unchecked(std::slice::from_raw_parts(line_ptr, line_len));
     let classifier = PrefixClassifier::new();
     let (sym, _) = classifier.classify(line);
     sym.to_bits()
@@ -509,7 +544,10 @@ mod tests {
         assert_eq!(c.classify("function hello() {").0, PrefixSymbol::PlusOne);
         assert_eq!(c.classify("def process(x):").0, PrefixSymbol::PlusOne);
         assert_eq!(c.classify("class Foo:").0, PrefixSymbol::PlusOne);
-        assert_eq!(c.classify("struct Point { x: f32, y: f32 }").0, PrefixSymbol::PlusOne);
+        assert_eq!(
+            c.classify("struct Point { x: f32, y: f32 }").0,
+            PrefixSymbol::PlusOne
+        );
         assert_eq!(c.classify("const PI = 3.14;").0, PrefixSymbol::PlusOne);
         assert_eq!(c.classify("let x = 5;").0, PrefixSymbol::PlusOne);
     }
@@ -538,7 +576,10 @@ mod tests {
         let c = PrefixClassifier::new();
         assert_eq!(c.classify("print('hello')").0, PrefixSymbol::MinusOne);
         assert_eq!(c.classify("console.log(x)").0, PrefixSymbol::MinusOne);
-        assert_eq!(c.classify("fs.readFile('data.txt')").0, PrefixSymbol::MinusOne);
+        assert_eq!(
+            c.classify("fs.readFile('data.txt')").0,
+            PrefixSymbol::MinusOne
+        );
     }
 
     #[test]
@@ -555,12 +596,12 @@ mod tests {
         let source = "import os\n\ndef main():\n    print('hello')\n    x = 42\n    return x\n";
         let results = c.classify_batch(source);
         assert_eq!(results.len(), 6);
-        assert_eq!(results[0].symbol, "n");   // import
-        assert_eq!(results[1].symbol, "0");   // empty
-        assert_eq!(results[2].symbol, "+1");  // def
-        assert_eq!(results[3].symbol, "-1");  // print
-        assert_eq!(results[4].symbol, "+0");  // assignment
-        assert_eq!(results[5].symbol, "+n");  // return
+        assert_eq!(results[0].symbol, "n"); // import
+        assert_eq!(results[1].symbol, "0"); // empty
+        assert_eq!(results[2].symbol, "+1"); // def
+        assert_eq!(results[3].symbol, "-1"); // print
+        assert_eq!(results[4].symbol, "+0"); // assignment
+        assert_eq!(results[5].symbol, "+n"); // return
     }
 
     #[test]
@@ -569,7 +610,7 @@ mod tests {
         let source = "import os\n\n";
         let packed = c.classify_binary(source);
         assert_eq!(packed.len(), 1); // 2 lines → 1 byte
-        // import (7=n) in high nibble, empty (4=0) in low nibble
+                                     // import (7=n) in high nibble, empty (4=0) in low nibble
         assert_eq!(packed[0], (7 << 4) | 4);
     }
 
@@ -577,14 +618,24 @@ mod tests {
     fn test_3d_coordinates() {
         // Verify all 9 symbols have unique 3D coords
         let symbols = [
-            PrefixSymbol::PlusOne, PrefixSymbol::One, PrefixSymbol::MinusOne,
-            PrefixSymbol::PlusZero, PrefixSymbol::Zero, PrefixSymbol::MinusZero,
-            PrefixSymbol::PlusN, PrefixSymbol::N, PrefixSymbol::MinusN,
+            PrefixSymbol::PlusOne,
+            PrefixSymbol::One,
+            PrefixSymbol::MinusOne,
+            PrefixSymbol::PlusZero,
+            PrefixSymbol::Zero,
+            PrefixSymbol::MinusZero,
+            PrefixSymbol::PlusN,
+            PrefixSymbol::N,
+            PrefixSymbol::MinusN,
         ];
         let coords: Vec<_> = symbols.iter().map(|s| s.to_3d()).collect();
         for i in 0..coords.len() {
-            for j in (i+1)..coords.len() {
-                assert_ne!(coords[i], coords[j], "Duplicate 3D coord: {:?} and {:?}", symbols[i], symbols[j]);
+            for j in (i + 1)..coords.len() {
+                assert_ne!(
+                    coords[i], coords[j],
+                    "Duplicate 3D coord: {:?} and {:?}",
+                    symbols[i], symbols[j]
+                );
             }
         }
     }

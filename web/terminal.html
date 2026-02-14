@@ -1,3 +1,4 @@
+<!-- beyondBINARY quantum-prefixed | uvspeed | {+1, 1, -1, +0, 0, -0, +n, n, -n} -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -281,7 +282,9 @@
         </svg>
     </div>
     <div id="intro-prompt">
-        <div style="color:#6e7681;font-family:'SF Mono',monospace;font-size:.75rem">tap anywhere to continue</div>
+        <div style="font-family:'SF Mono',monospace;font-size:1.125rem;font-weight:700;color:#e6edf3;margin-bottom:6px">hexterm</div>
+        <div style="color:#6e7681;font-family:'SF Mono',monospace;font-size:.6875rem">quantum-prefixed terminal</div>
+        <div style="color:#484f58;font-family:'SF Mono',monospace;font-size:.5625rem;margin-top:12px">tap anywhere to enter</div>
     </div>
     <canvas id="intro-hex" width="48" height="56"></canvas>
     <div id="intro-sub">
@@ -2793,27 +2796,9 @@ const introPrompt = document.getElementById('intro-prompt');
 const introDone = sessionStorage.getItem('hexterm-intro-done');
 
 function introAutoCamera() {
-    // Auto-trigger native browser camera permission popup (like hexcast-send does)
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        introDismiss();
-        return;
-    }
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } }, audio: false })
-        .then(stream => {
-            introVideo.srcObject = stream;
-            introVideo.play();
-            introVideo.classList.add('show');
-            introPrompt.style.display = 'none';
-            // Show camera selfie briefly, then dismiss
-            setTimeout(() => {
-                introDismiss();
-                setTimeout(() => stream.getTracks().forEach(t => t.stop()), 1500);
-            }, 2000);
-        })
-        .catch(() => {
-            // Permission denied or no camera — just dismiss
-            introDismiss();
-        });
+    // Camera launch removed — hexterm splash is branding-only
+    // Camera streaming is handled by hexcast/hexcast-send when user chooses
+    introDismiss();
 }
 
 function introSkip() {
@@ -2837,13 +2822,10 @@ introEl.addEventListener('touchend', e => {
     introSkip();
 }, { passive: true });
 
-// Auto-trigger native camera popup after brief splash (1s to see the branding)
+// Auto-dismiss splash after 2.5s (just enough to see branding + mascot)
 if (!introDone) {
-    setTimeout(() => { if (introActive) introAutoCamera(); }, 1000);
+    setTimeout(() => { if (introActive) introDismiss(); }, 2500);
 }
-
-// Fallback: auto-dismiss after 6 seconds total if nothing happened
-setTimeout(() => { if (introActive) introDismiss(); }, 6000);
 
 // Auto-skip on revisit within same session
 if (introDone) {

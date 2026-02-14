@@ -11837,6 +11837,126 @@ print(f"  Norm:  {qs.normalize().norm().numpy():.6f}")`);
                 this._logStream('redo', `stack: ${this._redoStack.length}`, 'nav');
             }
 
+            /* ---------- Dimensional Diff ---------- */
+            // Computes a quantum-space diff between two snapshots.
+            // Shows what moved in X/Y/Z (deps, lines, complexity),
+            // not just line-number changes.
+            dimensionalDiff(snapshotA, snapshotB) {
+                const a = typeof snapshotA === 'string' ? JSON.parse(snapshotA) : snapshotA;
+                const b = typeof snapshotB === 'string' ? JSON.parse(snapshotB) : snapshotB;
+                const aMap = new Map(a.map(c => [c.id, c]));
+                const bMap = new Map(b.map(c => [c.id, c]));
+
+                const diff = { added: [], removed: [], moved: [], contentChanged: [], unchanged: 0, totalDelta: [0,0,0] };
+
+                // Check B for new or changed cells
+                for (const [id, bCell] of bMap) {
+                    const aCell = aMap.get(id);
+                    if (!aCell) {
+                        diff.added.push({ id, type: bCell.type, pos: bCell.quantumPosition || [0,0,0] });
+                        continue;
+                    }
+                    const aPos = aCell.quantumPosition || [0,0,0];
+                    const bPos = bCell.quantumPosition || [0,0,0];
+                    const posMoved = aPos[0] !== bPos[0] || aPos[1] !== bPos[1] || aPos[2] !== bPos[2];
+                    const contentChanged = aCell.content !== bCell.content;
+
+                    if (posMoved) {
+                        const delta = [bPos[0] - aPos[0], bPos[1] - aPos[1], bPos[2] - aPos[2]];
+                        diff.moved.push({ id, from: aPos, to: bPos, delta, contentChanged });
+                        diff.totalDelta[0] += Math.abs(delta[0]);
+                        diff.totalDelta[1] += Math.abs(delta[1]);
+                        diff.totalDelta[2] += Math.abs(delta[2]);
+                    } else if (contentChanged) {
+                        // Content changed but position same — compute prefix shift
+                        const QP = window.QuantumPrefixes;
+                        let prefixDelta = null;
+                        if (QP) {
+                            const aMeta = QP.prefixMetadata(aCell.content, 'auto');
+                            const bMeta = QP.prefixMetadata(bCell.content, 'auto');
+                            prefixDelta = {
+                                linesDelta: bMeta.totalLines - aMeta.totalLines,
+                                coverageDelta: +(bMeta.coverage - aMeta.coverage).toFixed(2),
+                                prefixShifts: {}
+                            };
+                            const allPrefixes = new Set([...Object.keys(aMeta.prefixCounts || {}), ...Object.keys(bMeta.prefixCounts || {})]);
+                            for (const p of allPrefixes) {
+                                const d = (bMeta.prefixCounts[p] || 0) - (aMeta.prefixCounts[p] || 0);
+                                if (d !== 0) prefixDelta.prefixShifts[p] = d;
+                            }
+                        }
+                        diff.contentChanged.push({ id, type: bCell.type, pos: bPos, prefixDelta });
+                    } else {
+                        diff.unchanged++;
+                    }
+                }
+
+                // Check A for removed cells
+                for (const [id, aCell] of aMap) {
+                    if (!bMap.has(id)) {
+                        diff.removed.push({ id, type: aCell.type, pos: aCell.quantumPosition || [0,0,0] });
+                    }
+                }
+
+                // Summary
+                diff.summary = {
+                    total: bMap.size,
+                    added: diff.added.length,
+                    removed: diff.removed.length,
+                    moved: diff.moved.length,
+                    contentChanged: diff.contentChanged.length,
+                    unchanged: diff.unchanged,
+                    spatialMagnitude: Math.sqrt(
+                        diff.totalDelta[0]**2 + diff.totalDelta[1]**2 + diff.totalDelta[2]**2
+                    ).toFixed(2),
+                };
+
+                return diff;
+            }
+
+            // Compute diff between current state and last undo snapshot
+            diffFromLastSave() {
+                const current = this.cells.map(c => ({
+                    id: c.id, type: c.type, content: c.content,
+                    quantumPosition: c.quantumPosition, executionCount: c.executionCount,
+                }));
+                const prev = this._undoStack.length > 0
+                    ? JSON.parse(this._undoStack[this._undoStack.length - 1])
+                    : [];
+                return this.dimensionalDiff(prev, current);
+            }
+
+            // Render dimensional diff as terminal output
+            showDimensionalDiff() {
+                const diff = this.diffFromLastSave();
+                const lines = ['═══ Dimensional Diff ═══'];
+                lines.push(`Cells: ${diff.summary.total} | Δ Spatial: ${diff.summary.spatialMagnitude}`);
+                if (diff.added.length) lines.push(`  + ${diff.added.length} added`);
+                if (diff.removed.length) lines.push(`  - ${diff.removed.length} removed`);
+                if (diff.moved.length) {
+                    lines.push(`  ↕ ${diff.moved.length} moved in quantum space:`);
+                    diff.moved.forEach(m => {
+                        lines.push(`    ${m.id}: [${m.from}] → [${m.to}] Δ[${m.delta}]${m.contentChanged ? ' +content' : ''}`);
+                    });
+                }
+                if (diff.contentChanged.length) {
+                    lines.push(`  ✎ ${diff.contentChanged.length} content changes:`);
+                    diff.contentChanged.forEach(c => {
+                        const pd = c.prefixDelta;
+                        if (pd) {
+                            const shifts = Object.entries(pd.prefixShifts).map(([k,v]) => `${k}:${v > 0 ? '+' : ''}${v}`).join(' ');
+                            lines.push(`    ${c.id}: Δlines=${pd.linesDelta} Δcov=${pd.coverageDelta}% ${shifts}`);
+                        } else {
+                            lines.push(`    ${c.id}: content modified`);
+                        }
+                    });
+                }
+                if (diff.unchanged > 0) lines.push(`  ≡ ${diff.unchanged} unchanged`);
+                lines.push(`Total Δ: X=${diff.totalDelta[0]} Y=${diff.totalDelta[1]} Z=${diff.totalDelta[2]}`);
+                this._logStream('dimensional-diff', lines.join('\n'), 'perf');
+                return diff;
+            }
+
             /* ---------- Cell Helpers ---------- */
             updateCell(cellId, content) {
                 const cell = this.cells.find(c => c.id === cellId);
@@ -15029,6 +15149,31 @@ print(f"  Norm:  {qs.normalize().norm().numpy():.6f}")`);
                     term.writeln(`  \x1b[36m${result.symbol}\x1b[0m  \x1b[33m${result.category}\x1b[0m  ${line}`);
                     break;
                 }
+                case 'diff':
+                case 'qdiff':
+                    if (window.notebook) {
+                        const dd = notebook.showDimensionalDiff();
+                        term.writeln(`\x1b[36m  ═══ Dimensional Diff ═══\x1b[0m`);
+                        term.writeln(`  Cells: ${dd.summary.total} | Δ Spatial: ${dd.summary.spatialMagnitude}`);
+                        if (dd.added.length) term.writeln(`  \x1b[32m+ ${dd.added.length} added\x1b[0m`);
+                        if (dd.removed.length) term.writeln(`  \x1b[31m- ${dd.removed.length} removed\x1b[0m`);
+                        if (dd.moved.length) {
+                            dd.moved.forEach(m => term.writeln(`  \x1b[33m↕ ${m.id.slice(0,8)}: [${m.from}] → [${m.to}] Δ[${m.delta}]\x1b[0m`));
+                        }
+                        if (dd.contentChanged.length) {
+                            dd.contentChanged.forEach(c => {
+                                const pd = c.prefixDelta;
+                                if (pd && Object.keys(pd.prefixShifts).length) {
+                                    const shifts = Object.entries(pd.prefixShifts).map(([k,v]) => `${k}:${v>0?'+':''}${v}`).join(' ');
+                                    term.writeln(`  \x1b[35m✎ ${c.id.slice(0,8)}: Δlines=${pd.linesDelta} ${shifts}\x1b[0m`);
+                                } else {
+                                    term.writeln(`  \x1b[35m✎ ${c.id.slice(0,8)}: content modified\x1b[0m`);
+                                }
+                            });
+                        }
+                        term.writeln(`  \x1b[90mTotal Δ: X=${dd.totalDelta[0]} Y=${dd.totalDelta[1]} Z=${dd.totalDelta[2]}\x1b[0m`);
+                    } else { term.writeln('\x1b[31m  No notebook loaded\x1b[0m'); }
+                    break;
                 case 'cells':
                     if (window.notebook && notebook.cells) {
                         notebook.cells.forEach((c, i) => {

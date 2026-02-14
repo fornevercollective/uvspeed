@@ -16,6 +16,7 @@ crate-type = ["cdylib", "rlib"]
 default = ["native"]
 native = []
 wasm = ["wasm-bindgen", "js-sys"]
+ast = ["tree-sitter", "tree-sitter-python", "tree-sitter-javascript", "tree-sitter-rust", "tree-sitter-go", "tree-sitter-c", "tree-sitter-typescript"]
 
 [dependencies]
 serde = { version = "1", features = ["derive"] }
@@ -24,6 +25,15 @@ serde_json = "1"
 # WASM-only dependencies
 wasm-bindgen = { version = "0.2", optional = true }
 js-sys = { version = "0.3", optional = true }
+
+# AST-backed classification (tree-sitter)
+tree-sitter = { version = "0.24", optional = true }
+tree-sitter-python = { version = "0.23", optional = true }
+tree-sitter-javascript = { version = "0.23", optional = true }
+tree-sitter-rust = { version = "0.23", optional = true }
+tree-sitter-go = { version = "0.23", optional = true }
+tree-sitter-c = { version = "0.23", optional = true }
+tree-sitter-typescript = { version = "0.23", optional = true }
 
 [dev-dependencies]
 criterion = "0.5"

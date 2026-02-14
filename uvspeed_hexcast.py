@@ -52,24 +52,23 @@ Controls:
 
 __version__ = "3.6.0"
 
-import sys
-import os
-import time
-import signal
 import argparse
-import shutil
-import subprocess
 import asyncio
-import threading
-import json
 import base64
+import json
+import os
+import shutil
+import signal
 import socket
-import struct
+import subprocess
+import sys
+import time
 from io import BytesIO
 
 # ──────────────────────────────────────────────────────────
 # Self-update
 # ──────────────────────────────────────────────────────────
+
 
 def self_update():
     """Pull latest from git and reinstall the tool."""
@@ -88,14 +87,11 @@ def self_update():
 
     # reinstall
     print("\033[90m  uv tool install -e . --force ...\033[0m")
-    r2 = subprocess.run(
-        ["uv", "tool", "install", "-e", project_dir, "--force"],
-        capture_output=True, text=True
-    )
+    r2 = subprocess.run(["uv", "tool", "install", "-e", project_dir, "--force"], capture_output=True, text=True)
     if r2.returncode == 0:
-        print(f"\033[32m  ✓ Updated to latest\033[0m")
+        print("\033[32m  ✓ Updated to latest\033[0m")
         # Show new version
-        r3 = subprocess.run(["hexcast", "--version"], capture_output=False)
+        subprocess.run(["hexcast", "--version"], capture_output=False)
     else:
         print(f"\033[31m  Error: {r2.stderr.strip()}\033[0m")
         # Fallback: try pip-style
@@ -117,7 +113,8 @@ def _has_cv2():
     """Check if opencv is available (cached)."""
     if not hasattr(_has_cv2, "_ok"):
         try:
-            import cv2
+            import cv2  # noqa: F401
+
             _has_cv2._ok = True
         except ImportError:
             _has_cv2._ok = False
@@ -128,7 +125,8 @@ def _has_pil():
     """Check if Pillow is available (cached)."""
     if not hasattr(_has_pil, "_ok"):
         try:
-            from PIL import Image
+            from PIL import Image  # noqa: F401
+
             _has_pil._ok = True
         except ImportError:
             _has_pil._ok = False
@@ -138,16 +136,18 @@ def _has_pil():
 def compress_frame(frame, quality=50):
     """Compress BGR frame to JPEG bytes."""
     import cv2
-    ok, buf = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, quality])
+
+    ok, buf = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, quality])
     if ok:
         return buf.tobytes()
-    return b''
+    return b""
 
 
 def decompress_frame(data):
     """Decompress JPEG bytes to BGR numpy array (requires cv2+numpy)."""
     import cv2
     import numpy as np
+
     arr = np.frombuffer(data, dtype=np.uint8)
     return cv2.imdecode(arr, cv2.IMREAD_COLOR)
 
@@ -155,21 +155,28 @@ def decompress_frame(data):
 def decompress_frame_pil(data):
     """Decompress JPEG bytes to PIL Image (pure-Python fallback, no cv2)."""
     from PIL import Image
+
     return Image.open(BytesIO(data))
 
 
 def make_packet(frame, source_name="camera", cols=80, rows=24):
     """Create a JSON+binary streaming packet."""
     jpg = compress_frame(frame)
-    return json.dumps({
-        "type": "frame",
-        "v": __version__,
-        "src": source_name,
-        "w": frame.shape[1],
-        "h": frame.shape[0],
-        "sz": len(jpg),
-        "t": time.time(),
-    }) + "\n" + base64.b64encode(jpg).decode()
+    return (
+        json.dumps(
+            {
+                "type": "frame",
+                "v": __version__,
+                "src": source_name,
+                "w": frame.shape[1],
+                "h": frame.shape[0],
+                "sz": len(jpg),
+                "t": time.time(),
+            }
+        )
+        + "\n"
+        + base64.b64encode(jpg).decode()
+    )
 
 
 def parse_packet(raw):
@@ -200,6 +207,7 @@ def parse_packet(raw):
 # Networking: WebSocket serve (broadcast camera)
 # ──────────────────────────────────────────────────────────
 
+
 def run_serve(args):
     """Broadcast camera/test over WebSocket for remote viewing."""
     import cv2
@@ -217,10 +225,10 @@ def run_serve(args):
         cap = cv2.VideoCapture(args.camera)
         if not cap.isOpened():
             print(f"\033[31mError: cannot open camera {args.camera}.\033[0m")
-            print(f"\033[90m  No camera found. Use test pattern instead:\033[0m")
-            print(f"\033[90m    hexcast --serve --test\033[0m")
-            print(f"\033[90m  Or receive from a phone:\033[0m")
-            print(f"\033[90m    hexcast --receive\033[0m")
+            print("\033[90m  No camera found. Use test pattern instead:\033[0m")
+            print("\033[90m    hexcast --serve --test\033[0m")
+            print("\033[90m  Or receive from a phone:\033[0m")
+            print("\033[90m    hexcast --receive\033[0m")
             sys.exit(1)
         cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
@@ -233,7 +241,8 @@ def run_serve(args):
     mdns_info = None
     zc = None
     try:
-        from zeroconf import Zeroconf, ServiceInfo
+        from zeroconf import ServiceInfo, Zeroconf
+
         hostname = socket.gethostname()
         local_ip = _get_local_ip()
         mdns_info = ServiceInfo(
@@ -281,7 +290,7 @@ def run_serve(args):
                     await asyncio.sleep(0.1)
                     continue
 
-            if clients:
+            if clients:  # noqa: F823 — closure variable from parent scope
                 packet = make_packet(frame, source_name)
                 dead = set()
                 for ws in clients.copy():
@@ -289,7 +298,7 @@ def run_serve(args):
                         await ws.send(packet)
                     except Exception:
                         dead.add(ws)
-                clients -= dead
+                clients -= dead  # noqa: F841
 
             elapsed = time.monotonic() - t0
             await asyncio.sleep(max(0, interval - elapsed))
@@ -301,7 +310,7 @@ def run_serve(args):
         print(f"\033[32m  ws://{local_ip}:{port}\033[0m")
         print(f"\033[90m  Connect: hexcast --connect {local_ip}\033[0m")
         print(f"\033[90m  mDNS: {'registered' if mdns_info else 'unavailable'}\033[0m")
-        print(f"\033[90m  Ctrl+C to stop\033[0m\n")
+        print("\033[90m  Ctrl+C to stop\033[0m\n")
 
         try:
             async with websockets.server.serve(handler, "0.0.0.0", port):
@@ -309,7 +318,7 @@ def run_serve(args):
         except OSError as e:
             if e.errno == 48 or "address already in use" in str(e).lower():
                 print(f"\033[31m  Error: port {port} already in use.\033[0m")
-                print(f"\033[90m  Another hexcast instance may be running (--receive or --serve).\033[0m")
+                print("\033[90m  Another hexcast instance may be running (--receive or --serve).\033[0m")
                 print(f"\033[90m  Try a different port: hexcast --serve --port {port + 1}\033[0m")
                 print(f"\033[90m  Or kill the existing process: lsof -ti:{port} | xargs kill\033[0m")
             else:
@@ -332,11 +341,13 @@ def run_serve(args):
 # Networking: WebSocket connect (view remote stream)
 # ──────────────────────────────────────────────────────────
 
+
 def run_connect(args):
     """Connect to a remote hexcast and render in terminal."""
-    import websockets
     import termios
     import tty
+
+    import websockets
 
     host = args.connect
     port = args.port or HEXCAST_PORT
@@ -371,11 +382,11 @@ def run_connect(args):
         latencies = []
 
         print(f"\033[36m  hexcast connect\033[0m → {uri}")
-        print(f"\033[90m  Connecting...\033[0m")
+        print("\033[90m  Connecting...\033[0m")
 
         try:
             async with websockets.connect(uri, max_size=10_000_000) as ws:
-                print(f"\033[32m  Connected!\033[0m\n")
+                print("\033[32m  Connected!\033[0m\n")
                 await asyncio.sleep(0.5)
 
                 async for msg in ws:
@@ -420,7 +431,7 @@ def run_connect(args):
                         f"\033[36m hexcast\033[0m "
                         f"\033[90m← {host} {src} {w}×{h} "
                         f"f:{frame_count} lat:{avg_lat:.0f}ms "
-                        f"sz:{sz//1024}KB {mode_str}\033[0m"
+                        f"sz:{sz // 1024}KB {mode_str}\033[0m"
                     )
 
                     move_cursor(1, 1)
@@ -444,13 +455,14 @@ def run_connect(args):
 # Networking: bidirectional video chat
 # ──────────────────────────────────────────────────────────
 
+
 def run_chat(args):
     """Bidirectional video chat — send camera + receive remote, split-screen."""
-    import cv2
-    import numpy as np
-    import websockets
     import termios
     import tty
+
+    import cv2
+    import websockets
 
     host = args.chat
     port = args.port or HEXCAST_PORT
@@ -465,7 +477,7 @@ def run_chat(args):
 
     cap = cv2.VideoCapture(args.camera)
     if not cap.isOpened():
-        print(f"\033[31mError: cannot open camera for chat\033[0m")
+        print("\033[31mError: cannot open camera for chat\033[0m")
         sys.exit(1)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 320)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 240)
@@ -492,11 +504,11 @@ def run_chat(args):
         clear_screen()
 
         print(f"\033[36m  hexcast chat\033[0m → {uri}")
-        print(f"\033[90m  Connecting...\033[0m")
+        print("\033[90m  Connecting...\033[0m")
 
         try:
             async with websockets.connect(uri, max_size=10_000_000) as ws:
-                print(f"\033[32m  Connected! Split-screen video chat active.\033[0m\n")
+                print("\033[32m  Connected! Split-screen video chat active.\033[0m\n")
                 await asyncio.sleep(0.3)
 
                 async def send_loop():
@@ -560,7 +572,7 @@ def run_chat(args):
                             else:
                                 line += " " * half_cols
 
-                            line += f"\033[0m│"
+                            line += "\033[0m│"
 
                             # Right half: remote
                             rf = remote_frame[0]
@@ -609,15 +621,16 @@ def run_chat(args):
 # Networking: mDNS discovery
 # ──────────────────────────────────────────────────────────
 
+
 def run_discover(args):
     """Discover hexcast peers on the local network via mDNS/Bonjour."""
     try:
-        from zeroconf import Zeroconf, ServiceBrowser
+        from zeroconf import ServiceBrowser, Zeroconf
     except ImportError:
         print("\033[31mInstall zeroconf: pip install zeroconf\033[0m")
         sys.exit(1)
 
-    print(f"\033[36m  hexcast discover\033[0m — scanning LAN for peers...")
+    print("\033[36m  hexcast discover\033[0m — scanning LAN for peers...")
     print(f"\033[90m  Looking for {MDNS_SERVICE}\033[0m\n")
 
     found = []
@@ -647,7 +660,7 @@ def run_discover(args):
 
     zc = Zeroconf()
     listener = Listener()
-    browser = ServiceBrowser(zc, MDNS_SERVICE, listener)
+    ServiceBrowser(zc, MDNS_SERVICE, listener)
 
     try:
         # Scan for a few seconds
@@ -665,8 +678,8 @@ def run_discover(args):
 
     if not found:
         local_ip = _get_local_ip()
-        print(f"\033[33m  No hexcast peers found on LAN.\033[0m")
-        print(f"\033[90m  Start one: hexcast --serve\033[0m")
+        print("\033[33m  No hexcast peers found on LAN.\033[0m")
+        print("\033[90m  Start one: hexcast --serve\033[0m")
         print(f"\033[90m  Your IP: {local_ip}\033[0m")
     else:
         print(f"\n\033[32m  Found {len(found)} peer(s)\033[0m")
@@ -675,6 +688,7 @@ def run_discover(args):
 # ──────────────────────────────────────────────────────────
 # Networking: ping
 # ──────────────────────────────────────────────────────────
+
 
 def run_ping(args):
     """Measure latency to a remote hexcast server."""
@@ -706,7 +720,7 @@ def run_ping(args):
 
                     data = json.loads(resp)
                     server_t = data.get("st", 0)
-                    half = (server_t - t0) * 1000 if server_t else rtt / 2
+                    (server_t - t0) * 1000 if server_t else rtt / 2
 
                     times.append(rtt)
                     bar = "█" * max(1, min(40, int(rtt / 2)))
@@ -734,9 +748,9 @@ def run_ping(args):
 # Networking: relay
 # ──────────────────────────────────────────────────────────
 
+
 def run_relay(args):
     """Connect via a relay server for NAT traversal."""
-    import websockets
 
     relay_url = args.relay
     room = args.room or f"hexcast-{os.getpid()}"
@@ -756,12 +770,14 @@ def run_relay(args):
 # Networking: receive (render incoming frames from phone/web)
 # ──────────────────────────────────────────────────────────
 
+
 def run_receive(args):
     """Start a WS server that renders frames sent from remote devices (phone PWA, web)."""
-    import websockets
-    import websockets.server
     import termios
     import tty
+
+    import websockets
+    import websockets.server
 
     port = args.port or HEXCAST_PORT
     thermal = args.thermal
@@ -777,7 +793,8 @@ def run_receive(args):
     mdns_info = None
     zc = None
     try:
-        from zeroconf import Zeroconf, ServiceInfo
+        from zeroconf import ServiceInfo, Zeroconf
+
         hostname = socket.gethostname()
         local_ip = _get_local_ip()
         mdns_info = ServiceInfo(
@@ -906,15 +923,16 @@ def run_receive(args):
                 show_cursor()
                 clear_screen()
                 print(f"\033[31m  Error: port {port} already in use.\033[0m")
-                print(f"\033[90m  Another hexcast instance may be running.\033[0m")
+                print("\033[90m  Another hexcast instance may be running.\033[0m")
                 print()
-                print(f"\033[36m  Fix options:\033[0m")
+                print("\033[36m  Fix options:\033[0m")
                 print(f"\033[90m    hexcast --receive --port {port + 1}        # use a different port\033[0m")
                 print(f"\033[90m    lsof -ti:{port} | xargs kill              # kill the process on the port\033[0m")
                 print()
                 # Attempt to show what's on the port
                 try:
                     import subprocess
+
                     result = subprocess.run(["lsof", "-ti", f":{port}"], capture_output=True, text=True, timeout=3)
                     pids = result.stdout.strip()
                     if pids:
@@ -933,6 +951,7 @@ def run_receive(args):
 # ──────────────────────────────────────────────────────────
 # Helpers
 # ──────────────────────────────────────────────────────────
+
 
 def _get_local_ip():
     """Get LAN IP address."""
@@ -956,6 +975,7 @@ MAX_CAMERA_PROBE = 10  # check indices 0..9
 def detect_cameras():
     """Probe system for available cameras. Returns list of {index, name, w, h, facing}."""
     import cv2
+
     # Suppress OpenCV native C warning spam during probing
     os.environ["OPENCV_LOG_LEVEL"] = "SILENT"
     _stderr_fd = sys.stderr.fileno()
@@ -1004,13 +1024,14 @@ def list_cameras():
         tag = "\033[32m●\033[0m" if c["facing"] == "front" else "\033[33m●\033[0m"
         label = "FRONT" if c["facing"] == "front" else "BACK" if c["facing"] == "back" else c["facing"].upper()
         print(f"  {tag} [{c['index']}] {label}  {c['w']}×{c['h']}  {c['name']}")
-    print(f"\n\033[90m  Use --camera N to select, or press 'c' during stream to cycle\033[0m")
+    print("\n\033[90m  Use --camera N to select, or press 'c' during stream to cycle\033[0m")
     return cams
 
 
 def open_camera(idx, width=640, height=480):
     """Open a camera by index with requested resolution."""
     import cv2
+
     cap = cv2.VideoCapture(idx)
     if not cap.isOpened():
         return None
@@ -1042,6 +1063,7 @@ def swap_camera(current_cap, current_idx, cameras, direction=1):
 # Terminal helpers
 # ──────────────────────────────────────────────────────────
 
+
 def terminal_size():
     cols, rows = shutil.get_terminal_size((80, 24))
     return cols, rows
@@ -1069,6 +1091,7 @@ def move_cursor(row, col):
 def kbhit():
     """Non-blocking key check."""
     import select
+
     dr, _, _ = select.select([sys.stdin], [], [], 0)
     return len(dr) > 0
 
@@ -1080,6 +1103,7 @@ def getch():
 # ──────────────────────────────────────────────────────────
 # Color palettes
 # ──────────────────────────────────────────────────────────
+
 
 def truecolor_fg(r, g, b):
     return f"\033[38;2;{r};{g};{b}m"
@@ -1129,20 +1153,26 @@ def render_frame_truecolor(frame, cols, rows, thermal=False, brightness=1.0):
     # Detect PIL Image vs numpy array
     try:
         from PIL import Image
+
         is_pil = isinstance(frame, Image.Image)
     except ImportError:
         is_pil = False
 
     if is_pil:
         resized = frame.resize((target_w, target_h), Image.LANCZOS).convert("RGB")
-        get_pixel = lambda x, y: resized.getpixel((x, y))  # returns (R, G, B)
+
+        def get_pixel(x, y):
+            return resized.getpixel((x, y))  # returns (R, G, B)
     else:
-        import numpy as np
         import cv2
+        import numpy as np
+
         resized = cv2.resize(frame, (target_w, target_h), interpolation=cv2.INTER_AREA)
         if brightness != 1.0:
             resized = np.clip(resized * brightness, 0, 255).astype(np.uint8)
-        get_pixel = lambda x, y: tuple(int(v) for v in reversed(resized[y, x]))  # BGR → RGB
+
+        def get_pixel(x, y):
+            return tuple(int(v) for v in reversed(resized[y, x]))  # BGR → RGB
 
     lines = []
     for row in range(rows):
@@ -1170,20 +1200,26 @@ def render_frame_ascii(frame, cols, rows, thermal=False, brightness=1.0):
     """Colored ASCII characters. Accepts cv2 ndarray or PIL Image."""
     try:
         from PIL import Image
+
         is_pil = isinstance(frame, Image.Image)
     except ImportError:
         is_pil = False
 
     if is_pil:
         resized = frame.resize((cols, rows), Image.LANCZOS).convert("RGB")
-        get_pixel = lambda x, y: resized.getpixel((x, y))
+
+        def get_pixel(x, y):
+            return resized.getpixel((x, y))
     else:
-        import numpy as np
         import cv2
+        import numpy as np
+
         resized = cv2.resize(frame, (cols, rows), interpolation=cv2.INTER_AREA)
         if brightness != 1.0:
             resized = np.clip(resized * brightness, 0, 255).astype(np.uint8)
-        get_pixel = lambda x, y: tuple(int(v) for v in reversed(resized[y, x]))
+
+        def get_pixel(x, y):
+            return tuple(int(v) for v in reversed(resized[y, x]))
 
     lines = []
     for y in range(rows):
@@ -1204,12 +1240,20 @@ def render_frame_ascii(frame, cols, rows, thermal=False, brightness=1.0):
 # Test pattern
 # ──────────────────────────────────────────────────────────
 
+
 def generate_test_pattern(w, h, frame_num):
     import numpy as np
+
     img = np.zeros((h, w, 3), dtype=np.uint8)
     colors = [
-        (255, 255, 255), (0, 255, 255), (255, 255, 0), (0, 255, 0),
-        (255, 0, 255), (0, 0, 255), (255, 0, 0), (0, 0, 0),
+        (255, 255, 255),
+        (0, 255, 255),
+        (255, 255, 0),
+        (0, 255, 0),
+        (255, 0, 255),
+        (0, 0, 255),
+        (255, 0, 0),
+        (0, 0, 0),
     ]
     bar_w = max(1, w // 8)
     for i, (b, g, r) in enumerate(colors):
@@ -1225,7 +1269,7 @@ def generate_test_pattern(w, h, frame_num):
     grad_h = max(1, h // 10)
     for x in range(w):
         v = int(255 * x / max(1, w - 1))
-        img[h - grad_h:, x] = (v, v, v)
+        img[h - grad_h :, x] = (v, v, v)
 
     return img
 
@@ -1234,11 +1278,24 @@ def generate_test_pattern(w, h, frame_num):
 # Screen capture via ffmpeg
 # ──────────────────────────────────────────────────────────
 
+
 def open_screen_capture():
     cmd = [
-        "ffmpeg", "-f", "avfoundation", "-framerate", "15",
-        "-i", "1:none", "-vf", "scale=320:240",
-        "-f", "rawvideo", "-pix_fmt", "bgr24", "-an", "-"
+        "ffmpeg",
+        "-f",
+        "avfoundation",
+        "-framerate",
+        "15",
+        "-i",
+        "1:none",
+        "-vf",
+        "scale=320:240",
+        "-f",
+        "rawvideo",
+        "-pix_fmt",
+        "bgr24",
+        "-an",
+        "-",
     ]
     try:
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
@@ -1251,6 +1308,7 @@ def open_screen_capture():
 # ──────────────────────────────────────────────────────────
 # Main
 # ──────────────────────────────────────────────────────────
+
 
 def main():
     parser = argparse.ArgumentParser(
@@ -1376,6 +1434,7 @@ def main():
         ffmpeg_proc, screen_w, screen_h = open_screen_capture()
     elif args.file:
         from pathlib import Path
+
         source_name = f"file:{Path(args.file).name}"
         cap = cv2.VideoCapture(args.file)
         if not cap.isOpened():
@@ -1389,9 +1448,9 @@ def main():
             matching = [c for c in available_cameras if c["index"] == cam_idx]
             if matching:
                 cam_facing = matching[0]["facing"]
-            cam_count = len(available_cameras)
+            len(available_cameras)
         else:
-            cam_count = 0
+            pass
 
         cap = open_camera(cam_idx)
         if not cap:
@@ -1399,14 +1458,14 @@ def main():
             if available_cameras:
                 print(f"\033[90m  Available: {', '.join(str(c['index']) for c in available_cameras)}\033[0m")
             else:
-                print(f"\033[90m  No cameras detected on this device.\033[0m")
+                print("\033[90m  No cameras detected on this device.\033[0m")
             print()
-            print(f"\033[36m  Try one of these instead:\033[0m")
-            print(f"\033[90m    hexcast --test           # synthetic test pattern\033[0m")
-            print(f"\033[90m    hexcast --screen         # capture your screen\033[0m")
-            print(f"\033[90m    hexcast --receive        # receive a phone camera stream\033[0m")
-            print(f"\033[90m    hexcast --serve --test   # broadcast test pattern over WiFi\033[0m")
-            print(f"\033[90m    hexcast --cameras        # list all detected cameras\033[0m")
+            print("\033[36m  Try one of these instead:\033[0m")
+            print("\033[90m    hexcast --test           # synthetic test pattern\033[0m")
+            print("\033[90m    hexcast --screen         # capture your screen\033[0m")
+            print("\033[90m    hexcast --receive        # receive a phone camera stream\033[0m")
+            print("\033[90m    hexcast --serve --test   # broadcast test pattern over WiFi\033[0m")
+            print("\033[90m    hexcast --cameras        # list all detected cameras\033[0m")
             sys.exit(1)
         source_name = f"camera:{cam_idx} ({cam_facing})"
 
@@ -1442,6 +1501,7 @@ def main():
         )
         sys.stdout.flush()
         time.sleep(0.6)
+        last_output = ""
 
         while True:
             t0 = time.monotonic()
@@ -1474,7 +1534,8 @@ def main():
                     # Quick jump to front camera
                     front = [c for c in available_cameras if c["facing"] == "front"]
                     if front and front[0]["index"] != cam_idx:
-                        if cap: cap.release()
+                        if cap:
+                            cap.release()
                         cam_idx = front[0]["index"]
                         cam_facing = "front"
                         cap = open_camera(cam_idx)
@@ -1483,7 +1544,8 @@ def main():
                     # Quick jump to back camera
                     back = [c for c in available_cameras if c["facing"] == "back"]
                     if back and back[0]["index"] != cam_idx:
-                        if cap: cap.release()
+                        if cap:
+                            cap.release()
                         cam_idx = back[0]["index"]
                         cam_facing = "back"
                         cap = open_camera(cam_idx)

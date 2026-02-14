@@ -37,8 +37,8 @@ jobs:
             NAME=$(basename "$app")
             ERRORS=""
 
-            # Check DOCTYPE
-            if ! head -1 "$app" | grep -qi "DOCTYPE"; then
+            # Check DOCTYPE (may be on line 2 after quantum prefix header comment)
+            if ! head -3 "$app" | grep -qi "DOCTYPE"; then
               ERRORS="${ERRORS}missing DOCTYPE, "
             fi
 

@@ -571,6 +571,110 @@
     }
 
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // Quantum Circuit Mapping (prefix → qubit topology)
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+    /**
+     * Map prefix classifications to quantum circuit gates.
+     * Each prefix symbol maps to a quantum gate operation:
+     *   +1 → H (Hadamard)    - superposition / declaration
+     *    1 → CNOT            - entanglement / logic branching
+     *   -1 → X (Pauli-X)    - bit flip / I/O side effect
+     *   +0 → Rz(θ)          - phase rotation / assignment
+     *    0 → I (Identity)    - no-op / neutral
+     *   -0 → S (Phase)       - phase gate / comment annotation
+     *   +n → T (T-gate)      - modifier / flow control
+     *    n → SWAP            - import / data movement
+     *   -n → M (Measure)     - unknown / collapse
+     */
+    var QUBIT_GATE_MAP = {
+        '+1': { gate: 'H',    name: 'Hadamard',  qubits: 1, desc: 'Superposition — declaration creates possibility space' },
+        '1':  { gate: 'CNOT', name: 'CNOT',      qubits: 2, desc: 'Entanglement — logic branches connect states' },
+        '-1': { gate: 'X',    name: 'Pauli-X',   qubits: 1, desc: 'Bit flip — I/O flips classical state' },
+        '+0': { gate: 'Rz',   name: 'Rz(π/4)',   qubits: 1, desc: 'Phase rotation — assignment changes phase' },
+        '0':  { gate: 'I',    name: 'Identity',   qubits: 1, desc: 'Identity — neutral, no transformation' },
+        '-0': { gate: 'S',    name: 'Phase',      qubits: 1, desc: 'Phase gate — comment adds metadata phase' },
+        '+n': { gate: 'T',    name: 'T-gate',     qubits: 1, desc: 'T-gate — modifier precision adjustment' },
+        'n':  { gate: 'SWAP', name: 'SWAP',       qubits: 2, desc: 'SWAP — import moves data between qubits' },
+        '-n': { gate: 'M',    name: 'Measure',    qubits: 1, desc: 'Measurement — unknown collapses superposition' },
+    };
+
+    /**
+     * Convert classified source code to a quantum circuit description.
+     * Returns an array of gate operations that could be sent to a QPU.
+     * @param {string} content  Source code
+     * @param {string} language  Language hint
+     * @returns {{ gates: Array, qubits: number, depth: number, circuit: string }}
+     */
+    function toQuantumCircuit(content, language) {
+        var meta = prefixMetadata(content, language);
+        var gates = [];
+        var maxQubit = 0;
+        var qubitPtr = 0;
+
+        (meta.lines || []).forEach(function(line, idx) {
+            var mapping = QUBIT_GATE_MAP[line.sym] || QUBIT_GATE_MAP['-n'];
+            var gate = {
+                step: idx,
+                gate: mapping.gate,
+                qubit: qubitPtr % 8,  // 8-qubit register
+                lineNum: idx + 1,
+                symbol: line.sym,
+            };
+            if (mapping.qubits === 2) {
+                gate.target = (qubitPtr + 1) % 8;
+            }
+            gates.push(gate);
+            if (gate.qubit > maxQubit) maxQubit = gate.qubit;
+            if (gate.target && gate.target > maxQubit) maxQubit = gate.target;
+            // Advance qubit pointer based on nesting
+            if (line.sym === '+1' || line.sym === '1') qubitPtr++;
+            if (line.sym === '+n' || line.sym === '-n') qubitPtr = Math.max(0, qubitPtr - 1);
+        });
+
+        // Build ASCII circuit diagram
+        var numQubits = maxQubit + 1;
+        var circuitLines = [];
+        for (var q = 0; q < numQubits; q++) {
+            var wire = 'q' + q + ': ';
+            gates.forEach(function(g) {
+                if (g.qubit === q) {
+                    wire += '[' + g.gate + ']─';
+                } else if (g.target === q) {
+                    wire += '─●──';
+                } else {
+                    wire += '────';
+                }
+            });
+            circuitLines.push(wire);
+        }
+
+        return {
+            gates: gates,
+            qubits: numQubits,
+            depth: gates.length,
+            circuit: circuitLines.join('\n'),
+            gateMap: QUBIT_GATE_MAP,
+        };
+    }
+
+    /**
+     * Send prefix state as qubit mappings to the IoT bridge.
+     * @param {string} content Source code
+     * @param {string} language Language hint
+     */
+    function sendToQPU(content, language) {
+        if (!isIoTConnected()) return null;
+        var circuit = toQuantumCircuit(content, language);
+        _relayToIoT({
+            type: 'qpu-circuit',
+            circuit: circuit,
+            timestamp: Date.now(),
+        });
+        return circuit;
+    }
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     // Aggregate Stats Helper
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     function aggregateGlobalStats() {
@@ -925,6 +1029,9 @@
         connectIoT: connectIoT,
         disconnectIoT: disconnectIoT,
         isIoTConnected: isIoTConnected,
+        toQuantumCircuit: toQuantumCircuit,
+        sendToQPU: sendToQPU,
+        QUBIT_GATE_MAP: QUBIT_GATE_MAP,
 
         // Theme
         toggleTheme: toggleTheme,

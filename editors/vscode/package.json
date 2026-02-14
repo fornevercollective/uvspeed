@@ -1,0 +1,79 @@
+{
+    "name": "uvspeed-quantum-prefixes",
+    "displayName": "uvspeed Quantum Prefixes",
+    "description": "9-symbol quantum prefix gutter for code — structural classification beyond line numbers",
+    "version": "0.1.0",
+    "publisher": "ForNeverCollective",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/ForNeverCollective/uvspeed"
+    },
+    "engines": {
+        "vscode": "^1.85.0"
+    },
+    "categories": ["Programming Languages", "Other"],
+    "activationEvents": ["onStartupFinished"],
+    "main": "./out/extension.js",
+    "contributes": {
+        "configuration": {
+            "title": "Quantum Prefixes",
+            "properties": {
+                "quantumPrefixes.enabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable quantum prefix gutter decorations"
+                },
+                "quantumPrefixes.showCoverage": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Show coverage percentage in status bar"
+                },
+                "quantumPrefixes.languages": {
+                    "type": "array",
+                    "default": ["python", "javascript", "typescript", "rust", "go", "c", "cpp", "shell", "html", "css", "markdown", "sql", "yaml", "json"],
+                    "description": "Languages to classify with quantum prefixes"
+                },
+                "quantumPrefixes.useWasm": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Use WASM engine for classification (faster)"
+                }
+            }
+        },
+        "commands": [
+            {
+                "command": "quantumPrefixes.toggle",
+                "title": "Quantum Prefixes: Toggle Gutter"
+            },
+            {
+                "command": "quantumPrefixes.classify",
+                "title": "Quantum Prefixes: Classify Current File"
+            },
+            {
+                "command": "quantumPrefixes.export",
+                "title": "Quantum Prefixes: Export Prefixed File"
+            },
+            {
+                "command": "quantumPrefixes.heatmap",
+                "title": "Quantum Prefixes: Show Heatmap"
+            },
+            {
+                "command": "quantumPrefixes.dimensionalDiff",
+                "title": "Quantum Prefixes: Dimensional Diff"
+            },
+            {
+                "command": "quantumPrefixes.circuit",
+                "title": "Quantum Prefixes: View as Quantum Circuit"
+            }
+        ]
+    },
+    "scripts": {
+        "compile": "tsc -p ./",
+        "watch": "tsc -watch -p ./"
+    },
+    "devDependencies": {
+        "@types/vscode": "^1.85.0",
+        "typescript": "^5.3.0"
+    }
+}

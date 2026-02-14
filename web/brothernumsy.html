@@ -1971,13 +1971,66 @@ state.obstacles.forEach((o, i) => {
     const canvas = document.getElementById('game');
     const game = new BrotherNumsyGame(canvas);
 
-    // Expose AI API
+    // Expose AI API with training capabilities
+    const _trainSessions = [];
     window.numsyAI = {
         getState: () => game.getState(),
         act: (a) => game.act(a),
         reset: () => game.reset(),
         onFrame: (cb) => game.onFrame(cb),
         get highScore() { return game.highScore; },
+        get sessions() { return _trainSessions; },
+
+        // Train N episodes with a callback agent
+        train: function(episodes, agentFn, opts) {
+            opts = opts || {};
+            const delay = opts.delay || 0;
+            let ep = 0;
+            const results = [];
+            const session = { start: Date.now(), episodes, results, status: 'running' };
+            _trainSessions.push(session);
+
+            function runEpisode() {
+                if (ep >= episodes) {
+                    session.status = 'done';
+                    session.end = Date.now();
+                    session.bestScore = Math.max(...results.map(r => r.score));
+                    session.avgScore = results.reduce((s, r) => s + r.score, 0) / results.length;
+                    console.log(`[AI Train] Done: ${episodes} episodes, best=${session.bestScore}, avg=${session.avgScore.toFixed(1)}`);
+                    if (opts.onDone) opts.onDone(session);
+                    return;
+                }
+                game.start();
+                const epStart = Date.now();
+                const cb = function(state) {
+                    if (!state.alive) {
+                        // Episode over
+                        const idx = game._aiCallbacks.indexOf(cb);
+                        if (idx >= 0) game._aiCallbacks.splice(idx, 1);
+                        results.push({ episode: ep, score: state.score, time: Date.now() - epStart, frames: state.frame });
+                        if (opts.onEpisode) opts.onEpisode(ep, results[results.length - 1]);
+                        ep++;
+                        if (delay > 0) setTimeout(runEpisode, delay);
+                        else requestAnimationFrame(runEpisode);
+                        return;
+                    }
+                    agentFn(state);
+                };
+                game.onFrame(cb);
+            }
+            runEpisode();
+            return session;
+        },
+
+        // Quick heuristic benchmark
+        benchmark: function(episodes) {
+            return this.train(episodes || 10, function(state) {
+                var ob = state.obstacles[0];
+                if (ob && ob.dist < 150 && ob.dist > 0) {
+                    numsyAI.act(ob.type === 'flying' ? 'duck' : 'jump');
+                }
+            }, { onEpisode: function(i, r) { console.log(`[Benchmark] Ep ${i}: score=${r.score}`); } });
+        },
     };
 
     // Buttons
@@ -2401,63 +2454,154 @@ FreyaUnits.units.forEach(u => {
             let js = '// ═══ Game Blocks Builder — Auto-generated ═══\n';
             js += '// beyondBINARY quantum-prefixed | {' + [...new Set(blocks.map(b => GB_TYPES[b.type].prefix))].join(', ') + '}\n\n';
 
-            // Entity configs
+            // Entity configs — LIVE parameter injection
             config.entities?.forEach(e => {
                 js += `// ${e.prefix} ${e.type}\n`;
                 if (e.type === 'player') {
-                    js += `game.speedMult = 1.0; // base will use ${e.params.speed || BASE_SPEED};\n`;
-                    js += `// JUMP_FORCE override: ${e.params.jump || JUMP_FORCE}\n`;
-                    js += `// GRAVITY override: ${e.params.gravity || GRAVITY}\n\n`;
+                    const spd = parseFloat(e.params.speed) || 4.5;
+                    const jmp = parseFloat(e.params.jump) || -12;
+                    const grv = parseFloat(e.params.gravity) || 0.65;
+                    js += `game.speed = ${spd};\n`;
+                    js += `game.speedMult = 1;\n`;
+                    js += `game._jumpForce = ${jmp};\n`;
+                    js += `game._gravity = ${grv};\n\n`;
                 } else if (e.type === 'enemy') {
-                    js += `// Enemy config: ${e.params.type || 'ground'}, speed=${e.params.speed || '1.0'}, hp=${e.params.hp || '1'}\n\n`;
+                    js += `game._enemyType = '${e.params.type || 'ground'}';\n`;
+                    js += `game._enemySpeed = ${parseFloat(e.params.speed) || 1.0};\n\n`;
                 } else if (e.type === 'collectible') {
-                    js += `// Collectible: ${e.params.type || 'quantum'}, points=${e.params.points || '10'}, effect=${e.params.effect || 'score'}\n\n`;
+                    js += `game._collectPoints = ${parseInt(e.params.points) || 10};\n`;
+                    js += `game._collectEffect = '${e.params.effect || 'score'}';\n\n`;
                 } else if (e.type === 'companion') {
-                    js += `// Companion: ${e.params.name || 'Freya'}, power_max=${e.params.power_max || '100'}\n\n`;
+                    js += `game.freya.power = 0;\n`;
+                    js += `game._freyaPowerMax = ${parseInt(e.params.power_max) || 100};\n\n`;
                 }
             });
 
-            // Physics
+            // Physics — apply to running game instance
             config.physics?.forEach(p => {
                 js += `// ${p.prefix} ${p.type}\n`;
-                if (p.type === 'gravity_cfg') js += `// Gravity: force=${p.params.force}, max_fall=${p.params.max_fall}, dir=${p.params.direction}\n`;
-                if (p.type === 'spawn_wave') js += `// Spawn: delay=${p.params.min_delay}-${p.params.max_delay}, ramp=${p.params.increase}\n`;
-                js += '\n';
+                if (p.type === 'gravity_cfg') {
+                    js += `game._gravity = ${parseFloat(p.params.force) || 0.65};\n`;
+                    js += `game._maxFall = ${parseFloat(p.params.max_fall) || 15};\n\n`;
+                }
+                if (p.type === 'collision') {
+                    js += `game._collisionShrink = ${parseFloat(p.params.shrink) || 0.7};\n\n`;
+                }
+                if (p.type === 'bounds') {
+                    js += `game._boundsWrap = ${p.params.wrap === 'true' || p.params.wrap === 'yes'};\n\n`;
+                }
             });
 
-            // AI
+            // AI — real trainable agents
             config.ai?.forEach(a => {
                 js += `// ${a.prefix} ${a.type}\n`;
                 if (a.type === 'ai_behavior') {
-                    js += `numsyAI.onFrame(function(state) {\n`;
-                    js += `    if (!state.alive) return;\n`;
-                    js += `    var ob = state.obstacles[0];\n`;
-                    if (a.params.mode === 'heuristic') {
-                        js += `    // Heuristic: react at ${a.params.react_dist || 150}px\n`;
-                        js += `    if (ob && ob.dist < ${a.params.react_dist || 150} && ob.dist > 0) {\n`;
+                    const mode = a.params.mode || 'heuristic';
+                    if (mode === 'nn_simple') {
+                        js += `// Neural network agent — trains on gameplay\n`;
+                        js += `(function() {\n`;
+                        js += `    var weights = new Float32Array(8).fill(0).map(() => (Math.random() - 0.5) * 0.5);\n`;
+                        js += `    var lr = ${parseFloat(a.params.learn_rate) || 0.01};\n`;
+                        js += `    var prevScore = 0, prevAction = null, prevInput = null;\n`;
+                        js += `    function forward(input) {\n`;
+                        js += `        var sum = 0;\n`;
+                        js += `        for (var i = 0; i < Math.min(input.length, weights.length); i++) sum += input[i] * weights[i];\n`;
+                        js += `        return 1 / (1 + Math.exp(-sum));\n`;
+                        js += `    }\n`;
+                        js += `    numsyAI.onFrame(function(state) {\n`;
+                        js += `        if (!state.alive) { prevScore = 0; return; }\n`;
+                        js += `        var ob = state.obstacles[0] || { dist: 999, type: 'ground', y: 0 };\n`;
+                        js += `        var input = [\n`;
+                        js += `            ob.dist / 300,\n`;
+                        js += `            ob.type === 'flying' ? 1 : 0,\n`;
+                        js += `            state.playerY / state.canvasH,\n`;
+                        js += `            state.playerGrounded ? 1 : 0,\n`;
+                        js += `            state.speed / 20,\n`;
+                        js += `            state.playerDucking ? 1 : 0,\n`;
+                        js += `            (state.obstacles[1] || { dist: 999 }).dist / 500,\n`;
+                        js += `            state.freyaPower / 100\n`;
+                        js += `        ];\n`;
+                        js += `        // Simple reward: score increased = good\n`;
+                        js += `        var reward = state.score - prevScore;\n`;
+                        js += `        if (prevInput && prevAction !== null) {\n`;
+                        js += `            var target = reward > 0 ? prevAction : 1 - prevAction;\n`;
+                        js += `            var pred = forward(prevInput);\n`;
+                        js += `            var error = target - pred;\n`;
+                        js += `            for (var i = 0; i < weights.length; i++) weights[i] += lr * error * prevInput[i];\n`;
+                        js += `        }\n`;
+                        js += `        prevScore = state.score;\n`;
+                        js += `        var out = forward(input);\n`;
+                        js += `        if (out > 0.6 && ob.dist < ${parseInt(a.params.react_dist) || 200} && ob.dist > 0) {\n`;
+                        js += `            var action = ob.type === 'flying' ? 'duck' : 'jump';\n`;
+                        js += `            numsyAI.act(action);\n`;
+                        js += `            prevAction = 1; prevInput = input;\n`;
+                        js += `        } else { prevAction = 0; prevInput = input; }\n`;
+                        js += `        if (state.frame % 300 === 0) console.log('[NN Agent] score:', state.score, 'weights:', Array.from(weights).map(w => w.toFixed(3)));\n`;
+                        js += `    });\n`;
+                        js += `    console.log('[NN Agent] Training started — weights will adapt to gameplay');\n`;
+                        js += `})();\n\n`;
+                    } else if (mode === 'heuristic') {
+                        const react = parseInt(a.params.react_dist) || 150;
+                        js += `numsyAI.onFrame(function(state) {\n`;
+                        js += `    if (!state.alive) return;\n`;
+                        js += `    var ob = state.obstacles[0];\n`;
+                        js += `    if (ob && ob.dist < ${react} && ob.dist > 0) {\n`;
                         js += `        if (ob.type === 'flying') numsyAI.act('duck');\n`;
                         js += `        else numsyAI.act('jump');\n`;
                         js += `    }\n`;
-                    } else if (a.params.mode === 'random') {
+                        js += `});\n\n`;
+                    } else if (mode === 'follow_player') {
+                        js += `numsyAI.onFrame(function(state) {\n`;
+                        js += `    if (!state.alive) return;\n`;
+                        js += `    // Mirror optimal play — jump early, duck late\n`;
+                        js += `    var ob = state.obstacles[0];\n`;
+                        js += `    if (ob && ob.dist < 180 && ob.dist > 40) {\n`;
+                        js += `        numsyAI.act(ob.type === 'flying' ? 'duck' : 'jump');\n`;
+                        js += `    }\n`;
+                        js += `    // Seek collectibles\n`;
+                        js += `    var c = state.collectibles[0];\n`;
+                        js += `    if (c && c.dist < 120 && c.y < state.playerY && state.playerGrounded) numsyAI.act('jump');\n`;
+                        js += `});\n\n`;
+                    } else {
+                        js += `numsyAI.onFrame(function(state) {\n`;
+                        js += `    if (!state.alive) return;\n`;
                         js += `    if (Math.random() < 0.05) numsyAI.act(Math.random() > 0.5 ? 'jump' : 'duck');\n`;
+                        js += `});\n\n`;
                     }
-                    js += `});\n\n`;
                 }
                 if (a.type === 'difficulty') {
-                    js += `// Difficulty ramp: ${a.params.start}-${a.params.max}, ${a.params.ramp}, every ${a.params.per_score} pts\n\n`;
+                    const start = parseFloat(a.params.start) || 1;
+                    const max = parseFloat(a.params.max) || 3;
+                    const per = parseInt(a.params.per_score) || 500;
+                    js += `numsyAI.onFrame(function(state) {\n`;
+                    js += `    var ramp = Math.min(${max}, ${start} + (state.score / ${per}) * 0.1);\n`;
+                    js += `    game.speedMult = ramp;\n`;
+                    js += `});\n\n`;
                 }
             });
 
-            // Loops
+            // Loops — functional spawn and repeat
             config.loops?.forEach(l => {
-                js += `// ${l.prefix} ${l.type}: `;
-                const params = Object.entries(l.params).map(([k, v]) => `${k}=${v}`).join(', ');
-                js += params + '\n\n';
+                js += `// ${l.prefix} ${l.type}\n`;
+                if (l.type === 'game_loop') {
+                    js += `// Game loop configured: fps=${l.params.fps || 60}, pause_key=${l.params.pause_key || 'Escape'}\n\n`;
+                } else if (l.type === 'spawn_wave') {
+                    const min = parseInt(l.params.min_delay) || 60;
+                    const max = parseInt(l.params.max_delay) || 120;
+                    js += `game._spawnMin = ${min};\n`;
+                    js += `game._spawnMax = ${max};\n\n`;
+                } else if (l.type === 'repeat') {
+                    js += `(function() { var _rCount = 0, _rMax = ${parseInt(l.params.count) || 10};\n`;
+                    js += `    var _rTimer = setInterval(function() { if (++_rCount >= _rMax) clearInterval(_rTimer); }, ${parseInt(l.params.interval) || 1000});\n`;
+                    js += `})();\n\n`;
+                }
             });
 
-            // Score rules
+            // Score rules — live multiplier
             config.output?.forEach(o => {
-                js += `// ${o.prefix} score_rule: source=${o.params.source}, mult=${o.params.multiplier}\n\n`;
+                const mult = parseFloat(o.params.multiplier) || 1;
+                js += `// ${o.prefix} score_rule\n`;
+                js += `game._scoreMult = ${mult};\n\n`;
             });
 
             js += '// ═══ End Game Blocks Config ═══\n';
