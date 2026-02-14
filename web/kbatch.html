@@ -340,6 +340,9 @@
         <button class="tab-btn" data-tab="dictionary">&#x1F4D6; Dictionary</button>
         <button class="tab-btn" data-tab="quantum">&#x269B; Quantum <span class="tab-badge">IBM</span></button>
         <button class="tab-btn" data-tab="training">&#x1F3AF; Training</button>
+        <button class="tab-btn" data-tab="capsules">&#x1F30D; Capsules</button>
+        <button class="tab-btn" data-tab="symbollab">&#x1F523; Symbols</button>
+        <button class="tab-btn" data-tab="lattice">&#x269B; Lattice</button>
     </div>
 
     <!-- ═══════════ TAB: ANALYZER (existing) ═══════════ -->
@@ -521,6 +524,97 @@
                 <div class="stat"><span class="stat-label">Accuracy</span> <span class="stat-val stat-eff" id="train-acc">100%</span></div>
                 <div class="stat"><span class="stat-label">Progress</span> <span class="stat-val stat-dist" id="train-prog">0%</span></div>
                 <div class="stat"><span class="stat-label">Errors</span> <span class="stat-val stat-cpx" id="train-err">0</span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════ TAB: CAPSULES ═══════════ -->
+    <div class="tab-panel" id="panel-capsules">
+        <div style="display:flex;flex-direction:column;flex:1;overflow-y:auto;padding:12px;gap:10px;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+                <span style="font-size:1.2rem;">&#x1F30D;</span>
+                <span style="font-weight:700;color:#e6edf3;">Language Capsules</span>
+                <span style="color:#484f58;font-size:.625rem;">demographic vocab sets — tap to load</span>
+            </div>
+            <div id="capsule-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;"></div>
+            <div id="capsule-detail" style="display:none;flex-direction:column;gap:8px;">
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <button id="capsule-back" style="background:none;border:1px solid #30363d;color:#8b949e;padding:4px 10px;border-radius:4px;cursor:pointer;font-size:.625rem;">&larr; Back</button>
+                    <span id="capsule-name" style="font-weight:700;color:#e6edf3;"></span>
+                    <span id="capsule-count" style="color:#484f58;font-size:.625rem;"></span>
+                </div>
+                <div id="capsule-words" style="display:flex;flex-wrap:wrap;gap:4px;max-height:300px;overflow-y:auto;"></div>
+                <div id="capsule-stats" style="font-family:'SF Mono',monospace;font-size:.625rem;color:#484f58;padding-top:6px;border-top:1px solid #21262d;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════ TAB: SYMBOL LAB ═══════════ -->
+    <div class="tab-panel" id="panel-symbollab">
+        <div style="display:flex;flex-direction:column;flex:1;overflow-y:auto;padding:12px;gap:10px;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+                <span style="font-size:1.2rem;">&#x1F523;</span>
+                <span style="font-weight:700;color:#e6edf3;">Symbol Lab</span>
+                <span style="color:#484f58;font-size:.625rem;">multi-script input + pattern recognition</span>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <select id="sym-script" style="background:#161b22;border:1px solid #30363d;color:#e6edf3;padding:6px 10px;border-radius:6px;font-family:'SF Mono',monospace;font-size:.75rem;">
+                    <option value="latin">Latin</option>
+                    <option value="cyrillic">Cyrillic</option>
+                    <option value="arabic">Arabic</option>
+                    <option value="devanagari">Devanagari</option>
+                    <option value="hangul">Hangul</option>
+                    <option value="kanji">Kanji</option>
+                    <option value="hiragana">Hiragana</option>
+                    <option value="greek">Greek</option>
+                    <option value="hebrew">Hebrew</option>
+                    <option value="thai">Thai</option>
+                    <option value="tamil">Tamil</option>
+                    <option value="georgian">Georgian</option>
+                    <option value="armenian">Armenian</option>
+                </select>
+                <input type="text" id="sym-input" placeholder="Type or paste symbols..." style="flex:1;background:#0d1117;border:1px solid #30363d;color:#e6edf3;padding:6px 10px;border-radius:6px;font-size:1.2rem;font-family:'SF Mono',monospace;outline:none;" autocomplete="off">
+            </div>
+            <div style="display:flex;gap:8px;">
+                <div style="flex:1;">
+                    <div style="font-size:.625rem;color:#484f58;margin-bottom:4px;">Unicode Analysis</div>
+                    <div id="sym-analysis" style="background:#161b22;border:1px solid #21262d;border-radius:6px;padding:8px;font-family:'SF Mono',monospace;font-size:.6875rem;color:#8b949e;min-height:80px;"></div>
+                </div>
+                <div style="flex:1;">
+                    <div style="font-size:.625rem;color:#484f58;margin-bottom:4px;">Pattern Recognition</div>
+                    <div id="sym-patterns" style="background:#161b22;border:1px solid #21262d;border-radius:6px;padding:8px;font-family:'SF Mono',monospace;font-size:.6875rem;color:#8b949e;min-height:80px;"></div>
+                </div>
+            </div>
+            <div style="display:flex;gap:8px;">
+                <div style="flex:2;">
+                    <div style="font-size:.625rem;color:#484f58;margin-bottom:4px;">Logogram Workspace</div>
+                    <canvas id="cv-logogram" style="width:100%;height:200px;background:#0d1117;border:1px solid #21262d;border-radius:6px;"></canvas>
+                </div>
+                <div style="flex:1;">
+                    <div style="font-size:.625rem;color:#484f58;margin-bottom:4px;">Script Properties</div>
+                    <div id="sym-props" style="background:#161b22;border:1px solid #21262d;border-radius:6px;padding:8px;font-family:'SF Mono',monospace;font-size:.6875rem;color:#8b949e;min-height:200px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════ TAB: LATTICE ═══════════ -->
+    <div class="tab-panel" id="panel-lattice">
+        <div style="display:flex;flex-direction:column;flex:1;overflow:hidden;padding:12px;gap:10px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+                <span style="font-size:1.2rem;">&#x269B;</span>
+                <span style="font-weight:700;color:#e6edf3;">Quantum Lattice</span>
+                <span style="color:#484f58;font-size:.625rem;">3D keyboard lattice — nodes = keys, quantum animations</span>
+                <span style="flex:1;"></span>
+                <button id="lattice-reset" style="background:none;border:1px solid #30363d;color:#8b949e;padding:4px 10px;border-radius:4px;cursor:pointer;font-size:.625rem;">Reset</button>
+                <button id="lattice-animate" style="background:#238636;border:none;color:#fff;padding:4px 10px;border-radius:4px;cursor:pointer;font-size:.625rem;">Animate</button>
+            </div>
+            <canvas id="cv-lattice" style="flex:1;width:100%;background:#050810;border:1px solid #21262d;border-radius:8px;cursor:grab;"></canvas>
+            <div style="display:flex;gap:12px;font-family:'SF Mono',monospace;font-size:.625rem;color:#484f58;">
+                <span>Nodes: <span id="lattice-nodes" style="color:#7ee787;">0</span></span>
+                <span>Edges: <span id="lattice-edges" style="color:#58a6ff;">0</span></span>
+                <span>Tunnels: <span id="lattice-tunnels" style="color:#d2a8ff;">0</span></span>
+                <span>Rotation: <span id="lattice-rot" style="color:#f0883e;">0,0,0</span></span>
             </div>
         </div>
     </div>
@@ -1726,6 +1820,273 @@ console.log(qasm.split('\n').slice(0,5).join('\n'));</textarea>
         // Expose session analysis
         window.kbatch.sessionAnalysis = () => HS.analyzeContext({ content: sessionText });
         window.kbatch.sessionText = () => sessionText;
+    })();
+
+    // ══════════════════ CAPSULES TAB ══════════════════
+    (function(){
+        const CAPSULES = [
+            { id: 'en-child', name: 'English (Child 0-12)', flag: '🇺🇸', color: '#3fb950', count: 500,
+              desc: 'Sight words, phonics, early readers',
+              words: ['the','and','is','it','to','in','was','you','he','she','we','they','said','my','for','are','but','not','what','all','can','had','her','him','his','how','its','may','new','now','old','our','out','own','say','too','way','who','any','big','boy','day','did','get','got','has','let','man','put','red','run','top','use','two','hot','six','ten','yes','fly','eat','sit','try','ask','bad','cut','end','far','few','fun','hit','lot','off','set','sun','win','bed','bit','box','bus','cup','dog','egg','hat','ice','job','key','lip','map','net','oil','pen','rib','sea','tie','van','web','zoo'] },
+            { id: 'en-teen', name: 'English (Teen 13-18)', flag: '🇺🇸', color: '#58a6ff', count: 800,
+              desc: 'Academic vocab, SAT prep, social media lingo',
+              words: ['analyze','context','evaluate','hypothesis','inference','rhetoric','synthesis','abstract','aesthetic','ambiguous','contemporary','diverse','elaborate','facilitate','generate','implement','justify','maintain','objective','perspective','relevant','significant','substantial','transition','utilize','advocate','comprise','derive','enhance','fluctuate','innovate','manipulate','negotiate','paradigm','reinforce','simulate','variable','volatile'] },
+            { id: 'en-adult', name: 'English (Adult 18-40)', flag: '🇺🇸', color: '#a78bfa', count: 1200,
+              desc: 'Professional, technical, financial terminology',
+              words: ['acquisition','benchmark','compliance','derivative','equity','fiduciary','governance','hedge','infrastructure','jurisdiction','leverage','methodology','optimization','procurement','quantitative','regulatory','stakeholder','throughput','underwrite','valuation','workflow','amortize','bandwidth','contingency','depreciation','escrow','franchise','holistic','iterate','juxtapose','kickstart','liquidate','monetize','nuance','outsource','pipeline','rebalance','scalable','turnover','upskill'] },
+            { id: 'zh-3k', name: 'Chinese (3k Newspaper)', flag: '🇨🇳', color: '#ef4444', count: 100,
+              desc: 'Top 100 most common newspaper characters',
+              words: ['的','一','是','不','了','人','我','在','有','他','这','中','大','来','上','国','个','到','说','们','为','子','和','你','地','出','会','时','要','也','以','就','那','年','学','对','可','她','里','后','自','心','小','去','生','多','天','全','家','两','发','最','如','行','动','方','三','没','前','进','好','意','又','事','新','手','明','已','开','问','之','将','经','能','同','然','工','面','因','看','知','很','所','起','都','主'] },
+            { id: 'ja-joyo', name: 'Japanese (Joyo Kanji)', flag: '🇯🇵', color: '#fb7185', count: 80,
+              desc: 'First 80 common-use kanji (grade 1-2)',
+              words: ['一','二','三','四','五','六','七','八','九','十','百','千','上','下','左','右','中','大','小','月','日','年','早','木','林','森','山','川','土','空','田','天','生','花','草','虫','犬','人','名','女','男','子','目','耳','口','手','足','見','音','力','気','円','入','出','立','休','先','夕','本','文','字','学','校','村','町','正','水','火','玉','王','石','竹','糸','貝','車','金','雨','赤','青','白'] },
+            { id: 'ko-syl', name: 'Korean (1800 Syllables)', flag: '🇰🇷', color: '#22d3ee', count: 80,
+              desc: 'Essential Korean syllable blocks and vocab',
+              words: ['가','나','다','라','마','바','사','아','자','차','카','타','파','하','거','너','더','러','머','버','서','어','저','처','커','터','퍼','허','고','노','도','로','모','보','소','오','조','초','코','토','포','호','구','누','두','루','무','부','수','우','주','추','쿠','투','푸','후','그','느','드','르','므','브','스','으','즈','크','트','프','흐','기','니','디','리','미','비','시','이','지','치','키','티','피','히'] },
+            { id: 'ar-core', name: 'Arabic (Core)', flag: '🇸🇦', color: '#fbbf24', count: 60,
+              desc: 'Classical + modern standard Arabic core vocabulary',
+              words: ['كتاب','قلم','بيت','ماء','أرض','سماء','شمس','قمر','نجم','بحر','جبل','شجرة','زهرة','حيوان','إنسان','طفل','رجل','امرأة','أب','أم','أخ','أخت','صديق','معلم','طبيب','مدرسة','جامعة','كبير','صغير','جميل','جديد','قديم','سريع','بطيء','حار','بارد','أبيض','أسود','أحمر','أزرق','أخضر','أصفر','واحد','اثنان','ثلاثة','أربعة','خمسة','ستة','سبعة','ثمانية','تسعة','عشرة','مئة','ألف','يوم','ليل','صباح','مساء','سنة','شهر'] },
+            { id: 'es-core', name: 'Spanish (Regional)', flag: '🇪🇸', color: '#f97316', count: 80,
+              desc: 'Pan-Spanish core + regional variants',
+              words: ['hola','gracias','por favor','buenos días','buenas noches','agua','comida','casa','familia','amigo','trabajo','escuela','ciudad','país','tiempo','dinero','salud','amor','vida','mundo','libro','calle','tienda','mercado','iglesia','hospital','playa','montaña','río','sol','luna','estrella','flor','árbol','perro','gato','niño','niña','hombre','mujer','grande','pequeño','nuevo','viejo','bueno','malo','bonito','feo','rápido','lento','caliente','frío','blanco','negro','rojo','azul','verde','amarillo','uno','dos','tres','cuatro','cinco','seis','siete','ocho','nueve','diez','cien','mil','hoy','mañana','ayer','siempre','nunca','aquí','allí','cerca','lejos'] },
+            { id: 'hi-core', name: 'Hindi (Core)', flag: '🇮🇳', color: '#84cc16', count: 60,
+              desc: 'Devanagari core vocabulary and phrases',
+              words: ['नमस्ते','धन्यवाद','कृपया','हाँ','नहीं','पानी','खाना','घर','परिवार','दोस्त','काम','स्कूल','शहर','देश','समय','पैसा','स्वास्थ्य','प्यार','जीवन','दुनिया','किताब','सड़क','बाज़ार','मंदिर','अस्पताल','पहाड़','नदी','सूरज','चाँद','तारा','फूल','पेड़','कुत्ता','बिल्ली','लड़का','लड़की','आदमी','औरत','बड़ा','छोटा','नया','पुराना','अच्छा','बुरा','सुंदर','तेज़','धीमा','गरम','ठंडा','सफ़ेद','काला','लाल','नीला','हरा','पीला','एक','दो','तीन','चार','पाँच'] },
+        ];
+
+        const grid = document.getElementById('capsule-grid');
+        const detail = document.getElementById('capsule-detail');
+        if (!grid) return;
+
+        function renderGrid() {
+            grid.style.display = 'grid'; detail.style.display = 'none';
+            grid.innerHTML = '';
+            CAPSULES.forEach(cap => {
+                const card = document.createElement('div');
+                card.style.cssText = 'padding:12px;background:#161b22;border:1px solid #21262d;border-radius:8px;cursor:pointer;transition:all .15s;';
+                card.onmouseenter = () => { card.style.borderColor = cap.color; card.style.transform = 'translateY(-2px)'; };
+                card.onmouseleave = () => { card.style.borderColor = '#21262d'; card.style.transform = ''; };
+                card.innerHTML = '<div style="font-size:1.2rem;margin-bottom:4px;">' + cap.flag + '</div>' +
+                    '<div style="font-weight:700;font-size:.75rem;color:#e6edf3;">' + cap.name + '</div>' +
+                    '<div style="font-size:.5625rem;color:#484f58;margin:4px 0;">' + cap.desc + '</div>' +
+                    '<div style="font-family:\'SF Mono\',monospace;font-size:.5625rem;color:' + cap.color + ';">' + cap.words.length + ' words loaded</div>';
+                card.onclick = () => showCapsule(cap);
+                grid.appendChild(card);
+            });
+        }
+
+        function showCapsule(cap) {
+            grid.style.display = 'none'; detail.style.display = 'flex';
+            document.getElementById('capsule-name').textContent = cap.flag + ' ' + cap.name;
+            document.getElementById('capsule-count').textContent = cap.words.length + ' / ' + cap.count + ' words';
+            const wordsEl = document.getElementById('capsule-words');
+            wordsEl.innerHTML = '';
+            cap.words.forEach(w => {
+                const span = document.createElement('span');
+                span.style.cssText = 'padding:3px 8px;background:#161b22;border:1px solid #21262d;border-radius:4px;font-family:\'SF Mono\',monospace;font-size:.6875rem;color:#e6edf3;cursor:pointer;transition:all .15s;';
+                span.textContent = w;
+                span.onclick = () => {
+                    if (window.kbatch) window.kbatch.processText(w + ' ');
+                    span.style.borderColor = cap.color; span.style.color = cap.color;
+                    setTimeout(() => { span.style.borderColor = '#21262d'; span.style.color = '#e6edf3'; }, 300);
+                };
+                wordsEl.appendChild(span);
+            });
+            // Stats
+            const avgLen = cap.words.reduce((s, w) => s + w.length, 0) / cap.words.length;
+            const scripts = new Set(); cap.words.forEach(w => { for (const ch of w) { const cp = ch.codePointAt(0); if (cp > 0x4e00) scripts.add('CJK'); else if (cp > 0x0900) scripts.add('Indic'); else if (cp > 0x0600) scripts.add('Arabic'); else if (cp > 0x0400) scripts.add('Cyrillic'); else if (cp > 0xac00) scripts.add('Hangul'); else scripts.add('Latin'); } });
+            document.getElementById('capsule-stats').textContent = 'Avg length: ' + avgLen.toFixed(1) + ' | Scripts: ' + [...scripts].join(', ') + ' | Category: ' + cap.id;
+        }
+
+        document.getElementById('capsule-back').onclick = renderGrid;
+        renderGrid();
+    })();
+
+    // ══════════════════ SYMBOL LAB TAB ══════════════════
+    (function(){
+        const SCRIPTS = {
+            latin: { name: 'Latin', range: [0x0041, 0x024F], dir: 'LTR', sample: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' },
+            cyrillic: { name: 'Cyrillic', range: [0x0400, 0x04FF], dir: 'LTR', sample: 'АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ' },
+            arabic: { name: 'Arabic', range: [0x0600, 0x06FF], dir: 'RTL', sample: 'ابتثجحخدذرزسشصضطظعغفقكلمنهوي' },
+            devanagari: { name: 'Devanagari', range: [0x0900, 0x097F], dir: 'LTR', sample: 'अआइईउऊएऐओऔकखगघङचछजझञटठडढणतथदधनपफबभमयरलवशषसह' },
+            hangul: { name: 'Hangul', range: [0xAC00, 0xD7AF], dir: 'LTR', sample: '가나다라마바사아자차카타파하' },
+            kanji: { name: 'Kanji/CJK', range: [0x4E00, 0x9FFF], dir: 'LTR', sample: '一二三四五六七八九十百千万' },
+            hiragana: { name: 'Hiragana', range: [0x3040, 0x309F], dir: 'LTR', sample: 'あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをん' },
+            greek: { name: 'Greek', range: [0x0370, 0x03FF], dir: 'LTR', sample: 'ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ' },
+            hebrew: { name: 'Hebrew', range: [0x0590, 0x05FF], dir: 'RTL', sample: 'אבגדהוזחטיכלמנסעפצקרשת' },
+            thai: { name: 'Thai', range: [0x0E00, 0x0E7F], dir: 'LTR', sample: 'กขฃคฅฆงจฉชซฌญฎฏฐฑฒณดตถทธนบปผฝพฟภมยรลวศษสหฬอฮ' },
+            tamil: { name: 'Tamil', range: [0x0B80, 0x0BFF], dir: 'LTR', sample: 'அஆஇஈஉஊஎஏஐஒஓஔககாகிகீகுகூ' },
+            georgian: { name: 'Georgian', range: [0x10A0, 0x10FF], dir: 'LTR', sample: 'ᲐᲑᲒᲓᲔᲕᲖᲗᲘᲙᲚᲛᲜᲝᲞᲟᲠᲡᲢᲣᲤᲥᲦᲧᲨᲩᲪᲫᲬᲭᲮᲯᲰ' },
+            armenian: { name: 'Armenian', range: [0x0530, 0x058F], dir: 'LTR', sample: 'ԱԲԳԴԵԶԷԸԹԺԻԼԽԾԿՀՁՂՃՄՅՆՇՈՉdelays' },
+        };
+
+        const symInput = document.getElementById('sym-input');
+        const symAnalysis = document.getElementById('sym-analysis');
+        const symPatterns = document.getElementById('sym-patterns');
+        const symProps = document.getElementById('sym-props');
+        const symScript = document.getElementById('sym-script');
+        if (!symInput) return;
+
+        function analyze() {
+            const text = symInput.value;
+            if (!text) { symAnalysis.textContent = 'Type or paste characters to analyze...'; symPatterns.textContent = ''; symProps.textContent = ''; return; }
+
+            // Unicode analysis
+            const chars = [...text];
+            const points = chars.map(ch => {
+                const cp = ch.codePointAt(0);
+                return 'U+' + cp.toString(16).toUpperCase().padStart(4, '0') + ' ' + ch;
+            });
+            symAnalysis.innerHTML = points.slice(0, 30).map(p => '<div>' + p + '</div>').join('');
+
+            // Pattern recognition
+            const scriptCounts = {};
+            chars.forEach(ch => {
+                const cp = ch.codePointAt(0);
+                for (const [id, s] of Object.entries(SCRIPTS)) {
+                    if (cp >= s.range[0] && cp <= s.range[1]) { scriptCounts[id] = (scriptCounts[id] || 0) + 1; break; }
+                }
+            });
+            const patternHtml = Object.entries(scriptCounts).map(([id, c]) =>
+                '<div>' + SCRIPTS[id].name + ': ' + c + ' chars (' + Math.round(c / chars.length * 100) + '%)</div>'
+            ).join('');
+            symPatterns.innerHTML = patternHtml || '<div>No recognized scripts</div>';
+            symPatterns.innerHTML += '<div style="margin-top:4px;color:#484f58;">Total: ' + chars.length + ' characters, ' + Object.keys(scriptCounts).length + ' scripts</div>';
+        }
+
+        symInput.addEventListener('input', analyze);
+        symScript.addEventListener('change', () => {
+            const s = SCRIPTS[symScript.value];
+            if (s) {
+                symInput.value = s.sample;
+                symInput.dir = s.dir === 'RTL' ? 'rtl' : 'ltr';
+                symProps.innerHTML = '<div>Script: ' + s.name + '</div><div>Direction: ' + s.dir + '</div><div>Unicode range: U+' + s.range[0].toString(16).toUpperCase() + ' - U+' + s.range[1].toString(16).toUpperCase() + '</div><div>Block size: ' + (s.range[1] - s.range[0]) + ' code points</div><div>Sample: ' + s.sample.length + ' characters</div>';
+                analyze();
+            }
+        });
+        // Init with latin
+        symScript.dispatchEvent(new Event('change'));
+    })();
+
+    // ══════════════════ LATTICE TAB ══════════════════
+    (function(){
+        const cv = document.getElementById('cv-lattice');
+        if (!cv) return;
+        const ctx = cv.getContext('2d');
+        let animating = false, animId = null;
+        let rotX = 0.3, rotY = 0.5, rotZ = 0;
+        let dragging = false, lastMX = 0, lastMY = 0;
+        const nodes = [];
+        const edges = [];
+        const tunnels = [];
+
+        function buildLattice() {
+            nodes.length = 0; edges.length = 0; tunnels.length = 0;
+            const layout = window.kbatch ? window.kbatch.layouts[window.kbatch.activeLayout] : null;
+            if (!layout) return;
+            const rows = layout.rows || [];
+            rows.forEach((row, ri) => {
+                [...row].forEach((ch, ci) => {
+                    if (ch === ' ') return;
+                    nodes.push({ ch: ch, x: (ci - row.length / 2) * 1.2, y: (ri - rows.length / 2) * 1.5, z: Math.sin(ci * 0.5 + ri) * 0.8, color: '#58a6ff' });
+                });
+            });
+            // Build edges between adjacent nodes
+            for (let i = 0; i < nodes.length; i++) {
+                for (let j = i + 1; j < nodes.length; j++) {
+                    const dx = nodes[i].x - nodes[j].x, dy = nodes[i].y - nodes[j].y;
+                    if (Math.sqrt(dx * dx + dy * dy) < 2.0) edges.push([i, j]);
+                }
+            }
+            // Quantum tunnels (random long-range connections)
+            for (let i = 0; i < Math.min(nodes.length / 3, 10); i++) {
+                const a = Math.floor(Math.random() * nodes.length);
+                const b = Math.floor(Math.random() * nodes.length);
+                if (a !== b) tunnels.push([a, b]);
+            }
+            document.getElementById('lattice-nodes').textContent = nodes.length;
+            document.getElementById('lattice-edges').textContent = edges.length;
+            document.getElementById('lattice-tunnels').textContent = tunnels.length;
+        }
+
+        function project(x, y, z) {
+            // Rotate
+            let x1 = x, y1 = y * Math.cos(rotX) - z * Math.sin(rotX), z1 = y * Math.sin(rotX) + z * Math.cos(rotX);
+            let x2 = x1 * Math.cos(rotY) + z1 * Math.sin(rotY), y2 = y1, z2 = -x1 * Math.sin(rotY) + z1 * Math.cos(rotY);
+            const scale = 40 / (z2 + 6);
+            return { sx: cv.width / 2 + x2 * scale * 30, sy: cv.height / 2 + y2 * scale * 30, depth: z2 };
+        }
+
+        function render() {
+            cv.width = cv.parentElement.offsetWidth - 24;
+            cv.height = cv.parentElement.offsetHeight - 60;
+            ctx.fillStyle = '#050810'; ctx.fillRect(0, 0, cv.width, cv.height);
+            if (nodes.length === 0) { ctx.fillStyle = '#484f58'; ctx.font = '12px monospace'; ctx.textAlign = 'center'; ctx.fillText('Loading lattice...', cv.width / 2, cv.height / 2); return; }
+            const projected = nodes.map(n => project(n.x, n.y, n.z));
+            // Edges
+            edges.forEach(([a, b]) => {
+                const pa = projected[a], pb = projected[b];
+                ctx.strokeStyle = 'rgba(88,166,255,0.15)'; ctx.lineWidth = 1;
+                ctx.beginPath(); ctx.moveTo(pa.sx, pa.sy); ctx.lineTo(pb.sx, pb.sy); ctx.stroke();
+            });
+            // Tunnels
+            const t = Date.now() / 1000;
+            tunnels.forEach(([a, b]) => {
+                const pa = projected[a], pb = projected[b];
+                ctx.strokeStyle = 'rgba(210,168,255,' + (0.2 + 0.2 * Math.sin(t * 2)) + ')';
+                ctx.lineWidth = 1; ctx.setLineDash([4, 4]);
+                ctx.beginPath(); ctx.moveTo(pa.sx, pa.sy); ctx.lineTo(pb.sx, pb.sy); ctx.stroke();
+                ctx.setLineDash([]);
+            });
+            // Nodes (sorted by depth)
+            const sorted = projected.map((p, i) => ({ ...p, i })).sort((a, b) => a.depth - b.depth);
+            sorted.forEach(p => {
+                const n = nodes[p.i];
+                const r = Math.max(3, 8 - p.depth * 1.5);
+                ctx.beginPath(); ctx.arc(p.sx, p.sy, r, 0, Math.PI * 2);
+                ctx.fillStyle = n.color + (animating ? Math.round(180 + 75 * Math.sin(t * 3 + p.i)).toString(16) : 'cc');
+                ctx.fill();
+                if (r > 4) {
+                    ctx.fillStyle = '#e6edf3'; ctx.font = Math.max(6, r) + 'px monospace'; ctx.textAlign = 'center';
+                    ctx.fillText(n.ch, p.sx, p.sy + r + 10);
+                }
+            });
+            document.getElementById('lattice-rot').textContent = rotX.toFixed(2) + ',' + rotY.toFixed(2) + ',' + rotZ.toFixed(2);
+        }
+
+        function animate() {
+            if (!animating) return;
+            rotY += 0.005; rotX += 0.002;
+            render();
+            animId = requestAnimationFrame(animate);
+        }
+
+        // Mouse drag rotation
+        cv.addEventListener('mousedown', e => { dragging = true; lastMX = e.clientX; lastMY = e.clientY; cv.style.cursor = 'grabbing'; });
+        window.addEventListener('mouseup', () => { dragging = false; cv.style.cursor = 'grab'; });
+        window.addEventListener('mousemove', e => {
+            if (!dragging) return;
+            rotY += (e.clientX - lastMX) * 0.01;
+            rotX += (e.clientY - lastMY) * 0.01;
+            lastMX = e.clientX; lastMY = e.clientY;
+            if (!animating) render();
+        });
+
+        document.getElementById('lattice-reset').onclick = () => { rotX = 0.3; rotY = 0.5; rotZ = 0; render(); };
+        document.getElementById('lattice-animate').onclick = () => {
+            animating = !animating;
+            document.getElementById('lattice-animate').textContent = animating ? 'Stop' : 'Animate';
+            if (animating) animate(); else if (animId) cancelAnimationFrame(animId);
+        };
+
+        // Build on tab switch
+        const observer = new MutationObserver(() => {
+            if (document.getElementById('panel-lattice').classList.contains('active')) {
+                buildLattice(); render();
+            }
+        });
+        observer.observe(document.getElementById('panel-lattice'), { attributes: true, attributeFilter: ['class'] });
+        buildLattice();
     })();
 
     // ══════════════════ CODE CELL ══════════════════

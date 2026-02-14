@@ -1,5 +1,5 @@
 # beyondBINARY quantum-prefixed | uvspeed | {+1, 1, -1, +0, 0, -0, +n, n, -n}
-# Health Check — Validate all 20 PWA apps load without errors
+# Health Check — Validate all 23 PWA apps load without errors
 
 name: Health Check
 
@@ -97,7 +97,7 @@ jobs:
           OK=0
           FAIL=0
 
-          for f in web/quantum-prefixes.js web/sw.js; do
+          for f in web/quantum-prefixes.js web/history-search-engine.js web/sw.js; do
             if node --check "$f" 2>/dev/null; then
               echo "✓ $f"
               OK=$((OK + 1))
@@ -134,6 +134,10 @@ jobs:
             "getTheme"
             "connectIoT"
             "aggregateGlobalStats"
+            "simulateCircuit"
+            "submitToIBM"
+            "hellingerFidelity"
+            "contextToCoordinates"
           )
 
           MISSING=0

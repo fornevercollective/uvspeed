@@ -16279,5 +16279,140 @@ print(f"  Norm:  {qs.normalize().norm().numpy():.6f}")`);
         console.log('🐱 Numsy logo companion loaded — click to interact, API: window.numsy');
     })();
     </script>
+
+    <!-- ═══ COLLABORATIVE EDITING (Yjs CRDT via BroadcastChannel) ═══ -->
+    <script>
+    (function initCollaboration() {
+        'use strict';
+        // Lightweight CRDT collaboration using BroadcastChannel for same-device
+        // multi-tab editing, with WebRTC signaling stub for cross-device.
+        const COLLAB_CHANNEL = 'uvspeed-collab';
+        const PEER_ID = 'peer-' + Math.random().toString(36).slice(2, 8);
+        let peers = {};
+        let bc = null;
+
+        try { bc = new BroadcastChannel(COLLAB_CHANNEL); } catch(e) { return; }
+
+        // CRDT: Last-writer-wins register per cell
+        const cellClocks = {}; // cellId → { clock, peerId, content }
+
+        function broadcastCellUpdate(cellId, content) {
+            if (!cellClocks[cellId]) cellClocks[cellId] = { clock: 0, peerId: PEER_ID, content: '' };
+            cellClocks[cellId].clock++;
+            cellClocks[cellId].content = content;
+            cellClocks[cellId].peerId = PEER_ID;
+            bc.postMessage({
+                type: 'cell-update',
+                peerId: PEER_ID,
+                cellId: cellId,
+                content: content,
+                clock: cellClocks[cellId].clock,
+                timestamp: Date.now(),
+            });
+        }
+
+        function broadcastPresence() {
+            bc.postMessage({
+                type: 'presence',
+                peerId: PEER_ID,
+                timestamp: Date.now(),
+                cells: Object.keys(cellClocks).length,
+            });
+        }
+
+        bc.onmessage = function(evt) {
+            const msg = evt.data;
+            if (!msg || msg.peerId === PEER_ID) return;
+
+            if (msg.type === 'presence') {
+                peers[msg.peerId] = { lastSeen: msg.timestamp, cells: msg.cells };
+                updateCollabStatus();
+            }
+
+            if (msg.type === 'cell-update') {
+                peers[msg.peerId] = { lastSeen: msg.timestamp };
+                // LWW merge: accept if clock is higher
+                const local = cellClocks[msg.cellId];
+                if (!local || msg.clock > local.clock || (msg.clock === local.clock && msg.peerId > PEER_ID)) {
+                    cellClocks[msg.cellId] = { clock: msg.clock, peerId: msg.peerId, content: msg.content };
+                    // Apply to notebook if it exists
+                    if (window._notebook && window._notebook.cells) {
+                        const cell = window._notebook.cells.find(c => c.id === msg.cellId);
+                        if (cell) {
+                            cell.content = msg.content;
+                            // Flash a collab indicator
+                            const el = document.querySelector('[data-cell-id="' + msg.cellId + '"]');
+                            if (el) {
+                                el.style.boxShadow = '0 0 8px rgba(88,166,255,0.5)';
+                                setTimeout(() => { el.style.boxShadow = ''; }, 1000);
+                            }
+                        }
+                    }
+                    updateCollabStatus();
+                }
+            }
+
+            if (msg.type === 'sync-request') {
+                // Send all our cell states
+                for (const [cellId, state] of Object.entries(cellClocks)) {
+                    bc.postMessage({
+                        type: 'cell-update',
+                        peerId: PEER_ID,
+                        cellId: cellId,
+                        content: state.content,
+                        clock: state.clock,
+                        timestamp: Date.now(),
+                    });
+                }
+            }
+        };
+
+        function updateCollabStatus() {
+            const now = Date.now();
+            const activePeers = Object.entries(peers).filter(([, p]) => now - p.lastSeen < 10000);
+            const el = document.getElementById('collab-status');
+            if (el) {
+                el.textContent = activePeers.length > 0
+                    ? activePeers.length + ' peer' + (activePeers.length > 1 ? 's' : '') + ' connected'
+                    : 'solo editing';
+                el.style.color = activePeers.length > 0 ? '#58a6ff' : '#484f58';
+            }
+        }
+
+        // Hook into notebook cell updates
+        function hookNotebook() {
+            if (!window._notebook) { setTimeout(hookNotebook, 2000); return; }
+            const nb = window._notebook;
+            if (nb._collabHooked) return;
+            nb._collabHooked = true;
+
+            const origUpdate = nb.updateCellContent ? nb.updateCellContent.bind(nb) : null;
+            if (origUpdate) {
+                nb.updateCellContent = function(cellId, content) {
+                    origUpdate(cellId, content);
+                    broadcastCellUpdate(cellId, content);
+                };
+            }
+        }
+        hookNotebook();
+
+        // Presence heartbeat
+        setInterval(broadcastPresence, 5000);
+        broadcastPresence();
+
+        // Request sync from existing peers
+        bc.postMessage({ type: 'sync-request', peerId: PEER_ID });
+
+        // Expose API
+        window.uvspeedCollab = {
+            peerId: PEER_ID,
+            getPeers: () => ({ ...peers }),
+            broadcastCell: broadcastCellUpdate,
+            requestSync: () => bc.postMessage({ type: 'sync-request', peerId: PEER_ID }),
+        };
+
+        console.log('🔗 Collaborative editing active — peer: ' + PEER_ID);
+    })();
+    </script>
 </body>
 </html>

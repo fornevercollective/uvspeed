@@ -1286,6 +1286,55 @@
     }
 
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // PWA Manifest Generator
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    /**
+     * Generate a PWA manifest JSON for any uvspeed app.
+     * @param {Object} opts - { name, shortName, description, startUrl, themeColor, bgColor, icon192, icon512 }
+     * @returns {string} JSON manifest string
+     */
+    function generateManifest(opts) {
+        opts = opts || {};
+        return JSON.stringify({
+            name: opts.name || 'uvspeed',
+            short_name: opts.shortName || opts.name || 'uvspeed',
+            description: opts.description || 'beyondBINARY quantum-prefixed application',
+            start_url: opts.startUrl || './',
+            display: 'standalone',
+            orientation: 'any',
+            theme_color: opts.themeColor || '#0d1117',
+            background_color: opts.bgColor || '#0d1117',
+            icons: [
+                { src: opts.icon192 || '../icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+                { src: opts.icon512 || '../icons/hexterm-512.png', sizes: '512x512', type: 'image/png' },
+            ],
+        }, null, 2);
+    }
+
+    /**
+     * Export any app page as a standalone PWA HTML file.
+     * @param {Object} opts - { title, content (HTML body), css, js, manifest }
+     * @returns {string} Complete HTML string ready to download
+     */
+    function exportAppAsPWA(opts) {
+        opts = opts || {};
+        var manifest = opts.manifest || generateManifest({ name: opts.title || 'uvspeed app' });
+        var manifestDataUri = 'data:application/json;base64,' + btoa(manifest);
+        return '<!DOCTYPE html>\n<html lang="en">\n<head>\n' +
+            '<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width,initial-scale=1.0">\n' +
+            '<meta name="theme-color" content="#0d1117">\n' +
+            '<meta name="apple-mobile-web-app-capable" content="yes">\n' +
+            '<link rel="manifest" href="' + manifestDataUri + '">\n' +
+            '<title>' + (opts.title || 'uvspeed') + '</title>\n' +
+            (opts.css ? '<style>' + opts.css + '</style>\n' : '') +
+            '</head>\n<body>\n' +
+            (opts.content || '') + '\n' +
+            (opts.js ? '<script>' + opts.js + '<\/script>\n' : '') +
+            '<script>if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(function(){});<\/script>\n' +
+            '</body>\n</html>';
+    }
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     // Public API
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     var API = {
@@ -1337,6 +1386,10 @@
 
         // 3D context mapping
         contextToCoordinates: contextToCoordinates,
+
+        // PWA
+        generateManifest: generateManifest,
+        exportAppAsPWA: exportAppAsPWA,
 
         // Theme
         toggleTheme: toggleTheme,

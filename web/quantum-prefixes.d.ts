@@ -171,6 +171,65 @@ export interface QuantumGutterMeta {
 }
 
 /**
+ * QSim statevector simulator instance.
+ */
+export interface QSimInstance {
+  readonly n: number;
+  apply(gate: number[][], target: number): void;
+  measure(shots: number): Record<string, number>;
+}
+
+/**
+ * Quantum circuit description.
+ */
+export interface QuantumCircuit {
+  readonly qubits: number;
+  readonly depth: number;
+  readonly gates: Array<{ gate: string; target: number; param?: number }>;
+  readonly qasm: string;
+}
+
+/**
+ * Result of simulating a quantum circuit.
+ */
+export interface SimulationResult {
+  readonly qubits: number;
+  readonly counts: Record<string, number>;
+  readonly circuit: QuantumCircuit;
+}
+
+/**
+ * Context analysis input for contextToCoordinates.
+ */
+export interface ContextAnalysis {
+  readonly tone?: { dominant?: string; academic?: number; marketing?: number; educational?: number; narrative?: number; legal?: number; crisis?: number; [key: string]: unknown };
+  readonly vocabulary?: { totalWords: number; uniqueWords: number; typeTokenRatio: number; hapaxRatio: number; avgWordLength: number; top50?: Array<{ word: string; count: number }> };
+  readonly subReferences?: Record<string, string[]>;
+  readonly monetarySignals?: string[];
+  readonly sentiment?: number;
+  readonly readabilityScore?: number;
+  readonly heartbeat?: number;
+  readonly aiPerspective?: string;
+}
+
+/**
+ * 3D quantum coordinate result.
+ */
+export interface ContextCoordinates {
+  readonly coordinates: [number, number, number];
+  readonly label: string;
+  readonly color: string;
+  readonly gate: string;
+  readonly raw: {
+    readonly refDensity: number;
+    readonly vocabRichness: number;
+    readonly toneComplexity: number;
+    readonly activeTones: number;
+    readonly toneEntropy: number;
+  };
+}
+
+/**
  * ⚛ QuantumPrefixes — The main API exposed on `window.QuantumPrefixes`.
  *
  * Universal module used by all UV-Speed apps for 11-symbol quantum prefix
@@ -248,6 +307,37 @@ export interface QuantumPrefixesAPI {
 
   /** Check if the IoT bridge is connected. */
   isIoTConnected(): boolean;
+
+  // ── QPU Simulation ──
+
+  /** Local statevector quantum simulator (up to 12 qubits). */
+  QSim: new (n: number) => QSimInstance;
+
+  /** Standard quantum gate matrices. */
+  QGATES: Record<string, number[][]>;
+
+  /** Rotation-X gate constructor. */
+  rxGate(theta: number): number[][];
+
+  /** Rotation-Y gate constructor. */
+  ryGate(theta: number): number[][];
+
+  /** Rotation-Z gate constructor. */
+  rzGate(theta: number): number[][];
+
+  /** Build and simulate a quantum circuit from source code. */
+  simulateCircuit(code: string, language?: SupportedLanguage, shots?: number): SimulationResult;
+
+  /** Submit a quantum circuit to IBM Quantum via REST API. */
+  submitToIBM(circuit: QuantumCircuit, token: string, backend?: string, shots?: number): Promise<Record<string, number>>;
+
+  /** Calculate Hellinger fidelity between two measurement distributions. */
+  hellingerFidelity(dist1: Record<string, number>, dist2: Record<string, number>): number;
+
+  // ── 3D Context Mapping ──
+
+  /** Map document/context analysis to 3D quantum coordinates [x, y, z]. */
+  contextToCoordinates(analysis: ContextAnalysis): ContextCoordinates;
 
   // ── Theme Engine ──
 

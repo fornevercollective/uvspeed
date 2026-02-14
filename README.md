@@ -6,7 +6,7 @@
 
 > A development platform built on the beyondBINARY prefix system `{+1, 1, -1, +0, 0, -0, +n, n, -n, +2, +3}` — structurally addressing code with 11 symbols across 20+ languages, each mapping to a quantum gate.
 
-[![Version](https://img.shields.io/badge/v4.3-uvspeed-brightgreen)](#install)
+[![Version](https://img.shields.io/badge/v4.19-uvspeed-brightgreen)](#install)
 [![Languages](https://img.shields.io/badge/Languages-20_supported-blue)](#quantum-prefix-system)
 [![Sponsor](https://img.shields.io/badge/Sponsor-%E2%9D%A4-ff69b4)](https://github.com/sponsors/fornevercollective)
 [![License](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
@@ -149,7 +149,7 @@ Plus a `{dev}` launch mode that opens the terminal with the dev console active.
 | **[grid](web/grid.html)** | Multi-stream canvas with 2x2/3x3/4x4 layout, device management, dev console |
 | **[launcher](web/launcher.html)** | Mode picker + command console for controlling all connected devices |
 | **[brotherNumsy](web/brothernumsy.html)** | Endless runner game with AI training API and FreyaUnits converter |
-| **[kbatch](web/kbatch.html)** | Keyboard heatmap analyzer — thermal contrails, geometric patterns, WebSocket sync |
+| **[kbatch](web/kbatch.html)** | World keyboard analyzer — 8 tabs, 15 layouts, language capsules, Symbol Lab, Quantum Lattice 3D, IBM QPU bridge |
 | **[hexcast](web/hexcast.html)** | Camera → hex video broadcast — 4 encode modes, latency benchmarks |
 | **[hexcast-send](web/hexcast-send.html)** | Mobile PWA for streaming phone camera to a remote hexcast receiver |
 | **[blackwell](web/blackwell.html)** | NVIDIA Blackwell data visualization + deploy targets (DGX Spark, Lambda) |
@@ -161,7 +161,7 @@ Plus a `{dev}` launch mode that opens the terminal with the dev console active.
 | **[freya](web/freya.html)** | Galactic unit converter, scientific calculator, celestial charts, quantum geo navigation |
 | **[freya-landing](web/freya-landing.html)** | FreyaUnits showcase — interactive log-scale canvas, live converter demo, roadmap |
 | **[history](web/history.html)** | Universal timeline knowledge graph — ZPF to cosmic scale, block canvas, research viewer, AI persona builder, mass search connectors |
-| **[search](web/search.html)** | Mobile-first universal search PWA — 14 connectors (Wikipedia, arXiv, PubChem, Sacred Texts, Wayback, etc.) |
+| **[search](web/search.html)** | Mobile-first universal search PWA — 17 connectors + Document Viewer + tone/heartbeat analysis + economic timeline |
 | **[numsy](web/numsy.html)** | 1080x1080 Instagram visual generator |
 | **[sponsor](web/sponsor.html)** | Sponsor page with Rubik's cube, inverse starfield, Numsy sprites, tier cards |
 | **[github-dashboard](web/github-dashboard.html)** | Project health dashboard — phases, deps, community, actions |
@@ -171,14 +171,14 @@ Plus a `{dev}` launch mode that opens the terminal with the dev console active.
 | Module | Description |
 |--------|-------------|
 | **[quantum-prefixes.js](web/quantum-prefixes.js)** | Shared prefix API — `classifyLine()`, `prefixContent()`, cross-app `BroadcastChannel` sync, IoT WebSocket bridge, global light/dark theme engine |
-| **[history-search-engine.js](web/history-search-engine.js)** | Shared search engine — 14 connectors (Wikipedia, arXiv, PubChem, Sacred Texts, Wayback, etc.), timeline renderer, used by extension + PWA + HexTerm |
-| **[sw.js](web/sw.js)** | Service worker — offline-first cache for all 20 apps + shared assets |
+| **[history-search-engine.js](web/history-search-engine.js)** | Shared search engine v2 — 17 connectors, document fetching, tone/vocabulary analysis, economic signals, shockwave detection, 3D context coordinates |
+| **[sw.js](web/sw.js)** | Service worker — offline-first cache for all 23 apps + shared assets |
 
 ### Browser Extension
 
 | File | Description |
 |------|-------------|
-| **[extensions/history-search/](extensions/history-search/)** | Chrome/Edge/Brave/Opera/Arc/Vivaldi/Firefox extension — injects 14-connector search above Google, Bing, DuckDuckGo, Brave Search, Ecosia, Yahoo results |
+| **[extensions/history-search/](extensions/history-search/)** | Chrome/Edge/Brave/Opera/Arc/Vivaldi/Firefox extension — injects 17-connector search above Google, Bing, DuckDuckGo, Brave Search, Ecosia, Yahoo results |
 
 **Install**: `chrome://extensions` → Developer Mode → Load Unpacked → select `extensions/history-search/`
 
@@ -277,7 +277,7 @@ Supported in 20+ languages: Python, JavaScript, TypeScript, Rust, Go, Swift, Kot
 
 ```
 uvspeed/
-├── web/                         # 20 standalone HTML apps (PWA-ready)
+├── web/                         # 23 standalone HTML apps (PWA-ready)
 │   ├── quantum-gutter.html      # Prefix system showcase + 3D cube
 │   ├── quantum-notepad.html     # Main notepad with prefix gutter
 │   ├── terminal.html            # Full terminal emulator (hexterm)
@@ -381,7 +381,7 @@ nu scripts/audit.nu health                # Check dev tool versions
 
 # Version management
 bash scripts/version-sync.sh              # Check version consistency
-bash scripts/version-sync.sh set 4.3.0    # Set all versions at once
+bash scripts/version-sync.sh set 4.19.0   # Set all versions at once
 
 # Pre-commit hooks (one-time setup)
 pip install pre-commit && pre-commit install
@@ -397,6 +397,31 @@ Edit code → git commit (pre-commit: ruff + clippy + prefix headers + version s
 ```
 
 10 languages: TypeScript, Rust, Python, JavaScript, Go, CSS, Shell, Nushell, WGSL, TOML/YAML
+
+### v4.19 — Search Context Intelligence + KBatch Expansion + CRDT Collab
+
+- **Search Context Intelligence** — `history-search-engine.js` v2 with 17 connectors
+  (added FRED, World Bank, CoinGecko), document fetching, writing tone analysis
+  (academic/marketing/educational/narrative/legal/crisis), vocabulary profiling,
+  monetary signal detection, shockwave analysis, and heartbeat metric.
+- **Document Viewer** — Slide-in panel in `search.html` and Inspector Doc tab in
+  `history.html` for deep-dive content analysis with tone bars and AI self-awareness.
+- **Economic Timeline** — `history.html` gains an economic heatmap overlay with
+  shockwave lines from historical crises (Great Depression, dotcom, 2008, COVID).
+- **3D Quantum Coordinates** — `contextToCoordinates()` maps document context to
+  `[x, y, z]` quantum space (sub-references, vocabulary richness, tone complexity).
+- **KBatch Expansion** — 8-tab system: Analyzer, Layouts, Dictionary, Capsules
+  (8 demographic language sets), Symbol Lab (multi-script + Unicode analysis),
+  Quantum Lattice (3D keyboard visualization), Quantum (IBM bridge), Training.
+- **PWA Manifest Generator** — `generateManifest()` and `exportAppAsPWA()` in
+  shared module for one-click PWA export of any uvspeed app.
+- **CRDT Collaborative Editing** — BroadcastChannel-based LWW register sync
+  for multi-tab real-time editing in quantum-notepad.
+- **Launcher Overhaul** — All 22 apps now linked from the launcher hub.
+- **TypeScript Defs** — Full type coverage for QPU simulation, context coordinates,
+  and `history-search-engine.d.ts` for the search engine API.
+- **CI Health** — Updated required exports check (14 functions including
+  `simulateCircuit`, `submitToIBM`, `hellingerFidelity`, `contextToCoordinates`).
 
 ### v4.3 — Multi-Architecture + AI + AST
 
